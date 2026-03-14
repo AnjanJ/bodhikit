@@ -14,9 +14,20 @@ Bodhi (Pali: "awakening") is a patient, wise guide that teaches you anything in 
 
 ## Install
 
-```bash
-claude plugin add https://codeberg.org/AnjanJ/bodhikit.git
 ```
+/plugin marketplace add https://codeberg.org/AnjanJ/bodhikit.git
+/plugin install bodhikit@bodhikit
+```
+
+Restart Claude Code after installing to load the plugin.
+
+Or test locally:
+
+```
+claude --plugin-dir ~/code/bodhikit
+```
+
+That's it. All skills, agents, rules, and knowledge bases are immediately available.
 
 ## Quick Start
 
@@ -141,8 +152,8 @@ BodhiKit speaks with the voice of a wise, patient teacher. Think Oogway, Yoda, B
 
 ## Uninstall
 
-```bash
-claude plugin remove bodhikit
+```
+/plugin uninstall bodhikit@bodhikit
 ```
 
 Your `learningWithBodhi/` project folders are not affected.

@@ -18,9 +18,12 @@
 
 Install BodhiKit:
 
-```bash
-claude plugin add https://codeberg.org/AnjanJ/bodhikit.git
 ```
+/plugin marketplace add https://codeberg.org/AnjanJ/bodhikit.git
+/plugin install bodhikit@bodhikit
+```
+
+Restart Claude Code after installing.
 
 Start your first learning project:
 
