@@ -121,3 +121,7 @@ Your `learningWithBodhi/` project folders are not affected.
 ## License
 
 MIT
+
+Made with ❤️ by [Anjan](https://anjan.dev)
+
+[Buy me a coffee ☕](https://buymeacoffee.com/anjanj)
