@@ -88,18 +88,47 @@ We recommend backing this with git and a remote repository.
 
 ## The Science
 
-BodhiKit integrates these research-backed methodologies:
+BodhiKit integrates these research-backed methodologies. We stand on the shoulders of giants:
 
-- **Spaced Repetition** (Ebbinghaus, Leitner) — Review concepts at expanding intervals for durable memory
+- **Spaced Repetition** — Review concepts at expanding intervals for durable memory
+  - Hermann Ebbinghaus, *[Memory: A Contribution to Experimental Psychology](https://en.wikipedia.org/wiki/Memory:_A_Contribution_to_Experimental_Psychology)* (1885)
+  - Sebastian Leitner, *[Learning to Learn](https://en.wikipedia.org/wiki/Leitner_system)* (1972)
+
+- **Learning How to Learn** — Focused/diffuse modes, chunking, interleaving, overcoming procrastination
+  - Dr. Barbara Oakley, *[A Mind for Numbers](https://barbaraoakley.com/books/a-mind-for-numbers/)* (2014)
+  - Dr. Barbara Oakley and Dr. Terrence Sejnowski, *[Learning How to Learn](https://www.coursera.org/learn/learning-how-to-learn)* (Coursera, most popular online course in the world)
+
 - **Bloom's Taxonomy** — Assess and track skills across 6 cognitive levels (Remember to Create)
-- **Zone of Proximal Development** (Vygotsky) — Calibrate difficulty to where learning is most productive
+  - Benjamin Bloom, *[Taxonomy of Educational Objectives](https://en.wikipedia.org/wiki/Bloom%27s_taxonomy)* (1956)
+  - Lorin Anderson and David Krathwohl, *[A Taxonomy for Learning, Teaching, and Assessing](https://en.wikipedia.org/wiki/Bloom%27s_taxonomy#The_cognitive_domain_(knowledge-based))* (2001, revised taxonomy)
+
+- **Zone of Proximal Development** — Calibrate difficulty to where learning is most productive
+  - Lev Vygotsky, *[Mind in Society](https://en.wikipedia.org/wiki/Zone_of_proximal_development)* (1978)
+
 - **Feynman Technique** — Explain concepts simply to reveal gaps in understanding
-- **Deliberate Practice** (Ericsson) — Targeted exercises at the edge of ability with immediate feedback
-- **Growth Mindset** (Dweck) — Feedback that promotes learning over performance
-- **Desirable Difficulties** (Bjork) — Interleaving, retrieval practice, and variation for stronger retention
-- **Active Recall** — Retrieve from memory rather than re-read for superior learning outcomes
+  - Richard Feynman, inspired by his teaching philosophy at Caltech
+  - Popularized by James Gleick, *[Genius: The Life and Science of Richard Feynman](https://en.wikipedia.org/wiki/Genius:_The_Life_and_Science_of_Richard_Feynman)* (1992)
+
+- **Deliberate Practice** — Targeted exercises at the edge of ability with immediate feedback
+  - K. Anders Ericsson, *[Peak: Secrets from the New Science of Expertise](https://en.wikipedia.org/wiki/Peak:_Secrets_from_the_New_Science_of_Expertise)* (2016)
+  - K. Anders Ericsson, *[The Role of Deliberate Practice in the Acquisition of Expert Performance](https://psycnet.apa.org/record/1993-40718-001)* (1993)
+
+- **Growth Mindset** — Feedback that promotes learning over performance
+  - Dr. Carol Dweck, *[Mindset: The New Psychology of Success](https://en.wikipedia.org/wiki/Mindset_(book))* (2006)
+
+- **Desirable Difficulties** — Interleaving, retrieval practice, and variation for stronger retention
+  - Dr. Robert Bjork and Dr. Elizabeth Bjork, *[Making Things Hard on Yourself, But in a Good Way](https://bjorklab.psych.ucla.edu/research/)* (2011)
+
+- **Constructivism and Spiral Curriculum** — Learning by building, revisiting concepts at increasing depth
+  - Jean Piaget, *[The Construction of Reality in the Child](https://en.wikipedia.org/wiki/Constructivism_(philosophy_of_education))* (1954)
+  - Jerome Bruner, *[The Process of Education](https://en.wikipedia.org/wiki/The_Process_of_Education)* (1960)
+  - Seymour Papert, *[Mindstorms: Children, Computers, and Powerful Ideas](https://en.wikipedia.org/wiki/Mindstorms_(book))* (1980)
+
+- **Mastery-Based Learning** — Demonstrate competence before advancing, not time-based
+  - Benjamin Bloom, *[Learning for Mastery](https://en.wikipedia.org/wiki/Mastery_learning)* (1968)
+
 - **Metacognition** — Teach learners HOW to learn, not just WHAT to learn
-- **Mastery-Based Progression** — Demonstrate competence before advancing, not time-based
+  - John Flavell, who coined the term in *[Metacognition and Cognitive Monitoring](https://psycnet.apa.org/record/1980-09388-001)* (1979)
 
 ## The Philosophy
 
