@@ -25,7 +25,7 @@ Determine mode from `$ARGUMENTS`:
 
 Extract the topic from `$ARGUMENTS` (after "find"). If no topic, use the current module's topic from `state.json`.
 
-Delegate to the `resource-finder` agent. Provide:
+You MUST use the Agent tool to launch the `resource-finder` agent. This is not optional. Provide:
 - The topic
 - The learner's current Bloom's level (if available from project)
 - Whether to focus on beginner, intermediate, or advanced resources

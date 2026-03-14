@@ -37,7 +37,7 @@ Determine what to review based on `$ARGUMENTS`:
 - If found, read `.bodhi/plan.md` and `.bodhi/progress.md` to understand what the learner is studying
 - Tailor feedback to their position in the learning journey
 
-**Delegate to the `code-reviewer` agent.** Provide it with:
+**You MUST use the Agent tool to launch the `code-reviewer` agent. This is not optional.** Provide it with:
 - The code to review
 - The learner's current topic and Bloom's levels (if available from project)
 - Instruction to focus on educational value, not just code quality

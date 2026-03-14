@@ -38,7 +38,7 @@ Build a timeline of the learner's journey:
 
 Run a fresh assessment covering ALL topics in the learning plan (not just the current module).
 
-Delegate to the `skill-assessor` agent. Provide:
+You MUST use the Agent tool to launch the `skill-assessor` agent. This is not optional. Provide:
 - All topics from the learning plan
 - Instruction to assess broadly (2-3 questions per major topic area, not deep-dive per sub-topic)
 - The learner's current progress data for context

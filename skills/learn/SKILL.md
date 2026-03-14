@@ -41,7 +41,7 @@ If the user mentions existing learning materials (books, paid courses, etc.), no
 
 Open with: "Before we chart the path, let me understand where you stand. Not to judge — simply to know where the journey begins."
 
-Delegate assessment to the `skill-assessor` agent. Provide it with:
+You MUST use the Agent tool to launch the `skill-assessor` agent. This is not optional. Provide it with:
 - The scoped topic from Phase 1
 - Any background information the learner shared
 - Any existing code or repos the learner mentioned

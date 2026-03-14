@@ -27,7 +27,7 @@ Open with: "Let us explore what you already know about [topic]. Think of this as
 
 ## Phase 2: Assessment
 
-Delegate to the `skill-assessor` agent. Provide:
+You MUST use the Agent tool to launch the `skill-assessor` agent. This is not optional. Provide:
 - The scoped topic
 - Any context about the learner (if an active learning project exists, share their current progress)
 - Instruction to use adaptive questioning starting at Bloom's Level 3
