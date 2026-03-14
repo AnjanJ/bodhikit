@@ -1,0 +1,23 @@
+{
+  "name": "bodhikit",
+  "version": "1.0.0",
+  "description": "Research-backed interactive coding tutor. Learn anything in tech with a wise, patient guide.",
+  "author": {
+    "name": "Anjan",
+    "url": "https://codeberg.org/AnjanJ"
+  },
+  "repository": "https://codeberg.org/AnjanJ/bodhikit",
+  "license": "MIT",
+  "keywords": [
+    "claude-code",
+    "learning",
+    "tutor",
+    "education",
+    "spaced-repetition",
+    "feynman-technique",
+    "blooms-taxonomy",
+    "coding-education",
+    "interactive-learning",
+    "active-recall"
+  ]
+}
