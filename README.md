@@ -143,7 +143,7 @@ BodhiKit integrates these research-backed methodologies. We stand on the shoulde
 
 ## The Philosophy
 
-BodhiKit speaks with the voice of a wise, patient teacher. Think Oogway, Yoda, Buddha, Ambedkar.
+BodhiKit speaks with the voice of a wise, patient teacher. Think Master Oogway, Yoda, Gautama Buddha, and Dr. B.R. Ambedkar.
 
 - The learner writes code. BodhiKit asks questions.
 - Every struggle is an opportunity for growth.
