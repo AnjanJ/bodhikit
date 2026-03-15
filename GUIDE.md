@@ -71,10 +71,12 @@ Use `/bodhikit:continue` to pick up where you left off:
 ```
 
 BodhiKit will:
-- Find your active projects
-- Show you where you left off
+- Show a quick status check (project, module, streak, concepts due)
+- Find your active projects and show where you left off
 - Check if any concepts are due for spaced review
-- Offer options: continue current module, review due concepts, or something else
+- Offer options: continue current module, practice, or something else
+- Auto-invoke `/teach` when you continue with the next module
+- Auto-invoke `/reflect` when you say goodbye
 
 This works across sessions. Your progress is saved in `.bodhi/` files.
 
@@ -82,14 +84,16 @@ This works across sessions. Your progress is saved in `.bodhi/` files.
 
 ## Daily Learning Workflow
 
-A typical learning session:
+A typical learning session with `/bodhikit:continue`:
 
-1. **Start**: `/bodhikit:continue` — resume your project
-2. **Review**: If concepts are due for spaced review, do that first (5-10 minutes)
-3. **Learn**: Continue with your current module — explanation, discussion, exercises
-4. **Practice**: `/bodhikit:practice` — get a hands-on exercise
-5. **Check**: `/bodhikit:quiz` — test what you learned today
-6. **Close**: Say goodbye and BodhiKit saves your progress
+1. **Status**: Quick 3-line check-in (auto)
+2. **Review**: Spaced review of due concepts (auto, if any are due)
+3. **Teach**: Guided teaching of the next concept (auto, when you choose to continue)
+4. **Practice**: Hands-on exercise on the concept you just learned (auto, within /teach)
+5. **Quiz**: Quick retention check (auto, within /teach)
+6. **Reflect**: End-of-session reflection (auto, when you say goodbye)
+
+You can also invoke any skill directly at any time. The auto-invocation just means `/continue` handles the full flow for you.
 
 You do not need to follow this exact order. Use whatever skills feel right for your session.
 
@@ -101,7 +105,10 @@ You do not need to follow this exact order. Use whatever skills feel right for y
 Start a new learning project. Creates a personalized plan based on your assessment.
 
 ### `/bodhikit:continue [project-name]`
-Resume from where you left off. Works across sessions. Checks spaced review schedule.
+Resume from where you left off. Auto-invokes `/status`, `/teach`, and `/reflect` for a complete guided session. Works across sessions.
+
+### `/bodhikit:teach [topic|next]`
+Proactive guided teaching. Walks you through a concept step by step: explains it, demonstrates with code, works through a problem together, gives you an exercise, then verifies retention. Auto-invoked by `/continue`.
 
 ### `/bodhikit:assess <topic>`
 Standalone skill assessment. Get your Bloom's taxonomy level for any topic without starting a full project.
@@ -129,6 +136,12 @@ Get a hands-on exercise calibrated to your level. Beginners get starter files, a
 
 ### `/bodhikit:evaluate [project-name]`
 Comprehensive evaluation of your entire learning journey. Compares where you started to where you are now.
+
+### `/bodhikit:reflect`
+End-of-session metacognitive reflection. Asks what was hardest, what surprised you, and your confidence rating. Feeds data back into spaced repetition scheduling. Auto-invoked by `/continue` when you say goodbye.
+
+### `/bodhikit:status`
+Quick 3-line check-in: current project, module, streak, and concepts due today. Auto-invoked by `/continue` at session start.
 
 ---
 

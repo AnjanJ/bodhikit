@@ -88,7 +88,7 @@ After adjustments, update `.bodhi/plan.md` preserving all progress data. Show th
 Warn: "Regenerating will create a fresh plan based on a new assessment. Your progress history will be preserved, but the module structure may change. Would you like to proceed?"
 
 If yes:
-1. You MUST use the Agent tool to launch the `skill-assessor` agent for a fresh assessment
+1. You MUST use the Agent tool to launch the `skill-assessor` agent for a fresh assessment. **Fallback:** If the agent fails, conduct the assessment directly with 5-6 adaptive questions.
 2. Build a new plan following the same principles as `/learn` Phase 3
 3. Preserve `.bodhi/progress.md` history (append, do not overwrite)
 4. Update `.bodhi/plan.md` with the new plan

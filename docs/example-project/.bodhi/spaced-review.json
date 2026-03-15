@@ -1,0 +1,108 @@
+{
+  "version": 1,
+  "lastReviewCheck": "2026-03-14",
+  "concepts": [
+    {
+      "id": "jsx-syntax",
+      "name": "JSX Syntax",
+      "module": "jsx-basics",
+      "box": 4,
+      "lastReviewed": "2026-03-12",
+      "nextReview": "2026-03-26",
+      "reviewHistory": [
+        {"date": "2026-03-08", "result": "correct", "boxBefore": 1, "boxAfter": 2},
+        {"date": "2026-03-10", "result": "correct", "boxBefore": 2, "boxAfter": 3},
+        {"date": "2026-03-12", "result": "correct", "boxBefore": 3, "boxAfter": 4}
+      ],
+      "relatedExercise": "exercises/01-hello-jsx/"
+    },
+    {
+      "id": "component-functions",
+      "name": "Component Functions",
+      "module": "components",
+      "box": 3,
+      "lastReviewed": "2026-03-13",
+      "nextReview": "2026-03-20",
+      "reviewHistory": [
+        {"date": "2026-03-10", "result": "correct", "boxBefore": 1, "boxAfter": 2},
+        {"date": "2026-03-13", "result": "correct", "boxBefore": 2, "boxAfter": 3}
+      ],
+      "relatedExercise": "exercises/02-first-component/"
+    },
+    {
+      "id": "props-passing",
+      "name": "Passing Props",
+      "module": "props",
+      "box": 3,
+      "lastReviewed": "2026-03-13",
+      "nextReview": "2026-03-20",
+      "reviewHistory": [
+        {"date": "2026-03-10", "result": "incorrect", "boxBefore": 1, "boxAfter": 1},
+        {"date": "2026-03-12", "result": "correct", "boxBefore": 1, "boxAfter": 2},
+        {"date": "2026-03-13", "result": "correct", "boxBefore": 2, "boxAfter": 3}
+      ],
+      "relatedExercise": "exercises/03-user-card/"
+    },
+    {
+      "id": "props-destructuring",
+      "name": "Props Destructuring",
+      "module": "props",
+      "box": 2,
+      "lastReviewed": "2026-03-13",
+      "nextReview": "2026-03-16",
+      "reviewHistory": [
+        {"date": "2026-03-12", "result": "correct", "boxBefore": 1, "boxAfter": 2},
+        {"date": "2026-03-13", "result": "incorrect", "boxBefore": 2, "boxAfter": 1},
+        {"date": "2026-03-13", "result": "correct", "boxBefore": 1, "boxAfter": 2}
+      ],
+      "relatedExercise": "exercises/03-user-card/"
+    },
+    {
+      "id": "usestate-basics",
+      "name": "useState Hook",
+      "module": "state-and-hooks",
+      "box": 2,
+      "lastReviewed": "2026-03-14",
+      "nextReview": "2026-03-17",
+      "reviewHistory": [
+        {"date": "2026-03-13", "result": "correct", "boxBefore": 1, "boxAfter": 2},
+        {"date": "2026-03-14", "result": "correct", "boxBefore": 2, "boxAfter": 2}
+      ],
+      "relatedExercise": "exercises/04-counter/"
+    },
+    {
+      "id": "immutable-state-updates",
+      "name": "Immutable State Updates",
+      "module": "state-and-hooks",
+      "box": 1,
+      "lastReviewed": "2026-03-14",
+      "nextReview": "2026-03-15",
+      "reviewHistory": [
+        {"date": "2026-03-14", "result": "incorrect", "boxBefore": 1, "boxAfter": 1}
+      ],
+      "relatedExercise": "exercises/05-todo-list/"
+    },
+    {
+      "id": "event-handlers",
+      "name": "Event Handlers in React",
+      "module": "state-and-hooks",
+      "box": 2,
+      "lastReviewed": "2026-03-14",
+      "nextReview": "2026-03-17",
+      "reviewHistory": [
+        {"date": "2026-03-14", "result": "correct", "boxBefore": 1, "boxAfter": 2}
+      ],
+      "relatedExercise": "exercises/05-todo-list/"
+    },
+    {
+      "id": "conditional-rendering",
+      "name": "Conditional Rendering",
+      "module": "rendering-patterns",
+      "box": 1,
+      "lastReviewed": null,
+      "nextReview": "2026-03-15",
+      "reviewHistory": [],
+      "relatedExercise": null
+    }
+  ]
+}

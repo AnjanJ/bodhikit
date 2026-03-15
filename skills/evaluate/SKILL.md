@@ -45,6 +45,8 @@ You MUST use the Agent tool to launch the `skill-assessor` agent. This is not op
 
 This assessment should take 10-15 questions total, covering the full breadth of the plan.
 
+**Fallback:** If the agent fails or returns incomplete results, conduct the assessment directly. Ask 2-3 questions per major topic area yourself, adapting based on responses.
+
 ---
 
 ## Phase 3: Comparative Analysis

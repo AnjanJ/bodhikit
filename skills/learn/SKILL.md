@@ -48,6 +48,8 @@ You MUST use the Agent tool to launch the `skill-assessor` agent. This is not op
 
 The agent will return a per-sub-topic Bloom's level classification. Review the results.
 
+**Fallback:** If the agent fails, returns incomplete results, or hits its turn limit, conduct the assessment directly in this conversation. Ask the learner 5-6 key questions yourself, starting at Bloom's Level 3 and adapting up or down based on responses. Classify their level per sub-topic based on their answers.
+
 If the learner has NO prior knowledge (all Level 0), acknowledge warmly: "A blank page is not emptiness — it is possibility. We start from the very beginning, and that is a wonderful place to start."
 
 If the learner has SOME knowledge, acknowledge what they know: "You have solid roots in [X]. We will build on those."

@@ -38,12 +38,13 @@ That's it. All skills, agents, rules, and knowledge bases are immediately availa
 /bodhikit:progress           # See your dashboard
 ```
 
-## Skills (11)
+## Skills (14)
 
 | Skill | Description |
 |-------|-------------|
 | `/learn` | Start a new learning project with assessment and personalized plan |
-| `/continue` | Resume from where you left off (cross-session) |
+| `/continue` | Resume from where you left off — auto-invokes teach, reflect, status |
+| `/teach` | Proactive guided teaching: explain, demonstrate, practice, verify |
 | `/assess` | Standalone skill assessment on any topic |
 | `/review` | Educational code review (local files, GitHub, GitLab, Codeberg) |
 | `/quiz` | Active recall check with spaced repetition tracking |
@@ -53,6 +54,8 @@ That's it. All skills, agents, rules, and knowledge bases are immediately availa
 | `/explain` | Deep-dive explanation using the Feynman technique |
 | `/practice` | Hands-on exercise calibrated to your level |
 | `/evaluate` | Comprehensive evaluation of your learning journey |
+| `/reflect` | End-of-session metacognitive reflection |
+| `/status` | Quick 3-line check-in: project, module, streak, concepts due |
 
 ## Agents (3)
 

@@ -32,6 +32,8 @@ You MUST use the Agent tool to launch the `resource-finder` agent. This is not o
 
 The agent will return verified resources with: title, URL, type, difficulty, estimated time.
 
+**Fallback:** If the agent fails or returns incomplete results, use WebSearch directly to find resources. Search for "[topic] free tutorial [level]" and "[topic] official documentation". Verify links with WebFetch. Present the top 5-8 results.
+
 Present the results:
 
 ```

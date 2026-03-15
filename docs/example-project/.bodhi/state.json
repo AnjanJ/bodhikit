@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "projectName": "react-fundamentals",
+  "topic": "React",
+  "createdAt": "2026-03-08T10:00:00Z",
+  "lastSessionAt": "2026-03-14T14:30:00Z",
+  "totalSessions": 5,
+  "sessionDates": ["2026-03-08", "2026-03-10", "2026-03-12", "2026-03-13", "2026-03-14"],
+  "currentStreak": 3,
+  "currentPhase": 2,
+  "currentModule": "state-and-hooks",
+  "currentModuleIndex": 4,
+  "lastActivity": {
+    "type": "exercise",
+    "description": "Build a todo list using useState and event handlers",
+    "status": "completed",
+    "file": "exercises/05-todo-list/TodoList.jsx"
+  },
+  "initialBloomLevel": {
+    "html-css": 4,
+    "javascript-basics": 3,
+    "jsx": 0,
+    "components": 0,
+    "props": 0,
+    "state": 0,
+    "hooks": 0,
+    "event-handling": 1,
+    "conditional-rendering": 0
+  },
+  "overallCompletion": 0.45,
+  "lastSessionSummary": "Completed useState exercises. Built a todo list component. Struggled with the concept of immutable state updates but got there with hints. Confidence self-rating: 6/10 on useState."
+}

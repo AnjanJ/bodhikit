@@ -34,6 +34,8 @@ You MUST use the Agent tool to launch the `skill-assessor` agent. This is not op
 
 The agent will conduct the assessment through 8-12 questions, adapting difficulty based on responses.
 
+**Fallback:** If the agent fails or returns incomplete results, conduct the assessment directly. Ask 6-8 adaptive questions yourself, starting at Bloom's Level 3. Classify per sub-topic based on responses.
+
 ---
 
 ## Phase 3: Results

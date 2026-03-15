@@ -104,7 +104,7 @@ The README should include:
 
 After the learner indicates they have completed (or attempted) the exercise:
 
-1. **Read their code** using the Read tool. Then use the Agent tool to launch the `code-reviewer` agent to perform an educational review of the code.
+1. **Read their code** using the Read tool. Then use the Agent tool to launch the `code-reviewer` agent to perform an educational review of the code. **Fallback:** If the agent fails, conduct the educational review directly by analyzing the code yourself.
 
 2. **Review educationally** — do NOT just check if it works. Analyze:
    - What concepts did they demonstrate understanding of?

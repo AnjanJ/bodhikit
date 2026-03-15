@@ -42,6 +42,8 @@ Determine what to review based on `$ARGUMENTS`:
 - The learner's current topic and Bloom's levels (if available from project)
 - Instruction to focus on educational value, not just code quality
 
+**Fallback:** If the agent fails or returns incomplete results, conduct the educational review directly. Read the code yourself and analyze: what does it reveal about understanding? What Socratic questions would deepen their learning?
+
 The agent will return findings in the format:
 - What the code does
 - What it reveals about understanding
