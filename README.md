@@ -1,5 +1,7 @@
 # BodhiKit
 
+<a href="https://www.buymeacoffee.com/anjanj" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" width="200"></a>
+
 **Research-backed interactive coding tutor for Claude Code.**
 
 Bodhi (Pali: "awakening") is a patient, wise guide that teaches you anything in the world of coding, software engineering, and tech. It does not write code for you. It teaches you to write code yourself.
@@ -192,4 +194,4 @@ MIT
 
 Made with ❤️ by [Anjan](https://anjan.dev)
 
-[Buy me a coffee ☕](https://buymeacoffee.com/anjanj)
+<a href="https://www.buymeacoffee.com/anjanj" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" width="200"></a>
