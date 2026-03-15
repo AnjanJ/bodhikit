@@ -75,13 +75,27 @@ That's it. All skills, agents, rules, and knowledge bases are immediately availa
 | code-reviewer | Sonnet | Educational code review (what code reveals about understanding) |
 | resource-finder | Haiku | Web search for verified free learning resources |
 
-## Knowledge Bases (3)
+## Knowledge Bases (16)
+
+Each learning methodology lives in its own focused knowledge base, loaded only when needed (progressive disclosure):
 
 | Knowledge Base | Purpose |
 |---------------|---------|
-| learning-methodology | Spaced repetition, Bloom's taxonomy, ZPD, Feynman technique, deliberate practice |
-| assessment-framework | Question templates by Bloom's level, mastery criteria, exercise design |
-| teaching-personality | Oogway/Yoda/Buddha/Ambedkar personality guide for all interactions |
+| spaced-repetition | Ebbinghaus forgetting curve, Leitner box system |
+| blooms-taxonomy | 6 cognitive levels for programming, mastery criteria |
+| zone-of-proximal-development | Three zones, detection signals, scaffolding strategy |
+| feynman-technique | 4 steps for deep understanding, when to use |
+| deliberate-practice | Targeted exercises at the edge of ability |
+| growth-mindset | Language patterns, praising strategy over talent |
+| desirable-difficulties | Spacing, interleaving, retrieval, generation, variation |
+| metacognition | Teaching learners HOW to learn, Dunning-Kruger, illusions of competence |
+| constructivism | Spiral curriculum, project progression by level |
+| ai-learning-safeguards | Risks of AI over-reliance, structural safeguards |
+| mentoring-theory | GROW model, Kram's career and psychosocial functions |
+| pair-programming | Strong-style, driver/navigator, ping-pong TDD, Williams & Kessler |
+| scientific-debugging | TRAFFIC method, debugging mindset, wolf fence, expert vs novice |
+| assessment-framework | Question templates by Bloom's level, exercise design |
+| teaching-personality | Oogway/Yoda/Buddha/Ambedkar personality guide |
 
 ## Path-Scoped Rules (1)
 

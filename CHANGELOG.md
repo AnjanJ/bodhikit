@@ -2,7 +2,7 @@
 
 All notable changes to BodhiKit will be documented in this file.
 
-## [1.3.0] - 2026-03-16
+## [1.4.0] - 2026-03-16
 
 ### Added
 - `/mentor` skill — career and learning path guidance using the GROW model (Whitmore) and Kram's mentoring theory
@@ -19,6 +19,9 @@ All notable changes to BodhiKit will be documented in this file.
 - `/mentor` auto-invoked by `/evaluate` at major milestones
 - `/pair` auto-invoked by `/teach` during guided practice
 - `/debug-together` auto-invoked by `/practice` and `/teach` when code has bugs
+- Split monolithic `learning-methodology` KB (392 lines) into 13 focused KBs for progressive disclosure (ETH Zurich 2025 research compliance)
+- All skills now reference only the specific KBs they need, reducing context load per interaction
+- Knowledge base count: 3 → 16
 - Skill count: 14 → 17
 
 ## [1.2.0] - 2026-03-15

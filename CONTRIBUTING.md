@@ -26,7 +26,7 @@ argument-hint: "[optional|arg|syntax]"
 
 Requirements:
 - Reference `teaching-personality` knowledge base for tone
-- Reference `learning-methodology` knowledge base for pedagogical decisions
+- Reference the specific knowledge base for your methodology (e.g., `spaced-repetition`, `blooms-taxonomy`, `feynman-technique`)
 - Include phase-based workflow with checkpoints
 - If the skill uses an agent, use "You MUST use the Agent tool to launch the `<agent-name>` agent" and include a fallback instruction
 - If the skill should be auto-invocable by other skills, note this in the description
