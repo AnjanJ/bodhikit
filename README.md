@@ -7,9 +7,12 @@ Bodhi (Pali: "awakening") is a patient, wise guide that teaches you anything in 
 ## What Makes BodhiKit Different
 
 - **Research-backed**: Built on proven learning science (Oakley, Feynman, Bloom, Vygotsky, Ericsson, Dweck, Bjork)
-- **Personalized**: Assesses your skill level, builds a custom learning plan, adapts to your pace
+- **Deeply personalized**: Assesses your unique skill level, builds a custom learning plan, adapts to your pace
+- **Proactive teaching**: `/teach` walks you through concepts step by step, not just answering questions
 - **Hands-on**: Learn by doing. Exercises, projects, code review. Never just reading.
 - **Remembers your journey**: Spaced repetition, progress tracking, cross-session continuity
+- **Metacognitive reflection**: End-of-session `/reflect` builds your awareness of HOW you learn
+- **One command sessions**: `/continue` auto-invokes status, teaching, practice, and reflection
 - **Honest and wise**: Feedback that is respectful, specific, and genuinely helpful
 
 ## Install
@@ -33,9 +36,11 @@ That's it. All skills, agents, rules, and knowledge bases are immediately availa
 
 ```
 /bodhikit:learn react        # Start learning React
-/bodhikit:continue           # Resume where you left off
+/bodhikit:continue           # Resume — auto-runs status, teach, reflect
+/bodhikit:teach              # Guided teaching of the next concept
 /bodhikit:quiz               # Test your knowledge
-/bodhikit:progress           # See your dashboard
+/bodhikit:status             # Quick 3-line check-in
+/bodhikit:progress           # Full progress dashboard
 ```
 
 ## Skills (14)
@@ -99,6 +104,26 @@ learningWithBodhi/
 ```
 
 We recommend backing this with git and a remote repository.
+
+See `docs/example-project/` for a realistic example of what these tracking files look like after a few sessions.
+
+## How a Session Works
+
+Run `/bodhikit:continue` and the plugin handles the entire flow:
+
+```
+/continue
+  ├── /status       → quick 3-line check-in
+  ├── spaced review → quiz on concepts due for review
+  ├── /teach        → guided teaching of the next concept
+  │     ├── explain with analogies and code examples
+  │     ├── work through a problem together
+  │     ├── independent exercise
+  │     └── quick retention check
+  └── /reflect      → end-of-session metacognitive reflection
+```
+
+One command. Complete learning session. No need to remember which skills to invoke.
 
 ## The Science
 

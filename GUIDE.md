@@ -6,10 +6,13 @@
 - [Starting a New Learning Project](#starting-a-new-learning-project)
 - [Resuming Your Learning](#resuming-your-learning)
 - [Daily Learning Workflow](#daily-learning-workflow)
+- [How Teaching Works](#how-teaching-works)
+- [End-of-Session Reflection](#end-of-session-reflection)
 - [Skills Reference](#skills-reference)
 - [Using BodhiKit with Books and Courses](#using-bodhikit-with-books-and-courses)
 - [Understanding Your Progress](#understanding-your-progress)
 - [How Spaced Repetition Works](#how-spaced-repetition-works)
+- [Example Project](#example-project)
 - [Tips for Effective Learning](#tips-for-effective-learning)
 
 ---
@@ -96,6 +99,36 @@ A typical learning session with `/bodhikit:continue`:
 You can also invoke any skill directly at any time. The auto-invocation just means `/continue` handles the full flow for you.
 
 You do not need to follow this exact order. Use whatever skills feel right for your session.
+
+---
+
+## How Teaching Works
+
+When you choose to continue with the next module (or run `/bodhikit:teach` directly), BodhiKit follows the **Gradual Release of Responsibility** model:
+
+1. **I Do (Modeling)** — BodhiKit explains the concept with analogies, concrete code examples, and connects it to what you already know. It shows WHY the concept matters, not just what it does.
+
+2. **We Do (Guided Practice)** — You and BodhiKit work through a problem together. It asks guiding questions: "How would you start? What data structure fits here?" You make the decisions, it keeps you on track.
+
+3. **You Do (Independent Practice)** — BodhiKit gives you an exercise calibrated to your level. Beginners get starter files with TODO comments. Advanced learners get a problem statement only. You solve it yourself.
+
+4. **Verify** — Quick retention check: 2-3 questions to confirm the concept stuck. Concepts are added to spaced repetition tracking.
+
+The key rule: BodhiKit never lectures for more than 5 minutes without interaction. It is a conversation, not a presentation.
+
+---
+
+## End-of-Session Reflection
+
+When you say goodbye, BodhiKit auto-invokes `/reflect` to run a brief metacognitive reflection. This takes 3-5 minutes and multiplies the value of the entire session.
+
+It asks:
+1. **What felt hardest today?** — Identifies concepts that need more time
+2. **Was anything easier than expected?** — Calibrates your self-assessment
+3. **Confidence rating (1-10)** — Low confidence concepts get scheduled for review sooner
+4. **What would you do differently?** — Builds strategic thinking about learning itself
+
+Why this matters: research shows learners who reflect on their learning process retain 20-30% more. Your confidence rating feeds directly into the spaced repetition system, so concepts you are unsure about get reviewed sooner.
 
 ---
 
@@ -214,6 +247,22 @@ BodhiKit uses a virtual Leitner box system to schedule concept reviews:
 - When you run `/continue`, BodhiKit checks what is due for review
 
 This is automatic. You do not need to manage it.
+
+---
+
+## Example Project
+
+Want to see what a learning project looks like after a few sessions? Check out `docs/example-project/` in the BodhiKit repository.
+
+It contains realistic `.bodhi/` tracking files for a "React Fundamentals" learner who has completed 5 sessions:
+- `state.json` — 5 sessions, 3-day streak, working on Module 2.1 (State and Hooks)
+- `spaced-review.json` — 8 concepts across different Leitner boxes (Box 1 through Box 4)
+- `progress.md` — 3 completed modules, 1 in progress, with Bloom's levels and mastery percentages
+- `plan.md` — 3-phase learning plan with 9 modules
+- `assessment.md` — Initial assessment and a quiz record
+- `resources.md` — 3 curated resources (React docs, freeCodeCamp, Exercism)
+
+This gives you a clear picture of what to expect before you start your own learning project.
 
 ---
 
