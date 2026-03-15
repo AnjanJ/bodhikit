@@ -176,6 +176,27 @@ End-of-session metacognitive reflection. Asks what was hardest, what surprised y
 ### `/bodhikit:status`
 Quick 3-line check-in: current project, module, streak, and concepts due today. Auto-invoked by `/continue` at session start.
 
+### `/bodhikit:mentor [question]`
+Career and learning path guidance. Uses the GROW model (Goal, Reality, Options, Will) and Kram's mentoring theory. Looks across all your learning projects, understands your career goals, and suggests what to learn next. Auto-invoked by `/evaluate` when you complete a major milestone.
+
+### `/bodhikit:pair [strong-style|ping-pong|navigate]`
+Pair programming with BodhiKit as your partner. Three modes: strong-style (AI navigates, you drive), ping-pong (alternate writing tests and implementations), or navigate (you navigate, AI describes code). Mode auto-selected based on your level. Auto-invoked by `/teach` during guided practice.
+
+### `/bodhikit:debug-together [file-path]`
+Scientific debugging using Zeller's TRAFFIC method. Walks you through: reproduce, hypothesize, probe (not fix), isolate, correct. Never fixes bugs for you. Auto-invoked by `/practice` and `/teach` when your code has bugs.
+
+---
+
+## Learner Profile
+
+BodhiKit maintains a cross-project learner profile at `learningWithBodhi/.bodhi-profile.json`. This stores:
+- Your career goals and learning motivations
+- Overall Bloom's levels across all topics
+- Cumulative stats (total sessions, concepts mastered, longest streak)
+- Learning style preferences discovered over time
+
+The profile is created when you start your first learning project and updated as you progress. It allows BodhiKit to personalize guidance across different projects and power the `/mentor` skill.
+
 ---
 
 ## Using BodhiKit with Books and Courses

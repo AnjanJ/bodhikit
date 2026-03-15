@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "createdAt": "2026-03-08T10:00:00Z",
+  "lastUpdated": "2026-03-14T14:30:00Z",
+  "learner": {
+    "careerGoal": "Become a full-stack developer",
+    "whyLearning": "Career transition from marketing to software development",
+    "timeline": "6-12 months",
+    "priorExperience": "2 years HTML/CSS/JavaScript, built a few vanilla JS projects"
+  },
+  "preferences": {
+    "learningStyle": "hands-on",
+    "sessionLength": "30-45 minutes",
+    "feedbackStyle": "balanced",
+    "pacePreference": "steady"
+  },
+  "cumulativeStats": {
+    "totalProjects": 1,
+    "totalSessions": 5,
+    "totalConceptsMastered": 2,
+    "totalConceptsInProgress": 6,
+    "longestStreak": 3,
+    "currentStreak": 3,
+    "firstSessionDate": "2026-03-08",
+    "lastSessionDate": "2026-03-14"
+  },
+  "overallBloomLevels": {
+    "html-css": 4,
+    "javascript-basics": 3,
+    "jsx": 3,
+    "react-components": 3,
+    "react-props": 3,
+    "react-state": 2,
+    "react-hooks": 1,
+    "event-handling": 2
+  },
+  "completedProjects": [],
+  "activeProjects": ["react-fundamentals"],
+  "mentoringSessions": [
+    {
+      "date": "2026-03-08",
+      "topic": "Learning path discussion",
+      "outcome": "Decided to start with React fundamentals, then add backend (Node.js)"
+    }
+  ]
+}

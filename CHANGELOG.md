@@ -2,6 +2,25 @@
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [1.3.0] - 2026-03-16
+
+### Added
+- `/mentor` skill — career and learning path guidance using the GROW model (Whitmore) and Kram's mentoring theory
+- `/pair` skill — research-backed pair programming with 3 modes: strong-style (Falco), ping-pong with TDD, navigator (Freudenberg)
+- `/debug-together` skill — scientific debugging using Zeller's TRAFFIC method, O'Dell's Debugging Mindset, wolf fence algorithm
+- Learner profile system (`learningWithBodhi/.bodhi-profile.json`) for cross-project personalization
+- CONTRIBUTING.md for open source contributors
+- New research references in README: Kram, Whitmore, Beck, Williams & Kessler, Falco, Zeller, O'Dell, Gauss
+
+### Changed
+- Learning methodology KB expanded with mentoring, pair programming, and debugging sections
+- Teaching personality KB expanded with debugging, mentoring, and pairing language guidance
+- `/learn` now creates and updates the learner profile
+- `/mentor` auto-invoked by `/evaluate` at major milestones
+- `/pair` auto-invoked by `/teach` during guided practice
+- `/debug-together` auto-invoked by `/practice` and `/teach` when code has bugs
+- Skill count: 14 → 17
+
 ## [1.2.0] - 2026-03-15
 
 ### Added

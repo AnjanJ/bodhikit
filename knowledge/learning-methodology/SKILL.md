@@ -298,3 +298,95 @@ Each pass revisits earlier concepts in a more sophisticated context.
 - Track dependency patterns — if a learner always asks for help on the same type of problem, redirect to independent practice
 - Build metacognitive awareness: the learner should know HOW they learn, not just WHAT they learn
 - The goal is to become unnecessary
+
+---
+
+## 11. Mentoring — GROW Model and Kram's Theory
+
+### GROW Model (Whitmore, 1988)
+
+A coaching conversation structure:
+- **Goal**: What does the learner want to achieve? Be specific.
+- **Reality**: Where are they now? Honest, non-judgmental assessment.
+- **Options**: What could they do? Brainstorm multiple pathways. The learner generates options, not the mentor.
+- **Will**: What will they commit to? When? How will they measure success?
+
+Aligns with self-determination theory (Deci & Ryan): autonomy, competence, and relatedness drive intrinsic motivation.
+
+### Kram's Mentoring Theory (1983)
+
+Two categories of mentor functions:
+- **Career Functions**: Coaching, challenging assignments, exposure
+- **Psychosocial Functions**: Acceptance, encouragement, counseling, role modeling
+
+An AI tutor can provide coaching, challenging assignments, acceptance, and encouragement. It cannot provide sponsorship, organizational visibility, or networking. Be transparent about these limitations.
+
+---
+
+## 12. Pair Programming for Learning
+
+### Strong-Style Pairing (Falco, 2014)
+
+"For an idea to go from your head into the computer, it must go through someone else's hands."
+- The person with the idea navigates (describes intent)
+- The other person drives (types code)
+- Forces explicit communication of thinking
+- Designed specifically for coaching junior developers
+
+### Driver/Navigator Model (Freudenberg)
+
+- **Driver**: Tactical — writes code, manages files
+- **Navigator**: Strategic — reviews, thinks ahead, maintains mental model
+- They form a "cognitive tag team" that reduces overload
+
+### Ping-Pong Pairing with TDD
+
+1. Person A writes a failing test
+2. Person B makes it pass
+3. Person B writes the next failing test
+4. Repeat
+
+Ensures both participants engage with specification, implementation, and refactoring.
+
+### Williams & Kessler Research (2000, 2002)
+
+- 90% of participants preferred pairing over solo work
+- Pairing increased software quality and decreased development time
+- Students showed higher retention and reduced course drop-outs
+- Collaborative nature facilitated knowledge transfer and deeper understanding
+
+---
+
+## 13. Scientific Debugging
+
+### Zeller's TRAFFIC Method (2005)
+
+1. **Track**: Document the problem precisely
+2. **Reproduce**: Create reliable reproduction steps
+3. **Automate**: Write an automated test that demonstrates the failure
+4. **Find Origins**: Trace backward through dependencies
+5. **Focus**: Narrow the search space (binary search / wolf fence)
+6. **Isolate**: Scientific method — hypothesize, predict, probe (not fix), evaluate
+7. **Correct**: Fix only after isolating the root cause
+
+### The Debugging Mindset (O'Dell, 2017)
+
+Applying Dweck's growth mindset to debugging:
+- **Entity theorists** (fixed mindset): bugs = personal failure → frustration → random changes
+- **Incremental theorists** (growth mindset): bugs = puzzles → systematic investigation → learning
+
+Key insight: the debugging mindset can be taught. Frame bugs as puzzles, praise the process.
+
+### Rubber Duck Debugging (Hunt & Thomas, 1999)
+
+Self-explanation activates language processing, forces externalization of assumptions, and bridges implicit and explicit knowledge. Connected to the Feynman Technique: if you cannot explain the code simply, you do not understand it.
+
+### Wolf Fence Algorithm (Gauss, 1982)
+
+Binary search for bug location: place a checkpoint at the midpoint, determine which half contains the bug, repeat. O(log n) efficiency. Modern application: `git bisect`.
+
+### Expert vs Novice Debugging (Ahmadzadeh et al., 2005)
+
+Novice anti-patterns: tinkering (random changes), print spam without hypothesis, premature fixing, ignoring error messages, reading code without probing.
+
+Expert behavior: form hypotheses quickly, use systematic strategies, read error messages carefully, probe before fixing.

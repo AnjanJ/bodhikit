@@ -45,7 +45,7 @@ That's it. All skills, agents, rules, and knowledge bases are immediately availa
 /bodhikit:progress           # Full progress dashboard
 ```
 
-## Skills (14)
+## Skills (17)
 
 | Skill | Description |
 |-------|-------------|
@@ -63,6 +63,9 @@ That's it. All skills, agents, rules, and knowledge bases are immediately availa
 | `/evaluate` | Comprehensive evaluation of your learning journey |
 | `/reflect` | End-of-session metacognitive reflection |
 | `/status` | Quick 3-line check-in: project, module, streak, concepts due |
+| `/mentor` | Career and learning path guidance using the GROW model |
+| `/pair` | Pair programming: strong-style, ping-pong, or navigator mode |
+| `/debug-together` | Scientific debugging: reproduce, hypothesize, probe, isolate, fix |
 
 ## Agents (3)
 
@@ -170,6 +173,20 @@ BodhiKit integrates these research-backed methodologies. We stand on the shoulde
 
 - **Metacognition** — Teach learners HOW to learn, not just WHAT to learn
   - John Flavell, who coined the term in *[Metacognition and Cognitive Monitoring](https://psycnet.apa.org/record/1980-09388-001)* (1979)
+
+- **Mentoring Theory** — Career and psychosocial functions of effective mentoring
+  - Kathy Kram, *[Mentoring at Work](https://www.researchgate.net/publication/232463073_Mentoring_at_Work_Developmental_Relationships_in_Organisational_Life)* (1985)
+  - Sir John Whitmore, *[Coaching for Performance (GROW Model)](https://en.wikipedia.org/wiki/GROW_model)* (1988)
+
+- **Pair Programming** — Collaborative coding that improves learning, quality, and retention
+  - Kent Beck, *[Extreme Programming Explained](https://en.wikipedia.org/wiki/Extreme_programming)* (1999)
+  - Laurie Williams and Robert Kessler, *[Pair Programming Illuminated](https://collaboration.csc.ncsu.edu/laurie/Papers/ESE%20-%20Single%20Column.pdf)* (2002)
+  - Llewellyn Falco, *[Strong-Style Pairing](http://llewellynfalco.blogspot.com/2014/06/llewellyns-strong-style-pairing.html)* (2014)
+
+- **Scientific Debugging** — Systematic, hypothesis-driven approach to finding and fixing bugs
+  - Andreas Zeller, *[Why Programs Fail](https://en.wikipedia.org/wiki/Why_Programs_Fail)* (2005)
+  - Devon H. O'Dell, *[The Debugging Mindset](https://queue.acm.org/detail.cfm?id=3068754/)* (2017, ACM Queue)
+  - Edward J. Gauss, *[Wolf Fence Algorithm](https://dl.acm.org/doi/abs/10.1145/358690.358695)* (1982, ACM)
 
 ## The Philosophy
 

@@ -183,7 +183,21 @@ Populate `initialBloomLevel` from the Phase 2 assessment results.
 }
 ```
 
-5. Suggest git initialization: "I recommend backing this up with git. Would you like me to initialize a git repository and suggest creating a remote on GitHub/GitLab/Codeberg?"
+5. Create or update the **learner profile** at `learningWithBodhi/.bodhi-profile.json`:
+   - If it does not exist (first learning project), create it with:
+     - `learner.careerGoal`: from Phase 1 questions
+     - `learner.whyLearning`: from Phase 1 questions
+     - `learner.priorExperience`: from Phase 2 assessment
+     - `preferences.learningStyle`: inferred from Phase 1 answers
+     - `cumulativeStats`: initialized
+     - `overallBloomLevels`: from Phase 2 assessment
+     - `activeProjects`: add this project name
+   - If it already exists (subsequent projects), update:
+     - Add this project to `activeProjects`
+     - Update `overallBloomLevels` with new topic levels
+     - Increment `cumulativeStats.totalProjects`
+
+6. Suggest git initialization: "I recommend backing this up with git. Would you like me to initialize a git repository and suggest creating a remote on GitHub/GitLab/Codeberg?"
 
 ---
 
