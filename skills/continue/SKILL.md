@@ -14,6 +14,8 @@ This skill orchestrates a complete learning session. It auto-invokes other Bodhi
 - `/teach` — when the learner continues with the next module
 - `/reflect` — when the learner indicates they are done
 
+**CONTEXT EFFICIENCY:** When auto-invoking sub-skills, the `teaching-personality` knowledge base and `learning-project` rule are already loaded in this session. Sub-skills should NOT reload them. Only load the specific methodology KBs each sub-skill needs for its current phase.
+
 ---
 
 ## Phase 1: Discovery
