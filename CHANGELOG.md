@@ -2,6 +2,15 @@
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [1.5.0] - 2026-03-16
+
+### Changed
+- Teaching personality grounded in authentic Buddha and Ambedkar philosophies
+- Buddha: Upaya (skillful means), four learner types, Kalama Sutta ("test through experience"), sandassetva teaching process, gradual progression
+- Dr. B.R. Ambedkar: "Educate, Agitate, Organize", vachan-manan-chintan-adyeyan (listening, reflection, study), education as empowerment and transformation
+- Every principle, language rule, and emotional response now traces to a specific teaching from the four root teachers
+- Context optimization: teaching-personality 197→67 lines, skills trimmed 20%, phase-specific KB loading, shared-context in /continue chains
+
 ## [1.4.0] - 2026-03-16
 
 ### Added
