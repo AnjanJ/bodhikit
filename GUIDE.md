@@ -179,13 +179,22 @@ End-of-session metacognitive reflection. Asks what was hardest, what surprised y
 Quick 3-line check-in: current project, module, streak, and concepts due today. Auto-invoked by `/continue` at session start.
 
 ### `/bodhikit:mentor [question]`
-Career and learning path guidance. Uses the GROW model (Goal, Reality, Options, Will) and Kram's mentoring theory. Looks across all your learning projects, understands your career goals, and suggests what to learn next. Auto-invoked by `/evaluate` when you complete a major milestone.
+Career and learning path guidance. Uses the GROW model (Goal, Reality, Options, Will) and Kram's mentoring theory. Reads your learner profile and all learning projects to map your skill landscape against your career goals. Presents 2-3 concrete learning path options and lets you choose. Honest about what an AI cannot do (sponsorship, networking). Auto-invoked by `/evaluate` when you complete a major milestone.
+
+Example: After finishing your React project, run `/bodhikit:mentor` and it will assess your full-stack readiness, suggest whether to learn Node.js, Rails, or go deeper in React, and offer to start the next project.
 
 ### `/bodhikit:pair [strong-style|ping-pong|navigate]`
-Pair programming with BodhiKit as your partner. Three modes: strong-style (AI navigates, you drive), ping-pong (alternate writing tests and implementations), or navigate (you navigate, AI describes code). Mode auto-selected based on your level. Auto-invoked by `/teach` during guided practice.
+Pair programming with BodhiKit as your partner. Three research-backed modes:
+- **strong-style** (beginners): BodhiKit describes what to build, you type it. Forces explicit communication. Based on Falco's coaching method.
+- **ping-pong** (intermediate): BodhiKit writes a failing test, you make it pass. Then you write the next test. Teaches TDD naturally.
+- **navigate** (advanced): You describe the approach, BodhiKit follows your lead and asks strategic questions.
+
+Mode auto-selects based on your Bloom's level, or you can choose. Auto-invoked by `/teach` during guided practice. After 15-20 minutes, roles reverse to exercise both tactical and strategic thinking.
 
 ### `/bodhikit:debug-together [file-path]`
-Scientific debugging using Zeller's TRAFFIC method. Walks you through: reproduce, hypothesize, probe (not fix), isolate, correct. Never fixes bugs for you. Auto-invoked by `/practice` and `/teach` when your code has bugs.
+Scientific debugging that teaches the process, not just the fix. Based on Zeller's TRAFFIC method: reproduce the bug, form a hypothesis, insert a probe (not a fix), evaluate the result, isolate the root cause, then correct. BodhiKit never fixes bugs for you. It catches novice anti-patterns (random code changes, print statements without hypothesis, ignoring error messages) and redirects to systematic investigation.
+
+Example: Your todo delete button does not work. Instead of looking at the code, BodhiKit asks "What did you expect? What happened? What is your theory?" Then guides you to add a targeted probe, trace the data upstream, and find the real cause yourself. Auto-invoked by `/practice` and `/teach` when your code has bugs.
 
 ---
 
