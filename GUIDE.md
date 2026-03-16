@@ -9,6 +9,7 @@
 - [How Teaching Works](#how-teaching-works)
 - [End-of-Session Reflection](#end-of-session-reflection)
 - [Skills Reference](#skills-reference)
+- [How Agents Work Behind the Scenes](#how-agents-work-behind-the-scenes)
 - [Using BodhiKit with Books and Courses](#using-bodhikit-with-books-and-courses)
 - [Learner Profile](#learner-profile)
 - [Understanding Your Progress](#understanding-your-progress)
@@ -207,6 +208,36 @@ BodhiKit maintains a cross-project learner profile at `learningWithBodhi/.bodhi-
 - Learning style preferences discovered over time
 
 The profile is created when you start your first learning project and updated as you progress. It allows BodhiKit to personalize guidance across different projects and power the `/mentor` skill.
+
+---
+
+## How Agents Work Behind the Scenes
+
+BodhiKit uses three specialized AI agents that handle complex tasks. You never invoke agents directly. Skills launch them automatically when needed.
+
+### Skill Assessor Agent
+
+**Used by:** `/learn`, `/assess`, `/evaluate`, `/plan` (regenerate mode)
+
+When BodhiKit needs to understand your skill level, it launches the skill-assessor agent. This agent runs in a separate context so it does not clutter your main conversation. It asks 8-12 adaptive questions, starting at Bloom's Level 3 and adjusting up or down based on your answers. It classifies your level per sub-topic with a confidence rating (HIGH/MEDIUM/LOW) and returns a structured assessment.
+
+Example: When you run `/bodhikit:learn react`, the skill-assessor takes over for Phase 2. It asks you about JSX, components, state, hooks. If you answer the components question easily, it escalates to a harder one. If you struggle with hooks, it de-escalates. After 8-10 questions, it returns: "JSX: Level 2, Components: Level 3, Props: Level 1, State: Level 0, Hooks: Level 0" with confidence ratings. This shapes your entire learning plan.
+
+### Code Reviewer Agent
+
+**Used by:** `/review`, `/practice` (review loop), `/teach` (after exercises)
+
+When BodhiKit reviews your code, it launches the code-reviewer agent. This is NOT a production code review. The agent analyzes what your code reveals about your understanding: what concepts you demonstrate mastery of, what misconceptions are visible, what patterns you are ready to learn next, and where your Zone of Proximal Development sits.
+
+Example: You complete a React exercise and the code works. The code-reviewer notices you used a `for` loop where `map` would be idiomatic, and that you mutated state directly instead of using spread syntax. Instead of saying "use map and spread," it returns Socratic questions: "What do you know about array methods like map?" and graduated hints if needed.
+
+### Resource Finder Agent
+
+**Used by:** `/resources` (find mode)
+
+When you need learning materials, the resource-finder agent searches the web for verified, community-recommended free resources. It prioritizes official documentation, interactive platforms (Exercism, freeCodeCamp), and structured courses over random blog posts. It verifies each link is live and returns resources with title, type, difficulty level, and estimated time.
+
+Example: You run `/bodhikit:resources find rust`. The agent searches for Rust learning materials, verifies links, and returns: The Rust Book (official docs), Rustlings (interactive exercises), Exercism Rust Track (practice problems), and a few curated tutorials, ranked by interactivity and community reputation.
 
 ---
 
