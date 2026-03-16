@@ -10,10 +10,12 @@
 - [End-of-Session Reflection](#end-of-session-reflection)
 - [Skills Reference](#skills-reference)
 - [Using BodhiKit with Books and Courses](#using-bodhikit-with-books-and-courses)
+- [Learner Profile](#learner-profile)
 - [Understanding Your Progress](#understanding-your-progress)
 - [How Spaced Repetition Works](#how-spaced-repetition-works)
 - [Example Project](#example-project)
 - [Tips for Effective Learning](#tips-for-effective-learning)
+- [Philosophy](#philosophy)
 
 ---
 

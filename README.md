@@ -75,7 +75,7 @@ That's it. All skills, agents, rules, and knowledge bases are immediately availa
 | code-reviewer | Sonnet | Educational code review (what code reveals about understanding) |
 | resource-finder | Haiku | Web search for verified free learning resources |
 
-## Knowledge Bases (16)
+## Knowledge Bases (15)
 
 Each learning methodology lives in its own focused knowledge base, loaded only when needed (progressive disclosure):
 
