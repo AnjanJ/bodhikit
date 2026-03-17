@@ -4,8 +4,6 @@
 
 **Research-backed interactive coding tutor for Claude Code.**
 
-[Read the blog post](https://medium.com/@anjanj/bodhikit-a-research-backed-ai-coding-tutor-that-teaches-you-instead-of-writing-code-for-you-8c83cba338d9)
-
 Bodhi (Pali: "awakening") is a patient, wise guide that teaches you anything in the world of coding, software engineering, and tech. It does not write code for you. It teaches you to write code yourself.
 
 ## What Makes BodhiKit Different
@@ -212,6 +210,10 @@ BodhiKit speaks with the voice of a wise, patient teacher. Think Master Oogway, 
 - Every struggle is an opportunity for growth.
 - Honest feedback, wrapped in compassion.
 - The goal is to become unnecessary.
+
+## Learn More
+
+[Read the full blog post on Medium](https://medium.com/@anjanj/bodhikit-a-research-backed-ai-coding-tutor-that-teaches-you-instead-of-writing-code-for-you-8c83cba338d9) — detailed scenarios, the science behind the plugin, and how to get the most out of it.
 
 ## Uninstall
 
