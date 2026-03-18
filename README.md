@@ -26,7 +26,27 @@ Bodhi (Pali: "awakening") is a patient, wise guide that teaches you anything in 
 
 Restart Claude Code after installing to load the plugin.
 
-Or test locally:
+**Important: Enable only where you need it.** BodhiKit loads 15 knowledge bases. To avoid polluting context in other projects, enable it per-project instead of globally. In your `learningWithBodhi/.claude/settings.json`:
+
+```json
+{
+  "enabledPlugins": {
+    "bodhikit@bodhikit": true
+  }
+}
+```
+
+Or disable it in projects where you do not need it by adding to `.claude/settings.local.json`:
+
+```json
+{
+  "enabledPlugins": {
+    "bodhikit@bodhikit": false
+  }
+}
+```
+
+Or test locally without installing:
 
 ```
 claude --plugin-dir ~/code/bodhikit
