@@ -118,7 +118,32 @@ for f in knowledge/*/SKILL.md; do
 done
 
 # ---------------------------------------------------------------------------
-# 9. README skill count sanity (best-effort)
+# 9. Chainable skills must handle --invoked-from=
+# ---------------------------------------------------------------------------
+chainable="teach practice reflect status quiz forget"
+for s in $chainable; do
+  f="skills/$s/SKILL.md"
+  if [ ! -f "$f" ]; then continue; fi
+  if ! grep -q 'invoked-from' "$f"; then
+    err "$f is in the chainable set but does not mention --invoked-from="
+  fi
+done
+
+# ---------------------------------------------------------------------------
+# 10. /continue must pass --invoked-from=continue to every chained sub-skill
+# ---------------------------------------------------------------------------
+if [ -f skills/continue/SKILL.md ]; then
+  for sub in status teach practice reflect; do
+    if grep -qE "Auto-invoke .\/${sub}\b" skills/continue/SKILL.md; then
+      if ! grep -qE "\/${sub}([[:space:]]|--)[^\`]*--invoked-from=continue" skills/continue/SKILL.md; then
+        err "skills/continue/SKILL.md auto-invokes /$sub but without --invoked-from=continue"
+      fi
+    fi
+  done
+fi
+
+# ---------------------------------------------------------------------------
+# 11. README skill count sanity (best-effort)
 # ---------------------------------------------------------------------------
 declared=$(grep -oE 'Skills \([0-9]+\)' README.md | head -1 | grep -oE '[0-9]+')
 actual=$(find skills -name SKILL.md | wc -l | tr -d ' ')

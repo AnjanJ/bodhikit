@@ -5,6 +5,8 @@ user-invocable: false
 
 # Spaced Repetition (Ebbinghaus, Leitner)
 
+See also: `state-schema` KB (`spaced-review.json` shape), `desirable-difficulties` KB (why spacing works), `metacognition` KB (calibrating self-rated confidence against actual retention).
+
 ## The Forgetting Curve
 
 Without review, memory decays exponentially:

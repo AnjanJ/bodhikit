@@ -86,7 +86,7 @@ Ask where they want to keep learning projects. Create a `learningWithBodhi` fold
    - `.bodhi/` — `state.json`, `plan.md`, `assessment.md`, `progress.md`, `spaced-review.json`, `resources.md`
    - `exercises/`, `projects/`, `notes/`
 
-3. Initialize `state.json`, `spaced-review.json`, and `.bodhi-profile.json` per the shapes defined in the `state-schema` KB. `initialBloomLevel` comes from Phase 2. For existing `.bodhi-profile.json`, add to `activeProjects`, update Bloom's levels, increment `totalProjects`.
+3. Initialize `state.json`, `spaced-review.json`, `assessment-history.json` (with the Phase 2 results as the first entry, `trigger: "learn-phase2"`), and `.bodhi-profile.json` per the shapes defined in the `state-schema` KB. `initialBloomLevel` comes from Phase 2. For existing `.bodhi-profile.json`, add to `activeProjects`, update Bloom's levels, increment `totalProjects`.
 
 6. Suggest git initialization and a remote repository.
 

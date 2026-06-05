@@ -16,9 +16,9 @@ This is NOT a quiz. This is a comprehensive evaluation of the learner's entire j
 
 If `$ARGUMENTS` is provided, use it as the project name. Otherwise, discover the active project.
 
-Read ALL `.bodhi/` files: `state.json` (timeline, sessions, streak), `plan.md`, `assessment.md`, `progress.md` (module-by-module), `spaced-review.json` (retention data), `resources.md`.
+Read ALL `.bodhi/` files: `state.json`, `plan.md`, `assessment.md`, `assessment-history.json` (the structured Bloom's-over-time data — primary source for trajectory analysis), `progress.md`, `spaced-review.json`, `resources.md`.
 
-Build a timeline: start date, sessions completed, modules covered, Bloom's level changes over time, retention distribution (Box 4-5 vs Box 1), exercises and projects completed.
+Build a timeline: start date, sessions completed, modules covered, **per-sub-topic Bloom's level changes over time from `assessment-history.json` entries** (initial vs intermediate vs current), retention distribution (Box 4-5 vs Box 1), exercises and projects completed.
 
 ---
 
@@ -63,6 +63,8 @@ Treat this as a milestone moment. Acknowledge the path walked with specific evid
 
 ## Update Tracking
 
-- Save evaluation to `.bodhi/assessment.md` with date and full results
+- Append a prose entry to `.bodhi/assessment.md` with date and full results
+- Append a structured entry to `.bodhi/assessment-history.json` (`trigger: "evaluate"`) per the `state-schema` KB
 - Update `.bodhi/progress.md` with Bloom's level changes
 - Update `.bodhi/state.json` `lastActivity` noting the evaluation
+- Update `learningWithBodhi/.bodhi-profile.json` per `state-schema` rules: bump `cumulativeStats.totalMilestonesReached`. If a topic now has 3+ entries in `assessment-history.json` at Bloom's <3, add to `patterns.persistentChallenges`; 3+ at Bloom's 4+ adds to `patterns.consistentStrengths`. If the project is complete, move from `activeProjects` to `completedProjects`.

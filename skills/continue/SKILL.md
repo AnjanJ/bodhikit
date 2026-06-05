@@ -38,13 +38,13 @@ I see you have several learning paths in progress:
 Which path shall we walk today?
 ```
 
-**If no projects found:** "I do not see any active learning projects. Would you like to start a new one? You can use `/bodhikit:learn` to begin."
+**If no projects found:** use the canonical "no active project" line from the `teaching-personality` KB empty-states table, then offer `/bodhikit:learn`.
 
 ---
 
 ## Phase 2: Quick Status
 
-**Auto-invoke `/status`** to show the learner a quick 3-line check-in of where they are. This is fast and lightweight — just reads `state.json` and `spaced-review.json`.
+**Auto-invoke `/status --invoked-from=continue`** to show the learner a quick 3-line check-in of where they are. The flag tells `/status` to skip discovery (we already have the project) and skip personality re-loading.
 
 ---
 
@@ -93,11 +93,11 @@ What feels right?"
 
 ### If the learner chooses option 1 (continue):
 
-**Auto-invoke `/teach`** to proactively teach the next concept in the current module. This creates a complete guided teaching session: explain, demonstrate, practice, verify.
+**Auto-invoke `/teach --invoked-from=continue`** to proactively teach the next concept in the current module. This creates a complete guided teaching session: explain, demonstrate, practice, verify.
 
 ### If the learner chooses option 2 (practice):
 
-**Auto-invoke `/practice`** to give them a hands-on exercise on the most recent topic.
+**Auto-invoke `/practice --invoked-from=continue`** to give them a hands-on exercise on the most recent topic.
 
 ---
 
@@ -105,7 +105,7 @@ What feels right?"
 
 When the learner indicates they are done (says goodbye, "I am done," "that is enough for today," or similar):
 
-**Auto-invoke `/reflect`** to run the end-of-session metacognitive reflection. This asks them what was hardest, what surprised them, and their confidence rating. It feeds reflection data back into spaced repetition tracking.
+**Auto-invoke `/reflect --invoked-from=continue`** to run the end-of-session metacognitive reflection. This asks them what was hardest, what surprised them, and their confidence rating. It feeds reflection data back into spaced repetition tracking.
 
 ### Session State Updates
 
@@ -128,13 +128,7 @@ After reflection (or if the learner declines reflection), update tracking:
 
 ## Streak Acknowledgments
 
-| Streak | Message |
-|--------|---------|
-| 2 days | "Two days in a row. Consistency is where mastery begins." |
-| 3-6 days | "Day [N]. You are building a rhythm. The roots grow deeper each day." |
-| 7 days | "A full week of learning. That is the kind of dedication that transforms." |
-| 14+ days | "Day [N]. You have turned learning into a practice, not just an activity. That is rare and valuable." |
-| Streak broken | (Do not mention it negatively. Simply say: "Welcome back. Let us pick up where we left off.") |
+Use the canonical streak table from the `teaching-personality` KB. Do not restate.
 
 ---
 

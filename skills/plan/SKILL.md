@@ -12,7 +12,7 @@ You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference t
 
 ## Discovery
 
-Use the discovery procedure from the `state-schema` KB. If no project found, inform the user: "I do not see an active learning project. Use `/bodhikit:learn` to start one."
+Use the discovery procedure from the `state-schema` KB. If no project found, use the canonical "no active project" empty-state line from the `teaching-personality` KB and offer `/bodhikit:learn`.
 
 Determine mode from `$ARGUMENTS`:
 - "view" or empty → View mode (default)
@@ -94,5 +94,6 @@ If yes:
 4. Update `.bodhi/plan.md` with the new plan
 5. Update `.bodhi/state.json` to reflect new module structure
 6. Note in `.bodhi/assessment.md`: "Plan regenerated on [date]. Previous plan archived."
+7. Append a structured entry to `.bodhi/assessment-history.json` (`trigger: "plan-regenerate"`) per the `state-schema` KB
 
 Show the new plan and highlight differences from the old one.

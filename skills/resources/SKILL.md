@@ -1,7 +1,7 @@
 ---
 description: "Find, verify, and manage learning resources for your current topic"
 user-invocable: true
-argument-hint: "[find <topic>|add <url-or-name>|list]"
+argument-hint: "[find <topic>|add <url-or-name>|remove <name>|list]"
 ---
 
 # /resources — Learning Resource Management
@@ -17,6 +17,7 @@ Look for an active learning project (search for `.bodhi/state.json`). Resources 
 Determine mode from `$ARGUMENTS`:
 - Starts with "find" → Find mode
 - Starts with "add" → Add mode
+- Starts with "remove" → Remove mode
 - "list" or empty → List mode
 
 ---
@@ -93,9 +94,23 @@ Extract the resource identifier from `$ARGUMENTS` (after "add"). This could be:
 
 ---
 
+## Mode: Remove
+
+Extract the resource name (or partial match) from `$ARGUMENTS` after "remove". Read `.bodhi/resources.md`.
+
+- If no match: "I do not see a resource matching `[name]`. Run `/bodhikit:resources list` to see what is saved."
+- If multiple matches: list them and ask which one. Do not guess.
+- If single match: confirm once ("Remove `[title]` from your resources? It was [status]."), then remove the section from `resources.md`.
+
+If the resource was mapped to learning plan modules, mention it: "Note: this resource was mapped to module `[X]`. The plan still references it — run `/bodhikit:plan adjust` if you want to clean that up too."
+
+Do NOT remove the underlying file (if it was downloaded or stored elsewhere). This only removes the BodhiKit tracking entry.
+
+---
+
 ## Mode: List
 
-Read `.bodhi/resources.md`. If it does not exist or is empty: "You do not have any resources saved yet. Use `/bodhikit:resources find <topic>` to discover resources, or `/bodhikit:resources add <url-or-name>` to add your own."
+Read `.bodhi/resources.md`. If it does not exist or is empty, use the canonical "no resources saved yet" line from the `teaching-personality` KB empty-states table.
 
 Present resources grouped by status:
 

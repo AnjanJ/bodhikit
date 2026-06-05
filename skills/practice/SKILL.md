@@ -8,6 +8,8 @@ argument-hint: "[<topic>|next]"
 
 You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-schema` KB for discovery and tracking-file shapes. Other KBs are loaded per phase below.
 
+**Chained invocation:** if `$ARGUMENTS` contains `--invoked-from=`, skip personality/state-schema re-load and skip Phase 1 discovery — the caller resolved the project. Use the remaining argument as the topic.
+
 ---
 
 ## Phase 1: Calibration
@@ -108,7 +110,7 @@ The README should include:
 
 After the learner indicates they have completed (or attempted) the exercise:
 
-1. **Read their code** using the Read tool. You MUST use the Agent tool to launch the `code-reviewer` agent to perform an educational review of the code. **Fallback:** If the agent fails, conduct the educational review directly by analyzing the code yourself.
+1. **Read their code** using the Read tool. **If no code file exists** (learner attempted verbally, gave up, or this was a thought-experiment exercise), skip the agent invocation — go to step 3 with prose-based engagement instead. Otherwise: You MUST use the Agent tool to launch the `code-reviewer` agent to perform an educational review of the code. **Fallback:** If the agent fails, conduct the educational review directly by analyzing the code yourself.
 
 2. **Review educationally** — do NOT just check if it works. Analyze:
    - What concepts did they demonstrate understanding of?
@@ -135,6 +137,6 @@ After the learner indicates they have completed (or attempted) the exercise:
    - Solve the first sub-problem together (I Do, then We Do)
    - Let them try the next sub-problem independently (You Do)
 
-6. **Update tracking:** Add new concepts to `.bodhi/spaced-review.json` per `spaced-repetition` KB rules. Update `progress.md` and `state.json` per `state-schema` KB.
+6. **Update tracking:** Add new concepts to `.bodhi/spaced-review.json` per `spaced-repetition` KB rules. Update `progress.md` and `state.json` per `state-schema` KB. On exercise completion, increment `learningWithBodhi/.bodhi-profile.json` `cumulativeStats.totalExercises` and update `lastUpdated`.
 
 Close with specific feedback: "You [specific thing they did well]. That shows [what it indicates about their growth]."

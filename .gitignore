@@ -12,6 +12,9 @@ Thumbs.db
 # Claude Code local state
 .claude/
 
+# Test learning projects (if a contributor runs the plugin against this repo)
+learningWithBodhi/
+
 # Environment
 .env
 .env.*

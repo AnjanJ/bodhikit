@@ -8,6 +8,8 @@ argument-hint: ""
 
 You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `metacognition` KB for method. Reference the `state-schema` and `spaced-repetition` KBs for tracking updates.
 
+**Chained invocation:** if `$ARGUMENTS` contains `--invoked-from=`, skip personality re-load and skip discovery — the caller has the project resolved.
+
 Builds metacognitive awareness — learners who reflect retain 20-30% more and develop better self-assessment accuracy over time.
 
 Can be auto-invoked by `/continue` when the learner is done for the session.
@@ -38,8 +40,10 @@ Ask one at a time. Wait for response before continuing.
 **Q3 — Confidence:** "If you had to explain [main concept] to a colleague, how confident? 1 to 10."
 - 8-10: Strong. Note in tracking; move concept up one box per `spaced-repetition` KB.
 - 5-7: Partial. Schedule review soon (Box 1–2 depending on current box).
-- 1-4: Needs work. **Auto-invoke `/forget <concept>`** to demote and surface it tomorrow.
+- 1-4: Needs work. Collect the concept(s) for batch demotion at end of Phase 3.
 - Do NOT judge the rating. "Honesty is where growth starts."
+
+If multiple concepts came up in the session, ask Q3 per concept (or batch: "Rate confidence on each of: A, B, C").
 
 **Q4 — Strategy (optional, skip if session was short):** "Anything you would do differently next time?"
 
@@ -51,22 +55,25 @@ Based on reflection, adjust tracking:
 
 All box transitions follow the `spaced-repetition` KB update rules.
 
+Collect concepts flagged for demotion across Q1 and Q3; auto-invoke `/forget --invoked-from=reflect "<concept1>, <concept2>, ..."` once with the full list rather than per concept.
+
 | Signal | Action |
 |---|---|
-| Hard concept identified | Auto-invoke `/forget <concept>`. Note in `state.json` for revisiting. |
-| Low confidence (1-4) | Auto-invoke `/forget <concept>`. Suggest different learning approach next session. |
-| High confidence (8-10) | Move concept up one box. Acknowledge alignment with observed performance. |
-| Surprisingly easy | Note in progress — may skip ahead or go deeper on this topic. |
+| Hard concept identified (Q1) | Add to demote list. Note in `state.json` for revisiting. |
+| Low confidence 1-4 (Q3) | Add to demote list. Suggest different learning approach next session. |
+| High confidence 8-10 (Q3) | Move concept up one box. Acknowledge alignment with observed performance. |
+| Surprisingly easy (Q2) | Note in progress — may skip ahead or go deeper on this topic. |
 
 ---
 
 ## Phase 4: Close the Session
 
-Update tracking files:
+Update tracking files (shapes per `state-schema` KB):
 
 1. **`state.json`:** Update lastSessionAt, increment totalSessions, append to sessionDates, update currentStreak, update lastSessionSummary with reflection notes, update lastActivity.
 2. **`spaced-review.json`:** Apply box movements from confidence ratings, update lastReviewCheck.
 3. **`progress.md`:** Note any Bloom's level adjustments.
+4. **`learningWithBodhi/.bodhi-profile.json`:** Increment `cumulativeStats.totalSessions` (once per session per project — guard against double-count if `/reflect` was invoked twice in one session via the day already being in `sessionDates`). Update `lastUpdated`.
 
 Close with warmth and specific encouragement. Use streak acknowledgment if appropriate.
 

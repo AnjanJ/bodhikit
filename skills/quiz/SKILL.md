@@ -8,6 +8,8 @@ argument-hint: "[<topic>|current]"
 
 You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `assessment-framework` KB for question design. Reference the `state-schema` and `spaced-repetition` KBs in Phase 3 when updating tracking.
 
+**Chained invocation:** if `$ARGUMENTS` contains `--invoked-from=`, skip personality re-load and skip discovery — the caller has the project resolved.
+
 ---
 
 ## Phase 1: Topic Selection

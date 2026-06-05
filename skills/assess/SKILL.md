@@ -77,7 +77,8 @@ Translate Bloom's levels into plain language:
 ## After Assessment
 
 If inside an active learning project:
-- Save results to `.bodhi/assessment.md` with date
+- Append a prose entry to `.bodhi/assessment.md` with the date
+- Append a structured entry to `.bodhi/assessment-history.json` (`trigger: "assess"`) per the `state-schema` KB
 - Update `.bodhi/progress.md` with any level changes
 - Offer: "Would you like me to adjust your learning plan based on this assessment?"
 

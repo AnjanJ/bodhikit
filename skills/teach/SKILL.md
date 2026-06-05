@@ -8,6 +8,8 @@ argument-hint: "[<topic>|next]"
 
 You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-schema` KB for all tracking-file shapes. Other KBs are loaded per phase below.
 
+**Chained invocation:** if `$ARGUMENTS` contains `--invoked-from=continue` (or any `--invoked-from=` value), skip the personality and state-schema re-load — the caller has them in context. Skip Phase 1 discovery; the caller passes the resolved topic as the remaining argument.
+
 This skill is the heart of BodhiKit — walking the learner through a concept step by step, checking understanding along the way.
 
 Can be auto-invoked by `/continue` when the learner proceeds with the next module.
@@ -88,10 +90,10 @@ Graduated hints: (1) Direction → (2) Approach → (3) Near-solution. Never Hin
 
 ### When They Complete It
 
-1. Read their code
-2. You MUST use the Agent tool to launch the `code-reviewer` agent for educational review. **Fallback:** If the agent fails or hits its turn limit, conduct the educational review directly by reading the code and applying the Socratic-questioning framework yourself.
-3. Working code: acknowledge, then ask a deepening question
-4. Not working: guide them to find the issue (Socratic method)
+1. Look for code in `exercises/<current-module>/` and any file they named while working. If no code file was produced (the exercise was a thought experiment, a discussion, or they did not get to typing), **skip step 2** — there is nothing to review. Go straight to step 3 with prose-based acknowledgment.
+2. If code exists, Read it. You MUST use the Agent tool to launch the `code-reviewer` agent for educational review. **Fallback:** If the agent fails or hits its turn limit, conduct the educational review directly by reading the code and applying the Socratic-questioning framework yourself.
+3. Working code (or strong verbal answer): acknowledge, then ask a deepening question.
+4. Not working: guide them to find the issue (Socratic method).
 
 ---
 
@@ -105,7 +107,7 @@ Ask 2-3 questions mixing Bloom's levels: Level 2 (explain in own words), Level 3
 
 Apply update rules from the `spaced-repetition` KB. Demonstrated understanding → move up one box from current. Struggled but got there → Box 1.
 
-Update `progress.md` and `state.json` per the `state-schema` KB.
+Update `progress.md` and `state.json` per the `state-schema` KB. If the concept reaches Bloom's Level 3+ as a result of this session, increment `learningWithBodhi/.bodhi-profile.json` `cumulativeStats.totalConceptsLearned` (once per concept; check `progress.md` history to avoid double-counting).
 
 ### Transition
 

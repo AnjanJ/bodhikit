@@ -5,19 +5,33 @@ All notable changes to BodhiKit will be documented in this file.
 ## [1.6.0] - 2026-06-05
 
 ### Added
-- `/forget` skill — learner-initiated demotion of a concept back to Box 1; auto-invoked by `/reflect` when self-rated confidence is 1–4
+- `/forget` skill — learner-initiated demotion of one or more concepts back to Box 1; comma-separated lists supported; auto-invoked by `/reflect` (batched once per session) when self-rated confidence is 1–4
 - `knowledge/state-schema/` KB — canonical shape for `state.json`, `spaced-review.json`, `progress.md`, `.bodhi-profile.json`, plus the project discovery procedure (single source for all skills)
-- `~/.bodhikit/config.json` optional discovery config (`searchPaths` array). Defaults: `$PWD` (with parent walk) and `~/learningWithBodhi`
-- `CLAUDE.md` at repo root — author/dev notes (not loaded by end-user installs; Claude Code only ingests `skills/`, `agents/`, `knowledge/`, `rules/`, `.claude-plugin/`)
-- `dev/check.sh` — authoring-contract lint: version drift, frontmatter, agent fallback presence, KB references, voice duplication, README skill count
+- `~/.bodhikit/config.json` optional global discovery config (`searchPaths` array). Defaults: `$PWD` (with parent walk) and `~/learningWithBodhi`
+- Per-project `<repo>/.bodhikit/config.json` override with `projectRoot` — for users who keep `.bodhi/` somewhere other than `learningWithBodhi/` in a specific repo
+- One-shot legacy-path migration via `/bodhikit:status migrate` — detects pre-1.6.0 `~/code/learningWithBodhi` or `~/projects/learningWithBodhi` and writes them into `~/.bodhikit/config.json` so discovery keeps finding them
+- `.bodhi/assessment-history.json` — structured Bloom's-over-time data appended by `/learn` Phase 2, `/assess`, `/evaluate`, and `/plan regenerate`. `/evaluate` reads it for trajectory analysis. `assessment.md` remains the prose journal
+- `--invoked-from=<caller>` convention for sub-skill chaining. Caller skills (currently `/continue`) pass the flag; chainable skills (`/teach`, `/practice`, `/reflect`, `/status`, `/quiz`, `/forget`) check for it and skip personality/state-schema reload and discovery when set
+- Migration discipline section in `state-schema` KB — inline read-time migration pattern for forward-compatible schema changes
+- Streak acknowledgment table and empty-state language table moved into `teaching-personality` KB (single source for all skills that open sessions or hit empty states)
+- Profile feedback loops — `/reflect`, `/practice`, `/teach`, `/evaluate` now update `learningWithBodhi/.bodhi-profile.json` `cumulativeStats` and `patterns` (persistent challenges, consistent strengths)
+- New profile fields: `cumulativeStats.totalConceptsLearned`, `cumulativeStats.totalMilestonesReached`, `patterns.persistentChallenges`, `patterns.consistentStrengths`
+- `/resources remove <name>` mode
+- `dev/install-hooks.sh` — installs a pre-commit hook that runs `dev/check.sh`
+- `CLAUDE.md` at repo root — author/dev notes (not loaded by end-user installs)
+- `dev/check.sh` — authoring-contract lint (version drift, frontmatter, agent fallback presence, KB references, voice duplication, chain-flag presence, README skill count)
 
 ### Changed
 - Leitner box→interval mapping and update rules consolidated into the `spaced-repetition` KB. `/continue`, `/teach`, `/explain`, `/quiz`, `/reflect`, `/practice`, `/debug-together`, `/evaluate`, `/progress` no longer restate intervals
 - Tracking file shapes consolidated into `state-schema` KB. Skills now reference it instead of restating field lists
-- Project discovery consolidated into `state-schema` KB. Removed hardcoded `~/code/...` and `~/projects/...` paths from `/status`, `/continue`, and other skills
+- Project discovery consolidated into `state-schema` KB. Removed hardcoded `~/code/...` and `~/projects/...` paths
 - Personality voice rules consolidated into `teaching-personality` KB. Skills, agents, and the path-scoped rule reference it with one line instead of restating DO/NEVER lists
+- `/teach` and `/practice` now skip the `code-reviewer` agent invocation when no code file exists for the exercise (saves tokens on prose-only or thought-experiment exercises)
+- KBs cross-link (`see also` lines) so the KB graph is navigable in both directions
 - `marketplace.json` `metadata.description` corrected (was advertising "11 skills, 3 agents, 3 KBs"; now matches the actual 18/3/16 totals)
 - Version bumped in both `plugin.json` and `marketplace.json`; README now displays a version badge
+- `docs/example-project/README.md` updated for the new file list and discovery layers
+- `.gitignore` adds `learningWithBodhi/` (defensive — prevents accidental commits when contributors test the plugin against this repo)
 
 ### Fixed
 - Drift between `marketplace.json` `metadata.description` and `plugins[0].description`

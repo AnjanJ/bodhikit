@@ -4,6 +4,17 @@ This is a Claude Code plugin. No build, no runtime. Edits are markdown + JSON. E
 
 Claude Code only loads `skills/`, `agents/`, `knowledge/`, `rules/`, and the `.claude-plugin/` manifests from an installed plugin. Root-level files (this CLAUDE.md, README, CHANGELOG, `dev/`) are inert at install time. Safe to commit anything here; nothing pollutes end-user context unless it sits in one of the loaded directories.
 
+## Sub-skill chaining (context efficiency)
+
+When one skill auto-invokes another, it MUST pass `--invoked-from=<caller>` in the arguments. Example: `/continue` invokes `/teach` as `/bodhikit:teach --invoked-from=continue <topic>`.
+
+Chainable skills MUST check `$ARGUMENTS` for `--invoked-from=` and, if present:
+- Skip re-loading the `teaching-personality` KB (the caller already loaded it).
+- Skip re-loading the `learning-project` rule (already active for the session).
+- Skip discovery (the caller already resolved the project).
+
+Currently chainable: `/teach`, `/practice`, `/reflect`, `/status`, `/quiz`, `/forget`. The caller passes any positional argument AFTER the flag.
+
 ## Authoring contract (must hold for every PR)
 
 - Every `skills/*/SKILL.md` and `agents/*.md` references `teaching-personality` KB for voice. Voice rules are NOT restated inline.
