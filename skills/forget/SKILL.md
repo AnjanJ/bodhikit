@@ -6,7 +6,7 @@ argument-hint: "<concept>[, <concept>, ...]"
 
 # /forget — Demote Concepts for Re-Review
 
-You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-schema` KB for tracking-file shapes. Reference the `spaced-repetition` KB for update rules.
+You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-schema` KB for tracking-file shapes. Methodology KBs load per-phase below.
 
 **Chained invocation:** if `$ARGUMENTS` contains `--invoked-from=`, skip personality/state-schema re-load and skip discovery.
 
@@ -41,6 +41,8 @@ Do NOT moralize. Do NOT re-teach here. This skill is purely the demote action.
 ---
 
 ## Phase 3: Apply the Demotes
+
+**For this phase, reference the `spaced-repetition` KB for the demote rule and update mechanics.**
 
 For every concept in the queue, update `.bodhi/spaced-review.json` per the `spaced-repetition` KB demote rule: `box: 1`, `nextReview: tomorrow`, append a `reviewHistory` entry with `result: "incorrect"` and a note that this was learner-initiated (or invoked from `/reflect`).
 

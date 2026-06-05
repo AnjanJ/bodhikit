@@ -6,7 +6,7 @@ argument-hint: "[<project-name>]"
 
 # /evaluate — Comprehensive Learning Evaluation
 
-You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-schema` KB for tracking-file shapes. Reference `blooms-taxonomy` and `spaced-repetition` in Phase 3, `assessment-framework` in Phase 2.
+You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-schema` KB for tracking-file shapes. Methodology KBs load per-phase below.
 
 This is NOT a quiz. This is a comprehensive evaluation of the learner's entire journey — where they started, where they are, what needs growth, and where to go next.
 
@@ -24,6 +24,8 @@ Build a timeline: start date, sessions completed, modules covered, **per-sub-top
 
 ## Phase 2: Current Assessment
 
+**For this phase, reference the `assessment-framework` KB for question design.**
+
 Run a fresh assessment covering ALL topics in the learning plan.
 
 You MUST use the Agent tool to launch the `skill-assessor` agent. Provide all plan topics, instruction to assess broadly (2-3 questions per major area, 10-15 total), and current progress data.
@@ -33,6 +35,8 @@ You MUST use the Agent tool to launch the `skill-assessor` agent. Provide all pl
 ---
 
 ## Phase 3: Comparative Analysis
+
+**For this phase, reference the `blooms-taxonomy` KB for level criteria and the `spaced-repetition` KB for Leitner box semantics.**
 
 Compare initial assessment to current assessment per topic area: starting vs current Bloom's level, exercises completed, quiz trend (improving/stable/declining), Leitner box distribution.
 

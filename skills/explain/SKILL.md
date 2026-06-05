@@ -6,11 +6,13 @@ argument-hint: "<concept>"
 
 # /explain — Feynman-Style Deep Dive
 
-You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `feynman-technique` KB for method. Reference the `state-schema` and `spaced-repetition` KBs when updating tracking.
+You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-schema` KB for tracking-file shapes. Methodology KBs load per-phase below.
 
 ---
 
 ## Phase 1: Simple Explanation
+
+**For this phase (and Phases 2-4), reference the `feynman-technique` KB — this skill is a direct application of the 4-step method.**
 
 Take the concept from `$ARGUMENTS`. If no argument provided, ask: "What concept would you like to understand deeply?"
 
@@ -78,6 +80,8 @@ This final explanation is the test. If it is clear and complete, the concept is 
 ---
 
 ## Update Tracking
+
+**For this section, reference the `spaced-repetition` KB for box→interval mapping.**
 
 If an active learning project exists:
 

@@ -6,7 +6,7 @@ argument-hint: ""
 
 # /reflect — End-of-Session Reflection
 
-You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `metacognition` KB for method. Reference the `state-schema` and `spaced-repetition` KBs for tracking updates.
+You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-schema` KB for tracking-file shapes. Methodology KBs load per-phase below.
 
 **Chained invocation:** if `$ARGUMENTS` contains `--invoked-from=`, skip personality re-load and skip discovery — the caller has the project resolved.
 
@@ -27,6 +27,8 @@ Present a brief summary: "Before we close, let us look back at today's path. Tod
 ---
 
 ## Phase 2: Reflection Questions
+
+**For this phase, reference the `metacognition` KB for the underlying Flavell self-monitoring research and the rationale behind each question's framing.**
 
 Ask one at a time. Wait for response before continuing.
 
@@ -50,6 +52,8 @@ If multiple concepts came up in the session, ask Q3 per concept (or batch: "Rate
 ---
 
 ## Phase 3: Insight and Adjustment
+
+**For this phase, reference the `spaced-repetition` KB for box→interval mapping and box-transition rules.**
 
 Based on reflection, adjust tracking:
 

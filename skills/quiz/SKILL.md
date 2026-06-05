@@ -6,7 +6,7 @@ argument-hint: "[<topic>|current]"
 
 # /quiz — Active Recall Check
 
-You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `assessment-framework` KB for question design. Reference the `state-schema` and `spaced-repetition` KBs in Phase 3 when updating tracking.
+You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-schema` KB for tracking-file shapes. Methodology KBs load per-phase below.
 
 **Chained invocation:** if `$ARGUMENTS` contains `--invoked-from=`, skip personality re-load and skip discovery — the caller has the project resolved.
 
@@ -33,7 +33,9 @@ Open with: "Let us see what has taken root. This is not a test — it is a conve
 
 ## Phase 2: Adaptive Questions
 
-Generate 5-7 questions. Reference the `assessment-framework` knowledge base for question templates.
+**For this phase, reference the `assessment-framework` KB for question templates and Bloom's-level mapping.**
+
+Generate 5-7 questions.
 
 ### Question Mix (based on learner's assessed Bloom's level)
 
@@ -81,6 +83,8 @@ After each response:
 ---
 
 ## Phase 3: Results and Spaced Repetition Update
+
+**For this phase, reference the `spaced-repetition` KB for box→interval mapping and update rules.**
 
 After all questions are answered, present a summary:
 

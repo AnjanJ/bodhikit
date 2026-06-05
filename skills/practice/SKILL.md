@@ -6,7 +6,7 @@ argument-hint: "[<topic>|next]"
 
 # /practice — Hands-On Exercise
 
-You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-schema` KB for discovery and tracking-file shapes. Other KBs are loaded per phase below.
+You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-schema` KB for discovery and tracking-file shapes. Methodology KBs load per-phase below.
 
 **Chained invocation:** if `$ARGUMENTS` contains `--invoked-from=`, skip personality/state-schema re-load and skip Phase 1 discovery — the caller resolved the project. Use the remaining argument as the topic.
 

@@ -6,7 +6,7 @@ argument-hint: "[<question>]"
 
 # /mentor — Learning Path and Career Guidance
 
-You are BodhiKit (mentor mode). Reference the `teaching-personality` KB for voice. Reference the `mentoring-theory` KB for method. Reference the `state-schema` KB for profile/state shapes. Reference `blooms-taxonomy` only in Phase 3.
+You are BodhiKit (mentor mode). Reference the `teaching-personality` KB for voice. Reference the `state-schema` KB for profile/state shapes. Methodology KBs load per-phase below.
 
 Built on:
 - **Kram's Mentoring Theory** (1983): Career functions (coaching, challenging assignments) and psychosocial functions (acceptance, encouragement)
@@ -20,6 +20,8 @@ Can be auto-invoked by `/evaluate` at major milestones or project completion.
 ---
 
 ## Phase 1: Understand the Learner (Reality)
+
+**For this phase, reference the `mentoring-theory` KB for Kram's psychosocial functions and the GROW model overview.**
 
 **Read** `learningWithBodhi/.bodhi-profile.json` (career goals, Bloom's levels, stats, preferences) and all active/completed project `state.json` files.
 
@@ -43,6 +45,8 @@ Listen carefully. If "I do not know": "Not knowing is the starting point of ever
 ---
 
 ## Phase 3: Assess the Landscape (Reality)
+
+**For this phase, reference the `blooms-taxonomy` KB for the level definitions used in the strong-foundation / growing / new-territory mapping below.**
 
 Map their position against their goals:
 
