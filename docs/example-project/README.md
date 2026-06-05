@@ -4,19 +4,31 @@ This is a sample BodhiKit learning project showing what the `.bodhi/` tracking f
 
 In a real project, these files are created and updated automatically by BodhiKit skills. You never need to edit them manually.
 
+The layout below reflects the v2 schema introduced in 1.7.0 (live + archive + summary for narrative surfaces, sectional plan, slim state). Pre-1.7.0 projects are converted by `/bodhikit:housekeep migrate`.
+
 ## Files
+
+### Live surfaces (loaded by routine skills)
 
 | File | Purpose |
 |------|---------|
-| `.bodhi/state.json` | Current position, session history, streak |
-| `.bodhi/plan.md` | Personalized learning plan |
-| `.bodhi/progress.md` | Per-module progress with Bloom's levels |
-| `.bodhi/spaced-review.json` | Leitner box system for concept retention |
-| `.bodhi/assessment.md` | Human-readable assessment journal |
-| `.bodhi/assessment-history.json` | Structured assessment data (Bloom's-over-time for `/evaluate`) |
-| `.bodhi/resources.md` | Curated learning resources |
+| `.bodhi/state.json` | Slim — current position, session counts, streak. **No long narrative.** |
+| `.bodhi/progress.md` | Live document: latest session entry + "Summary of earlier sessions" block with pointers. |
+| `.bodhi/plan/README.md` | Arc overview, phase titles, current-phase pointer. |
+| `.bodhi/plan/phase-{N}.md` | Per-phase detailed plan. Routine skills load only the current phase. |
+| `.bodhi/assessments/latest.md` | Most recent assessment + summary of earlier assessments with pointers. |
+| `.bodhi/spaced-review.json` | Leitner box system for concept retention. |
+| `.bodhi/assessment-history.json` | Structured Bloom's-over-time data for `/evaluate` trajectory analysis. |
+| `.bodhi/resources.md` | Curated learning resources. |
 
-The canonical shape of every file lives in `knowledge/state-schema/SKILL.md`.
+### Archived surfaces (loaded only when justified)
+
+| Path | Purpose |
+|------|---------|
+| `.bodhi/progress/archive/session-<YYYY-MM-DD>.md` | Full text of each archived session. Reached via pointers in `progress.md`'s summary block. |
+| `.bodhi/assessments/archive/<name>.md` | Full text of each archived assessment. Reached via pointers in `assessments/latest.md`. |
+
+The canonical shape of every file lives in `knowledge/state-schema/SKILL.md`. The universal housekeeping protocol that rotates live entries to archive lives in the same KB. Schema versioning and one-shot migration live in `knowledge/state-migration/SKILL.md`.
 
 ## Discovery
 

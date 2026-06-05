@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "date": "2026-03-08",
+      "trigger": "learn-phase2",
+      "topic": "React",
+      "subTopics": [
+        { "name": "html-css", "bloomLevel": 4, "confidence": "high", "evidence": "Can debug layout issues, understands box model" },
+        { "name": "javascript-basics", "bloomLevel": 3, "confidence": "high", "evidence": "Can write functions, use arrays/objects, handle events" },
+        { "name": "jsx", "bloomLevel": 0, "confidence": "high", "evidence": "No prior exposure" },
+        { "name": "components", "bloomLevel": 0, "confidence": "high", "evidence": "No prior exposure" },
+        { "name": "props", "bloomLevel": 0, "confidence": "high", "evidence": "No prior exposure" },
+        { "name": "state", "bloomLevel": 0, "confidence": "high", "evidence": "No prior exposure" },
+        { "name": "hooks", "bloomLevel": 0, "confidence": "high", "evidence": "No prior exposure" },
+        { "name": "event-handling", "bloomLevel": 1, "confidence": "medium", "evidence": "Knows vanilla JS events, not React patterns" },
+        { "name": "conditional-rendering", "bloomLevel": 0, "confidence": "high", "evidence": "No prior exposure" }
+      ],
+      "overallNote": "Strong HTML/CSS/JS foundation; React is new territory. Recommended start: Module 1.1 JSX Basics."
+    }
+  ]
+}
