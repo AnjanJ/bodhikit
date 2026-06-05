@@ -23,7 +23,7 @@ Determine mode from `$ARGUMENTS`:
 
 ## Mode: View (Default)
 
-Read `.bodhi/plan.md` and `.bodhi/progress.md`.
+Read `.bodhi/plan/README.md` AND every `.bodhi/plan/phase-*.md` file (this skill's job is to show the full arc). Also read `.bodhi/progress.md` for current-state context.
 
 Present a clear summary:
 

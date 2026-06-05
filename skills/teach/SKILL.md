@@ -18,7 +18,7 @@ Can be auto-invoked by `/continue` when the learner proceeds with the next modul
 
 ## Phase 1: Identify What to Teach
 
-- **Auto-invoked by `/continue`:** Current module known from `state.json`. Read `.bodhi/plan.md` for details.
+- **Auto-invoked by `/continue`:** Current module known from `state.json`. Read `.bodhi/plan/phase-{currentPhase}.md` for module details — NOT other phase files.
 - **`$ARGUMENTS` is "next" or empty:** Find active project via `.bodhi/state.json`, locate next untaught concept in current module (or advance to next module).
 - **`$ARGUMENTS` is a specific topic:** Teach that topic regardless of plan order. Still read project context to calibrate depth.
 

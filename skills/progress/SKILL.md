@@ -22,8 +22,10 @@ Use the discovery procedure from the `state-schema` KB.
 
 Read these files:
 - `.bodhi/state.json` — overview data
-- `.bodhi/progress.md` — module-level progress
+- `.bodhi/progress.md` — the live entry plus the "Summary of earlier sessions" block (do NOT follow archive pointers into `progress/archive/` by default — the summary block is the per-session digest)
 - `.bodhi/spaced-review.json` — retention data
+
+**Reach into the archive only when justified.** If the learner asks for a long-view trajectory ("how have I progressed this year?", "what was happening in Module 1?"), follow the relevant pointers in the summary block and read those specific archive files. Announce which archive files you load.
 
 ### If showing ALL projects:
 

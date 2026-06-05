@@ -16,7 +16,7 @@ You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference t
 
 Take the concept from `$ARGUMENTS`. If no argument provided, ask: "What concept would you like to understand deeply?"
 
-**Check for active learning project context:** Look for `.bodhi/state.json`. If found, read `.bodhi/progress.md` to understand the learner's current Bloom's level for related concepts. Calibrate the explanation accordingly.
+**Check for active learning project context:** Look for `.bodhi/state.json`. If found, read `.bodhi/progress.md` (the live session entry plus the "Summary of earlier sessions" block — do NOT follow archive pointers) to understand the learner's current Bloom's level for related concepts. Calibrate the explanation accordingly.
 
 Explain the concept following these rules:
 

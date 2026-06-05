@@ -23,7 +23,11 @@ Can be auto-invoked by `/evaluate` at major milestones or project completion.
 
 **For this phase, reference the `mentoring-theory` KB for Kram's psychosocial functions and the GROW model overview.**
 
-**Read** `learningWithBodhi/.bodhi-profile.json` (career goals, Bloom's levels, stats, preferences) and all active/completed project `state.json` files.
+**Read** both profile files:
+- `learningWithBodhi/.bodhi-profile.json` — career goals, Bloom's levels, cumulative stats, preferences, patterns.
+- `learningWithBodhi/.bodhi-profile.projects.json` — `activeProjects` and `completedProjects` arrays. Cross-project context is core to mentoring.
+
+Then read `state.json` for each active project the learner has running.
 
 If `$ARGUMENTS` contains a specific question, address it directly. Otherwise: "Let us step back and look at the bigger picture. Where you have been, where you are, and where you might go next."
 

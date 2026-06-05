@@ -54,9 +54,13 @@ Which path shall we walk today?
 
 Read these files (and only these):
 
-1. `.bodhi/state.json` — current position, last session summary, streak
-2. `.bodhi/plan.md` — read ONLY the current phase section, not the entire plan
-3. `.bodhi/spaced-review.json` — filter to concepts where `nextReview <= today`
+1. `.bodhi/state.json` — current position, streak, lastActivity
+2. `.bodhi/plan/README.md` — arc overview, plus the current phase pointer
+3. `.bodhi/plan/phase-{currentPhase}.md` — detailed plan for the current phase only, NOT other phase files
+4. `.bodhi/progress.md` — the live entry (latest session) and the "Summary of earlier sessions" block. Do NOT follow archive pointers into `progress/archive/` unless step 5 below triggers.
+5. `.bodhi/spaced-review.json` — filter to concepts where `nextReview <= today`
+
+**Reach into the archive only when justified.** If `state.json.lastSessionAt` is more than 30 days ago, read the most recent 2-3 entries from `progress/archive/` to re-onboard the learner. Announce this in your turn output ("Loading the last few sessions for context since it has been a while").
 
 Calculate streak:
 - Check if `sessionDates` includes yesterday or today
@@ -69,7 +73,7 @@ Calculate streak:
 
 Present a warm, brief recap:
 
-"Welcome back. [Streak acknowledgment if > 1 day]. Last time, you were working on [module name]. [1-sentence summary from lastSessionSummary]."
+"Welcome back. [Streak acknowledgment if > 1 day]. Last time, you were working on [module name]. [1-sentence recap drawn from the latest session entry in `progress.md`]."
 
 ### If concepts are due for spaced review:
 

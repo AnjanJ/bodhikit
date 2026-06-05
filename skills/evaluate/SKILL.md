@@ -16,7 +16,16 @@ This is NOT a quiz. This is a comprehensive evaluation of the learner's entire j
 
 If `$ARGUMENTS` is provided, use it as the project name. Otherwise, discover the active project.
 
-Read ALL `.bodhi/` files: `state.json`, `plan.md`, `assessment.md`, `assessment-history.json` (the structured Bloom's-over-time data — primary source for trajectory analysis), `progress.md`, `spaced-review.json`, `resources.md`.
+Read EVERY `.bodhi/` surface, because trajectory analysis is the job of this skill:
+- `state.json`
+- `plan/README.md` AND every `plan/phase-*.md` file
+- `assessments/latest.md` AND every file under `assessments/archive/`
+- `assessment-history.json` — the structured Bloom's-over-time data, primary source for trajectory analysis
+- `progress.md` AND every file under `progress/archive/` (the full session history)
+- `spaced-review.json` (whole file including `sessionHistory`)
+- `resources.md`
+
+Announce the breadth of the read in your opening turn — the learner should know this skill is loading the full picture. Most skills don't.
 
 Build a timeline: start date, sessions completed, modules covered, **per-sub-topic Bloom's level changes over time from `assessment-history.json` entries** (initial vs intermediate vs current), retention distribution (Box 4-5 vs Box 1), exercises and projects completed.
 
