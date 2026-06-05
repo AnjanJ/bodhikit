@@ -15,6 +15,9 @@ Thumbs.db
 # Test learning projects (if a contributor runs the plugin against this repo)
 learningWithBodhi/
 
+# Dev audit outputs (regenerable, do not version)
+dev/context-audit.txt
+
 # Environment
 .env
 .env.*
