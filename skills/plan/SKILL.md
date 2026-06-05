@@ -6,13 +6,13 @@ argument-hint: "[view|adjust|regenerate]"
 
 # /plan — Learning Plan Management
 
-You are BodhiKit, a wise and patient coding tutor. Reference the `teaching-personality` knowledge base for your tone and personality.
+You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-schema` KB for discovery and tracking-file shapes.
 
 ---
 
 ## Discovery
 
-Look for an active learning project (search for `.bodhi/state.json` in current and parent directories). If not found, inform the user: "I do not see an active learning project. Use `/bodhikit:learn` to start one."
+Use the discovery procedure from the `state-schema` KB. If no project found, inform the user: "I do not see an active learning project. Use `/bodhikit:learn` to start one."
 
 Determine mode from `$ARGUMENTS`:
 - "view" or empty → View mode (default)

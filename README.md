@@ -1,6 +1,6 @@
 # BodhiKit
 
-[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow?logo=buymeacoffee)](https://buymeacoffee.com/anjanj) [![Sponsor](https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ea4aaa?logo=githubsponsors)](https://github.com/sponsors/AnjanJ)
+[![Version](https://img.shields.io/badge/version-1.6.0-blue)](./CHANGELOG.md) [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow?logo=buymeacoffee)](https://buymeacoffee.com/anjanj) [![Sponsor](https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ea4aaa?logo=githubsponsors)](https://github.com/sponsors/AnjanJ)
 
 **Research-backed interactive coding tutor for Claude Code.**
 
@@ -26,7 +26,7 @@ Bodhi (Pali: "awakening") is a patient, wise guide that teaches you anything in 
 
 Restart Claude Code after installing to load the plugin.
 
-**Important: Enable only where you need it.** BodhiKit loads 15 knowledge bases. To avoid polluting context in other projects, enable it per-project instead of globally. In your `learningWithBodhi/.claude/settings.json`:
+**Important: Enable only where you need it.** BodhiKit loads 16 knowledge bases. To avoid polluting context in other projects, enable it per-project instead of globally. In your `learningWithBodhi/.claude/settings.json`:
 
 ```json
 {
@@ -65,7 +65,7 @@ That's it. All skills, agents, rules, and knowledge bases are immediately availa
 /bodhikit:progress           # Full progress dashboard
 ```
 
-## Skills (17)
+## Skills (18)
 
 | Skill | Description |
 |-------|-------------|
@@ -86,6 +86,7 @@ That's it. All skills, agents, rules, and knowledge bases are immediately availa
 | `/mentor` | Career and learning path guidance using the GROW model |
 | `/pair` | Pair programming: strong-style, ping-pong, or navigator mode |
 | `/debug-together` | Scientific debugging: reproduce, hypothesize, probe, isolate, fix |
+| `/forget` | Demote a concept back to Box 1 — for honest self-assessment |
 
 ## Agents (3)
 
@@ -95,13 +96,13 @@ That's it. All skills, agents, rules, and knowledge bases are immediately availa
 | code-reviewer | Sonnet | Educational code review (what code reveals about understanding) |
 | resource-finder | Haiku | Web search for verified free learning resources |
 
-## Knowledge Bases (15)
+## Knowledge Bases (16)
 
 Each learning methodology lives in its own focused knowledge base, loaded only when needed (progressive disclosure):
 
 | Knowledge Base | Purpose |
 |---------------|---------|
-| spaced-repetition | Ebbinghaus forgetting curve, Leitner box system |
+| spaced-repetition | Ebbinghaus forgetting curve, Leitner box system, update rules |
 | blooms-taxonomy | 6 cognitive levels for programming, mastery criteria |
 | zone-of-proximal-development | Three zones, detection signals, scaffolding strategy |
 | feynman-technique | 4 steps for deep understanding, when to use |
@@ -116,6 +117,7 @@ Each learning methodology lives in its own focused knowledge base, loaded only w
 | scientific-debugging | TRAFFIC method, debugging mindset, wolf fence, expert vs novice |
 | assessment-framework | Question templates by Bloom's level, exercise design |
 | teaching-personality | Oogway/Yoda/Buddha/Ambedkar personality guide |
+| state-schema | Canonical shape of `.bodhi/` tracking files and discovery config |
 
 ## Path-Scoped Rules (1)
 

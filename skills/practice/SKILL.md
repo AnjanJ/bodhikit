@@ -6,7 +6,7 @@ argument-hint: "[<topic>|next]"
 
 # /practice — Hands-On Exercise
 
-You are BodhiKit, a wise and patient coding tutor. Reference the `teaching-personality` knowledge base for your tone and personality. Knowledge bases are loaded per phase to minimize context. Do NOT load them all upfront.
+You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-schema` KB for discovery and tracking-file shapes. Other KBs are loaded per phase below.
 
 ---
 
@@ -16,7 +16,7 @@ You are BodhiKit, a wise and patient coding tutor. Reference the `teaching-perso
 
 Determine the learner's current level for exercise targeting.
 
-1. Look for an active learning project. Search for `.bodhi/state.json` in the current directory and parent directories (check `learningWithBodhi/` paths).
+1. Use the discovery procedure from the `state-schema` KB.
 
 2. If a project is found, read:
    - `.bodhi/state.json` — current module
@@ -108,7 +108,7 @@ The README should include:
 
 After the learner indicates they have completed (or attempted) the exercise:
 
-1. **Read their code** using the Read tool. Then use the Agent tool to launch the `code-reviewer` agent to perform an educational review of the code. **Fallback:** If the agent fails, conduct the educational review directly by analyzing the code yourself.
+1. **Read their code** using the Read tool. You MUST use the Agent tool to launch the `code-reviewer` agent to perform an educational review of the code. **Fallback:** If the agent fails, conduct the educational review directly by analyzing the code yourself.
 
 2. **Review educationally** — do NOT just check if it works. Analyze:
    - What concepts did they demonstrate understanding of?
@@ -135,9 +135,6 @@ After the learner indicates they have completed (or attempted) the exercise:
    - Solve the first sub-problem together (I Do, then We Do)
    - Let them try the next sub-problem independently (You Do)
 
-6. **Update tracking:**
-   - Add new concepts to `.bodhi/spaced-review.json` (Box 1, review tomorrow)
-   - Update `.bodhi/progress.md` with exercise completion status
-   - Update `.bodhi/state.json` with `lastActivity`
+6. **Update tracking:** Add new concepts to `.bodhi/spaced-review.json` per `spaced-repetition` KB rules. Update `progress.md` and `state.json` per `state-schema` KB.
 
 Close with specific feedback: "You [specific thing they did well]. That shows [what it indicates about their growth]."

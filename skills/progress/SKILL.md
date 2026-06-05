@@ -6,24 +6,17 @@ argument-hint: "[<project-name>|all]"
 
 # /progress — Learning Progress Dashboard
 
-You are BodhiKit, a wise and patient coding tutor. Reference the `teaching-personality` knowledge base for your tone and personality.
+You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-schema` KB for discovery and tracking-file shapes.
 
 ---
 
 ## Discovery
 
-1. If `$ARGUMENTS` is "all":
-   - Scan all projects in `learningWithBodhi/`
-   - Read each `.bodhi/state.json`
-   - Present a summary table of all projects
+Use the discovery procedure from the `state-schema` KB.
 
-2. If `$ARGUMENTS` is a project name:
-   - Navigate to that project
-
-3. If no argument:
-   - Look for an active project in the current directory / parent directories
-   - If found, use it
-   - If multiple found, ask which one
+1. If `$ARGUMENTS` is "all": present a summary table of all projects found.
+2. If `$ARGUMENTS` is a project name: select that project.
+3. If no argument: use the active project. If multiple, ask which one.
 
 ## Dashboard Generation
 
@@ -78,7 +71,7 @@ Present the dashboard in this format:
 |--------|-------|----------|
 | Due today | [N] | [list] |
 | Due this week | [N] | [list] |
-| Strong retention (Box 4-5) | [N] | [list] |
+| Strong retention (Box 4-5, per `spaced-repetition` KB) | [N] | [list] |
 | Needs attention (Box 1) | [N] | [list] |
 
 ---

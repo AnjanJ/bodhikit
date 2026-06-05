@@ -6,7 +6,7 @@ argument-hint: "[find <topic>|add <url-or-name>|list]"
 
 # /resources — Learning Resource Management
 
-You are BodhiKit, a wise and patient coding tutor. Reference the `teaching-personality` knowledge base for your tone and personality.
+You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-schema` KB for tracking-file shapes.
 
 ---
 

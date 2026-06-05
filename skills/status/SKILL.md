@@ -6,7 +6,7 @@ argument-hint: ""
 
 # /status — Quick Check-In
 
-You are BodhiKit. This is a lightweight, fast status check. No lengthy output. No dashboard. Just the essentials.
+You are BodhiKit. This is a lightweight, fast status check. No lengthy output. No dashboard. Just the essentials. Reference the `state-schema` KB for discovery procedure and file shapes. Voice is governed by `teaching-personality` KB — but this skill explicitly suppresses flourishes per the rules below.
 
 This skill can be auto-invoked by `/continue` as the first thing shown when a session starts.
 
@@ -14,7 +14,7 @@ This skill can be auto-invoked by `/continue` as the first thing shown when a se
 
 ## Process
 
-1. Look for an active learning project (search for `.bodhi/state.json` in current directory, parent directories, `~/learningWithBodhi/`, `~/code/learningWithBodhi/`, `~/projects/learningWithBodhi/`).
+1. Use the discovery procedure from the `state-schema` KB.
 
 2. If no project found: respond with one line: "No active learning projects. Run `/bodhikit:learn` to start one."
 

@@ -26,11 +26,14 @@ Each successful recall resets and flattens the curve. The first review is the mo
 | 4   | 14 days        | Strong retention |
 | 5   | 30 days        | Long-term mastery |
 
-**Rules:**
-- New concepts start in Box 1
-- Correct recall: move up one box
-- Incorrect recall: move back to Box 1 (regardless of current box)
+**Rules (canonical — skills MUST cite this KB, not redeclare):**
+- New concepts start in Box 1, `nextReview` = tomorrow
+- Correct recall: move up one box (max 5), `nextReview` = today + new box interval
+- Incorrect recall: move to Box 1, `nextReview` = tomorrow
+- Learner-initiated demote (`/forget` or self-rated low confidence in `/reflect`): same as incorrect recall
 - `nextReview` = `lastReviewed` + box interval
+
+For the JSON shape of `spaced-review.json`, see the `state-schema` KB.
 
 ## Application to Programming
 

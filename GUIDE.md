@@ -31,7 +31,7 @@ Install BodhiKit:
 
 Restart Claude Code after installing.
 
-**Context tip:** BodhiKit loads 15 knowledge bases. To keep other projects lean, enable it only where you need it. Add to your `learningWithBodhi/.claude/settings.json`:
+**Context tip:** BodhiKit loads 16 knowledge bases. To keep other projects lean, enable it only where you need it. Add to your `learningWithBodhi/.claude/settings.json`:
 
 ```json
 {
@@ -198,6 +198,9 @@ End-of-session metacognitive reflection. Asks what was hardest, what surprised y
 
 ### `/bodhikit:status`
 Quick 3-line check-in: current project, module, streak, and concepts due today. Auto-invoked by `/continue` at session start.
+
+### `/bodhikit:forget <concept>`
+Demote a concept back to Box 1 for re-review tomorrow. Use it the moment you notice a concept has slipped — the algorithm will catch it eventually, but honest self-assessment beats waiting. Auto-invoked by `/reflect` when you self-rate confidence 1–4 on a specific concept.
 
 ### `/bodhikit:mentor [question]`
 Career and learning path guidance. Uses the GROW model (Goal, Reality, Options, Will) and Kram's mentoring theory. Reads your learner profile and all learning projects to map your skill landscape against your career goals. Presents 2-3 concrete learning path options and lets you choose. Honest about what an AI cannot do (sponsorship, networking). Auto-invoked by `/evaluate` when you complete a major milestone.

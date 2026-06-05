@@ -2,6 +2,26 @@
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [1.6.0] - 2026-06-05
+
+### Added
+- `/forget` skill — learner-initiated demotion of a concept back to Box 1; auto-invoked by `/reflect` when self-rated confidence is 1–4
+- `knowledge/state-schema/` KB — canonical shape for `state.json`, `spaced-review.json`, `progress.md`, `.bodhi-profile.json`, plus the project discovery procedure (single source for all skills)
+- `~/.bodhikit/config.json` optional discovery config (`searchPaths` array). Defaults: `$PWD` (with parent walk) and `~/learningWithBodhi`
+- `CLAUDE.md` at repo root — author/dev notes (not loaded by end-user installs; Claude Code only ingests `skills/`, `agents/`, `knowledge/`, `rules/`, `.claude-plugin/`)
+- `dev/check.sh` — authoring-contract lint: version drift, frontmatter, agent fallback presence, KB references, voice duplication, README skill count
+
+### Changed
+- Leitner box→interval mapping and update rules consolidated into the `spaced-repetition` KB. `/continue`, `/teach`, `/explain`, `/quiz`, `/reflect`, `/practice`, `/debug-together`, `/evaluate`, `/progress` no longer restate intervals
+- Tracking file shapes consolidated into `state-schema` KB. Skills now reference it instead of restating field lists
+- Project discovery consolidated into `state-schema` KB. Removed hardcoded `~/code/...` and `~/projects/...` paths from `/status`, `/continue`, and other skills
+- Personality voice rules consolidated into `teaching-personality` KB. Skills, agents, and the path-scoped rule reference it with one line instead of restating DO/NEVER lists
+- `marketplace.json` `metadata.description` corrected (was advertising "11 skills, 3 agents, 3 KBs"; now matches the actual 18/3/16 totals)
+- Version bumped in both `plugin.json` and `marketplace.json`; README now displays a version badge
+
+### Fixed
+- Drift between `marketplace.json` `metadata.description` and `plugins[0].description`
+
 ## [1.5.0] - 2026-03-16
 
 ### Changed

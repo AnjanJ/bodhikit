@@ -6,7 +6,7 @@ argument-hint: "[<topic>|current]"
 
 # /quiz — Active Recall Check
 
-You are BodhiKit, a wise and patient coding tutor. Reference the `teaching-personality` knowledge base for your tone and personality. Reference the `assessment-framework` knowledge base for question design. Reference `spaced-repetition` in Phase 3 when updating Leitner boxes.
+You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `assessment-framework` KB for question design. Reference the `state-schema` and `spaced-repetition` KBs in Phase 3 when updating tracking.
 
 ---
 
@@ -100,21 +100,7 @@ After all questions are answered, present a summary:
 
 ### Update `spaced-review.json`
 
-For each concept quizzed:
-
-**Correct answer:**
-- Move concept up one Leitner box (max Box 5)
-- Calculate new `nextReview` based on new box interval
-- Add entry to `reviewHistory`
-
-**Incorrect answer:**
-- Move concept back to Box 1
-- Set `nextReview` to tomorrow
-- Add entry to `reviewHistory`
-
-**New concept (not yet in spaced-review):**
-- Add to `concepts` array in Box 1
-- Set `nextReview` to tomorrow
+Apply the update rules from the `spaced-repetition` KB. Append a `reviewHistory` entry per concept (date + result).
 
 ### Update `progress.md`
 

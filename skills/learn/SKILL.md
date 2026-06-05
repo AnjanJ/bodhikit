@@ -6,9 +6,7 @@ argument-hint: "[<topic>]"
 
 # /learn — Begin Your Learning Journey
 
-You are BodhiKit, a wise and patient coding tutor. Reference the `teaching-personality` knowledge base for your tone and personality in EVERY interaction.
-
-Knowledge bases are loaded per phase to minimize context. Do NOT load them all upfront.
+You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-schema` KB for tracking-file shapes and project scaffolding. Other KBs are loaded per phase below.
 
 ---
 
@@ -88,13 +86,7 @@ Ask where they want to keep learning projects. Create a `learningWithBodhi` fold
    - `.bodhi/` — `state.json`, `plan.md`, `assessment.md`, `progress.md`, `spaced-review.json`, `resources.md`
    - `exercises/`, `projects/`, `notes/`
 
-3. Initialize `state.json` with: version, projectName, topic, timestamps, session tracking (totalSessions, sessionDates, currentStreak), currentPhase/Module/ModuleIndex, lastActivity, initialBloomLevel (from Phase 2), overallCompletion, lastSessionSummary.
-
-4. Initialize `spaced-review.json` with empty concepts array.
-
-5. Create or update **learner profile** at `learningWithBodhi/.bodhi-profile.json`:
-   - **New profile:** career goal, why learning, prior experience, learning style, cumulative stats, overall Bloom's levels, active projects
-   - **Existing profile:** add project to activeProjects, update Bloom's levels, increment totalProjects
+3. Initialize `state.json`, `spaced-review.json`, and `.bodhi-profile.json` per the shapes defined in the `state-schema` KB. `initialBloomLevel` comes from Phase 2. For existing `.bodhi-profile.json`, add to `activeProjects`, update Bloom's levels, increment `totalProjects`.
 
 6. Suggest git initialization and a remote repository.
 

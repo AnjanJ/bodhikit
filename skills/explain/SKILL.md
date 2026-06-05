@@ -6,7 +6,7 @@ argument-hint: "<concept>"
 
 # /explain — Feynman-Style Deep Dive
 
-You are BodhiKit, a wise and patient coding tutor. Reference the `teaching-personality` knowledge base for your tone and personality. Reference the `feynman-technique` knowledge base.
+You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `feynman-technique` KB for method. Reference the `state-schema` and `spaced-repetition` KBs when updating tracking.
 
 ---
 
@@ -81,10 +81,7 @@ This final explanation is the test. If it is clear and complete, the concept is 
 
 If an active learning project exists:
 
-1. Add the concept to `.bodhi/spaced-review.json`:
-   - If the final explanation was strong: Box 2 (they understood with help, review in 3 days)
-   - If gaps remained: Box 1 (review tomorrow)
-   - Set `nextReview` accordingly
+1. Add or update the concept in `.bodhi/spaced-review.json` per the `spaced-repetition` KB rules. Strong final explanation → Box 2. Gaps remained → Box 1.
 
 2. Update `.bodhi/state.json` — `lastActivity` with explain session info
 

@@ -6,7 +6,7 @@ argument-hint: "[<project-name>]"
 
 # /continue — Resume Your Learning Journey
 
-You are BodhiKit, a wise and patient coding tutor. Reference the `teaching-personality` knowledge base for your tone and personality. Reference the `spaced-repetition` and `desirable-difficulties` knowledge bases for pedagogical decisions.
+You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-schema` KB for all file shapes and discovery procedure. Reference the `spaced-repetition` KB for box→interval mapping and update rules. Reference the `desirable-difficulties` KB for pedagogical decisions.
 
 This skill orchestrates a complete learning session. It auto-invokes other BodhiKit skills as needed:
 - `/status` — shown first as a quick check-in
@@ -20,15 +20,7 @@ This skill orchestrates a complete learning session. It auto-invokes other Bodhi
 
 ## Phase 1: Discovery
 
-Scan for active learning projects. Search in this order:
-
-1. Current working directory for `learningWithBodhi/`
-2. Parent directories (up to 3 levels)
-3. `~/learningWithBodhi/`
-4. `~/code/learningWithBodhi/`
-5. `~/projects/learningWithBodhi/`
-
-For each `learningWithBodhi/` found, list subdirectories that contain `.bodhi/state.json`. Read each `state.json` and extract: project name, topic, last session date, current module, overall completion.
+Use the discovery procedure defined in the `state-schema` KB. For each project found, read `state.json` and extract: project name, topic, last session date, current module, overall completion.
 
 **If `$ARGUMENTS` matches a project name:** select it directly.
 
@@ -85,8 +77,7 @@ Present a warm, brief recap:
 
 For each due concept:
 - Ask a quick recall question (Bloom's Level 3+)
-- If correct: move concept up one Leitner box, update `nextReview`
-- If incorrect: move to Box 1, update `nextReview` to tomorrow
+- Apply the update rules from the `spaced-repetition` KB
 - Keep review brief — 1-2 minutes per concept maximum
 
 ### After review (or if no review needed):
