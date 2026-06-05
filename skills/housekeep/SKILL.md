@@ -111,25 +111,34 @@ This phase runs only when `$ARGUMENTS` is `migrate`. Load the `state-migration` 
 ### 5a. State narrative extraction
 
 Read `state.json`. If `lastSessionSummary` or `bloomResetNote` fields are present:
-1. Compose a synthetic session entry from them: date = `lastSessionAt`, body = the concatenation of the two fields with a `**Pre-1.7.0 migration note:**` prefix.
+1. Compose a synthetic session entry from them: date = `lastSessionAt` (or `updatedAt` if `lastSessionAt` is absent), body = the concatenation of the two fields with a `**Pre-1.7.0 migration note:**` prefix.
 2. Hold this entry in memory for use by step 5b.
 3. Remove the two fields from the `state.json` shape. Bump `state.json` `version` to 2.
 
-If neither field is present, this step is a no-op.
+**Preserve unknown fields.** Real v1 `state.json` files in the wild carry fields from older minor versions (e.g., `goal`, `standalone`, `pace`, `previousModule`, `nextActivity`, `bloomLevels`, `initialBloomLevel`) that the current schema does not declare. The migration MUST preserve every field it does not explicitly strip. Only `lastSessionSummary` and `bloomResetNote` are removed; everything else stays verbatim.
+
+If neither field is present, this step is a no-op (still bump `version` to 2).
 
 ### 5b. progress.md → live + archive + summary
 
-Read existing `progress.md`. Parse out every dated `## YYYY-MM-DD` (or `## <YYYY-MM-DD> — ...`) section.
+Read existing `progress.md`. Parse out session entries. Real v1 files use several heading styles — try them in this order:
+
+1. Top-level dated: `## YYYY-MM-DD` or `## YYYY-MM-DD — <label>`.
+2. Hierarchical: a top-level `## Session Log` header followed by `### Session N` or `### Session N — YYYY-MM-DD` entries.
+3. Numbered: `## Session N` with a date in the body.
+4. Fallback: if none match, treat the whole file as a single archived blob with synthetic date = `state.json.lastSessionAt` or `updatedAt`.
 
 If a synthetic entry was held from step 5a and its date is NOT already covered by an existing section, prepend it to the parsed list as the most recent entry.
+
+**Non-session content preservation.** Real v1 `progress.md` files often contain non-session content at the top: a "Timeline" or "Module Status" table summarizing module completion, a description paragraph, header front-matter. This content MUST be preserved. If it summarizes current state, keep it at the bottom of the new live `progress.md` (after the "Summary of earlier sessions" block). If it is bulky and historical, write it to a sibling file `progress/notes.md` instead, and add a single line in `progress.md` pointing to it.
 
 If the parsed list has only one entry, no archive work needed — just ensure the file has a "Summary of earlier sessions" section (empty for now) appended.
 
 Otherwise:
 1. Keep the most recent entry as the new live `progress.md` head.
 2. For each older entry, write `progress/archive/session-<YYYY-MM-DD>[-N].md` (sequential `-N` for same-day).
-3. Generate a "Summary of earlier sessions" block with one entry per archived session, derived from each section's bullet structure (Outcomes line if present; otherwise first non-empty bullet).
-4. Replace `progress.md` with: latest-entry header + body, separator (`---`), `## Summary of earlier sessions`, generated entries.
+3. Generate a "Summary of earlier sessions" block with one entry per archived session, derived from each section's bullet structure (Outcomes line if present; otherwise first non-empty bullet). Target 2-5 lines per entry; up to 20 for milestone sessions.
+4. Replace `progress.md` with: latest-entry header + body, separator (`---`), `## Summary of earlier sessions`, generated entries, optional separator + preserved non-session content.
 
 ### 5c. assessment.md / assessments/ → live + archive + summary
 
@@ -146,11 +155,12 @@ Then:
 
 ### 5d. plan.md → sectional plan/
 
-Read `plan.md`. Parse on `## Phase {N}` or `# Phase {N}` headings.
+Read `plan.md`. Parse on `## Phase {N}` or `# Phase {N}` headings (both the bare form and the colon variant `## Phase 1: Foundations` are accepted).
 
 1. For each phase section, write `plan/phase-<N>.md` containing the section body. Promote the `## Phase {N}` heading to `# Phase {N}` at the top of the new file (the file is now a stand-alone phase plan, not a section of a larger doc).
 2. Write `plan/README.md` as the arc index: project topic, target arc / pace summary from the original plan front matter, then a bulleted list of phases with pointers to each `phase-<N>.md`. Mark the current phase based on `state.json.currentPhase`.
-3. Move the original `plan.md` into the backup directory; do not leave it at the canonical path (its presence would confuse future readers).
+3. **Preserve non-phase content.** Real v1 plans often carry top-of-file metadata (goal, target date, capacity), a week-by-week schedule table, a resources table, and a "Not covering" section. All of this content lives outside the `## Phase` boundaries and MUST end up in `plan/README.md` (top-of-file content above the Phases list; tables and "Not covering" sections below it). Nothing from `plan.md` is discarded.
+4. Move the original `plan.md` into the backup directory; do not leave it at the canonical path (its presence would confuse future readers).
 
 If `plan.md` has no `## Phase` headings (rare; informal plans), do not split — leave `plan.md` in place and write a one-line `plan/README.md` pointing to it as a single-file plan. Note this case in the migration marker output.
 
@@ -167,7 +177,7 @@ If the file does not exist, this step is a no-op (the profile is created lazily 
 
 ### 5f. spaced-review.json version bump
 
-Read `spaced-review.json`. If `version` is 1 (or missing), bump to 2 and persist. No structural changes — observed real data already carries `question` and `lastResult` per concept; the bump just makes the schema declaration explicit.
+Read `spaced-review.json`. If `version` is 1 (or missing — many real v1 files have no `version` field at all), bump to 2 and persist. No structural changes — observed real data already carries `question` and `lastResult` per concept; the bump just makes the schema declaration explicit.
 
 ### 5g. Write the migration marker
 
