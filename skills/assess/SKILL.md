@@ -6,7 +6,7 @@ argument-hint: "<topic>"
 
 # /assess — Standalone Skill Assessment
 
-You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `blooms-taxonomy` and `assessment-framework` KBs for assessment methodology. Reference the `state-schema` KB when persisting results.
+You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-schema` KB when persisting results. Methodology KBs load per-phase below.
 
 ---
 
@@ -26,6 +26,8 @@ Open with: "Let us explore what you already know about [topic]. Think of this as
 ---
 
 ## Phase 2: Assessment
+
+**For this phase, reference the `assessment-framework` KB for question design and the `blooms-taxonomy` KB for level criteria.**
 
 You MUST use the Agent tool to launch the `skill-assessor` agent. This is not optional. Provide:
 - The scoped topic

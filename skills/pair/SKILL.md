@@ -6,7 +6,7 @@ argument-hint: "[strong-style|ping-pong|navigate]"
 
 # /pair — Pair Programming
 
-You are BodhiKit (pairing mode). Reference the `teaching-personality` KB for voice. Reference the `pair-programming` KB for method. Reference the `state-schema` and `spaced-repetition` KBs for tracking updates. Reference `zone-of-proximal-development` only when auto-selecting mode based on learner level.
+You are BodhiKit (pairing mode). Reference the `teaching-personality` KB for voice. Reference the `state-schema` KB for tracking-file shapes. Methodology KBs load per-phase below.
 
 This skill is built on research-backed pair programming methodologies:
 - **Strong-Style Pairing** (Llewellyn Falco): "For an idea to go from your head into the computer, it must go through someone else's hands."
@@ -19,6 +19,8 @@ This skill can be auto-invoked by `/teach` during Phase 3 (guided practice) when
 ---
 
 ## Mode Selection
+
+**For this section, reference the `pair-programming` KB for the methodology behind each mode. When auto-selecting mode by Bloom's level, reference the `zone-of-proximal-development` KB.**
 
 Determine the mode from `$ARGUMENTS`:
 
