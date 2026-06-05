@@ -108,14 +108,13 @@ After all questions are answered, present a summary:
 
 Apply the update rules from the `spaced-repetition` KB. Append a `reviewHistory` entry per concept (date + result).
 
-### Update `progress.md`
+### Update `progress.md` (v2 live document — quiz narrative goes here)
 
-- Update Bloom's level for concepts if the quiz revealed a level change
-- Note quiz date and performance
+Append a quiz entry at the top of `progress.md`: `## YYYY-MM-DD — Quiz (<topic>)` followed by score, concepts reviewed, Bloom-level adjustments, and any precision gaps noted. This is the canonical narrative of what happened during the quiz.
 
-### Update `state.json`
+### Update `state.json` (slim — no narrative)
 
-- Update `lastActivity` with quiz info
-- Update `lastSessionSummary`
+- Update `lastActivity` with ONE short sentence (≤120 chars), e.g. "Quizzed on indexing; 5/7 passes, B-tree mechanism solid."
+- Do NOT write `lastSessionSummary` — that field is removed in v2. Quiz narrative lives in `progress.md`.
 
 Close with: "Every question you answer — right or wrong — waters the garden. The ones you got wrong are not failures. They are the spots that need the most sunlight."

@@ -77,9 +77,10 @@ Translate Bloom's levels into plain language:
 ## After Assessment
 
 If inside an active learning project:
-- Append a prose entry to `.bodhi/assessment.md` with the date
-- Append a structured entry to `.bodhi/assessment-history.json` (`trigger: "assess"`) per the `state-schema` KB
-- Update `.bodhi/progress.md` with any level changes
+- Append a new assessment block at the top of `.bodhi/assessments/latest.md`: `## <Topic> — <YYYY-MM-DD>`, then the per-area Bloom table, evidence, recommendations. The prior assessment block stays in place — `/housekeep` will rotate it to `assessments/archive/` on its next run.
+- Append a structured entry to `.bodhi/assessment-history.json` (`trigger: "assess"`) per the `state-schema` KB.
+- Append a short assessment entry to `.bodhi/progress.md` (live document): `## YYYY-MM-DD — Assessment (<topic>)`, then **Bloom levels** table summary + **Headline finding**. Full detail stays in `assessments/latest.md`; the `progress.md` entry is just the pointer + key result.
+- Update `.bodhi/state.json` (slim — no narrative): set `lastActivity` to ONE short sentence; bump `currentBloomLevel` per topic if the assessment surfaced changes.
 - Offer: "Would you like me to adjust your learning plan based on this assessment?"
 
 If no active project:

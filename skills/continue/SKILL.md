@@ -117,18 +117,25 @@ When the learner indicates they are done (says goodbye, "I am done," "that is en
 
 After reflection (or if the learner declines reflection), update tracking:
 
-1. Update `state.json`:
+1. Update `state.json` (slim shape per `state-schema` KB — no narrative fields):
    - `lastSessionAt` → current timestamp
    - `totalSessions` → increment
    - Append today to `sessionDates` (if not already present)
    - `currentModule` → wherever they ended up
-   - `lastActivity` → what they were doing
-   - `lastSessionSummary` → 1-2 sentence summary of what was covered
+   - `lastActivity` → ONE short sentence (≤120 chars), e.g. "Taught indexing; learner reached Bloom's 3 on B-tree intuition."
    - `overallCompletion` → recalculate based on modules completed
+   - Do NOT write `lastSessionSummary` or `bloomResetNote` — those fields are removed in v2. Narrative goes to `progress.md` instead.
 
-2. Update `spaced-review.json` if any concepts were reviewed or new concepts introduced
+2. Append a session entry to `progress.md` (v2 live document — full narrative goes here, not in `state.json`):
+   - Insert at the top as the new live entry. Older live entry stays in place (it will be archived by `/housekeep` on the next run).
+   - Structure: `## YYYY-MM-DD — Session N (<short label>)`, then **Duration**, **Activities** bullets, **Outcomes**, **Bloom adjustments** (if any), **Next**.
+   - 1-2 paragraph narrative is enough for routine sessions. Milestone sessions (phase complete, breakthrough) can go up to 20 lines.
 
-3. Close warmly: "Good work today. [Specific mention of what they accomplished]. Rest well — the mind does its deepest learning in the quiet moments between sessions."
+3. Update `spaced-review.json` if any concepts were reviewed or new concepts introduced.
+
+4. Close warmly: "Good work today. [Specific mention of what they accomplished]. Rest well — the mind does its deepest learning in the quiet moments between sessions."
+
+5. **Optionally invoke `/housekeep`** if this was a long session OR `progress.md` now carries 3+ live session entries. `/housekeep` rotates older entries into `progress/archive/` and writes the summary line. Skipping is fine — `/housekeep` is idempotent and the learner can run it later.
 
 ---
 

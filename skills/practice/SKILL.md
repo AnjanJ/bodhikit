@@ -137,6 +137,10 @@ After the learner indicates they have completed (or attempted) the exercise:
    - Solve the first sub-problem together (I Do, then We Do)
    - Let them try the next sub-problem independently (You Do)
 
-6. **Update tracking:** Add new concepts to `.bodhi/spaced-review.json` per `spaced-repetition` KB rules. Update `progress.md` and `state.json` per `state-schema` KB. On exercise completion, increment `learningWithBodhi/.bodhi-profile.json` `cumulativeStats.totalExercises` and update `lastUpdated`.
+6. **Update tracking:**
+   - Add new concepts to `.bodhi/spaced-review.json` per `spaced-repetition` KB rules.
+   - Append an exercise entry to `.bodhi/progress.md` at the top (the new live entry): `## YYYY-MM-DD — Exercise: <topic>`, then **What was attempted**, **Code-review findings**, **Bloom adjustments**, **Next**. Older entries stay in place until `/housekeep` rotates them.
+   - Update `.bodhi/state.json` (slim shape, no narrative): bump `lastSessionAt` if this opens a new session, set `lastActivity` to ONE short sentence pointing to what `progress.md` describes.
+   - On exercise completion, increment `learningWithBodhi/.bodhi-profile.json` `cumulativeStats.totalExercises` and update `lastUpdated`. Profile narrative belongs in `progress.md`, not in the profile file.
 
 Close with specific feedback: "You [specific thing they did well]. That shows [what it indicates about their growth]."

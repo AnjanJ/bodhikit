@@ -87,9 +87,9 @@ If an active learning project exists:
 
 1. Add or update the concept in `.bodhi/spaced-review.json` per the `spaced-repetition` KB rules. Strong final explanation → Box 2. Gaps remained → Box 1.
 
-2. Update `.bodhi/state.json` — `lastActivity` with explain session info
+2. Update `.bodhi/state.json` (slim — no narrative): set `lastActivity` to ONE short sentence noting the explain session.
 
-3. Update `.bodhi/progress.md` — note Bloom's level for this concept based on explanation quality:
+3. Append an entry to `.bodhi/progress.md` (v2 live document) at the top: `## YYYY-MM-DD — Explain (<concept>)`, then **What was explained**, **Learner's explanation quality**, **Bloom adjustment** based on quality:
    - Clear, complete explanation with good analogies = Level 2-3
    - Can explain AND apply in code = Level 3-4
    - Can explain trade-offs and when NOT to use it = Level 4-5

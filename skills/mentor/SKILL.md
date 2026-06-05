@@ -88,7 +88,7 @@ Once they choose:
 
 ## Phase 6: Update Profile
 
-Save/update `learningWithBodhi/.bodhi-profile.json` with career goals, skill landscape, chosen path, and session date.
+Save/update `learningWithBodhi/.bodhi-profile.json` (the top-level profile file from the v2 split) with `careerGoal`, `whyLearning`, updated `overallBloomLevels` if this session surfaced shifts, and `lastUpdated`. Do NOT write to `activeProjects` here — that array lives in `.bodhi-profile.projects.json`. Mentor sessions rarely create new projects; if the learner commits to a new path, this skill suggests `/learn [topic]` rather than scaffolding directly.
 
 ---
 

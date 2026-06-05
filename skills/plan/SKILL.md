@@ -55,31 +55,32 @@ If behind: "The plan is a guide, not a deadline. What matters is understanding, 
 
 Ask: "What would you like to change about your learning plan?"
 
-Common adjustments:
+Common adjustments (write to the per-phase files in `.bodhi/plan/`, not a monolithic `plan.md`):
+
 1. **Reorder modules**: "I want to learn [X] before [Y]"
-   - Check if prerequisites allow it
-   - If yes, reorder and update `.bodhi/plan.md`
+   - Check if prerequisites allow it.
+   - If yes: edit the relevant `.bodhi/plan/phase-{N}.md` file(s) to move the module entries. If the swap crosses a phase boundary, edit both phase files; update `plan/README.md` if the phase summary lines change.
    - If no, explain why: "[Y] builds on concepts from [X]. Let us find a way to cover the essentials first."
 
 2. **Skip a module**: "I already know [X]"
-   - Run a quick assessment (3-4 questions) to verify
-   - If confirmed, mark as skipped with a note
+   - Run a quick assessment (3-4 questions) to verify.
+   - If confirmed: edit the module's phase file and mark the module section with a `**Status:** skipped (verified <YYYY-MM-DD>)` line. Do not delete the section — preserve the history.
    - If not confirmed: "Your intuition is close, but there are a few pieces worth solidifying. Would you like to do a quick review instead of the full module?"
 
 3. **Add a topic**: "I also want to learn [Z]"
-   - Determine where it fits in the plan (prerequisites, logical sequence)
-   - Add the module with appropriate Bloom's level targets
+   - Determine where it fits (prerequisites, logical sequence) — which phase file should hold it.
+   - Append a new module section to that `plan/phase-{N}.md` file with appropriate Bloom's level targets.
 
 4. **Change pace**: "I want to go faster/slower"
-   - Adjust module granularity: merge modules for faster pace, split for slower
-   - Adjust exercise difficulty: fewer guided exercises for faster, more for slower
+   - Adjust module granularity in the affected phase file(s): merge modules for faster pace, split for slower.
+   - Adjust exercise difficulty: fewer guided exercises for faster, more for slower.
 
 5. **Integrate materials**: "I started reading [book/course]"
-   - Map the material's chapters to existing modules
-   - Add references to `.bodhi/resources.md`
-   - Adjust the plan to align with or supplement the material
+   - Map the material's chapters to existing modules in the relevant phase files.
+   - Add references to `.bodhi/resources.md`.
+   - Adjust the affected phase file(s) to align with or supplement the material.
 
-After adjustments, update `.bodhi/plan.md` preserving all progress data. Show the updated plan.
+After adjustments, show the updated plan by reading back the edited phase file(s). Preserve every status / progress marker that was on existing module sections — the learner's history must not be lost in an edit. Update `plan/README.md` only if the phase summary lines (titles, durations, current-pointer) changed.
 
 ---
 
@@ -89,11 +90,11 @@ Warn: "Regenerating will create a fresh plan based on a new assessment. Your pro
 
 If yes:
 1. You MUST use the Agent tool to launch the `skill-assessor` agent for a fresh assessment. **Fallback:** If the agent fails, conduct the assessment directly with 5-6 adaptive questions.
-2. Build a new plan following the same principles as `/learn` Phase 3
-3. Preserve `.bodhi/progress.md` history (append, do not overwrite)
-4. Update `.bodhi/plan.md` with the new plan
-5. Update `.bodhi/state.json` to reflect new module structure
-6. Note in `.bodhi/assessment.md`: "Plan regenerated on [date]. Previous plan archived."
-7. Append a structured entry to `.bodhi/assessment-history.json` (`trigger: "plan-regenerate"`) per the `state-schema` KB
+2. Build a new plan following the same principles as `/learn` Phase 4 (sectional v2 layout: `plan/README.md` + per-phase `plan/phase-{N}.md`).
+3. Preserve `.bodhi/progress.md` and `.bodhi/progress/archive/` exactly as they are — never overwrite or remove session history. Append a new live entry at the top of `progress.md` noting the regeneration: `## YYYY-MM-DD — Plan regenerated`, then a one-line reason and the headline shift from old to new structure.
+4. Before writing the new plan, move the existing `plan/` directory to `plan/.archive-<YYYY-MM-DD>/` so the old plan structure is preserved on disk. Then write fresh `plan/README.md` + `plan/phase-{N}.md` files for the new plan.
+5. Update `.bodhi/state.json` to reflect the new module structure (`currentPhase`, `currentModule`, `currentModuleIndex`, `initialBloomLevel` for the new plan). Slim shape — no narrative fields.
+6. Append a new assessment block at the top of `.bodhi/assessments/latest.md`: `## Plan regeneration — <YYYY-MM-DD>`, containing the fresh assessment results and a note "Plan regenerated; old plan archived at `plan/.archive-<YYYY-MM-DD>/`."
+7. Append a structured entry to `.bodhi/assessment-history.json` (`trigger: "plan-regenerate"`) per the `state-schema` KB.
 
-Show the new plan and highlight differences from the old one.
+Show the new plan (read back `plan/README.md` + each `plan/phase-*.md`) and highlight differences from the archived old one.

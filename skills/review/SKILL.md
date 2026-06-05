@@ -83,5 +83,5 @@ Summarize what the code reveals about their learning journey:
 "Your code shows [specific strength]. You are clearly developing [skill]. The areas we discussed — [brief list] — are natural next steps in your growth."
 
 If an active learning project exists, update:
-- `.bodhi/state.json` — `lastActivity` with review info
-- `.bodhi/progress.md` — note any Bloom's level changes observed
+- `.bodhi/state.json` (slim — no narrative) — set `lastActivity` to ONE short sentence pointing at the review.
+- `.bodhi/progress.md` (v2 live document — narrative goes here) — append a review entry at the top: `## YYYY-MM-DD — Code review (<file or topic>)`, then **What was reviewed**, **Strengths shown**, **Growth areas**, **Bloom adjustments** (if any).

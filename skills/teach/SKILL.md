@@ -107,7 +107,11 @@ Ask 2-3 questions mixing Bloom's levels: Level 2 (explain in own words), Level 3
 
 Apply update rules from the `spaced-repetition` KB. Demonstrated understanding → move up one box from current. Struggled but got there → Box 1.
 
-Update `progress.md` and `state.json` per the `state-schema` KB. If the concept reaches Bloom's Level 3+ as a result of this session, increment `learningWithBodhi/.bodhi-profile.json` `cumulativeStats.totalConceptsLearned` (once per concept; check `progress.md` history to avoid double-counting).
+Append a teaching entry to `progress.md` at the top — the new live entry. Structure: `## YYYY-MM-DD — Session N — <concept taught>`, then **Phases covered** (which of I-Do / We-Do / You-Do completed), **Outcomes**, **Bloom adjustments**, **Next**. Older live entries stay in place until `/housekeep` rotates them.
+
+Update `state.json` (slim shape — no narrative): bump `lastSessionAt`, increment `totalSessions` if this opens a new session, update `currentModule`/`currentModuleIndex` if you advanced, set `lastActivity` to ONE short sentence pointing at what `progress.md` describes in full.
+
+If the concept reaches Bloom's Level 3+ as a result of this session, increment `learningWithBodhi/.bodhi-profile.json` `cumulativeStats.totalConceptsLearned`. Double-count guard: check the new `progress.md` live entry plus the "Summary of earlier sessions" block for any prior mention of this concept reaching Bloom's 3+; only increment if this is the first time.
 
 ### Transition
 

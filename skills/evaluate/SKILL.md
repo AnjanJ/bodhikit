@@ -76,8 +76,9 @@ Treat this as a milestone moment. Acknowledge the path walked with specific evid
 
 ## Update Tracking
 
-- Append a prose entry to `.bodhi/assessment.md` with date and full results
-- Append a structured entry to `.bodhi/assessment-history.json` (`trigger: "evaluate"`) per the `state-schema` KB
-- Update `.bodhi/progress.md` with Bloom's level changes
-- Update `.bodhi/state.json` `lastActivity` noting the evaluation
-- Update `learningWithBodhi/.bodhi-profile.json` per `state-schema` rules: bump `cumulativeStats.totalMilestonesReached`. If a topic now has 3+ entries in `assessment-history.json` at Bloom's <3, add to `patterns.persistentChallenges`; 3+ at Bloom's 4+ adds to `patterns.consistentStrengths`. If the project is complete, move from `activeProjects` to `completedProjects`.
+- Append a new assessment block at the top of `.bodhi/assessments/latest.md` with the date and full evaluation results (Growth Map, Strengths, Active Growth, Areas Needing Attention, Spaced Repetition Health, Key Concepts Status, Recommendations). The prior assessment block stays in place — `/housekeep` will rotate it to `assessments/archive/` on its next run.
+- Append a structured entry to `.bodhi/assessment-history.json` (`trigger: "evaluate"`) per the `state-schema` KB.
+- Append an evaluation entry to `.bodhi/progress.md` (live document) at the top: `## YYYY-MM-DD — Evaluation (milestone)`, then **Headline trajectory** (1-2 sentences on growth), **Bloom adjustments**, **Next chapter**. Full detail stays in `assessments/latest.md`; the `progress.md` entry is just the pointer + headline.
+- Update `.bodhi/state.json` (slim — no narrative): set `lastActivity` to ONE short sentence noting the evaluation. Do NOT write narrative fields.
+- Update `learningWithBodhi/.bodhi-profile.json` (top-level profile — cumulative + patterns): bump `cumulativeStats.totalMilestonesReached`. If a topic now has 3+ entries in `assessment-history.json` at Bloom's <3, add to `patterns.persistentChallenges`; 3+ at Bloom's 4+ adds to `patterns.consistentStrengths`.
+- Update `learningWithBodhi/.bodhi-profile.projects.json` (the projects file from the v2 split): refresh this project's entry in `activeProjects` (current phase, bloom level, status). If the project is complete, move the entry from `activeProjects` to `completedProjects` with `completedAt` and `finalBloomLevel`.

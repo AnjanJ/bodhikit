@@ -74,10 +74,10 @@ Collect concepts flagged for demotion across Q1 and Q3; auto-invoke `/forget --i
 
 Update tracking files (shapes per `state-schema` KB):
 
-1. **`state.json`:** Update lastSessionAt, increment totalSessions, append to sessionDates, update currentStreak, update lastSessionSummary with reflection notes, update lastActivity.
-2. **`spaced-review.json`:** Apply box movements from confidence ratings, update lastReviewCheck.
-3. **`progress.md`:** Note any Bloom's level adjustments.
-4. **`learningWithBodhi/.bodhi-profile.json`:** Increment `cumulativeStats.totalSessions` (once per session per project — guard against double-count if `/reflect` was invoked twice in one session via the day already being in `sessionDates`). Update `lastUpdated`.
+1. **`state.json`** (slim shape — no narrative fields): Update `lastSessionAt`, increment `totalSessions`, append to `sessionDates`, update `currentStreak`, update `lastActivity` (one short sentence, ≤120 chars). Do NOT write `lastSessionSummary` or `bloomResetNote` — those fields are removed in v2.
+2. **`progress.md`** (v2 live document — narrative goes here): Append a reflection entry at the top, structured as `## YYYY-MM-DD — Session N (Reflection)` followed by the Q1/Q2/Q3/Q4 responses, Bloom adjustments, and concepts flagged for demotion. This is the canonical narrative of what happened — `state.json.lastActivity` is just the one-line pointer to it.
+3. **`spaced-review.json`:** Apply box movements from confidence ratings (per `spaced-repetition` KB), update `lastReviewCheck`.
+4. **`learningWithBodhi/.bodhi-profile.json`:** Increment `cumulativeStats.totalSessions` (once per session per project — guard against double-count by checking whether today's date is already in `state.json.sessionDates`). Update `lastUpdated`. Do NOT touch `activeProjects` here; that array lives in `.bodhi-profile.projects.json` and only `/learn`, `/evaluate`, and `/mentor` touch it.
 
 Close with warmth and specific encouragement. Use streak acknowledgment if appropriate.
 

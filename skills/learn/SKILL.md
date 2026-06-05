@@ -108,4 +108,8 @@ Give them the first micro-exercise from Module 1:
 - Directly relevant to the first module
 - Calibrated to level: beginners get starter files with TODOs and tests in `exercises/01-<topic>/`; intermediate+ get a clear description
 
-Close with encouragement about taking the first step. Update `state.json` with the exercise as `lastActivity`.
+Close with encouragement about taking the first step.
+
+Update tracking (this is Session 1 of the project):
+- Update `state.json` (slim — no narrative): set `lastActivity` to ONE short sentence describing the exercise. Set `lastSessionAt`, `totalSessions: 1`, `sessionDates: [today]`, `currentStreak: 1`.
+- Write the first entry of `progress.md` (the v2 live document): `## YYYY-MM-DD — Session 1 (Kickoff)`, then **Activities** (assessment completed, plan generated, project scaffolded, first exercise issued), **Outcomes** (initial Bloom's levels baselined), **Next** (Module 1 exercise). End the file with an empty `## Summary of earlier sessions` block (it will populate as `/housekeep` runs after future sessions).
