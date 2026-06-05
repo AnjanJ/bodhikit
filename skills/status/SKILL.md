@@ -1,7 +1,6 @@
 ---
 description: "Quick 3-line check-in: current project, module, streak, concepts due today"
 user-invocable: true
-argument-hint: "[migrate]"
 ---
 
 # /status — Quick Check-In
@@ -18,15 +17,13 @@ This skill can be auto-invoked by `/continue` as the first thing shown when a se
 
 1. Use the discovery procedure from the `state-schema` KB.
 
-2. **Legacy path detection (one-shot).** Before reporting "no project found," check whether `~/code/learningWithBodhi/` or `~/projects/learningWithBodhi/` exist (the pre-1.6.0 hardcoded paths). If either has projects AND `~/.bodhikit/config.json` does NOT exist, emit a single-line notice: "Found projects at `<path>` not on your search paths. Run `/bodhikit:status migrate` to save it." Then continue with the standard report (or empty-state line).
+2. **Legacy path detection (one-shot).** Before reporting "no project found," check whether `~/code/learningWithBodhi/` or `~/projects/learningWithBodhi/` exist (the pre-1.6.0 hardcoded paths). If either has projects AND `~/.bodhikit/config.json` does NOT exist, emit a single-line notice: "Found projects at `<path>` not on your search paths. Run `/bodhikit:housekeep migrate` to save them and convert tracking files to the 1.7.0 layout." Then continue with the standard report (or empty-state line). (The `migrate` subcommand moved to `/housekeep` in 1.7.0 because all file-shape work now lives in one place.)
 
-3. If `$ARGUMENTS` is `migrate`: write `~/.bodhikit/config.json` with the default `searchPaths` PLUS the detected legacy path(s). Confirm in one line: "Saved. `<path>` will be discovered going forward." Then exit (skip steps 4-6).
+3. If no project found: use the canonical empty-state line from the `teaching-personality` KB.
 
-4. If no project found: use the canonical empty-state line from the `teaching-personality` KB.
+4. If project found, read ONLY `.bodhi/state.json` and `.bodhi/spaced-review.json` (filter for concepts where `nextReview <= today`).
 
-5. If project found, read ONLY `.bodhi/state.json` and `.bodhi/spaced-review.json` (filter for concepts where `nextReview <= today`).
-
-6. Present status in exactly this format:
+5. Present status in exactly this format:
 
 ```
 📍 [project-name] | [current-module-name] | [overallCompletion]% complete
@@ -34,7 +31,7 @@ This skill can be auto-invoked by `/continue` as the first thing shown when a se
 📅 Last session: [relative time, e.g., "yesterday", "2 days ago"]
 ```
 
-7. If multiple projects exist, show the most recently active one and add: "(You have [N] other learning projects. Run `/bodhikit:progress all` to see them.)"
+6. If multiple projects exist, show the most recently active one and add: "(You have [N] other learning projects. Run `/bodhikit:progress all` to see them.)"
 
 ---
 

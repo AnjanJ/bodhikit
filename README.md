@@ -26,7 +26,7 @@ Bodhi (Pali: "awakening") is a patient, wise guide that teaches you anything in 
 
 Restart Claude Code after installing to load the plugin.
 
-**Important: Enable only where you need it.** BodhiKit loads 16 knowledge bases. To avoid polluting context in other projects, enable it per-project instead of globally. In your `learningWithBodhi/.claude/settings.json`:
+**Important: Enable only where you need it.** BodhiKit loads 18 knowledge bases. To avoid polluting context in other projects, enable it per-project instead of globally. In your `learningWithBodhi/.claude/settings.json`:
 
 ```json
 {
@@ -65,7 +65,7 @@ That's it. All skills, agents, rules, and knowledge bases are immediately availa
 /bodhikit:progress           # Full progress dashboard
 ```
 
-## Skills (18)
+## Skills (19)
 
 | Skill | Description |
 |-------|-------------|
@@ -87,6 +87,7 @@ That's it. All skills, agents, rules, and knowledge bases are immediately availa
 | `/pair` | Pair programming: strong-style, ping-pong, or navigator mode |
 | `/debug-together` | Scientific debugging: reproduce, hypothesize, probe, isolate, fix |
 | `/forget` | Demote a concept back to Box 1 — for honest self-assessment |
+| `/housekeep` | Rotate tracking files into archive + summary form; one-shot 1.7.0 migration |
 
 ## Agents (3)
 
@@ -96,7 +97,7 @@ That's it. All skills, agents, rules, and knowledge bases are immediately availa
 | code-reviewer | Sonnet | Educational code review (what code reveals about understanding) |
 | resource-finder | Haiku | Web search for verified free learning resources |
 
-## Knowledge Bases (16)
+## Knowledge Bases (18)
 
 Each learning methodology lives in its own focused knowledge base, loaded only when needed (progressive disclosure):
 
@@ -118,6 +119,8 @@ Each learning methodology lives in its own focused knowledge base, loaded only w
 | assessment-framework | Question templates by Bloom's level, exercise design |
 | teaching-personality | Oogway/Yoda/Buddha/Ambedkar personality guide |
 | state-schema | Canonical shape of `.bodhi/` tracking files and discovery config |
+| read-defaults | Per-skill default-read contract (loaded by `/housekeep`, audit, lint) |
+| state-migration | Schema versioning + one-shot v1 → v2 conversion (loaded by `/housekeep migrate`) |
 
 ## Path-Scoped Rules (1)
 
