@@ -1,6 +1,6 @@
 # BodhiKit
 
-[![Version](https://img.shields.io/badge/version-1.6.0-blue)](./CHANGELOG.md) [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow?logo=buymeacoffee)](https://buymeacoffee.com/anjanj) [![Sponsor](https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ea4aaa?logo=githubsponsors)](https://github.com/sponsors/AnjanJ)
+[![Version](https://img.shields.io/badge/version-1.7.0-blue)](./CHANGELOG.md) [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow?logo=buymeacoffee)](https://buymeacoffee.com/anjanj) [![Sponsor](https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ea4aaa?logo=githubsponsors)](https://github.com/sponsors/AnjanJ)
 
 **Research-backed interactive coding tutor for Claude Code.**
 
@@ -53,6 +53,20 @@ claude --plugin-dir ~/code/bodhikit
 ```
 
 That's it. All skills, agents, rules, and knowledge bases are immediately available.
+
+## Upgrading from 1.6.x
+
+1.7.0 introduces a progressive-disclosure layout for tracking files — live + archive + summary for narrative surfaces (sessions, assessments), a sectional plan, and a slimmer `state.json`. Existing projects are converted in one shot:
+
+```
+/bodhikit:housekeep migrate
+```
+
+Run this once in each existing learning project (or once at the `learningWithBodhi/` root to convert all projects). The command is **idempotent** (running twice is a no-op) and **non-destructive** (the originals are preserved at `.bodhi/.pre-1.7.0-backup/` for one minor version). It reports before/after byte sizes so you can see exactly what changed.
+
+Migration takes a few seconds per project. After it runs, routine skills like `/continue` and `/teach` read substantially less context per session (current phase plan + live session entry only, not the whole plan and full session history).
+
+See the [1.7.0 CHANGELOG entry](./CHANGELOG.md) for the full set of changes.
 
 ## Quick Start
 
@@ -130,26 +144,34 @@ Each learning methodology lives in its own focused knowledge base, loaded only w
 
 ## Learning Project Structure
 
-When you start learning, BodhiKit creates a project folder:
+When you start learning, BodhiKit creates a project folder. The v2 layout (1.7.0) uses live documents for the current state and archive directories for the historical detail — routine skills load only the live documents:
 
 ```
 learningWithBodhi/
-├── react-fundamentals/
-│   ├── .bodhi/              # Progress tracking
-│   │   ├── state.json       # Current position, streak, session history
-│   │   ├── plan.md          # Your personalized learning plan
-│   │   ├── progress.md      # Per-topic mastery levels
-│   │   ├── spaced-review.json  # Leitner box system for retention
-│   │   ├── assessment.md    # Assessment history
-│   │   └── resources.md     # Curated resources
-│   ├── exercises/           # Hands-on exercises
-│   ├── projects/            # Larger project work
-│   └── notes/               # Your personal notes
+├── .bodhi-profile.json            # Top-level profile (career goals, cumulative stats)
+├── .bodhi-profile.projects.json   # Per-project metadata (active + completed)
+└── react-fundamentals/
+    ├── .bodhi/
+    │   ├── state.json             # Slim — current position, counts, streak
+    │   ├── progress.md            # Latest session + "Summary of earlier sessions"
+    │   ├── progress/archive/      # Full text of each archived session
+    │   ├── plan/
+    │   │   ├── README.md          # Arc overview, current phase pointer
+    │   │   └── phase-{N}.md       # Per-phase detailed plan
+    │   ├── assessments/
+    │   │   ├── latest.md          # Most recent assessment + summary
+    │   │   └── archive/           # Full text of each archived assessment
+    │   ├── spaced-review.json     # Leitner box system for retention
+    │   ├── assessment-history.json # Structured Bloom's-over-time data
+    │   └── resources.md           # Curated resources
+    ├── exercises/                 # Hands-on exercises
+    ├── projects/                  # Larger project work
+    └── notes/                     # Your personal notes
 ```
 
 We recommend backing this with git and a remote repository.
 
-See `docs/example-project/` for a realistic example of what these tracking files look like after a few sessions.
+See `docs/example-project/` for a realistic example of what these tracking files look like after a few sessions. Upgrading from 1.6.x: run `/bodhikit:housekeep migrate` once per project — see the [Upgrading from 1.6.x](#upgrading-from-16x) section above.
 
 ## How a Session Works
 
