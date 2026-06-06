@@ -160,14 +160,16 @@ if [ -n "$declared" ] && [ "$declared" != "$actual" ]; then
 fi
 
 # ---------------------------------------------------------------------------
-# 12. v2 schema: no writes to lastSessionSummary or bloomResetNote outside /housekeep
+# 12. v2 schema: no writes to lastSessionSummary or bloomResetNote outside
+#     the v1-boundary skills (/housekeep, /status).
 # ---------------------------------------------------------------------------
 # These fields were removed from state.json in v2. The only legitimate
-# reference is inside /housekeep (which migrates them) or as an explicit
-# "Do NOT write" directive elsewhere. Applies to skills AND agents — both
-# can touch tracking files.
+# references are inside skills that straddle the v1↔v2 boundary by design:
+# /housekeep migrates them; /status all detects them as a health flag.
+# Everywhere else, mentioning these fields is drift.
+# Applies to skills AND agents — both can touch tracking files.
 for f in skills/*/SKILL.md agents/*.md; do
-  case "$f" in *housekeep*) continue;; esac
+  case "$f" in *housekeep*|*status*) continue;; esac
   while IFS= read -r line; do
     case "$line" in
       *"Do NOT write"*|*"do not write"*|*"removed in v2"*|*"v2 — narrative"*) continue;;
@@ -181,14 +183,15 @@ for f in skills/*/SKILL.md agents/*.md; do
 done
 
 # ---------------------------------------------------------------------------
-# 13. v2 schema: no reads of v1 paths outside /housekeep
+# 13. v2 schema: no reads of v1 paths outside v1-boundary skills.
 # ---------------------------------------------------------------------------
 # assessment.md (singular, root of .bodhi/) and plan.md (root of .bodhi/) are
 # v1 paths. v2 uses assessments/latest.md and plan/README.md + plan/phase-*.md.
-# /housekeep references both during migration; everywhere else is drift.
+# /housekeep references both during migration; /status all references them
+# as legacy-layout health flags. Everywhere else is drift.
 # Applies to skills AND agents.
 for f in skills/*/SKILL.md agents/*.md; do
-  case "$f" in *housekeep*) continue;; esac
+  case "$f" in *housekeep*|*status*) continue;; esac
   # Match `.bodhi/assessment.md` (NOT `.bodhi/assessments/...`) and
   # `.bodhi/plan.md` (NOT `.bodhi/plan/...`).
   if grep -qE '\.bodhi/assessment\.md([^/s]|$)' "$f"; then
@@ -243,6 +246,24 @@ if [ -d docs/example-project/.bodhi ]; then
     if ! grep -qE '"version":[[:space:]]*2' "$state_file"; then
       warn "$state_file is not declared as version 2"
     fi
+  fi
+fi
+
+# The profile in docs/example-project must use the split v2 layout
+profile_file=docs/example-project/.bodhi-profile.json
+projects_file=docs/example-project/.bodhi-profile.projects.json
+if [ -f "$profile_file" ]; then
+  # v2 = profile is split. activeProjects / completedProjects must live in projects file, not profile.
+  if grep -qE '"(activeProjects|completedProjects)"' "$profile_file"; then
+    warn "$profile_file carries activeProjects/completedProjects inline — should be in $projects_file (v2 split layout)"
+  fi
+  if ! grep -qE '"version":[[:space:]]*2' "$profile_file"; then
+    warn "$profile_file is not declared as version 2"
+  fi
+  if [ ! -f "$projects_file" ]; then
+    warn "$projects_file is missing — v2 split profile requires this file"
+  elif ! grep -qE '"version":[[:space:]]*2' "$projects_file"; then
+    warn "$projects_file is not declared as version 2 (cohort-consistent with parent profile)"
   fi
 fi
 

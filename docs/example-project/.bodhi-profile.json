@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "createdAt": "2026-03-08T10:00:00Z",
   "lastUpdated": "2026-03-14T14:30:00Z",
   "learner": {
@@ -34,8 +34,10 @@
     "react-hooks": 1,
     "event-handling": 2
   },
-  "completedProjects": [],
-  "activeProjects": ["react-fundamentals"],
+  "patterns": {
+    "persistentChallenges": [],
+    "consistentStrengths": []
+  },
   "mentoringSessions": [
     {
       "date": "2026-03-08",

@@ -2,6 +2,23 @@
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [1.7.1] - 2026-06-06
+
+### Fixed
+- **`/housekeep migrate` write defects.** The v1.7.0 migrate spec used declarative language ("remove the field", "bump the version", "replace progress.md with...") for steps that mutate `state.json` and `progress.md`. Executing models interpreted these as state-descriptions rather than file-write actions, so on real data the migration created the new directories, split `plan.md`, and wrote the receipt — but never actually rewrote `state.json` (left v1 `lastSessionSummary` + `bloomResetNote` fields intact and `version: "1.5.0"` unchanged) or rewrote `progress.md` to v2 live+archive+summary shape. Steps 5a, 5b, and 5c rewritten with explicit imperative writes ("Write the new content using the Write tool"), per-step idempotency checks, and post-write verification. The marker file (5g) now has an explicit precondition block — verify every preceding step persisted to disk before declaring migration complete. A broken migration can no longer falsely report success.
+- `.bodhi-profile.projects.json` was being written as `version: 1` because the `state-schema` KB declared it that way. Pinned to `version: 2` in the KB for cohort consistency with every other v2 file; `/housekeep` skill spec updated to enforce.
+- `docs/example-project/.bodhi-profile.json` was still in v1 single-file layout (despite v1.7.0 PR 5b claiming otherwise). Split into v2 layout: top-level profile + `.bodhi-profile.projects.json` sibling.
+
+### Added
+- `/status all` — table view of every project (active/stale/dormant classification, last-session, completion, health flags). Reads `.bodhi-profile.projects.json` plus each project's `state.json` only — no progress/plan/archive reads.
+- `/status <project-name>` — single-project glance for a specific project regardless of which is most recently active.
+- Health flags in `/status all`: `⚠ v1 fields` (unmigrated narrative fields in `state.json`), `⚠ unparseable` (JSON parse failure), `⚠ missing files` (state.json present but plan/ or progress.md absent), `⚠ legacy layout` (incomplete migration — `.bodhi/plan.md` or `.bodhi/assessment.md` singular still exist).
+- `/learn` **Phase 1.5 — Cross-Project Reconciliation.** Before running skill assessment for a new project, read `.bodhi-profile.json` + `.bodhi-profile.projects.json` and surface: overlap with existing projects, relevant Bloom priors from prior work, capacity flag when ≥ 3 active projects exist. Presents structured options — standalone / fold into existing / replace existing / defer. Phase 2 (skill assessment) now receives Bloom priors as input. First-time learners with no profile see no change.
+- `dev/check.sh` extended: rule 15 verifies `docs/example-project` profile uses v2 split layout (no inline `activeProjects` / `completedProjects`; both files declare `version: 2`). Rules 12 and 13 exempt `/status` alongside `/housekeep` — both are v1-boundary skills by design (one migrates, one detects).
+
+### Changed
+- `/continue` Phase 5 was already correct in v1.7.0 (Do NOT write `lastSessionSummary` / `bloomResetNote`); no behavioral change. Mentioned here so contributors don't re-flag it during 1.7.1 review.
+
 ## [1.7.0] - 2026-06-05
 
 ### Added

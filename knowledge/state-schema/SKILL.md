@@ -373,11 +373,11 @@ Routine skills load this small file (~1-2 KB at typical use). No `activeProjects
 
 ### `learningWithBodhi/.bodhi-profile.projects.json`
 
-Per-project metadata. Grows with project count. Loaded only by skills that need cross-project context.
+Per-project metadata. Grows with project count. Loaded only by skills that need cross-project context. Version pinned to `2` for cohort consistency with all other 1.7.0 v2 files — the file did not exist in v1, but the version field denotes schema-family generation (v2), not per-file iteration count.
 
 ```json
 {
-  "version": 1,
+  "version": 2,
   "activeProjects": [
     {
       "name": "string",

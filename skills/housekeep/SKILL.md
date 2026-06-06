@@ -110,18 +110,28 @@ This phase runs only when `$ARGUMENTS` is `migrate`. Load the `state-migration` 
 
 ### 5a. State narrative extraction
 
-Read `state.json`. If `lastSessionSummary` or `bloomResetNote` fields are present:
-1. Compose a synthetic session entry from them: date = `lastSessionAt` (or `updatedAt` if `lastSessionAt` is absent), body = the concatenation of the two fields with a `**Pre-1.7.0 migration note:**` prefix.
-2. Hold this entry in memory for use by step 5b.
-3. Remove the two fields from the `state.json` shape. Bump `state.json` `version` to 2.
+Read `state.json`.
 
-**Preserve unknown fields.** Real v1 `state.json` files in the wild carry fields from older minor versions (e.g., `goal`, `standalone`, `pace`, `previousModule`, `nextActivity`, `bloomLevels`, `initialBloomLevel`) that the current schema does not declare. The migration MUST preserve every field it does not explicitly strip. Only `lastSessionSummary` and `bloomResetNote` are removed; everything else stays verbatim.
+**Idempotency check.** If `version` is already `2` (number, not string) AND neither `lastSessionSummary` nor `bloomResetNote` is present, this step is already done. Skip to step 5b.
 
-If neither field is present, this step is a no-op (still bump `version` to 2).
+Otherwise:
+
+1. Compose a synthetic session entry from `lastSessionSummary` + `bloomResetNote` if either is present: date = `lastSessionAt` (or `updatedAt` if `lastSessionAt` is absent), body = the concatenation of the two fields with a `**Pre-1.7.0 migration note:**` prefix. **Hold this entry in memory for step 5b** — do not write it anywhere yet.
+2. **Construct the new state.json content in memory.** Start from the existing parsed JSON, then: (a) delete the `lastSessionSummary` key, (b) delete the `bloomResetNote` key, (c) set `version` to the integer `2`.
+3. **Write the new content to `.bodhi/state.json`, overwriting the existing file.** Use the Write tool (or equivalent file-write operation). Do not skip this — descriptive language like "remove the field" or "bump the version" means **rewrite the file to disk with the field removed and the version bumped**.
+4. **Verify the write.** Re-read `.bodhi/state.json`. Confirm `version` is now `2` and the two narrative fields are absent. If either check fails, do NOT proceed to subsequent steps — report the failure and exit. The marker file MUST NOT be written until every step has actually persisted.
+
+**Preserve unknown fields.** Real v1 `state.json` files in the wild carry fields from older minor versions (e.g., `goal`, `standalone`, `pace`, `previousModule`, `nextActivity`, `bloomLevels`, `initialBloomLevel`) that the current schema does not declare. The migration MUST preserve every field it does not explicitly strip. Only `lastSessionSummary` and `bloomResetNote` are removed; everything else stays verbatim in the rewritten file.
+
+If neither narrative field was present, still complete steps 2-4 above to ensure `version` reaches `2` on disk.
 
 ### 5b. progress.md → live + archive + summary
 
-Read existing `progress.md`. Parse out session entries. Real v1 files use several heading styles — try them in this order:
+Read existing `progress.md`.
+
+**Idempotency check.** If `progress.md` already contains the literal heading `## Summary of earlier sessions` AND `progress/archive/` already exists with at least one `session-*.md` file, this step is already done. Skip to step 5c.
+
+Otherwise, parse out session entries. Real v1 files use several heading styles — try them in this order:
 
 1. Top-level dated: `## YYYY-MM-DD` or `## YYYY-MM-DD — <label>`.
 2. Hierarchical: a top-level `## Session Log` header followed by `### Session N` or `### Session N — YYYY-MM-DD` entries.
@@ -132,26 +142,33 @@ If a synthetic entry was held from step 5a and its date is NOT already covered b
 
 **Non-session content preservation.** Real v1 `progress.md` files often contain non-session content at the top: a "Timeline" or "Module Status" table summarizing module completion, a description paragraph, header front-matter. This content MUST be preserved. If it summarizes current state, keep it at the bottom of the new live `progress.md` (after the "Summary of earlier sessions" block). If it is bulky and historical, write it to a sibling file `progress/notes.md` instead, and add a single line in `progress.md` pointing to it.
 
-If the parsed list has only one entry, no archive work needed — just ensure the file has a "Summary of earlier sessions" section (empty for now) appended.
+If the parsed list has only one entry, no archive work is needed — but you still MUST write a new `progress.md` that contains an empty "Summary of earlier sessions" section appended below the entry. Use the Write tool to overwrite the existing file.
 
-Otherwise:
-1. Keep the most recent entry as the new live `progress.md` head.
-2. For each older entry, write `progress/archive/session-<YYYY-MM-DD>[-N].md` (sequential `-N` for same-day).
-3. Generate a "Summary of earlier sessions" block with one entry per archived session, derived from each section's bullet structure (Outcomes line if present; otherwise first non-empty bullet). Target 2-5 lines per entry; up to 20 for milestone sessions.
-4. Replace `progress.md` with: latest-entry header + body, separator (`---`), `## Summary of earlier sessions`, generated entries, optional separator + preserved non-session content.
+If the parsed list has multiple entries:
+
+1. Identify the most recent entry. It becomes the new live head.
+2. **For each older entry, write a file at `progress/archive/session-<YYYY-MM-DD>[-N].md`** (sequential `-N` suffix for multiple same-day sessions). Use the Write tool. Each archive file is self-contained: copy the full section body verbatim, including the heading.
+3. Compose the "Summary of earlier sessions" block — one entry per archived session, derived from each section's bullet structure (Outcomes line if present; otherwise first non-empty bullet). Target 2-5 lines per entry; up to 20 for milestone sessions. Format per Phase 3 step 3.
+4. **Write the new `progress.md`** using the Write tool, overwriting the existing file. Content structure: latest-entry heading + body, separator (`---`), `## Summary of earlier sessions`, generated summary entries, optional separator + preserved non-session content. Do not just "replace" mentally — emit the Write call.
+5. **Verify the write.** Re-read `progress.md`. Confirm the file now contains `## Summary of earlier sessions` and the latest entry. Confirm at least one `progress/archive/session-*.md` exists. If either check fails, do NOT proceed — report the failure and exit. The marker file MUST NOT be written if this step did not persist.
 
 ### 5c. assessment.md / assessments/ → live + archive + summary
 
-Detect the existing assessment layout:
+**Idempotency check.** If `assessments/latest.md` already exists AND no flat `.bodhi/assessment.md` (singular) exists, this step is already done. Skip to step 5d.
+
+Otherwise, detect the existing assessment layout:
 - Flat `assessment.md` only → treat as a single block in v1 format; parse out dated `## YYYY-MM-DD` sub-sections if any.
 - `assessments/` subdirectory with multiple `.md` files → each file is a candidate.
 - Both exist → merge (subdirectory files take precedence; flat file content appended to oldest if dates conflict).
 
 Then:
-1. Identify the most recent assessment (by date in filename or by date header). Make it `assessments/latest.md`.
-2. Move all other assessment files to `assessments/archive/`, preserving filenames where they are already descriptive (`0.0-phase-zero-summary.md`); otherwise rename to `<YYYY-MM-DD>-<topic-slug>.md`.
-3. Generate the "Summary of earlier assessments" block at the bottom of `assessments/latest.md`.
-4. Remove the old flat `assessment.md` after content is preserved in `assessments/archive/`.
+
+1. Identify the most recent assessment (by date in filename or by date header).
+2. **Write that content to `assessments/latest.md`** using the Write tool. If the content is large (≥ 8 KB), `latest.md` should be a summary-with-pointer pattern: header + key findings + a pointer line `> Full report preserved at archive/<filename>` — and the full content goes to the archive file instead.
+3. **For each non-latest assessment, write it to `assessments/archive/<filename>.md`** using the Write tool. Preserve filenames where descriptive (`0.0-phase-zero-summary.md`); otherwise use `<YYYY-MM-DD>-<topic-slug>.md`.
+4. **Append a "Summary of earlier assessments" block to `assessments/latest.md`** using the Edit tool. One entry per archived assessment with a `→ archive/<filename>` pointer.
+5. **Delete the old flat `.bodhi/assessment.md`** using the Bash tool (`rm`). The content has been preserved in `assessments/archive/` and in the `.pre-1.7.0-backup/` safety net.
+6. **Verify.** Confirm `assessments/latest.md` exists and contains the "Summary of earlier assessments" section. Confirm `.bodhi/assessment.md` (singular) no longer exists. If either check fails, do NOT proceed — report and exit.
 
 ### 5d. plan.md → sectional plan/
 
@@ -168,7 +185,7 @@ If `plan.md` has no `## Phase` headings (rare; informal plans), do not split —
 
 Read the existing `learningWithBodhi/.bodhi-profile.json`.
 
-1. Extract `activeProjects` and `completedProjects` arrays into a new file: `learningWithBodhi/.bodhi-profile.projects.json` with shape per `state-schema` KB.
+1. Extract `activeProjects` and `completedProjects` arrays into a new file: `learningWithBodhi/.bodhi-profile.projects.json` with shape per `state-schema` KB. **The new file MUST declare `"version": 2`** — cohort-consistent with all other v2 files, per `state-schema` KB.
 2. If `totalProjects` exists at top level, move it into `cumulativeStats.totalProjects`.
 3. Bump `version` to 2 in the top-level profile.
 4. Write the slimmed `.bodhi-profile.json` (top-level fields + cumulativeStats + patterns only).
@@ -181,7 +198,19 @@ Read `spaced-review.json`. If `version` is 1 (or missing — many real v1 files 
 
 ### 5g. Write the migration marker
 
-Create `.bodhi/.migration-1.7.0.md`:
+**Precondition for writing the marker.** Before composing or writing this file, verify every preceding step persisted to disk:
+
+- `state.json` is on disk with `version: 2` (integer) and no `lastSessionSummary` / `bloomResetNote` fields.
+- `progress.md` is on disk and contains the literal heading `## Summary of earlier sessions`.
+- `assessments/latest.md` is on disk.
+- `.bodhi/assessment.md` (flat singular file) does NOT exist on disk.
+- `plan/README.md` is on disk; the flat `plan.md` is at `.pre-1.7.0-backup/plan.md` (not at `.bodhi/plan.md`).
+- `learningWithBodhi/.bodhi-profile.projects.json` is on disk with `version: 2` (or the profile did not exist, in which case skip).
+- `spaced-review.json` carries `version: 2`.
+
+If any of these checks fails, do NOT write the marker. Report which check failed and exit non-zero. The presence of the marker is what makes future runs detect the migration as complete — writing it prematurely would falsely make a broken migration appear successful.
+
+If every check passes, create `.bodhi/.migration-1.7.0.md`:
 
 ```markdown
 # Migration to 1.7.0 — <YYYY-MM-DD>

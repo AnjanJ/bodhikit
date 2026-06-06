@@ -28,6 +28,77 @@ Note any existing learning materials for plan integration.
 
 ---
 
+## Phase 1.5: Cross-Project Reconciliation
+
+**CHECKPOINT: Do not proceed to Phase 2 until any flagged tradeoffs are resolved with an explicit learner decision.**
+
+The point of this phase: a learner with existing projects deserves to see how a new request relates to their current learning before spending 20 minutes on an assessment that may not need to exist as a separate project. Cheap reads, real value. Skipped silently for first-ever `/learn` (no profile yet).
+
+### 1. Read
+
+Check whether the cross-project profile exists. Use the discovery procedure from the `state-schema` KB to locate `learningWithBodhi/`. If the profile files do not exist, skip this entire phase — this is a first-ever learner — and proceed to Phase 2.
+
+If they exist, read EXACTLY these two files (no more):
+- `learningWithBodhi/.bodhi-profile.json` — for `overallBloomLevels`, `cumulativeStats`, `patterns.persistentChallenges`, `patterns.consistentStrengths`.
+- `learningWithBodhi/.bodhi-profile.projects.json` — for `activeProjects` and `completedProjects`.
+
+Do NOT read individual project `state.json`, `progress.md`, plans, or assessments. The profile is the cross-project source of truth by design (see `state-schema` KB).
+
+### 2. Compute
+
+For the topic the learner scoped in Phase 1, compute three things:
+
+**Overlap analysis.** For each active and completed project, judge (qualitatively, in natural language — not keyword match) whether the new topic shares a meaningful concept surface with the existing project. Use the project's `topic` string, `currentPhase`, `currentModule`, `status` notes, and `trackPurpose` (if present) as input. Be willing to flag a maybe-overlap — false positives cost the learner one sentence to dismiss; false negatives cost a duplicate project. If `patterns.persistentChallenges` lists a sub-area that the new topic touches, surface it as relevant context too.
+
+**Bloom prior.** Scan `overallBloomLevels`. If any sub-area listed there is plausibly related to the new topic (e.g., learner is requesting `elixir-otp` and `overallBloomLevels.elixirPhoenix` is 2), record those Bloom priors. These will be handed to the skill-assessor agent in Phase 2 as a starting prior — better than assessing from zero.
+
+**Capacity check.** Count active projects in `.bodhi-profile.projects.json.activeProjects`. If the count is ≥ 3, this is a capacity flag — adding a 4th deserves explicit acknowledgment, not a default. (A learner with 3 active tracks may be load-managed; a learner adding a 4th unprompted may not have considered the cost.)
+
+### 3. Present
+
+**If nothing was flagged** (no overlap, no relevant Bloom prior, capacity < 3): emit one line and proceed silently to Phase 2.
+
+> Cross-checked against your N active projects — no overlap. Proceeding.
+
+This one-line confirmation tells the learner the check happened. Silence here would erode trust that the skill knows about their existing work.
+
+**If anything was flagged**, present a structured reconciliation block. Honest. Specific. Voice per `teaching-personality` KB but flourish-light — this is a decision moment, not a teaching moment.
+
+```
+Before we begin the assessment for "<new topic>", a few things to consider:
+
+[OVERLAP — only if found]
+Your "<existing-project>" track covers <specific shared concept(s)>.
+  Pro of folding the new topic in: <e.g., shared spaced-review pool, consistent bloom progression on the shared sub-areas, fewer parallel cadences to maintain>
+  Con of folding: <e.g., different drivers — one is job prep with deadline, one is open-ended depth; one is at Phase 1, one is just starting>
+
+[BLOOM PRIOR — only if found]
+Your profile shows <level> on <sub-area> from prior work. I'll factor this into the assessment rather than starting blind.
+
+[CAPACITY — only if active count ≥ 3]
+You currently have <N> active projects (<list names>). Adding a <N+1>th is a real time commitment. Worth naming the driver for this one before starting.
+
+Your options:
+  (a) Standalone new project — separate cadence, fresh tracking. (Recommended if drivers truly differ.)
+  (b) Fold into "<existing-project>" — add as a phase or module extension; the existing plan gets regenerated to include the new scope.
+  (c) Replace "<existing-project>" — archive it (the .bodhi tree stays at .bodhi/.archived-<date>/) and the new project takes its place.
+  (d) Continue as standalone and decide later (default).
+
+Which would you like?
+```
+
+Wait for an explicit response. Do not proceed on silence.
+
+### 4. Branch
+
+- **(a) Standalone or (d) defer:** proceed to Phase 2 with the new topic and any recorded Bloom priors. Phase 4 will scaffold a new project as usual.
+- **(b) Fold:** this is no longer a `/learn` call — it's a plan regeneration against an existing project. Acknowledge the change in scope, then run `/bodhikit:plan regenerate` against the named existing project, passing the new topic scope as additional input. Do NOT create a new project directory. End this `/learn` session after the regenerate completes.
+- **(c) Replace:** rename the existing project's `.bodhi/` directory to `.bodhi/.archived-<YYYY-MM-DD>/`, move the project entry in `.bodhi-profile.projects.json` from `activeProjects` to `completedProjects` with `status: "archived: replaced by <new project name> on <date>"`, then proceed to Phase 2 for the new topic as standalone. The archived directory stays — nothing is destroyed.
+
+For (b) and (c), narrate the change in one sentence before doing it, so the learner sees what's about to happen.
+
+---
+
 ## Phase 2: Skill Assessment
 
 **CHECKPOINT: Do not proceed to Phase 3 until assessment is complete.**
@@ -36,9 +107,9 @@ Note any existing learning materials for plan integration.
 
 Open with: "Before we chart the path, let me understand where you stand. Not to judge — simply to know where the journey begins."
 
-You MUST use the Agent tool to launch the `skill-assessor` agent with the scoped topic, background info, and any existing code/repos.
+You MUST use the Agent tool to launch the `skill-assessor` agent with the scoped topic, background info, any existing code/repos, AND any Bloom priors recorded in Phase 1.5. The agent uses these priors to skip ground-zero questions on areas the learner has demonstrably engaged with, focusing its turn budget on calibration in the new sub-areas.
 
-**Fallback:** If the agent fails or hits its turn limit, conduct the assessment directly. Ask 5-6 questions starting at Bloom's Level 3, adapting up/down. Classify per sub-topic.
+**Fallback:** If the agent fails or hits its turn limit, conduct the assessment directly. Ask 5-6 questions starting at Bloom's Level 3, adapting up/down. Classify per sub-topic. If Phase 1.5 surfaced Bloom priors, treat those sub-areas as already calibrated and only re-test if Phase 1 responses suggest the prior is stale.
 
 - **All Level 0:** "A blank page is not emptiness — it is possibility. We start from the very beginning."
 - **Some knowledge:** "You have solid roots in [X]. We will build on those."
