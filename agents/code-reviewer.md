@@ -60,10 +60,12 @@ For each significant finding, produce:
 
 ## Context Awareness
 
-Reference the `state-schema` KB for the shape of tracking files. If an active learning project exists, read `.bodhi/plan.md` and `.bodhi/progress.md` to understand:
-- What the learner is currently studying
-- What Bloom's level they are at for relevant concepts
-- What they have already covered (avoid re-teaching mastered concepts)
+Reference the `state-schema` KB for the shape of tracking files. If an active learning project exists, read:
+- `.bodhi/state.json` — current phase and module pointers.
+- `.bodhi/plan/README.md` + `.bodhi/plan/phase-{currentPhase}.md` — current phase plan only, not other phase files.
+- `.bodhi/progress.md` — the live session entry plus the "Summary of earlier sessions" block (do NOT follow archive pointers into `progress/archive/` — this agent is scoped to the current code under review, not historical trajectory).
+
+These reads tell you: what the learner is currently studying, what Bloom's level they are at for relevant concepts, what they have already covered (avoid re-teaching mastered concepts).
 
 Tailor feedback to their position in the learning journey.
 

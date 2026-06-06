@@ -164,8 +164,9 @@ fi
 # ---------------------------------------------------------------------------
 # These fields were removed from state.json in v2. The only legitimate
 # reference is inside /housekeep (which migrates them) or as an explicit
-# "Do NOT write" directive elsewhere.
-for f in skills/*/SKILL.md; do
+# "Do NOT write" directive elsewhere. Applies to skills AND agents — both
+# can touch tracking files.
+for f in skills/*/SKILL.md agents/*.md; do
   case "$f" in *housekeep*) continue;; esac
   while IFS= read -r line; do
     case "$line" in
@@ -185,7 +186,8 @@ done
 # assessment.md (singular, root of .bodhi/) and plan.md (root of .bodhi/) are
 # v1 paths. v2 uses assessments/latest.md and plan/README.md + plan/phase-*.md.
 # /housekeep references both during migration; everywhere else is drift.
-for f in skills/*/SKILL.md; do
+# Applies to skills AND agents.
+for f in skills/*/SKILL.md agents/*.md; do
   case "$f" in *housekeep*) continue;; esac
   # Match `.bodhi/assessment.md` (NOT `.bodhi/assessments/...`) and
   # `.bodhi/plan.md` (NOT `.bodhi/plan/...`).
