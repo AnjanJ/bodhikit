@@ -14,20 +14,19 @@ This is NOT a quiz. This is a comprehensive evaluation of the learner's entire j
 
 ## Phase 1: Journey Review
 
-If `$ARGUMENTS` is provided, use it as the project name. Otherwise, discover the active project.
+If `$ARGUMENTS` is provided, use it as the project name. Otherwise, discover the active project via the procedure in the `state-schema` KB.
 
-Read EVERY `.bodhi/` surface, because trajectory analysis is the job of this skill:
-- `state.json`
-- `plan/README.md` AND every `plan/phase-*.md` file
-- `assessments/latest.md` AND every file under `assessments/archive/`
-- `assessment-history.json` — the structured Bloom's-over-time data, primary source for trajectory analysis
-- `progress.md` AND every file under `progress/archive/` (the full session history)
-- `spaced-review.json` (whole file including `sessionHistory`)
-- `resources.md`
+Announce the scope to the learner in your opening turn: "Let us look at the full path you have walked. I am pulling together the entire history — sessions, assessments, retention, growth patterns. Take a breath; this will take a moment to assemble."
 
-Announce the breadth of the read in your opening turn — the learner should know this skill is loading the full picture. Most skills don't.
+Read ONLY the slim surfaces you need to frame the conversation:
+- `state.json` — current position, session count, dates.
+- `plan/README.md` — arc overview, total module count, current phase.
 
-Build a timeline: start date, sessions completed, modules covered, **per-sub-topic Bloom's level changes over time from `assessment-history.json` entries** (initial vs intermediate vs current), retention distribution (Box 4-5 vs Box 1), exercises and projects completed.
+You MUST use the Agent tool to launch the `trajectory-analyzer` agent for the full trajectory load. Pass the project root path as the argument. The agent reads every archive file, every assessment, every plan phase, and the spaced-review history in its own context window — so the heavy load does not crowd your conversation with the learner. The agent returns a structured trajectory report with per-topic Bloom movement, retention distribution, activity timeline, precision-gap movements with source quotes, completion, and patterns.
+
+**Fallback:** If the agent fails or hits its turn limit, conduct the trajectory analysis directly. Read every `.bodhi/` surface — `state.json`, `plan/README.md` and every `plan/phase-*.md`, `assessments/latest.md` and every file under `assessments/archive/`, `assessment-history.json`, `progress.md` and every file under `progress/archive/`, `spaced-review.json` (including `sessionHistory`), `resources.md`. Build the same per-topic Bloom trajectory, retention distribution, activity timeline, precision-gap movements, and completion figures yourself. Slower for you and for the learner, but the work is the same.
+
+Hold the trajectory report in memory — it drives Phase 3 and Phase 4.
 
 ---
 
@@ -47,9 +46,18 @@ You MUST use the Agent tool to launch the `skill-assessor` agent. Provide all pl
 
 **For this phase, reference the `blooms-taxonomy` KB for level criteria and the `spaced-repetition` KB for Leitner box semantics.**
 
-Compare initial assessment to current assessment per topic area: starting vs current Bloom's level, exercises completed, quiz trend (improving/stable/declining), Leitner box distribution.
+Use the trajectory report from Phase 1 (or the manual analysis from the fallback) plus the fresh assessment from Phase 2.
 
-Identify: **biggest growth areas**, **consistent strengths**, **persistent challenges**, **recent growth**.
+Compare initial → intermediate → current per sub-topic. The trajectory report already gives you the direction (improving / stable / declining) and an evidence quote per sub-topic; Phase 2's fresh assessment confirms or shifts the current level.
+
+Identify:
+- **Biggest growth areas** — sub-topics with the largest Bloom delta from initial to current. Anchor each with the trajectory report's evidence quote.
+- **Consistent strengths** — sub-topics at Bloom 4+ across multiple assessments (the report flags these as candidates in its Patterns section).
+- **Persistent challenges** — sub-topics at Bloom <3 across 3+ assessments (the report flags these too). Frame as opportunities, not failures.
+- **Recent growth** — Bloom moves in the last assessment window. Cross-check against Phase 2's fresh results.
+- **Retention concerns** — concepts in Box 1 that have demoted from a higher box (the report's "Concepts demoted" list). These are precision-gap candidates worth surfacing.
+
+The trajectory report's "Notes for the Parent Skill" section names a suggested framing focus (celebrate growth / honor effort / name the gap / milestone moment). Use it as a starting point, not a script — you know the learner's tone from the conversation so far.
 
 ---
 

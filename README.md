@@ -103,13 +103,14 @@ See the [1.7.0 CHANGELOG entry](./CHANGELOG.md) for the full set of changes.
 | `/forget` | Demote a concept back to Box 1 — for honest self-assessment |
 | `/housekeep` | Rotate tracking files into archive + summary form; one-shot 1.7.0 migration |
 
-## Agents (3)
+## Agents (4)
 
 | Agent | Model | Purpose |
 |-------|-------|---------|
 | skill-assessor | Sonnet | Adaptive Bloom's taxonomy skill evaluation |
 | code-reviewer | Sonnet | Educational code review (what code reveals about understanding) |
 | resource-finder | Haiku | Web search for verified free learning resources |
+| trajectory-analyzer | Sonnet | Reads full project history (sessions, archives, assessments) and returns a structured trajectory report — used by `/evaluate` so the heavy archive load happens in the agent's context, not the parent skill's |
 
 ## Knowledge Bases (18)
 

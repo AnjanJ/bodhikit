@@ -280,7 +280,9 @@ Both files are created when you start your first learning project and updated as
 
 ## How Agents Work Behind the Scenes
 
-BodhiKit uses three specialized AI agents that handle complex tasks. You never invoke agents directly. Skills launch them automatically when needed.
+BodhiKit uses four specialized AI agents that handle complex tasks. You never invoke agents directly. Skills launch them automatically when needed.
+
+The shared design idea: agents run in their own context window. Heavy reads (archive history, web fetches, large code bases) happen in the agent's context, not in your main conversation. The agent returns a structured result; the parent skill uses it to drive the conversation with you in BodhiKit's own voice. Your dialogue stays focused; the analytical load happens out of sight.
 
 ### Skill Assessor Agent
 
@@ -305,6 +307,16 @@ Example: You complete a React exercise and the code works. The code-reviewer not
 When you need learning materials, the resource-finder agent searches the web for verified, community-recommended free resources. It prioritizes official documentation, interactive platforms (Exercism, freeCodeCamp), and structured courses over random blog posts. It verifies each link is live and returns resources with title, type, difficulty level, and estimated time.
 
 Example: You run `/bodhikit:resources find rust`. The agent searches for Rust learning materials, verifies links, and returns: The Rust Book (official docs), Rustlings (interactive exercises), Exercism Rust Track (practice problems), and a few curated tutorials, ranked by interactivity and community reputation.
+
+### Trajectory Analyzer Agent
+
+**Used by:** `/evaluate` (Phase 1 Journey Review and Phase 3 Comparative Analysis)
+
+When `/evaluate` runs against a project with real depth — archived sessions, prior assessments, accumulated precision-gap notes — it launches the trajectory-analyzer agent. The agent reads every archive file, every plan phase, the full assessment history, and the spaced-review trail in its own context window. It returns a structured report: per-topic Bloom movement over time (initial / intermediate / current, with an evidence quote drawn verbatim from a real session), retention distribution by Leitner box, exercises and quizzes timeline, precision-gap movements (closed, preserved, newly opened), and project completion.
+
+This means `/evaluate` can do honest trajectory analysis across a learner's entire history without your dialogue with BodhiKit getting crowded by the load. For a learner six months in with dozens of archived sessions, the win is real — the heavy reading happens out of sight, and the evaluation conversation stays focused on what the trajectory means for what to do next.
+
+Example: You finish your React project after four months and run `/bodhikit:evaluate`. The agent reads your 30+ archived sessions, three earlier assessments, and the full spaced-review history. It returns: "JSX went 0 → 3 → 4 over March-June, evidence: 'self-corrected on the comparison';" "Hooks plateaued at 3 since April — three quiz misses on dependency arrays;" "Closed precision gap: PG memory 14-18 → 10-14 MB on April 12;" "Project completion 78%, eight of ten modules marked complete." BodhiKit uses that report to drive the milestone conversation with you in its own voice.
 
 ---
 

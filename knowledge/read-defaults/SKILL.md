@@ -27,7 +27,7 @@ The learner's accumulated work is theirs. Every skill MAY read every file when t
 | `/reflect` | `state.json`, `progress.md` | rarely |
 | `/forget` | `spaced-review.json` | never |
 | `/progress` | `progress.md` (live + summary), `state.json` | learner asks for long-view trajectory |
-| `/evaluate` | everything live, `progress/archive/`, `assessments/archive/`, `assessment-history.json`, all `plan/phase-*.md` | always (this is its job — and it announces what it loaded) |
+| `/evaluate` | `state.json` + `plan/README.md` only in the parent skill. **Delegates the full archive load to the `trajectory-analyzer` agent**, which reads every archive + assessment + plan phase + spaced-review history in its own context. Parent stays light; structured report comes back. | fallback path (agent failure) reads everything itself |
 | `/mentor` | `.bodhi-profile.json`, `.bodhi-profile.projects.json`, `state.json` for active project | learner asks about cross-track patterns or multi-month trajectory |
 | `/plan` (view) | `plan/README.md` + all `plan/phase-*.md` | regenerating |
 | `/assess` | `state.json`, `assessments/latest.md` | re-baselining against a prior assessment the learner names |
