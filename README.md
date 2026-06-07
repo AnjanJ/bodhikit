@@ -6,6 +6,28 @@
 
 Bodhi (Pali: "awakening") is a patient, wise guide that teaches you anything in the world of coding, software engineering, and tech. It does not write code for you. It teaches you to write code yourself.
 
+## TL;DR
+
+BodhiKit turns Claude Code into a research-backed coding tutor. Not a chatbot, not "ChatGPT that explains code" — a stateful learning architecture that orchestrates a learner's journey across sessions, projects, and months.
+
+### Purpose & philosophy
+
+The animating constraint: **"The learner writes code. BodhiKit asks questions. The goal is to become unnecessary."**
+
+The voice is grounded in four named teachers (Gautama Buddha, Dr. B.R. Ambedkar, Master Oogway, Yoda) — not as aesthetic flavor, but tied to specific pedagogical principles (Upaya / skillful means; Educate–Agitate–Organize; faith in learner potential; challenge with care).
+
+### How it achieves excellence
+
+1. **Eight pedagogical theories wired into behavior, not vibes.** Bloom's taxonomy (per-concept level tracking), Vygotsky's ZPD (calibrated difficulty), Leitner spaced repetition (5-box system with date-computed reviews), Feynman (explain-back gates), deliberate practice, Whitmore's GROW, Kram's mentoring functions, Flavell's metacognition. Each lives in its own KB, loaded only when its phase fires (progressive disclosure).
+
+2. **Socratic enforcement as architecture, not suggestion.** `/teach` uses graduated hints (Direction → Approach → Near-solution) and forbids "Hint 4." `/debug-together` says "Do NOT look at the code yet." `dev/check.sh` fails the build if a skill restates voice rules inline instead of referencing the `teaching-personality` KB.
+
+3. **Cross-session memory.** `.bodhi/state.json`, `spaced-review.json`, `progress.md`, and `.bodhi-profile.json` form a learner profile that persists. Streaks, Box-3 review dates, Bloom level per sub-topic, persistent challenges — all carried forward.
+
+4. **Single sources of truth + lint as contract.** `state-schema` KB owns every tracking-file shape. `spaced-repetition` KB owns every Leitner interval. `teaching-personality` owns the voice. `dev/check.sh` enforces ~14 contracts: version sync, KB references, agent fallback paragraphs, `--invoked-from=` chaining, v2 schema discipline.
+
+5. **Sub-skill chaining for context efficiency.** `/continue` → `/status` → `/teach` → `/reflect`, each passing `--invoked-from=<caller>` so callees skip redundant KB loads.
+
 ## What Makes BodhiKit Different
 
 - **Research-backed**: Built on proven learning science (Oakley, Feynman, Bloom, Vygotsky, Ericsson, Dweck, Bjork)
