@@ -80,6 +80,16 @@ Present a comprehensive report including:
 
 Treat this as a milestone moment. Acknowledge the path walked with specific evidence of transformation. For challenges: "The areas needing attention are not failure — they are the next chapter." End with a forward look.
 
+### Capstone offer (project-completion only)
+
+If this evaluation moves the project from `activeProjects` to `completedProjects` (the project is complete), offer the optional capstone — but only as an offer, never as an expectation:
+
+> "One last, optional path. Now that the project is complete, you may write a Socratic-style blog post on a topic you wrestled with and won — a capstone thesis that compares your understanding against the masters of the craft. It is not part of the course. It is an extracurricular for learners who want to consolidate by teaching. Run `/bodhikit:teach-back` if it calls to you. If not, this ending is already complete."
+
+Do NOT auto-invoke `/teach-back`. The capstone is opt-in by design — see `skills/teach-back/SKILL.md` for the eligibility gate.
+
+If the project is not complete (this evaluation is mid-journey), skip the capstone offer entirely.
+
 ---
 
 ## Update Tracking

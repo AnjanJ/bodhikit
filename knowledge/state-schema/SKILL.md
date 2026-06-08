@@ -71,6 +71,7 @@ Every `.bodhi/` surface follows one of three patterns. The pattern dictates how 
 | Profile | Split JSON | `.bodhi-profile.json` + `.bodhi-profile.projects.json` | none |
 | Resources | Whole MD | `resources.md` | none |
 | Assessment history | Append-only JSON | `assessment-history.json` | none |
+| Teach-backs (capstone) | Per-post MD files | `teach-backs/<YYYY-MM-DD>-<slug>.md` | none |
 
 ### Live + archive + summary pattern (sessions, assessments)
 
@@ -342,6 +343,23 @@ Structured assessment data for analytical skills like `/evaluate` and `/progress
 
 Markdown log. Dated sections or status-grouped sections (as `/resources list` produces). No fixed JSON schema. Small; not housekept.
 
+### `learningWithBodhi/<project>/teach-backs/`
+
+Optional capstone artifacts produced by `/teach-back` after `/evaluate` marks the project complete. Each post is its own markdown file at `teach-backs/<YYYY-MM-DD>-<slug>.md`. The directory sits at the project root (sibling to `.bodhi/`), not inside `.bodhi/` — these are learner-authored artifacts the learner may want visible in their own editing workflow, not internal tracking state.
+
+Each file carries a header (thesis, reader, why-it-matters), the learner's prose, and a closing status block:
+
+```markdown
+---
+
+**Status:** <draft | published | personal-notes>
+**Decided:** <YYYY-MM-DD>
+**Masters consulted:** <list from Phase 5>
+**Post-Phase-6 revisions:** <yes | no>
+```
+
+Not housekept. Posts persist indefinitely; the learner may continue editing them long after the skill closes. Only `/teach-back` writes here.
+
 ### `learningWithBodhi/.bodhi-profile.json`
 
 Cross-project learner profile. Shared across all projects under the same `learningWithBodhi/` root. **Split layout in v2:** `.bodhi-profile.json` holds top-level fields; `.bodhi-profile.projects.json` holds the project list.
@@ -359,7 +377,9 @@ Cross-project learner profile. Shared across all projects under the same `learni
     "totalExercises": 0,
     "totalConceptsLearned": 0,
     "totalMilestonesReached": 0,
-    "totalProjects": 0
+    "totalProjects": 0,
+    "teachBacksWritten": 0,
+    "teachBacksPublished": 0
   },
   "patterns": {
     "persistentChallenges": ["<topic>"],
@@ -409,6 +429,7 @@ Skills that write to the profile (across both files):
 - `/practice` — increment `cumulativeStats.totalExercises` (`.bodhi-profile.json`).
 - `/teach` — increment `cumulativeStats.totalConceptsLearned` when a concept reaches Bloom's 3+ (`.bodhi-profile.json`).
 - `/evaluate` — append topics to `patterns.persistentChallenges` or `patterns.consistentStrengths`; bump `totalMilestonesReached`; move a project from `activeProjects` to `completedProjects` if complete.
+- `/teach-back` — bump `cumulativeStats.teachBacksWritten`; bump `cumulativeStats.teachBacksPublished` if the learner self-reports the post was published.
 
 Skills MUST read before writing and MUST NOT overwrite fields they did not modify.
 

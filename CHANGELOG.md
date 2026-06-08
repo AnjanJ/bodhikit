@@ -2,6 +2,17 @@
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [1.8.0] - 2026-06-08
+
+### Added
+- `/teach-back` skill — optional capstone offered after `/evaluate` moves a project to `completedProjects`. The learner writes a Socratic-style blog post on a *formerly-shaky-now-solid* topic (multiple assessments climbing from Bloom <3 to ≥4, at least one demote-and-recover in spaced review, currently Bloom ≥4 AND Box ≥3), reads 3–5 acknowledged masters' work on the same topic *after* drafting (Bjork desirable-difficulty sequence — read after, not before), and decides for themselves whether to publish. **The skill never pronounces a post ready or not-ready** — that verdict is earned by the learner against the field, framed as credibility-protection rather than gatekeeping. Posts saved to `learningWithBodhi/<project>/teach-backs/<YYYY-MM-DD>-<slug>.md` (sibling to `.bodhi/`, not inside it, so the learner can edit them in their normal workflow). Reuses `trajectory-analyzer` for candidate topic surfacing and `resource-finder` (with masters-only instruction) for source discovery.
+- `/evaluate` Closing section now emits a one-paragraph opt-in offer for `/teach-back` whenever this evaluation moves the project from `activeProjects` to `completedProjects`. Mid-journey evaluations skip the offer. Never auto-invokes.
+- `cumulativeStats.teachBacksWritten` and `cumulativeStats.teachBacksPublished` fields added to `.bodhi-profile.json` (default 0; learner self-reports `published` if they actually publish). Profile-writer table in `state-schema` KB updated to list `/teach-back` as a writer.
+- `teach-backs/` registered as a new tracking-surface family in `state-schema` KB. Per-post markdown files. Not housekept. Only `/teach-back` writes.
+
+### Why this exists
+The system already had a clear ending — `/evaluate` confirms completion and moves the project to `completedProjects`. But "completed" was the *measurement* of mastery, not the *demonstration* of it. The capstone gives the learner a way to demonstrate mastery the way the masters themselves did: by writing something defensible on a topic that was once hard. Picking *formerly-shaky* topics (rather than easy ones) honors Bjork's desirable-difficulty principle and produces the more useful post — the next learner benefits more from "I kept getting this wrong until I realized X" than from "here's how X works." Reading the masters *after* drafting (not before) is the second half of Feynman's technique; reading first would turn the post into a summary of what was read. And the publish question is framed as credibility-*protection* ("publish only when you can defend every claim") not credibility-*building* ("publish to be seen") — the former keeps the learner's interests aligned with the bodhi metaphor of awakening passed forward; the latter would have made BodhiKit into a hype engine at the moment of graduation.
+
 ## [1.7.1] - 2026-06-06
 
 ### Fixed

@@ -1,6 +1,6 @@
 # BodhiKit
 
-[![Version](https://img.shields.io/badge/version-1.7.0-blue)](./CHANGELOG.md) [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow?logo=buymeacoffee)](https://buymeacoffee.com/anjanj) [![Sponsor](https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ea4aaa?logo=githubsponsors)](https://github.com/sponsors/AnjanJ)
+[![Version](https://img.shields.io/badge/version-1.8.0-blue)](./CHANGELOG.md) [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow?logo=buymeacoffee)](https://buymeacoffee.com/anjanj) [![Sponsor](https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ea4aaa?logo=githubsponsors)](https://github.com/sponsors/AnjanJ)
 
 **Research-backed interactive coding tutor for Claude Code.**
 
@@ -101,7 +101,7 @@ See the [1.7.0 CHANGELOG entry](./CHANGELOG.md) for the full set of changes.
 /bodhikit:progress           # Full progress dashboard
 ```
 
-## Skills (19)
+## Skills (20)
 
 | Skill | Description |
 |-------|-------------|
@@ -124,6 +124,7 @@ See the [1.7.0 CHANGELOG entry](./CHANGELOG.md) for the full set of changes.
 | `/debug-together` | Scientific debugging: reproduce, hypothesize, probe, isolate, fix |
 | `/forget` | Demote a concept back to Box 1 — for honest self-assessment |
 | `/housekeep` | Rotate tracking files into archive + summary form; one-shot 1.7.0 migration |
+| `/teach-back` | Optional capstone after completion: Socratic-style blog post on a formerly-shaky topic, master comparison, learner-decided publish |
 
 ## Agents (4)
 
