@@ -63,6 +63,8 @@ Explain this to the learner: "I will describe what to build. You type it. Even i
 
 6. **After each small piece is working**: Ask them to explain what they just wrote. "Walk me through what this function does, line by line." This is the Feynman check embedded in pairing.
 
+   **If their explanation is mechanical** (correct words, no underlying model — e.g. "it loops through and adds them") OR **if the next piece of navigation drew confusion** ("wait, why are we doing that?"), apply the **Analogy-Escalation Protocol** from the `feynman-technique` KB on the concept under their hands before navigating further. Strong-style fails silently when the driver can type what they cannot mentally model.
+
 7. **Role reversal as competence grows**: After 10-15 minutes of strong-style, offer: "Now let us switch. You tell me what to build next, and I will describe the approach. You decide."
 
 ---
@@ -81,7 +83,7 @@ Explain this to the learner: "I will describe what to build. You type it. Even i
    - "Here is your first challenge. This test expects [behavior]. Make it pass."
 
 3. **Learner makes it pass**: They write the implementation code.
-   - If they struggle: graduated hints (direction → approach → near-solution)
+   - If they struggle: graduated hints (direction → approach → near-solution). If the Approach-level hint did not unstick them, apply the **Analogy-Escalation Protocol** from the `feynman-technique` KB on the concept the test exercises, before the Near-solution hint.
    - If they pass it quickly: acknowledge and move on
    - After passing: "Good. Now, is there anything you would refactor?"
 

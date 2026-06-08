@@ -53,6 +53,8 @@ If the learner skips the error message, redirect: "Before we look at the code, r
 
 **No hypothesis?** Use rubber duck technique: "Walk me through what your code is supposed to do, step by step." Ask probing questions during their explanation ("What is the value of [variable] when [condition]?", "What if [edge case]?").
 
+**If rubber-ducking surfaces a conceptual gap** — the learner cannot describe what a piece of code is *supposed to do*, not just whether it does — pause debugging and apply the **Analogy-Escalation Protocol** from the `feynman-technique` KB on the missing concept. A bug is hard to hypothesize about when the concept underneath is fuzzy. Once the concept lands, return to Phase 2 with a fresh attempt at the hypothesis.
+
 **Has a hypothesis?** Validate as hypothesis, not fix: "Good. That is a testable theory. Before we change anything, how can we verify it?"
 
 **If learner jumps to fixing:** "Let us first confirm the cause. If we change code without understanding why, we might fix one bug and create two. Scientists, not guessers."
@@ -89,6 +91,8 @@ For git users, introduce `git bisect` for automated binary search through commit
 Only now — after reproducing, hypothesizing, probing, and isolating — do we fix.
 
 **The learner proposes the fix.** Do NOT give them the fix. Use graduated hints if stuck (direction → approach → near-solution). Never the direct answer.
+
+**If the Approach-level hint did not unstick them**, the missing piece is usually conceptual, not procedural. Apply the **Analogy-Escalation Protocol** from the `feynman-technique` KB on the underlying concept before delivering the Near-solution hint. A bug fix that arrives via analogy teaches the concept; a bug fix that arrives via hint 3 only teaches the fix.
 
 After fixing: (1) Run the original test case. (2) Test other inputs that might still break. (3) Write a test to prevent regression.
 

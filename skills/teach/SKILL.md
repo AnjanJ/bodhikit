@@ -47,7 +47,7 @@ After explaining, verify understanding before continuing:
 - "What would this code output?" (small snippet)
 - "How is this different from [related concept they know]?"
 
-If they struggle, re-explain with a DIFFERENT analogy. Do not repeat the same explanation.
+If they struggle, apply the **Analogy-Escalation Protocol** from the `feynman-technique` KB: read `.bodhi-profile.json` `learnerBackground.domains[]` + `analogyHistory[]`, climb the 4-rung ladder (learner-domain → ask-once → universal-physical → code-restatement), cap at two analogies before decomposing to a smaller sub-concept. Do not repeat the same explanation.
 
 ---
 
@@ -87,6 +87,8 @@ Tell them: "Struggle is where the learning lives. Try for at least 5 minutes bef
 ### If They Ask for Help
 
 Graduated hints: (1) Direction → (2) Approach → (3) Near-solution. Never Hint 4 — if 3 hints fail, return to Phase 2 and re-teach differently.
+
+**Between hint 2 and hint 3**, if the Approach-level hint did not move them forward, apply the **Analogy-Escalation Protocol** from the `feynman-technique` KB before delivering hint 3. A stuck learner often does not need a closer hint; they need the concept reframed into their world. If the protocol's first analogy lands, the learner may solve from there without ever needing hint 3.
 
 ### When They Complete It
 

@@ -22,7 +22,7 @@ Explain the concept following these rules:
 
 - **As if to a curious 12-year-old** — not a 5-year-old (do not be patronizing), but someone without domain expertise
 - **No jargon without definition** — if you must use a technical term, define it immediately in plain language
-- **Use analogies from everyday life** — connect the concept to something universally understood
+- **Use analogies from the learner's own world when possible** — read `.bodhi-profile.json` `learnerBackground.domains[]`; if a domain is listed AND `learnerBackground.analogyHistory[]` shows no recent use of that domain for this concept, prefer it (rung 1 of the **Analogy-Escalation Protocol** in the `feynman-technique` KB). If no domain is on file, use everyday-universal analogies (rung 3) — do not stop to ask for a domain in Phase 1; the rung-2 ask is reserved for when the first explanation does not land
 - **Use concrete examples** — show actual code snippets, not just abstract descriptions
 - **Build from known to unknown** — start with what the learner already understands and bridge to the new concept
 - **Keep it concise** — the first explanation should be 200-400 words, not a lecture
@@ -66,10 +66,10 @@ Be specific. "Good job" teaches nothing. "You correctly identified that indexes 
 For each gap identified in Phase 3:
 
 1. Provide a targeted mini-explanation (2-3 sentences) addressing just that gap
-2. Use a different analogy or example than Phase 1 (variation aids retention)
+2. Use a different analogy or example than Phase 1 (variation aids retention) — when this skill's Phase 1 already produced a learner-domain analogy, choose the *next rung* on the **Analogy-Escalation Protocol** ladder (`feynman-technique` KB) rather than picking a random angle
 3. Ask the learner to explain JUST the gap part again: "Can you now explain [specific gap] in your own words?"
-4. If they get it: move to the next gap
-5. If they still struggle: try yet another angle. Some concepts need three or four different explanations before they click.
+4. If they get it: move to the next gap. Append `{concept: <gap>, domain: <used>, landed: true, date}` to `learnerBackground.analogyHistory[]` in `.bodhi-profile.json`
+5. If they still struggle: apply the full **Analogy-Escalation Protocol** from the `feynman-technique` KB — the 2-analogy cap applies per gap, not per session, and after the cap the right move is to decompose the gap into a smaller sub-concept rather than reach for a third angle
 
 After all gaps are addressed:
 

@@ -2,6 +2,21 @@
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [1.9.0] - 2026-06-08
+
+### Added
+- **Analogy-Escalation Protocol** in `knowledge/feynman-technique/SKILL.md` — a single named protocol every struggle-sensitive skill reaches for when the learner is stuck. Trigger conditions tied to the ZPD "Beyond" signals (cannot articulate confusion, Approach-level hint did not move them, mechanical explain-back, surviving misconception). 4-rung ladder: (1) learner's own domain from `.bodhi-profile.json` `learnerBackground.domains[]`, (2) ask-once for a domain if none on file or all used for this concept, (3) universal-physical analogy as fallback, (4) code-restatement as last resort. Hard 2-analogy cap per concept — after two, the protocol decomposes to a smaller sub-concept rather than reach for a third analogy (correct ZPD response).
+- `learnerBackground` object on `.bodhi-profile.json`: `domains[]` (cross-project list of fields/hobbies/jobs the learner knows well) and `analogyHistory[]` (append-only `{concept, domain, landed, date}` log so future invocations on the same concept pick a different domain). Both fields optional; absence means "no prior data" and the protocol falls through naturally. Documented in the `state-schema` KB; writers list updated.
+
+### Changed
+- `/teach` Phase 2 Checkpoint and Phase 4 hint chain (between Approach and Near-solution) now invoke the Analogy-Escalation Protocol instead of the one-line "different analogy" instruction.
+- `/explain` Phase 1 prefers learner-domain analogies when `learnerBackground.domains[]` is populated; Phase 4 routes gap-refinement through the protocol's ladder rather than picking a random angle. The 2-analogy cap applies per gap.
+- `/debug-together` Phase 2 (Hypothesize) pauses debugging and applies the protocol when rubber-ducking surfaces a conceptual gap underneath the bug. Phase 5 (Fix) applies the protocol between Approach and Near-solution hints.
+- `/pair` strong-style step 6 (post-piece explain-back) and ping-pong step 3 (learner makes the test pass) invoke the protocol when the explanation is mechanical or the Approach hint did not unstick them.
+
+### Why this exists
+Analogies were already mentioned in three places (`feynman-technique` KB step 2, `/teach` Phase 2, `/explain` Phases 1 and 2), but as scattered instructions without a shared trigger condition, escalation order, or cap. The result was that analogies appeared inconsistently across skills — present in `/teach` and `/explain`, absent in `/debug-together` and `/pair` where struggle is most acute — and when they did fire, they reached for universal-physical analogies (mailboxes, libraries) before any attempt to ground in the learner's actual world. The new protocol makes analogy a **response to detected struggle**, escalates from the learner's domain first (highest leverage, lowest reuse if not personalized), caps at two before falling back to sub-concept decomposition (the real ZPD answer), and records what worked so the next session does not repeat. The "ask once for a domain" rung is gated to the moment struggle is detected — the learner is not interrogated at project start about their hobbies, only asked when an analogy is actually about to land.
+
 ## [1.8.0] - 2026-06-08
 
 ### Added

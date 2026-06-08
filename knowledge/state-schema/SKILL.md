@@ -385,9 +385,19 @@ Cross-project learner profile. Shared across all projects under the same `learni
     "persistentChallenges": ["<topic>"],
     "consistentStrengths": ["<topic>"]
   },
+  "learnerBackground": {
+    "domains": ["<string>"],
+    "analogyHistory": [
+      { "concept": "string", "domain": "string", "landed": true, "date": "YYYY-MM-DD" }
+    ]
+  },
   "lastUpdated": "ISO-8601"
 }
 ```
+
+- `learnerBackground.domains[]`: free-form list of fields, hobbies, or jobs the learner knows well (cooking, music, plumbing, accounting, woodworking, soccer, etc.). Cross-project — domains the learner knows well do not change when they start a new project. Populated by the analogy-escalation protocol's rung-2 ask, or by `/learn` Phase 1 / `/mentor` if the learner volunteers the info naturally.
+- `learnerBackground.analogyHistory[]`: append-only log of `{concept, domain, landed, date}` tuples. The analogy-escalation protocol writes one entry per analogy used so future invocations on the same concept reach for a different domain. `landed` is the learner's signal — true if they showed comprehension after the analogy, false if they did not.
+- Both fields are optional. Absence means "no prior data" — the protocol falls through to rungs 2-3 naturally. See the `feynman-technique` KB *Analogy-Escalation Protocol* section for the full read/write semantics.
 
 Routine skills load this small file (~1-2 KB at typical use). No `activeProjects` array here in v2.
 
@@ -430,6 +440,7 @@ Skills that write to the profile (across both files):
 - `/teach` — increment `cumulativeStats.totalConceptsLearned` when a concept reaches Bloom's 3+ (`.bodhi-profile.json`).
 - `/evaluate` — append topics to `patterns.persistentChallenges` or `patterns.consistentStrengths`; bump `totalMilestonesReached`; move a project from `activeProjects` to `completedProjects` if complete.
 - `/teach-back` — bump `cumulativeStats.teachBacksWritten`; bump `cumulativeStats.teachBacksPublished` if the learner self-reports the post was published.
+- `/teach`, `/explain`, `/debug-together`, `/pair` — append to `learnerBackground.domains[]` when the analogy-escalation protocol's rung-2 ask fires, and append `{concept, domain, landed, date}` to `learnerBackground.analogyHistory[]` whenever an analogy is used. Read-then-append; never overwrite. See the `feynman-technique` KB for protocol semantics.
 
 Skills MUST read before writing and MUST NOT overwrite fields they did not modify.
 
