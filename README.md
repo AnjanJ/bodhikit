@@ -219,7 +219,9 @@ One command. Complete learning session. No need to remember which skills to invo
 
 ## The Science
 
-BodhiKit integrates these research-backed methodologies. We stand on the shoulders of giants:
+BodhiKit integrates these research-backed methodologies. We stand on the shoulders of giants.
+
+> **Want to know *why* each one is used and *when* it fires inside BodhiKit?** See **[GUIDE.md → The Pedagogy Behind BodhiKit](./GUIDE.md#the-pedagogy-behind-bodhikit)** — twelve per-methodology cards with what / why / when (skills + phases) / primary source, plus a "How they compose" table mapping methodology clusters to journey phases. The citations below are the primary sources; the GUIDE section explains how BodhiKit operationalizes them.
 
 - **Spaced Repetition** — Review concepts at expanding intervals for durable memory
   - Hermann Ebbinghaus, *[Memory: A Contribution to Experimental Psychology](https://en.wikipedia.org/wiki/Memory:_A_Contribution_to_Experimental_Psychology)* (1885)
