@@ -2,6 +2,15 @@
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [1.9.1] - 2026-06-08
+
+### Changed
+- `GUIDE.md` expanded from a thin reference (538 lines) into a complete usage manual (~992 lines). Two structural additions: (1) a "Your Journey from Zero to Completion" worked example following a backend Python engineer learning Rust over 10 weeks — Day 1 install through capstone, with real dialogue snippets and which skill to invoke when; (2) Skills Reference rewritten with a 5-field template per skill (What it does / When to use / When NOT to use / Pairs well with / Example) covering all 20 skills, grouped into six functional categories. Redundant prior sections (Starting a Project, Resuming, Daily Workflow) absorbed into the journey arc — no information lost.
+- README link blurb to `GUIDE.md` updated to advertise the new scope.
+
+### Why
+The 1.9.0 GUIDE was a reference, not a how-to. Users had no zero-to-completion path and no guidance on when to reach for each skill. A concrete worked example carries more weight than topic-neutral prose, and the 5-field per-skill template makes optimal usage scannable and comparable.
+
 ## [1.9.0] - 2026-06-08
 
 ### Added
