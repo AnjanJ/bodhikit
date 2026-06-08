@@ -2,6 +2,15 @@
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [1.9.2] - 2026-06-08
+
+### Changed
+- `GUIDE.md` adds **"The Pedagogy Behind BodhiKit"** — a new section between *Understanding Your Progress* and *How Spaced Repetition Works* answering three questions for the learner: what pedagogy, why, when each fires. Twelve per-methodology cards (Bloom, Spaced Repetition, ZPD, Feynman, Deliberate Practice, Desirable Difficulties, Growth Mindset, Metacognition, Constructivism, Mentoring/GROW, Pair Programming, Scientific Debugging). Each card: what it is, why BodhiKit uses it (the specific learning problem), when it fires (skills + phases), one link to a primary source. Closes with a "How they compose" table showing which methodologies fire at each phase of a learner's journey.
+- `Pedagogy:` cross-links added under the Example of 10 skill entries (`/teach`, `/reflect`, `/quiz`, `/forget`, `/explain`, `/practice`, `/pair`, `/debug-together`, `/mentor`, `/teach-back`) so a learner reading about a skill can click through to the underlying research without leaving the GUIDE.
+
+### Why
+The GUIDE previously named methodologies in passing (Bloom in `/assess`, Feynman in `/explain`, etc.) but offered no answer to a learner who asked "what pedagogy and why?" The Science section in the README has the citations but no "when it fires" mapping, and the GUIDE did not link to it. The new section closes that gap with deep-dive links at the card level, and the per-skill cross-links make the pedagogy discoverable from any direction.
+
 ## [1.9.1] - 2026-06-08
 
 ### Changed

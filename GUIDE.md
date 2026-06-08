@@ -19,6 +19,7 @@
 - [Using BodhiKit with Books and Courses](#using-bodhikit-with-books-and-courses)
 - [Learner Profile](#learner-profile)
 - [Understanding Your Progress](#understanding-your-progress)
+- [The Pedagogy Behind BodhiKit](#the-pedagogy-behind-bodhikit) — what, why, when each methodology fires
 - [How Spaced Repetition Works](#how-spaced-repetition-works)
 - [Housekeeping Your Tracking Files](#housekeeping-your-tracking-files)
 - [Finishing a Project: the Capstone](#finishing-a-project-the-capstone)
@@ -417,6 +418,8 @@ Expect ~60–90 minutes for the full Day 1: discovery, ~8 assessment questions, 
 ```
 > "Lifetimes. Let us start with why they exist. A reference points at memory owned by something else — and that something else can disappear. The compiler needs to know how long a reference is valid so it never points at memory that has been freed. Lifetimes are the syntax for telling the compiler 'this reference is valid as long as that data is alive.' Here is a tiny example, then we will build one together, then you will write one alone."
 
+**Pedagogy:** [ZPD / Gradual Release](#3-zone-of-proximal-development-vygotsky), [Bloom](#1-blooms-taxonomy), [Feynman](#4-feynman-technique), [Desirable Difficulties](#6-desirable-difficulties-bjork).
+
 #### `/bodhikit:reflect`
 
 **What it does.** End-of-session metacognitive reflection. Asks four short questions (hardest concept today, what surprised you, confidence ratings, what would you do differently), updates spaced-review boxes based on your self-rated confidence (auto-invokes `/forget` when confidence ≤ 4 on a concept), and writes the session summary to `progress.md`. May invoke `/housekeep` at the boundary.
@@ -434,6 +437,8 @@ Expect ~60–90 minutes for the full Day 1: discovery, ~8 assessment questions, 
 /bodhikit:reflect
 ```
 > "Before we close — what felt hardest today? ... Was anything easier than you expected? ... On a scale of 1–10, how confident do you feel about lifetimes right now? About trait bounds? ... If you replayed today's session, would you do anything differently? Even one sentence is enough."
+
+**Pedagogy:** [Metacognition](#8-metacognition-flavell), [Growth Mindset](#7-growth-mindset-dweck).
 
 ---
 
@@ -541,6 +546,8 @@ These three skills keep what you have learned from leaking out.
 ```
 > 5 questions on async/await semantics — return types, executor pinning, send-bound futures, cancellation safety, the cost of `.await`. Box updates write to `spaced-review.json`.
 
+**Pedagogy:** [Spaced Repetition](#2-spaced-repetition-ebbinghaus--leitner), [Desirable Difficulties](#6-desirable-difficulties-bjork) (retrieval > recognition).
+
 #### `/bodhikit:forget <concept>[, <concept>, ...]`
 
 **What it does.** Learner-initiated demotion of one or more concepts back to Box 1 — they will be re-quizzed tomorrow. Honest self-assessment. Auto-invoked by `/reflect` when you self-rate confidence 1–4 on a concept.
@@ -558,6 +565,8 @@ These three skills keep what you have learned from leaking out.
 /bodhikit:forget lifetime elision, trait bounds
 ```
 > "Demoted: 'lifetime elision' (was Box 3), 'trait bounds' (was Box 2). Both back to Box 1, reviewing tomorrow. Honest self-assessment is how mastery sticks — well-named."
+
+**Pedagogy:** [Metacognition](#8-metacognition-flavell), [Spaced Repetition](#2-spaced-repetition-ebbinghaus--leitner).
 
 #### `/bodhikit:housekeep [migrate|--dry-run]`
 
@@ -601,6 +610,8 @@ These four go beyond the routine when you need depth, materials, or a code-level
 ```
 > Simple-language opening, your explain-back, gap analysis ("you correctly distinguished static vs dynamic dispatch but missed the size implication for trait objects"), refinement, final test. Typically 15–30 minutes for a meaty concept.
 
+**Pedagogy:** [Feynman](#4-feynman-technique) (the entire skill), [Analogy Protocol](#when-bodhikit-reaches-for-an-analogy) (when stuck).
+
 #### `/bodhikit:practice [topic|next]`
 
 **What it does.** A hands-on exercise calibrated to your current Bloom level on the topic. Beginners get starter files with TODOs; intermediate learners get a description and test cases; advanced learners get a problem statement only. After you solve it, the code-reviewer agent runs an educational review (what your code reveals about your understanding, not production-quality nits). May auto-invoke `/debug-together` if your code has a real bug.
@@ -619,6 +630,8 @@ These four go beyond the routine when you need depth, materials, or a code-level
 /bodhikit:practice error handling
 ```
 > "Write a function `parse_config(path: &str) -> Result<Config, ConfigError>` that handles file-not-found, invalid TOML, and missing-required-field cases distinctly. No starter code — you are at Bloom Level 3 on errors. Tests are in `exercises/error-handling/tests.rs`. When you have a working version, say so and I will look at it."
+
+**Pedagogy:** [Deliberate Practice](#5-deliberate-practice-ericsson), [Constructivism](#9-constructivism--spiral-curriculum-piaget-bruner-papert), [Bloom](#1-blooms-taxonomy) (calibration).
 
 #### `/bodhikit:review [file-path|repo-url]`
 
@@ -685,6 +698,8 @@ These two skills are for the moments learning gets concrete: real bugs, real cod
 ```
 > "Strong-style today. For an idea to go from my head into the computer, it must go through your hands. We are going to build a small CLI that takes a port number and serves 'hello' on it. Start by creating `src/main.rs` with a `main` function that prints 'starting on port…' — pick how to parse the port from argv when you are ready."
 
+**Pedagogy:** [Pair Programming](#11-pair-programming-beck-williams--kessler-falco), [ZPD](#3-zone-of-proximal-development-vygotsky) (mode auto-selects on level).
+
 #### `/bodhikit:debug-together [file-path]`
 
 **What it does.** Scientific debugging using **Zeller's TRAFFIC method** (Track, Reproduce, Automate, Find origins, Focus, Isolate, Correct) plus **wolf-fence binary search** (Gauss). Six phases: reproduce, hypothesize, probe (not fix), isolate, fix, reflect. Refuses to look at the code before you can reproduce the bug. Refuses to fix the bug for you. Catches novice anti-patterns (random changes, print-spam without hypothesis, ignoring error messages) and redirects.
@@ -703,6 +718,8 @@ These two skills are for the moments learning gets concrete: real bugs, real cod
 /bodhikit:debug-together src/server.rs
 ```
 > "Before we look at the code: what did you expect to happen, and what actually happened? Walk me through the exact steps to reproduce. If you have an error message, read it to me out loud."
+
+**Pedagogy:** [Scientific Debugging](#12-scientific-debugging-zeller--gauss--odell), [Growth Mindset](#7-growth-mindset-dweck) (bugs are clues).
 
 ---
 
@@ -747,6 +764,8 @@ These three skills are the long-arc ones — for evaluating where you have been 
 ```
 > "Let us go through this together. What is the goal you are working toward — concrete, time-bound if possible? ... Where are you with it right now — honestly? ... I see three plausible next-projects given your skills and that goal. Let me lay them out with what each costs and what each gets you."
 
+**Pedagogy:** [GROW + Kram's mentoring functions](#10-mentoring-theory-kram--whitmore-grow).
+
 #### `/bodhikit:teach-back`
 
 **What it does.** Optional capstone, offered only after `/evaluate` confirms a project is complete. You write a Socratic-style blog post on a topic that was *formerly shaky and is now solid*. The protocol: BodhiKit surfaces 2–3 candidate topics meeting the formerly-shaky-now-solid signal (Bloom < 3 → ≥ 4, at least one demote-and-recover, currently Bloom ≥ 4 AND Box ≥ 3). You pick one and draft in your own voice — BodhiKit asks Socratic questions to sharpen your claims but does not write paragraphs. **After** drafting, the resource-finder agent surfaces 3–5 acknowledged masters on the topic; you read them with your draft in hand. You revise. You decide whether to publish — BodhiKit never pronounces a post ready, that verdict is yours. Posts persist at `learningWithBodhi/<project>/teach-backs/<YYYY-MM-DD>-<slug>.md`.
@@ -764,6 +783,8 @@ These three skills are the long-arc ones — for evaluating where you have been 
 /bodhikit:teach-back
 ```
 > "Three topics from your history that meet the formerly-shaky-now-solid signal: (1) lifetimes — went from blank-wall in Week 1 to Bloom 4 by Week 9, with a demote-and-recover in Week 5; (2) trait bounds — three rounds of demote-and-recover, now stable at Box 4; (3) tokio spawn semantics — the bug you debugged in Week 6 reset this from 3 to 1, and it climbed back to 4 by Week 9. Which one do you want to write?"
+
+**Pedagogy:** [Feynman](#4-feynman-technique) (writing as gap-revealer), [Desirable Difficulties](#6-desirable-difficulties-bjork) (formerly-shaky topics on purpose).
 
 ---
 
@@ -869,6 +890,238 @@ A concept is considered **mastered** when:
 - 3 consecutive correct quiz answers
 - Spaced repetition Box 4 or 5
 - Can explain it to someone else (Feynman check)
+
+---
+
+## The Pedagogy Behind BodhiKit
+
+BodhiKit is built on twelve research-backed methodologies. None of them are decorative — each one solves a specific learning problem that comes up during a real journey, and each one fires inside specific skills at specific moments. This section is the map: what each methodology is, what problem it solves, when BodhiKit reaches for it, and where to read the primary source if you want to go deeper.
+
+If you only have time for one paragraph: **BodhiKit's job is to make the next move in your learning the one most likely to grow durable, transferable understanding — not the one most likely to feel productive in the moment.** The twelve methodologies below are the operationalization of that.
+
+---
+
+### 1. Bloom's Taxonomy
+
+**What it is.** A six-level hierarchy of cognitive engagement with a concept — Remember → Understand → Apply → Analyze → Evaluate → Create. Each level is qualitatively different from the one below, not just "more of the same."
+
+**Why BodhiKit uses it.** "Did you learn it?" is the wrong question. *At what level* did you learn it is the right one. Bloom gives BodhiKit a concrete vocabulary for the gap between "I have heard of monads" (Level 1) and "I can design a monad for a new domain" (Level 6). Without this, calibration is impossible — exercises are either too easy or too hard, hints either condescend or overshoot.
+
+**When it fires.**
+- `/learn` Phase 2: the skill-assessor agent classifies your level per sub-topic before generating a plan.
+- `/teach` Phase 4: exercise scaffolding is calibrated to Bloom level (1-2 get starter files; 3-4 get tests; 5-6 get problem statements only).
+- `/quiz`: questions mix levels deliberately — Level 2 recall, Level 3 prediction, Level 4 "what breaks if…"
+- `/assess`, `/evaluate`, `/progress`: per-topic Bloom levels are the unit of "where you are."
+
+**Go deeper.**
+- Benjamin Bloom, *[Taxonomy of Educational Objectives](https://en.wikipedia.org/wiki/Bloom%27s_taxonomy)* (1956) — the original.
+- Lorin Anderson & David Krathwohl, *[A Taxonomy for Learning, Teaching, and Assessing](https://en.wikipedia.org/wiki/Bloom%27s_taxonomy#The_cognitive_domain_(knowledge-based))* (2001) — the revised taxonomy BodhiKit uses.
+
+---
+
+### 2. Spaced Repetition (Ebbinghaus + Leitner)
+
+**What it is.** Reviewing material at expanding intervals defeats the forgetting curve. Leitner's box system operationalizes this: a concept you got right moves up a box (longer interval); a concept you got wrong drops to Box 1 (review tomorrow).
+
+**Why BodhiKit uses it.** Without scheduled review, learning leaks. You finish a module on hooks, feel solid, and a month later cannot remember the rules of dependency arrays. Spaced repetition is the only known way to make recall *durable* without spending more time per concept overall.
+
+**When it fires.**
+- `/continue` Phase 4: surfaces concepts where `nextReview ≤ today`.
+- `/quiz`: every answer updates the box per the canonical mapping (Box 1 → 1 day, Box 2 → 3, Box 3 → 7, Box 4 → 14, Box 5 → 30).
+- `/forget`: learner-initiated demotion to Box 1 — honest self-assessment.
+- `/teach` Phase 5 and `/explain` Phase 4: new and refined concepts enter the system.
+
+**Go deeper.**
+- Hermann Ebbinghaus, *[Memory: A Contribution to Experimental Psychology](https://en.wikipedia.org/wiki/Memory:_A_Contribution_to_Experimental_Psychology)* (1885) — the original forgetting-curve experiments.
+- Sebastian Leitner, *[Leitner system](https://en.wikipedia.org/wiki/Leitner_system)* (1972) — the box implementation.
+
+---
+
+### 3. Zone of Proximal Development (Vygotsky)
+
+**What it is.** Three zones around your current ability: *can do alone* (too easy, no learning), *can do with guidance* (the ZPD — where learning happens), *cannot do even with help* (overload). The right task is always in the middle zone.
+
+**Why BodhiKit uses it.** Most learning failures are calibration failures. A task that is too easy bores you out of engagement; a task that is too hard cognitively overloads you and you give up. Without a ZPD model, BodhiKit would either patronize advanced learners or break beginners.
+
+**When it fires.**
+- `/teach` Phase 3: scaffolds problems with the **Gradual Release of Responsibility** model (I Do → We Do → You Do).
+- `/teach` Phase 2 Checkpoint and Phase 4 hint chain: detects "Beyond the ZPD" signals (cannot articulate confusion, Approach hint did not unstick) and triggers the analogy protocol or a step back to a prerequisite.
+- `/pair`: mode auto-selects from Bloom level (1-2 → strong-style, 3-4 → ping-pong, 5-6 → navigate) — each mode is calibrated to a different ZPD position.
+
+**Go deeper.**
+- Lev Vygotsky, *[Mind in Society](https://en.wikipedia.org/wiki/Zone_of_proximal_development)* (1978) — the foundational text.
+
+---
+
+### 4. Feynman Technique
+
+**What it is.** Four steps: choose a concept, explain it simply (as if to a 12-year-old), identify the gaps your explanation revealed, refine and repeat. The check is the *simple* part — jargon hides confusion from yourself.
+
+**Why BodhiKit uses it.** Recognition feels like understanding but is not. You can "follow along" with a lecture on monads and still not be able to write one. Forcing you to *generate* the explanation in your own words breaks the illusion of competence and surfaces the actual gap.
+
+**When it fires.**
+- `/explain` — the entire skill is a direct application of all four steps.
+- `/teach` Phase 5: explain-back check.
+- `/teach-back`: a Feynman application scaled to a blog post; reading the masters happens *after* drafting so your gaps surface before they get hidden.
+- The [Analogy-Escalation Protocol](#when-bodhikit-reaches-for-an-analogy): operationalizes Feynman step 4 ("create better analogies") with a structured ladder.
+
+**Go deeper.**
+- James Gleick, *[Genius: The Life and Science of Richard Feynman](https://en.wikipedia.org/wiki/Genius:_The_Life_and_Science_of_Richard_Feynman)* (1992) — the most cited source for Feynman's teaching philosophy.
+
+---
+
+### 5. Deliberate Practice (Ericsson)
+
+**What it is.** Targeted exercises at the edge of your ability, with immediate feedback. Not just "more practice" — *correct* practice, focused on the specific sub-skill you are growing, with a clear success signal and a correction loop when you miss.
+
+**Why BodhiKit uses it.** Hours-of-practice does not produce expertise. Hours-of-correct-practice does. Without deliberate practice, learners drill on what they are already good at (which feels productive) and avoid the uncomfortable edge where actual growth happens.
+
+**When it fires.**
+- `/practice`: every exercise is calibrated to your current Bloom level on the topic, with the success criterion stated explicitly upfront.
+- `/teach` Phase 4: You-Do exercises follow the same calibration.
+- `/pair` ping-pong mode: rapid red-green-refactor cycles with immediate feedback.
+- `/review`: the post-exercise feedback loop closes the deliberate-practice cycle.
+
+**Go deeper.**
+- K. Anders Ericsson, *[The Role of Deliberate Practice in the Acquisition of Expert Performance](https://psycnet.apa.org/record/1993-40718-001)* (1993) — the foundational paper.
+- K. Anders Ericsson, *[Peak: Secrets from the New Science of Expertise](https://en.wikipedia.org/wiki/Peak:_Secrets_from_the_New_Science_of_Expertise)* (2016) — the readable book version.
+
+---
+
+### 6. Desirable Difficulties (Bjork)
+
+**What it is.** Some kinds of difficulty during learning produce *better* long-term retention even though they make practice feel slower or harder in the moment. Examples: interleaving topics rather than blocking, spacing rather than cramming, retrieval practice rather than re-reading, generation rather than recognition.
+
+**Why BodhiKit uses it.** What feels effective during learning is often the worst for retention, and what feels uncomfortable is often the most durable. Without this principle, BodhiKit would optimize for in-session smoothness and produce learners who forget everything in a month.
+
+**When it fires.**
+- `/teach`: interleaves prior concepts with new ones in examples (rather than mono-topic blocks).
+- `/quiz` and spaced review: retrieval practice (you generate the answer) and spacing (review at expanding intervals).
+- `/practice`: variation in context — learned with arrays, practice with objects.
+- `/teach-back`: picks *formerly-shaky* topics (not easy wins) precisely because the difficulty is desirable for both writer and reader.
+
+**Go deeper.**
+- Robert & Elizabeth Bjork, *[Making Things Hard on Yourself, But in a Good Way](https://bjorklab.psych.ucla.edu/research/)* (2011) — the named-and-explained version.
+
+---
+
+### 7. Growth Mindset (Dweck)
+
+**What it is.** Whether learners believe ability is fixed or developable changes how they respond to difficulty. Fixed-mindset learners avoid challenge (failure threatens identity); growth-mindset learners seek it (challenge is the path to growth).
+
+**Why BodhiKit uses it.** Feedback language has measurable effects on whether learners persist through stalls. Praise strategy ("you stuck with that problem until you cracked it") not talent ("you are smart"). Frame mistakes as data, not verdict.
+
+**When it fires.**
+- The `teaching-personality` KB encodes the voice across every skill — celebrate effort and strategy, not talent; reframe "I can't" as "I can't yet."
+- `/reflect`: questions explicitly probe what was hardest and what the learner would do differently — building growth-orientation through metacognition.
+- `/debug-together` Phase 0: bugs framed as clues, not failures.
+- `/forget`: honest self-demotion framed as awareness, not setback.
+
+**Go deeper.**
+- Carol Dweck, *[Mindset: The New Psychology of Success](https://en.wikipedia.org/wiki/Mindset_(book))* (2006) — the readable summary.
+
+---
+
+### 8. Metacognition (Flavell)
+
+**What it is.** Thinking about your thinking. Knowing what you know, what you do not know, and what tactics work for *you* specifically.
+
+**Why BodhiKit uses it.** The Dunning-Kruger curve and "illusions of competence" mean learners routinely overestimate their own understanding. Without explicit metacognitive practice, you do not know that you do not know. Reflection is also where retention is durably encoded — research shows learners who reflect retain 20-30% more.
+
+**When it fires.**
+- `/reflect`: the entire skill is direct metacognitive practice — four questions probing what was hardest, what surprised you, your confidence ratings, and what you would do differently.
+- `/forget`: explicit self-assessment of confidence, with consequences (Box demotion) — keeps metacognition honest.
+- `/evaluate`: comparative analysis ("you said you were Bloom 3 on hooks in March; the trajectory shows you are now Bloom 4 — but the recent quiz misses suggest a precision gap") confronts illusion of competence with evidence.
+
+**Go deeper.**
+- John Flavell, *[Metacognition and Cognitive Monitoring](https://psycnet.apa.org/record/1980-09388-001)* (1979) — the paper that coined the term.
+
+---
+
+### 9. Constructivism & Spiral Curriculum (Piaget, Bruner, Papert)
+
+**What it is.** Learning is *built* in the learner's head, not transmitted. The same concept benefits from being revisited at increasing depth — the spiral curriculum — rather than treated as "done" after one pass.
+
+**Why BodhiKit uses it.** A learner who *uses* a concept builds a model; a learner who *reads about* it does not. And concepts seen once are surface-level; concepts revisited in different contexts get integrated into a working mental model. Without these principles, BodhiKit would lecture you instead of giving you problems to chew on.
+
+**When it fires.**
+- "The learner writes the code from Phase 3 onward" — the core teaching principle in `/teach` and `/pair`.
+- Plans are organized by phase (Phase 0 → Phase 1 → Phase 2) with topics revisited at higher Bloom levels in later phases — Bruner's spiral.
+- `/practice` exercises calibrate to *building*, not reading.
+
+**Go deeper.**
+- Jean Piaget, *[The Construction of Reality in the Child](https://en.wikipedia.org/wiki/Constructivism_(philosophy_of_education))* (1954).
+- Jerome Bruner, *[The Process of Education](https://en.wikipedia.org/wiki/The_Process_of_Education)* (1960) — the spiral curriculum.
+- Seymour Papert, *[Mindstorms](https://en.wikipedia.org/wiki/Mindstorms_(book))* (1980) — constructionism applied to programming.
+
+---
+
+### 10. Mentoring Theory (Kram + Whitmore GROW)
+
+**What it is.** Effective mentoring has two functions: **career** (advice, exposure, sponsorship — what to do) and **psychosocial** (acceptance, confirmation, role-modeling — who to be). Whitmore's **GROW** model gives a four-step structure: Goal, Reality, Options, Will.
+
+**Why BodhiKit uses it.** A learner asking "what should I learn next?" is rarely just asking about topics — they are asking about path, identity, fit. GROW gives the conversation structure without prescribing the answer. Kram's distinction reminds BodhiKit which functions it *can* serve (career advice grounded in your skill data) and which it *cannot* (sponsorship, networking, vouching).
+
+**When it fires.**
+- `/mentor`: the entire skill is a direct application of GROW + Kram.
+- `/evaluate` may auto-invoke `/mentor` at major milestones.
+
+**Go deeper.**
+- Kathy Kram, *[Mentoring at Work](https://www.researchgate.net/publication/232463073_Mentoring_at_Work_Developmental_Relationships_in_Organisational_Life)* (1985) — the foundational study.
+- John Whitmore, *[Coaching for Performance (GROW Model)](https://en.wikipedia.org/wiki/GROW_model)* (1988) — the four-step structure.
+
+---
+
+### 11. Pair Programming (Beck, Williams & Kessler, Falco)
+
+**What it is.** Two people, one keyboard. One drives (types), one navigates (thinks strategically). Research shows pair programming improves learning outcomes, satisfaction, and retention compared to solo coding for novices.
+
+**Why BodhiKit uses it.** Some skills transfer through talk, not text — design intuition, debugging instinct, code-reading habits. Pairing makes those tacit skills *visible*. Strong-style specifically (Falco) is designed for coaching novices: the experienced person navigates so the novice must engage physically with the keyboard.
+
+**When it fires.**
+- `/pair`: three modes calibrated to ZPD position (strong-style for novices, ping-pong for intermediate, navigate for advanced).
+- `/teach` Phase 3 (We Do): auto-invokes `/pair` when collaborative coding fits better than guided discussion.
+
+**Go deeper.**
+- Kent Beck, *[Extreme Programming Explained](https://en.wikipedia.org/wiki/Extreme_programming)* (1999).
+- Laurie Williams & Robert Kessler, *[Pair Programming Illuminated](https://collaboration.csc.ncsu.edu/laurie/Papers/ESE%20-%20Single%20Column.pdf)* (2002) — the research synthesis.
+- Llewellyn Falco, *[Strong-Style Pairing](http://llewellynfalco.blogspot.com/2014/06/llewellyns-strong-style-pairing.html)* (2014) — the coaching variant.
+
+---
+
+### 12. Scientific Debugging (Zeller + Gauss + O'Dell)
+
+**What it is.** Debugging as scientific method: reproduce the failure, form a falsifiable hypothesis, insert a probe (not a fix), evaluate, isolate via binary search, correct. Then *reflect* on what made the bug findable. Zeller's TRAFFIC method (Track, Reproduce, Automate, Find origins, Focus, Isolate, Correct) and Gauss's Wolf Fence algorithm operationalize the loop.
+
+**Why BodhiKit uses it.** Developers spend 35-50% of their time debugging (O'Dell, 2017), yet debugging is rarely *taught* explicitly. Novices tinker randomly; experts hypothesize. The difference is a teachable skill — and like all skills, it grows through deliberate practice, not exposure.
+
+**When it fires.**
+- `/debug-together`: six phases directly map to TRAFFIC + wolf fence + reflection.
+- `/practice` and `/teach`: auto-invoke `/debug-together` when learner code has a real bug.
+
+**Go deeper.**
+- Andreas Zeller, *[Why Programs Fail](https://en.wikipedia.org/wiki/Why_Programs_Fail)* (2005) — the TRAFFIC method.
+- Edward J. Gauss, *[Wolf Fence Algorithm](https://dl.acm.org/doi/abs/10.1145/358690.358695)* (1982) — binary search for bugs.
+- Devon H. O'Dell, *[The Debugging Mindset](https://queue.acm.org/detail.cfm?id=3068754/)* (2017, ACM Queue) — growth mindset applied to bugs.
+
+---
+
+### How they compose
+
+| Phase of the journey | Pedagogies that fire |
+|---|---|
+| Day 1 — `/learn` onboarding | Bloom (assessment), Constructivism (start by building, not reading) |
+| Daily — `/continue` rhythm | Spaced Repetition (due reviews), ZPD (next-concept calibration) |
+| Teaching a concept — `/teach` | ZPD (Gradual Release), Feynman (explain-back), Bloom (exercise calibration), Desirable Difficulties (interleaving) |
+| A concept stalls — `/explain`, analogy protocol | Feynman (4-step refinement), ZPD (Beyond signals → protocol fires) |
+| Honest self-assessment — `/reflect`, `/forget` | Metacognition, Growth Mindset, Spaced Repetition (box updates) |
+| Hands-on building — `/practice`, `/pair` | Deliberate Practice, Pair Programming, Constructivism |
+| A real bug — `/debug-together` | Scientific Debugging, Growth Mindset (bugs as clues) |
+| Mid-journey checkpoint — `/evaluate` | Bloom (trajectory), Metacognition (confronting illusion of competence) |
+| Path question — `/mentor` | GROW, Kram's mentoring functions |
+| Capstone — `/teach-back` | Feynman (writing as gap-revealer), Desirable Difficulties (formerly-shaky topics) |
+
+If you notice a pattern: most skills compose 2-3 methodologies. None of them works alone. The reason `/teach` is calibrated to Bloom *and* follows ZPD *and* uses Feynman *and* leans on Desirable Difficulties is that real learning happens at the intersection, not in any single dimension.
 
 ---
 
