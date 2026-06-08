@@ -3,11 +3,12 @@
 ## Table of Contents
 
 - [Getting Started](#getting-started)
-- [Upgrading to 1.7.0](#upgrading-to-170)
+- [Upgrading from Earlier Versions](#upgrading-from-earlier-versions)
 - [Starting a New Learning Project](#starting-a-new-learning-project)
 - [Resuming Your Learning](#resuming-your-learning)
 - [Daily Learning Workflow](#daily-learning-workflow)
 - [How Teaching Works](#how-teaching-works)
+- [When BodhiKit Reaches for an Analogy](#when-bodhikit-reaches-for-an-analogy)
 - [End-of-Session Reflection](#end-of-session-reflection)
 - [Skills Reference](#skills-reference)
 - [How Agents Work Behind the Scenes](#how-agents-work-behind-the-scenes)
@@ -16,6 +17,7 @@
 - [Understanding Your Progress](#understanding-your-progress)
 - [How Spaced Repetition Works](#how-spaced-repetition-works)
 - [Housekeeping Your Tracking Files](#housekeeping-your-tracking-files)
+- [Finishing a Project: the Capstone](#finishing-a-project-the-capstone)
 - [Example Project](#example-project)
 - [Tips for Effective Learning](#tips-for-effective-learning)
 - [Philosophy](#philosophy)
@@ -63,7 +65,7 @@ BodhiKit will ask you questions to understand your background, goals, and curren
 
 ---
 
-## Upgrading to 1.7.0
+## Upgrading from Earlier Versions
 
 If you already have learning projects from 1.6.x or earlier, run the one-shot migration once per project:
 
@@ -177,6 +179,44 @@ The key rule: BodhiKit never lectures for more than 5 minutes without interactio
 
 ---
 
+## When BodhiKit Reaches for an Analogy
+
+Sometimes the first explanation does not land. The words are right, the code example is correct, but the concept has not arrived. When this happens, BodhiKit follows a deliberate four-rung ladder rather than throwing random analogies at you. This applies inside `/teach`, `/explain`, `/debug-together`, and `/pair`.
+
+### How BodhiKit notices you are stuck
+
+It watches for a specific pattern, not a general feeling of struggle. Productive struggle is good — you should sit with it. The protocol fires only when:
+
+- You cannot articulate what is confusing ("I just don't get it").
+- The first explanation drew a blank — no echo of the key terms, no question, no partial attempt.
+- An Approach-level hint (hint 2 of 3) did not move you forward.
+- Your explain-back is correct in words but mechanical — no sign of the underlying mental model.
+- A misconception survives one corrective re-explanation.
+
+It does NOT fire on a single wrong answer to a hard question, or on a request for "more examples" — those are normal.
+
+### The four rungs
+
+**Rung 1 — Your own world.** BodhiKit reads `learnerBackground.domains[]` in your profile and constructs the analogy from a field you actually know. If you told it you cook, recursion gets explained as "a recipe that mid-step says 'now do this entire recipe with half the ingredients, then continue.'" If you play music, pure functions become "a scale played the same way every time — the room, the time, what came before, none of it changes the sound."
+
+**Rung 2 — Asking once.** If your profile has no domains (or all listed domains have already been used for this concept), BodhiKit asks one question: "Before we keep going — what is a field, hobby, or job you know well? Cooking, sports, music, plumbing, accounting, anything. The next explanation will land better if I can borrow from it." Your answer gets saved so future sessions can use it without asking again. If you say "just explain it," the protocol drops to rung 3.
+
+**Rung 3 — Universal physical.** Stoves, mailboxes, libraries, road maps, water flow, locks-and-keys. These are weakest because they are pre-cached for every learner — but they are still better than restating the same explanation a second time.
+
+**Rung 4 — Code-restatement.** A second concrete code example that says the same thing differently (different data type, different scale). Used only when analogies have failed and the next step is to back off the concept anyway.
+
+### The two-analogy cap
+
+After two analogies on the same concept without traction, BodhiKit stops climbing. Reaching for a third would teach you the analogy instead of the concept. The right move at that point is not a better analogy — it is to back off and teach a smaller prerequisite first. You will hear something like: "Let us set [concept] down for a moment. There is a smaller piece underneath it that we should make solid first."
+
+This is not a setback. It is the protocol working correctly. The original concept comes back into view once its foundation is in place.
+
+### What gets remembered
+
+Every analogy BodhiKit uses is logged with whether it landed for you. Next time the same concept comes up, it reaches for a different domain — so you do not get the same cooking-recursion story twice. This data lives in `.bodhi-profile.json` and is cross-project: domains you know carry over from your React project to your Rust project.
+
+---
+
 ## End-of-Session Reflection
 
 When you say goodbye, BodhiKit auto-invokes `/reflect` to run a brief metacognitive reflection. This takes 3-5 minutes and multiplies the value of the entire session.
@@ -264,6 +304,12 @@ Mode auto-selects based on your Bloom's level, or you can choose. Auto-invoked b
 Scientific debugging that teaches the process, not just the fix. Based on Zeller's TRAFFIC method: reproduce the bug, form a hypothesis, insert a probe (not a fix), evaluate the result, isolate the root cause, then correct. BodhiKit never fixes bugs for you. It catches novice anti-patterns (random code changes, print statements without hypothesis, ignoring error messages) and redirects to systematic investigation.
 
 Example: Your todo delete button does not work. Instead of looking at the code, BodhiKit asks "What did you expect? What happened? What is your theory?" Then guides you to add a targeted probe, trace the data upstream, and find the real cause yourself. Auto-invoked by `/practice` and `/teach` when your code has bugs.
+
+### `/bodhikit:teach-back`
+
+Optional capstone, offered only after `/evaluate` confirms a project is complete and moves it to `completedProjects`. You write a Socratic-style blog post on a topic that was *formerly shaky and is now solid* — picked by surfacing topics where your Bloom level climbed from below 3 to 4 or higher, where you demoted-and-recovered in spaced review, and where you currently sit at Bloom ≥ 4 AND Box ≥ 3. BodhiKit then helps you find three to five acknowledged masters' work on the same topic — but only *after* you draft, never before. Reading the masters first would turn your post into a summary of what you read. The order matters: draft first, read after, revise. Then you decide whether the post is defensible enough to publish. BodhiKit never pronounces a post ready or not-ready — that verdict is yours.
+
+Posts are saved to `learningWithBodhi/<project>/teach-backs/<YYYY-MM-DD>-<slug>.md`, sibling to `.bodhi/` so you can keep editing them in your normal workflow. See [Finishing a Project: the Capstone](#finishing-a-project-the-capstone) for the full arc.
 
 ---
 
@@ -418,6 +464,32 @@ BodhiKit handles this with `/bodhikit:housekeep` — a single skill that tends t
 - Transparent: every rotation prints what moved where, and the before/after byte sizes of the live documents.
 
 You will rarely think about housekeeping. The point is that you can be aggressive about logging detail in real time (`progress.md` can hold a 20-line session entry, an assessment can be 200 lines) without worrying about context cost, because the next `/housekeep` will tuck it cleanly away while keeping the pointer visible.
+
+---
+
+## Finishing a Project: the Capstone
+
+When `/evaluate` confirms you have finished a project — Bloom's levels climbed across the topics that mattered, mastery criteria met, spaced-review retention strong — it moves the project from `activeProjects` to `completedProjects` and offers you one optional, opt-in step: a teach-back.
+
+A teach-back is a Socratic-style blog post you write on a topic that was *formerly shaky and is now solid*. Not your easiest win — your hardest-won one. The point is that the next learner benefits more from "I kept getting this wrong until I realized X" than from a clean summary of what X is.
+
+### How it works
+
+1. **Candidate surfacing.** BodhiKit reads your full project history (with the trajectory-analyzer agent) and proposes 2-3 topics that meet the formerly-shaky-now-solid signal: multiple assessments climbing from Bloom < 3 to ≥ 4, at least one demote-and-recover in spaced review, currently sitting at Bloom ≥ 4 AND Box ≥ 3. You pick one (or decline the capstone — it is always optional).
+
+2. **Draft.** You write the post in your own voice. BodhiKit asks Socratic questions to sharpen your claims, but does not write paragraphs for you.
+
+3. **Read the masters after, not before.** Once you have a draft, BodhiKit uses the resource-finder agent to surface 3-5 acknowledged masters on the topic — books, talks, papers, essays. You read them with your draft already in hand. This is the second half of the Feynman technique applied to writing: you find out what you missed only after you have committed to what you know.
+
+4. **Revise.** Your claims get checked against the masters. What survives is real. What does not, you revise or strike. BodhiKit prompts you on every claim it sees that the masters would push back on, but never overwrites your prose.
+
+5. **Decide.** You decide whether the post is defensible enough to publish, keep as personal notes, or set aside. BodhiKit will not pronounce it ready — the publish question is framed as credibility-protection, not credibility-building. Publish only when you can defend every claim against a master who knows more than you.
+
+### Why this exists
+
+The system already had a clear ending — `/evaluate` confirms completion. But "completed" measured mastery; it did not demonstrate it. The capstone gives you a way to show mastery the way the masters themselves did: by writing something defensible on a topic that was once hard.
+
+Posts persist at `learningWithBodhi/<project>/teach-backs/<YYYY-MM-DD>-<slug>.md`. They are not housekept; they are yours, sibling to `.bodhi/` so you can keep editing them in your normal workflow long after the skill closes.
 
 ---
 
