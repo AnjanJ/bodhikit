@@ -139,6 +139,7 @@ Organize into **Phases** containing **Modules**. Each module specifies: target B
 - Map learner's existing materials (books, courses) to modules
 - Leave room for adaptation
 - **Each phase after Phase 0 MUST declare at least one Spiral Revisit** — a concept from an earlier phase that this phase revisits at a *higher* target Bloom level (per the `constructivism` KB's spiral-curriculum mechanic — depth comes from returning, not from forward march alone). The revisit is a contract, not a suggestion: a phase that does not name one has skipped a constructivism principle the plan is supposed to honor. Phase 0 is exempt because there is nothing earlier to revisit.
+- **Each module from Module 2 onward MUST declare a `**Prerequisites for next module:**` line** listing the *specific* concept names from this module that the next module builds on (1.10.10 — feeds the `/teach` Phase 1 prerequisite gate's structured-declaration path; without it, the gate falls back to "all concepts from the prior module," which is conservative but pedagogically noisy). The line lives inside the module section in `plan/phase-{N}.md`, alongside Target Bloom's, Concepts, Exercise, Resource, Spaced Review.
 
 ### Per-phase Spiral Revisit declaration
 

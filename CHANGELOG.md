@@ -2,6 +2,39 @@
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [1.10.10] - 2026-06-09
+
+### Fixed
+- **`/teach` Phase 1 prerequisite gate trigger model re-specified.** The 1.10.0 spec said the gate fires when "selecting a concept from a module *different* from the learner's current module." But `state.json.currentModule` is advanced by `/learn` Phase 4, `/continue` Phase 4, or the prior session's Phase 5 wrap-up BEFORE the first session on the new module runs — so a literal "different module" check fires too late (or never) on real flows. The corrected trigger is: scan `spaced-review.json.concepts[]` for any entry whose `module` field matches `state.json.currentModule`. If at least one matches, this is a continuation session — gate does NOT fire. If zero match, this is the first session on a new module — proceed to the prerequisite check. The gate also explicitly does not fire on first-ever-`/teach` (no prior module), `--invoked-from=` chained calls (caller's intent overrides), or explicit-topic `$ARGUMENTS` (learner's request overrides).
+
+- **Prerequisite identification mechanism made explicit, with safe fallback.** The 1.10.0 spec referenced "prerequisite concepts named in the prior module's `plan/phase-{N}.md` success criteria" — but real plan files do not declare prerequisites structurally. The corrected spec defines two paths: (a) structured declaration via a `**Prerequisites for next module:**` line in each module section (now required by `/learn` Phase 3 and `/plan` Regenerate from 1.10.10 onward); (b) fallback when no structured declaration exists — treat all concepts in `spaced-review.json` whose `module` matches the prior module as prerequisites. The fallback is conservative (some may be irrelevant); the gate's prompt to the learner notes that the mapping was inferred and offers a "skip irrelevant" choice.
+
+- **Strong v2 retention evidence fallthrough added.** The 1.10.0 gate keyed only off `bloomLevel`. Real data showed concepts with strong v2 retention signals (Box 3+, two consecutive correct recalls in `reviewHistory[]`) that would block module advancement just because no v3 writer had run a Level-3+ question on them yet — `bloomLevel` would be artificially low while box-and-history evidence pointed at Apply-level mastery. The corrected rule: when `1 <= bloomLevel < 3` AND `box >= 3` AND the last 2 `reviewHistory[]` entries both have `result: "correct"`, treat the concept as Apply-equivalent for *gate purposes only*. Do NOT mutate `bloomLevel` — the fallthrough is a gate-time read, not a state write. The v3 writers will catch up to the v2 evidence on their own schedule.
+
+- **Gate is offer-shaped, not auto-blocking.** The 1.10.0 spec said "Do NOT advance" on a prerequisite gap. The corrected gate mirrors the 1.10.2 opt-in-offer discipline: surface the gap, name the trade-off, let the learner pick. Choices: revisit a specific prerequisite, carry on into the new module (recorded in `progress.md` as a conscious decision), skip an inferred-but-irrelevant prerequisite (per-session dismissal — no permanent reclassification), or end the session. Do not auto-override.
+
+### Added
+- **`/learn` Phase 3 and `/plan` Regenerate now require per-module `**Prerequisites for next module:**` lines** in `plan/phase-{N}.md` files from Module 2 onward. The line names the specific concepts from this module that the next module builds on — gives the `/teach` gate a structured declaration to consult instead of the broad fallback.
+- **`dev/check.sh` rules**: rule 17 expanded with three sub-checks (corrected trigger model, strong-v2-evidence fallthrough, offer-shape rather than auto-block); rule 42 requires the per-module Prerequisites declaration in `/learn` and `/plan`.
+
+### Why this exists
+The fourth dogfood step (trace `/teach` Phase 1 gate against `system-design` after a hypothetical 5f-bis run) caught four real bugs in the gate's logic. The 1.10.7 *legacy fallthrough* fix was correct as far as it went, but it only addressed the freshly-migrated case — once a learner starts running v3 writers on the project, three more bugs surface in sequence:
+
+- The gate may never fire at all (trigger condition mismatched the real session flow).
+- The gate has no defined input source for prerequisites (forces the executing model to invent the list per invocation).
+- The gate's single-signal `bloomLevel` check ignores the strongest retention evidence the system actually has (box + history).
+- The gate hard-blocks when the rest of the plugin (per 1.10.2) is offer-shaped.
+
+This is a deeper class of finding than 1.10.7/1.10.8/1.10.9 — those caught spec wording and architectural model bugs; this one caught a model-correctness issue. The 1.10.7 fix was a *boundary* correction; 1.10.10 is a *model* correction.
+
+Pattern across the four dogfood passes:
+- 1.10.7 — read one real file → caught a boundary check on a single field
+- 1.10.8 — trace migration logic → caught an architectural model bug (single marker as universal idempotency)
+- 1.10.9 — trace 5f-bis against real concept data → caught spec ambiguity that could silently drop data
+- 1.10.10 — trace the gate that the migration enables → caught a single-signal model in a multi-signal data world
+
+Each step exposed a deeper class than the prior. None visible without real `learn_with_bodhi/` data to trace against. The case for "schema-touching changes get a dogfood pass before tagging" is now overwhelming.
+
 ## [1.10.9] - 2026-06-09
 
 ### Fixed

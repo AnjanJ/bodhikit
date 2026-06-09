@@ -296,11 +296,45 @@ done
 # 17. /teach Phase 1 must mention the prerequisite Bloom gate.
 # ---------------------------------------------------------------------------
 # H3 fix from the 1.10.0 audit — Bloom advancement is contractual now.
+# 1.10.10 strengthens the check: the gate must use the new trigger model
+# (scan for prior work on currentModule, not "different module" string-match),
+# must declare the strong-v2-evidence fallthrough, and must be offer-shaped
+# (no auto-block).
 if [ -f skills/teach/SKILL.md ]; then
   if ! grep -qiE 'prerequisite.*(bloom|gate)|(bloom|gate).*prerequisite' skills/teach/SKILL.md; then
     err "skills/teach/SKILL.md missing the prerequisite Bloom gate language (H3 fix)"
   fi
+  # 1.10.10 — trigger model must be the corrected "first session on a new
+  # currentModule" detection, not the broken "different module" string match.
+  if ! grep -qiE 'first .*session on a new |first /teach invocation|module-start|scan .*concept array' skills/teach/SKILL.md; then
+    err "skills/teach/SKILL.md prerequisite gate missing first-session-on-new-module trigger (1.10.10 fix)"
+  fi
+  # 1.10.10 — strong v2 retention evidence fallthrough must be declared so
+  # concepts with high box + recent correct results are not falsely blocked
+  # by an artificially-low v3 bloomLevel.
+  if ! grep -qiE 'box >= 3|strong v2 retention|Apply-equivalent' skills/teach/SKILL.md; then
+    err "skills/teach/SKILL.md prerequisite gate missing strong-v2-evidence fallthrough (1.10.10 fix)"
+  fi
+  # 1.10.10 — gate must be offer-shaped (opt-in offers per the 1.10.2 chain
+  # discipline), not auto-block. The check looks for an offer/choice
+  # affordance rather than scanning for auto-block strings (the negation
+  # "does NOT auto-block" would have matched a naive auto-block scan).
+  if ! grep -qiE 'offer|let the learner (choose|decide|pick)|learner decides|opt-in' skills/teach/SKILL.md; then
+    err "skills/teach/SKILL.md prerequisite gate missing offer-shape language (1.10.10 fix — gate must be offer-shaped per 1.10.2 discipline)"
+  fi
 fi
+
+# ---------------------------------------------------------------------------
+# 42. /learn Phase 3 and /plan Regenerate must require per-module
+#     "Prerequisites for next module:" declarations (1.10.10 fix —
+#     feeds the /teach Phase 1 gate's structured-declaration path).
+# ---------------------------------------------------------------------------
+for f in skills/learn/SKILL.md skills/plan/SKILL.md; do
+  if [ ! -f "$f" ]; then continue; fi
+  if ! grep -qE 'Prerequisites for next module' "$f"; then
+    err "$f missing per-module Prerequisites-for-next-module declaration requirement (1.10.10 fix)"
+  fi
+done
 
 # ---------------------------------------------------------------------------
 # 18. /progress must mention the canonical mastery formula or the legacy
