@@ -2,6 +2,23 @@
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [1.10.9] - 2026-06-09
+
+### Fixed
+- **5f-bis step 1 backup verification specifies parsed-JSON equality, not byte-for-byte.** The 1.10.8 spec said "matches the source" — ambiguous between a byte comparison and a parsed-JSON comparison. The Write tool routinely re-emits JSON with different whitespace or key ordering than the source; a byte comparison would false-fail on a healthy backup and abort the migration before any real work happened. The corrected check verifies key-for-key equality at the parsed-JSON level: same top-level keys, same `concepts[].length`, same field set on every concept entry (including non-canonical fields), same `sessionHistory[].length` with same field set on every entry. Whitespace and key-order differences are not failures.
+
+- **5f-bis step 2 now declares in-place mutation discipline.** The original step 2 said "For each entry in `concepts[]`, add the three new fields if absent." Step 3 added "Preserve every other field verbatim." Both correct at the contract level, but an executing model could legitimately read these as "build the new JSON from the documented canonical fields plus the three new ones" — which would silently drop every non-canonical field. Real v2 `spaced-review.json` files in the wild carry non-canonical fields per concept (`precisionGap`, `lastResult` prose, `flaggedForFullReteach`) and per `sessionHistory[]` entry (`boxChanges`, `precisionGapMovement`, `habitObservations`, `partials`, `note`) — these are the learner's teaching history, sometimes hundreds of bytes of prose annotation each. The corrected step 2 makes the discipline explicit: read the parsed JSON, add the three keys to each concept, leave every other key untouched. Do not re-serialize from a schema template.
+
+- **5f-bis step 5 verify checks first AND last concepts plus length equality.** The 1.10.0 spec said "sample a concept entry" — singular. If a JSON re-serialization bug dropped concepts 2 through 5 from a 6-concept array, the verify check would pass on the sampled-and-still-intact first concept. The corrected check requires sampling the first AND last concept, plus a middle one if length > 5, plus an explicit `concepts[].length` equality check against the source, plus a non-canonical-field spot-check on at least one concept that had non-canonical fields in the source.
+
+### Added
+- **`dev/check.sh` rules** enforcing the in-place mutation declaration AND the parsed-JSON equality specification in `/housekeep migrate`. Prevents both regressions.
+
+### Why this exists
+The third dogfood step (trace `/housekeep migrate` against `system-design`'s `.bodhi/`) caught seven spec gaps; two were MEDIUM severity (silent data loss risk and false-fail risk on the backup verify) and five were LOW (cosmetic / ambiguity). The two MEDIUMs land in 1.10.9; the LOWs are filed as known papercuts for a future cleanup pass.
+
+The pattern continues: each dogfood step exposes a category of bug that schema and lint checks cannot. 1.10.7 caught a data-shape misread; 1.10.8 caught an architectural model bug (single marker as universal idempotency); 1.10.9 caught spec-wording ambiguity that an executing model could read into broken behavior. None were visible without real `learn_with_bodhi/` data to trace against. The case for "schema-touching changes get a dogfood pass before tagging" gets stronger with each iteration.
+
 ## [1.10.8] - 2026-06-09
 
 ### Fixed

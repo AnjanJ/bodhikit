@@ -555,6 +555,18 @@ if [ -f skills/housekeep/SKILL.md ]; then
   if ! grep -qiE 'per-target idempotency|per target idempotency' skills/housekeep/SKILL.md; then
     err "skills/housekeep/SKILL.md missing per-target idempotency declaration (1.10.8 fix)"
   fi
+  # 1.10.9 — 5f-bis step 2 must declare in-place mutation discipline so an
+  # executing model does not re-serialize from a schema template and silently
+  # drop learner's non-canonical fields (precisionGap, lastResult prose, etc.).
+  if ! grep -qiE 'mutate the parsed JSON object in place|in-place mutation' skills/housekeep/SKILL.md; then
+    err "skills/housekeep/SKILL.md 5f-bis step 2 missing in-place mutation discipline (1.10.9 fix — prevents silent drop of non-canonical learner fields)"
+  fi
+  # 1.10.9 — 5f-bis step 1 verify must specify parsed-JSON equality, not
+  # byte-for-byte (Write tool routinely reformats; byte-compare would
+  # false-fail on healthy backups).
+  if ! grep -qiE 'key-for-key equal|parsed-JSON level|parsed-JSON equality' skills/housekeep/SKILL.md; then
+    err "skills/housekeep/SKILL.md 5f-bis step 1 verify missing parsed-JSON equality specification (1.10.9 fix)"
+  fi
 fi
 
 # ---------------------------------------------------------------------------

@@ -228,15 +228,23 @@ Otherwise:
    - **Create the backup directory** with the Bash tool: `mkdir -p .bodhi/.pre-1.10-backup` (the `-p` flag makes it idempotent).
    - **Read the current `.bodhi/spaced-review.json`** with the Read tool.
    - **Write the contents verbatim** to `.bodhi/.pre-1.10-backup/spaced-review.json` with the Write tool. Do not paraphrase, reformat, or strip fields — the backup is byte-for-byte the pre-migration state.
-   - **Verify the backup.** Re-read `.bodhi/.pre-1.10-backup/spaced-review.json`. Confirm the file exists, parses as JSON, and matches the source. If any check fails, do NOT proceed to step 2 — report which check failed and exit. The backup must exist before any in-place transformation begins; without it, a partial write to the source destroys the only copy of the pre-v3 data.
+   - **Verify the backup** at the parsed-JSON level, not byte-for-byte. Re-read `.bodhi/.pre-1.10-backup/spaced-review.json`. Confirm the file exists, parses as JSON, and is **key-for-key equal** to the source when both are parsed — same top-level keys, same `concepts[].length`, same field set on every concept entry (including non-canonical fields like `precisionGap`, `lastResult` prose, `flaggedForFullReteach`), same `sessionHistory[].length` with the same field set on every entry (including non-canonical fields like `boxChanges`, `precisionGapMovement`, `habitObservations`). Whitespace and key-order differences are NOT failures — JSON serializers routinely vary on both. Only structural or content differences count. If any check fails, do NOT proceed to step 2 — report which check failed and exit. The backup must exist before any in-place transformation begins; without it, a partial write to the source destroys the only copy of the pre-v3 data.
 2. **For each entry in `concepts[]`**, add the three new fields if absent — per the v2 → v3 row in the `state-migration` KB:
    - `bloomLevel: 0` (uninitialized — the legacy fallthrough rule in the `state-schema` KB makes this safe for prerequisite gates)
    - `feynmanPassed: false`
    - `consecutiveCorrectAtL4Plus: 0`
    - Do NOT touch `reviewHistory[]` entries — readers treat absent `bloomLevel` on history rows as `0`; only new history rows written post-v3 include it.
-3. **Construct the new file content in memory.** Set top-level `version` to the integer `3`. Preserve every other field verbatim.
+
+   **Critical: mutate the parsed JSON object in place.** Do not re-serialize from a schema template or build a new object from the documented canonical fields. Real v2 `spaced-review.json` files in the wild carry non-canonical fields per concept (`precisionGap`, `lastResult` prose, `flaggedForFullReteach`) and per `sessionHistory[]` entry (`boxChanges`, `precisionGapMovement`, `habitObservations`, `partials`, `note`). These fields are the learner's teaching history and may carry hundreds of bytes of prose annotation each. The `state-schema` KB's Update Rules section is explicit: "Skills MUST preserve unknown fields when writing (forward compatibility)." An executing model that builds a new JSON from "the documented shape plus the three new fields" will silently drop every non-canonical field — wiping months of learner annotations. Read the parsed JSON, add the three keys to each concept, leave every other key untouched.
+3. **Construct the new file content in memory.** Set top-level `version` to the integer `3`. Preserve every other field verbatim, per the in-place mutation discipline in step 2.
 4. **Write `.bodhi/spaced-review.json`** using the Write tool, overwriting the existing file.
-5. **Verify the write.** Re-read the file. Confirm `version` is `3` and a sampled concept entry carries all three new fields. If the check fails, do NOT proceed to step 5g — report the failure and exit.
+5. **Verify the write.** Re-read the file. Confirm:
+   - Top-level `version` is `3`.
+   - `concepts[].length` equals the source file's `concepts[].length` (no concepts dropped or duplicated).
+   - The **first AND last** concept entries each carry all three new fields (`bloomLevel`, `feynmanPassed`, `consecutiveCorrectAtL4Plus`); if `concepts[].length > 5`, additionally sample one entry from the middle.
+   - Each sampled concept retains its non-canonical fields if any were present in the source (spot-check: pick one concept that had `precisionGap` in the source; confirm it's still there in the rewritten file).
+
+   If any check fails, do NOT proceed to step 5g — report which check failed and exit. The `.pre-1.10-backup/spaced-review.json` from step 1 is the rollback path; the source file can be restored from it.
 
 If `concepts[]` is empty or absent, still complete steps 2-4 to ensure `version: 3` is on disk.
 
