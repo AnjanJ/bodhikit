@@ -4,11 +4,14 @@
 # Verifies the contract documented in CLAUDE.md. Bash, no deps.
 # Exit 0 = clean. Exit 1 = hard violations.
 #
-# Two severities:
+# Single severity since 1.10.5 (sprint M6 close — gaps_of_pedagogy.md):
 #   err  — hard fail (exit 1). Schema drift, missing required pieces.
-#   warn — soft warning (no exit code change). v1.7.0 introduced these
-#          for the progressive-disclosure contract; they will be promoted
-#          to err in 1.8.0 once the punch list is clean.
+#
+# Historical note: 1.7.0 introduced soft warnings for the
+# progressive-disclosure contract; the pedagogy-audit sprint
+# (1.10.0 → 1.10.5) closed every flagged finding, and 1.10.5
+# promoted every warn to err. The warn() helper is kept for any
+# future intentionally-soft check, but no current rule uses it.
 
 set -u
 cd "$(dirname "$0")/.." || exit 2
@@ -176,7 +179,7 @@ for f in skills/*/SKILL.md agents/*.md; do
     esac
     case "$line" in
       *lastSessionSummary*|*bloomResetNote*)
-        warn "$f writes v1 narrative field — line: $(printf '%s' "$line" | head -c 80)..."
+        err "$f writes v1 narrative field — line: $(printf '%s' "$line" | head -c 80)..."
         ;;
     esac
   done < "$f"
@@ -195,10 +198,10 @@ for f in skills/*/SKILL.md agents/*.md; do
   # Match `.bodhi/assessment.md` (NOT `.bodhi/assessments/...`) and
   # `.bodhi/plan.md` (NOT `.bodhi/plan/...`).
   if grep -qE '\.bodhi/assessment\.md([^/s]|$)' "$f"; then
-    warn "$f references v1 path .bodhi/assessment.md — should be .bodhi/assessments/latest.md"
+    err "$f references v1 path .bodhi/assessment.md — should be .bodhi/assessments/latest.md"
   fi
   if grep -qE '\.bodhi/plan\.md([^/]|$)' "$f"; then
-    warn "$f references v1 path .bodhi/plan.md — should be .bodhi/plan/README.md or plan/phase-*.md"
+    err "$f references v1 path .bodhi/plan.md — should be .bodhi/plan/README.md or plan/phase-*.md"
   fi
 done
 
@@ -221,7 +224,7 @@ for f in skills/*/SKILL.md; do
       teaching-personality|state-schema|read-defaults|state-migration) continue;;
     esac
     if printf '%s' "$top" | grep -qE "\`$kb\`"; then
-      warn "$f loads \`$kb\` top-of-file (lines 1-8) — consider moving into the phase that uses it"
+      err "$f loads \`$kb\` top-of-file (lines 1-8) — consider moving into the phase that uses it"
     fi
   done
 done
@@ -232,19 +235,19 @@ done
 # v1 example will mislead contributors / users who pattern-match on it.
 if [ -d docs/example-project/.bodhi ]; then
   if [ -f docs/example-project/.bodhi/plan.md ]; then
-    warn "docs/example-project/.bodhi/plan.md is v1 layout — should be plan/README.md + plan/phase-*.md"
+    err "docs/example-project/.bodhi/plan.md is v1 layout — should be plan/README.md + plan/phase-*.md"
   fi
   if [ -f docs/example-project/.bodhi/assessment.md ]; then
-    warn "docs/example-project/.bodhi/assessment.md is v1 layout — should be assessments/latest.md"
+    err "docs/example-project/.bodhi/assessment.md is v1 layout — should be assessments/latest.md"
   fi
   # state.json should not carry lastSessionSummary or bloomResetNote in v2 example
   state_file=docs/example-project/.bodhi/state.json
   if [ -f "$state_file" ]; then
     if grep -qE '"(lastSessionSummary|bloomResetNote)"' "$state_file"; then
-      warn "$state_file carries v1 narrative fields — strip and move to progress.md"
+      err "$state_file carries v1 narrative fields — strip and move to progress.md"
     fi
     if ! grep -qE '"version":[[:space:]]*2' "$state_file"; then
-      warn "$state_file is not declared as version 2"
+      err "$state_file is not declared as version 2"
     fi
   fi
 fi
@@ -255,15 +258,15 @@ projects_file=docs/example-project/.bodhi-profile.projects.json
 if [ -f "$profile_file" ]; then
   # v2 = profile is split. activeProjects / completedProjects must live in projects file, not profile.
   if grep -qE '"(activeProjects|completedProjects)"' "$profile_file"; then
-    warn "$profile_file carries activeProjects/completedProjects inline — should be in $projects_file (v2 split layout)"
+    err "$profile_file carries activeProjects/completedProjects inline — should be in $projects_file (v2 split layout)"
   fi
   if ! grep -qE '"version":[[:space:]]*2' "$profile_file"; then
-    warn "$profile_file is not declared as version 2"
+    err "$profile_file is not declared as version 2"
   fi
   if [ ! -f "$projects_file" ]; then
-    warn "$projects_file is missing — v2 split profile requires this file"
+    err "$projects_file is missing — v2 split profile requires this file"
   elif ! grep -qE '"version":[[:space:]]*2' "$projects_file"; then
-    warn "$projects_file is not declared as version 2 (cohort-consistent with parent profile)"
+    err "$projects_file is not declared as version 2 (cohort-consistent with parent profile)"
   fi
 fi
 
@@ -284,7 +287,7 @@ for s in quiz teach explain practice forget pair; do
   if [ ! -f "$f" ]; then continue; fi
   if grep -q 'spaced-review\.json' "$f"; then
     if ! grep -qE 'bloomLevel|feynmanPassed|consecutiveCorrectAtL4Plus' "$f"; then
-      warn "$f writes spaced-review.json but does not mention any v3 per-concept field (bloomLevel/feynmanPassed/consecutiveCorrectAtL4Plus)"
+      err "$f writes spaced-review.json but does not mention any v3 per-concept field (bloomLevel/feynmanPassed/consecutiveCorrectAtL4Plus)"
     fi
   fi
 done
@@ -295,7 +298,7 @@ done
 # H3 fix from the 1.10.0 audit — Bloom advancement is contractual now.
 if [ -f skills/teach/SKILL.md ]; then
   if ! grep -qiE 'prerequisite.*(bloom|gate)|(bloom|gate).*prerequisite' skills/teach/SKILL.md; then
-    warn "skills/teach/SKILL.md missing the prerequisite Bloom gate language (H3 fix)"
+    err "skills/teach/SKILL.md missing the prerequisite Bloom gate language (H3 fix)"
   fi
 fi
 
@@ -308,7 +311,7 @@ fi
 # explicitly handles the legacy display fallthrough.
 if [ -f skills/progress/SKILL.md ]; then
   if ! grep -qE 'mastered === true|Mastery % formula|consecutiveCorrectAtL4Plus' skills/progress/SKILL.md; then
-    warn "skills/progress/SKILL.md missing the canonical mastery formula or fallthrough rule (H1/M2 fix)"
+    err "skills/progress/SKILL.md missing the canonical mastery formula or fallthrough rule (H1/M2 fix)"
   fi
 fi
 
@@ -320,7 +323,7 @@ fi
 # Phase 2 (where the rule applies), not buried elsewhere in the file.
 if [ -f skills/reflect/SKILL.md ]; then
   if ! awk '/^## Phase 2/,/^## Phase 3/' skills/reflect/SKILL.md | grep -q 'metacognition'; then
-    warn "skills/reflect/SKILL.md Phase 2 does not reference metacognition KB (H5/H6/H9 fix)"
+    err "skills/reflect/SKILL.md Phase 2 does not reference metacognition KB (H5/H6/H9 fix)"
   fi
 fi
 
@@ -331,7 +334,7 @@ fi
 # are the gate that catches Dunning-Kruger overconfidence at the explain-back.
 if [ -f skills/reflect/SKILL.md ]; then
   if ! awk '/^## Phase 2/,/^## Phase 3/' skills/reflect/SKILL.md | grep -q 'feynman-technique'; then
-    warn "skills/reflect/SKILL.md Phase 2 does not reference feynman-technique KB (H6 fix)"
+    err "skills/reflect/SKILL.md Phase 2 does not reference feynman-technique KB (H6 fix)"
   fi
 fi
 
@@ -343,10 +346,10 @@ fi
 if [ -f skills/reflect/SKILL.md ]; then
   phase3=$(awk '/^## Phase 3/,/^## Phase 4/' skills/reflect/SKILL.md)
   if ! printf '%s' "$phase3" | grep -q 'growth-mindset'; then
-    warn "skills/reflect/SKILL.md Phase 3 does not reference growth-mindset KB (A5 fix)"
+    err "skills/reflect/SKILL.md Phase 3 does not reference growth-mindset KB (A5 fix)"
   fi
   if ! printf '%s' "$phase3" | grep -q 'deliberate-practice'; then
-    warn "skills/reflect/SKILL.md Phase 3 does not reference deliberate-practice KB (M11 fix)"
+    err "skills/reflect/SKILL.md Phase 3 does not reference deliberate-practice KB (M11 fix)"
   fi
 fi
 
@@ -359,7 +362,7 @@ fi
 if [ -f skills/teach/SKILL.md ]; then
   phase3=$(awk '/^## Phase 3/,/^## Phase 4/' skills/teach/SKILL.md)
   if ! printf '%s' "$phase3" | grep -qE 'bodhikit:pair.*invoked-from=teach'; then
-    warn "skills/teach/SKILL.md Phase 3 does not offer /pair with --invoked-from=teach (H11/A9 fix)"
+    err "skills/teach/SKILL.md Phase 3 does not offer /pair with --invoked-from=teach (H11/A9 fix)"
   fi
 fi
 
@@ -369,7 +372,7 @@ fi
 if [ -f skills/practice/SKILL.md ]; then
   phase3=$(awk '/^## Phase 3/,/^## Phase 4|^---/' skills/practice/SKILL.md)
   if ! printf '%s' "$phase3" | grep -qE 'bodhikit:debug-together.*invoked-from=practice'; then
-    warn "skills/practice/SKILL.md Phase 3 does not offer /debug-together with --invoked-from=practice (H12 fix)"
+    err "skills/practice/SKILL.md Phase 3 does not offer /debug-together with --invoked-from=practice (H12 fix)"
   fi
 fi
 
@@ -379,7 +382,7 @@ fi
 if [ -f skills/teach/SKILL.md ]; then
   phase4=$(awk '/^## Phase 4/,/^## Phase 5/' skills/teach/SKILL.md)
   if ! printf '%s' "$phase4" | grep -qE 'bodhikit:debug-together.*invoked-from=teach'; then
-    warn "skills/teach/SKILL.md Phase 4 does not offer /debug-together with --invoked-from=teach (H13/A3 fix)"
+    err "skills/teach/SKILL.md Phase 4 does not offer /debug-together with --invoked-from=teach (H13/A3 fix)"
   fi
 fi
 
@@ -389,7 +392,7 @@ fi
 # Offer-only — auto-invoke is explicitly out of scope per the sprint decision.
 if [ -f skills/evaluate/SKILL.md ]; then
   if ! grep -qE 'bodhikit:mentor' skills/evaluate/SKILL.md; then
-    warn "skills/evaluate/SKILL.md does not mention /bodhikit:mentor (M27 fix — opt-in offer at completion/milestone)"
+    err "skills/evaluate/SKILL.md does not mention /bodhikit:mentor (M27 fix — opt-in offer at completion/milestone)"
   fi
 fi
 
@@ -405,7 +408,7 @@ for s in pair debug-together mentor; do
   if [ ! -f "$f" ]; then continue; fi
   head30=$(head -30 "$f")
   if ! printf '%s' "$head30" | grep -qiE 'offer|opt-in|chained invocation'; then
-    warn "$f opening 30 lines do not declare offer/opt-in/chained-invocation framing"
+    err "$f opening 30 lines do not declare offer/opt-in/chained-invocation framing"
   fi
 done
 
@@ -417,7 +420,7 @@ done
 if [ -f skills/pair/SKILL.md ]; then
   mode2=$(awk '/^## Mode 2/,/^## Mode 3/' skills/pair/SKILL.md)
   if ! printf '%s' "$mode2" | grep -q 'deliberate-practice'; then
-    warn "skills/pair/SKILL.md Mode 2 does not reference deliberate-practice KB (M10 fix)"
+    err "skills/pair/SKILL.md Mode 2 does not reference deliberate-practice KB (M10 fix)"
   fi
 fi
 
@@ -427,7 +430,7 @@ fi
 if [ -f skills/teach/SKILL.md ]; then
   phase4=$(awk '/^## Phase 4/,/^## Phase 5/' skills/teach/SKILL.md)
   if ! printf '%s' "$phase4" | grep -q 'desirable-difficulties'; then
-    warn "skills/teach/SKILL.md Phase 4 does not reference desirable-difficulties KB (M12 fix)"
+    err "skills/teach/SKILL.md Phase 4 does not reference desirable-difficulties KB (M12 fix)"
   fi
 fi
 
@@ -437,7 +440,7 @@ fi
 if [ -f skills/debug-together/SKILL.md ]; then
   phase0=$(awk '/^## Phase 0/,/^## Phase 1/' skills/debug-together/SKILL.md)
   if ! printf '%s' "$phase0" | grep -q 'growth-mindset'; then
-    warn "skills/debug-together/SKILL.md Phase 0 does not reference growth-mindset KB (M16 fix)"
+    err "skills/debug-together/SKILL.md Phase 0 does not reference growth-mindset KB (M16 fix)"
   fi
 fi
 
@@ -446,10 +449,10 @@ fi
 # ---------------------------------------------------------------------------
 if [ -f skills/evaluate/SKILL.md ]; then
   if ! grep -q 'metacognition' skills/evaluate/SKILL.md; then
-    warn "skills/evaluate/SKILL.md does not reference metacognition KB (M18 fix)"
+    err "skills/evaluate/SKILL.md does not reference metacognition KB (M18 fix)"
   fi
   if ! grep -qE '## Phase 2\.5|Predict Your Trajectory' skills/evaluate/SKILL.md; then
-    warn "skills/evaluate/SKILL.md missing Phase 2.5 prediction step (M18 fix)"
+    err "skills/evaluate/SKILL.md missing Phase 2.5 prediction step (M18 fix)"
   fi
 fi
 
@@ -461,7 +464,7 @@ for s in teach-back mentor plan; do
   f="skills/$s/SKILL.md"
   if [ ! -f "$f" ]; then continue; fi
   if ! grep -q 'constructivism' "$f"; then
-    warn "$f does not reference constructivism KB (M23/M24/M26 fix)"
+    err "$f does not reference constructivism KB (M23/M24/M26 fix)"
   fi
 done
 
@@ -470,7 +473,7 @@ done
 # ---------------------------------------------------------------------------
 if [ -f agents/skill-assessor.md ]; then
   if ! grep -qiE 'self-rating|learnerSelfRating|rate yourself' agents/skill-assessor.md; then
-    warn "agents/skill-assessor.md does not collect learner self-rating (M20 fix)"
+    err "agents/skill-assessor.md does not collect learner self-rating (M20 fix)"
   fi
 fi
 
@@ -483,7 +486,7 @@ fi
 if [ -f skills/pair/SKILL.md ]; then
   mode1=$(awk '/^## Mode 1/,/^## Mode 2/' skills/pair/SKILL.md)
   if ! printf '%s' "$mode1" | grep -qE 'ZPD|zone-of-proximal-development'; then
-    warn "skills/pair/SKILL.md Mode 1 does not reference ZPD for role-reversal gating (M5 fix)"
+    err "skills/pair/SKILL.md Mode 1 does not reference ZPD for role-reversal gating (M5 fix)"
   fi
 fi
 
@@ -493,7 +496,7 @@ fi
 if [ -f skills/pair/SKILL.md ]; then
   session_end=$(awk '/^## Session End/,/^## Pairing Principles/' skills/pair/SKILL.md)
   if ! printf '%s' "$session_end" | grep -q 'spaced-repetition'; then
-    warn "skills/pair/SKILL.md Session End does not reference spaced-repetition KB (M8 fix)"
+    err "skills/pair/SKILL.md Session End does not reference spaced-repetition KB (M8 fix)"
   fi
 fi
 
@@ -503,7 +506,7 @@ fi
 if [ -f skills/teach/SKILL.md ]; then
   phase4=$(awk '/^## Phase 4/,/^## Phase 5/' skills/teach/SKILL.md)
   if ! printf '%s' "$phase4" | grep -q 'zone-of-proximal-development'; then
-    warn "skills/teach/SKILL.md Phase 4 does not reference zone-of-proximal-development KB (M6 fix)"
+    err "skills/teach/SKILL.md Phase 4 does not reference zone-of-proximal-development KB (M6 fix)"
   fi
 fi
 
@@ -513,14 +516,14 @@ fi
 if [ -f skills/practice/SKILL.md ]; then
   phase3=$(awk '/^## Phase 3/,/^---$/' skills/practice/SKILL.md)
   if ! printf '%s' "$phase3" | grep -qE 'bodhikit:pair.*invoked-from=practice'; then
-    warn "skills/practice/SKILL.md Phase 3 does not offer /pair with --invoked-from=practice (L8 fix)"
+    err "skills/practice/SKILL.md Phase 3 does not offer /pair with --invoked-from=practice (L8 fix)"
   fi
 fi
 
 # ---------------------------------------------------------------------------
 echo
 if [ "$warn_count" -gt 0 ]; then
-  echo "$warn_count warning(s) above. v1.7.0 soft-warn; will be hard-fail in 1.10.5."
+  echo "$warn_count warning(s) above. (No current rule emits warns; this is a future-proofing fallback.)"
 fi
 if [ "$fail" -eq 0 ]; then
   echo "All hard checks passed."

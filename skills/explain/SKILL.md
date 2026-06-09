@@ -36,7 +36,7 @@ Then show a concrete code example of creating and using an index.
 
 ## Phase 2: Learner Explains Back
 
-This is the heart of the Feynman technique. Do NOT skip this phase.
+**CHECKPOINT: Do not proceed to Phase 3 until the learner has produced an explain-back in their own words. No proceeding on "I get it" alone — this is the heart of the Feynman technique.**
 
 "Now, explain this concept back to me in your own words. Pretend I have never heard of [concept]. Take your time."
 
@@ -52,6 +52,7 @@ Compare the learner's explanation against the concept's key components. Identify
 - **What they partially understood** — right direction but missing nuance or precision
 - **What they missed entirely** — key components they did not mention
 - **Misconceptions** — things they stated that are incorrect
+- **Fluency without understanding** — per the `feynman-technique` KB, three failure signals that look fluent on the surface: (a) **jargon used without definition** ("it uses a hash map" with no idea what a hash map is), (b) **vague hedging that papers over uncertainty** ("it kind of does the thing where..."), (c) **steps quietly skipped** (start and end named, middle glossed). Each of these is a Feynman failure signal. Route any of them into Phase 4's mini-explanation loop the same way as other gaps.
 
 Present the analysis with warmth:
 
@@ -85,7 +86,7 @@ This final explanation is the test. If it is clear and complete, the concept is 
 
 If an active learning project exists:
 
-1. Add or update the concept in `.bodhi/spaced-review.json` per the `spaced-repetition` KB rules. Strong final explanation → Box 2. Gaps remained → Box 1.
+1. Add or update the concept in `.bodhi/spaced-review.json` per the canonical update rules in the `spaced-repetition` KB. **Strong final explanation:** treat as a correct recall — move up one box from current (max 5), per the KB's correct-recall rule. Do NOT hardcode a destination box; a learner already in Box 3 should not be demoted to Box 2 by a strong explanation. **Gaps remained:** treat as incorrect — move to Box 1, per the KB's demote rule. (For new concepts not yet in `spaced-review.json`, follow the KB's "new concept" rule: Box 1, `nextReview` = tomorrow.)
 
    **Per-concept Bloom + Feynman writes (v3 schema, see `state-schema` KB):**
    - **Feynman gate:** if the Phase 4 final explanation is clear, complete, jargon-free, and in the learner's own words (the `feynman-technique` KB's bar), set `concepts[].feynmanPassed = true`. Set, never unset.

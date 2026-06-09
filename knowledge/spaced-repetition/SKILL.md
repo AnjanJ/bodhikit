@@ -37,6 +37,20 @@ Each successful recall resets and flattens the curve. The first review is the mo
 
 For the JSON shape of `spaced-review.json`, see the `state-schema` KB.
 
+## Retention Rollup Views (canonical — skills MUST cite this section)
+
+For dashboards and reports, the 5-box system rolls up into one named 3-tier view. Skills MUST NOT invent their own bucket boundaries inline — `/progress` and `/evaluate` previously diverged on this and each invented a slightly different rollup.
+
+**Canonical 3-tier rollup:**
+
+| Tier | Boxes | Meaning |
+|---|---|---|
+| **Strong retention** | Box 4-5 | Long-term retention. Reviews are infrequent (14d / 30d intervals); the concept has held across multiple successful recalls. |
+| **Building retention** | Box 2-3 | Mid-curve. The concept has been successfully recalled once or twice but has not yet stabilized at the long intervals. |
+| **Needs review** | Box 1 | New concept OR demoted concept. Either freshly introduced (tomorrow's review) or returned-to-square-one by an incorrect recall / `/forget`. |
+
+`/progress` Spaced Repetition Health section and `/evaluate` Phase 4 Spaced Repetition Health line cite this section by name ("Strong / Building / Needs review per the spaced-repetition KB rollup"). Both display the same buckets so a learner reading either skill sees consistent numbers.
+
 ## Application to Programming
 
 Spaced repetition for coding is NOT just flashcards. It includes:

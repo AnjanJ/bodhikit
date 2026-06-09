@@ -155,7 +155,7 @@ Ask 2-3 questions mixing Bloom's levels: Level 2 (explain in own words), Level 3
 
 ### Update Tracking
 
-Apply update rules from the `spaced-repetition` KB. Demonstrated understanding → move up one box from current. Struggled but got there → Box 1.
+Apply the canonical update rules from the `spaced-repetition` KB. **Demonstrated understanding:** move up one box from current (max 5). **Struggled but got there:** treat as correct (the learner reached the goal under their own steam); move up one box. Do NOT silently equate partial success with failure — the KB defines no "partial" demote rule, and conflating struggle-but-arrived with incorrect-recall punishes the productive struggle the plugin is designed to reward.
 
 **Write per-concept Bloom (v3 schema, see `state-schema` KB):** map this session's observed performance to a Bloom level using the `blooms-taxonomy` KB indicators, and update `concepts[].bloomLevel` for the taught concept. Preserve any higher prior value (never demote — that is `/forget`'s job). If the v2 → v3 inline-fill is needed (file at version 2, missing fields), perform it before writing, per the `state-migration` KB.
 

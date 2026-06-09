@@ -21,7 +21,7 @@ Offered (opt-in, not auto-invoked) by `/evaluate` at major milestones or project
 
 ---
 
-## Phase 1: Understand the Learner (Reality)
+## Phase 1: Understand the Learner (Kram: Acceptance)
 
 **For this phase, reference the `mentoring-theory` KB for Kram's psychosocial functions and the GROW model overview.**
 
@@ -64,15 +64,29 @@ Present honestly but not overwhelmingly. Frame gaps as opportunities: "This is n
 
 ---
 
-## Phase 4: Generate Options (Options)
+## Phase 4: Generate Options (Options) — learner generates first
 
-**Reference the `constructivism` KB for the spiral-curriculum mechanic — each suggested option must name at least one concept from prior projects that the new path will revisit at a *higher* Bloom level, not as repetition but as deepening.**
+**Reference the `mentoring-theory` KB for the canonical Options rule: the learner generates options; the mentor asks first, does not prescribe. Reference the `constructivism` KB for the spiral-curriculum mechanic that augments the learner-generated paths.**
 
-Present 2-3 concrete learning path options, each with: what to learn, why it is the logical next step, estimated duration, what it enables, AND **the spiral**: one specific concept from a completed project that this path revisits at a higher Bloom target (e.g., "you reached Bloom 3 on async/await in the Node project; this path takes it to Bloom 5 by writing a runtime that schedules them").
+The audit caught the original Phase 4 inverting the KB's explicit Options rule by *presenting* 2-3 paths for the learner to choose from. The right flow is ask-first:
 
-Principles: build on strength (strong in JS? suggest Node before a new language), follow ZPD, use spiral curriculum (per the `constructivism` KB — name the spiral concept explicitly per option), respect motivation (excitement beats optimal sequencing).
+1. **Ask the learner to generate options.** "From where you are now, what paths do you see ahead? If you had to pick one direction right now, where would you start?"
 
-"These are three paths I see. Each is valid. Which one resonates with you?"
+   - **If they offer concrete options:** listen carefully. These are the paths their own goals and constraints have already shaped. Acknowledge each.
+   - **If they say "I do not know":** do not jump to options. Use the inversion prompt — *"Let us start with what you have ruled out. What do you NOT want to do next? Sometimes the path becomes clearer once the non-paths are named."* Build the option set up from the negative space.
+   - **If they offer one option but seem unsure of others:** ask whether they want to see additional angles before committing.
+
+2. **Augment, only after they have generated.** Once the learner has offered their own paths (one or more), and ONLY after, offer 1-2 additional options as augmentation — never as the primary list. Frame as offering, not prescription:
+
+   > "I can see a couple of additional paths that might complement what you have already named. Take, leave, or modify any of them."
+
+3. **For each option (learner-generated AND mentor-augmented), name the spiral revisit.** Per the `constructivism` KB, each path must name at least one concept from a completed project that the new path will revisit at a *higher* Bloom level — not as repetition but as deepening. Example: "You reached Bloom 3 on async/await in the Node project; this path takes it to Bloom 5 by writing a runtime that schedules them." This is the spiral-curriculum mechanic; without it, the path is sequential rather than developmental.
+
+Principles: build on strength (strong in JS? Node before a new language), follow ZPD, spiral curriculum (per the `constructivism` KB — name the spiral concept explicitly per option), respect motivation (excitement beats optimal sequencing).
+
+After both sets of options are on the table, ask:
+
+> "Each path is valid. Which one resonates with you?"
 
 ---
 
@@ -82,7 +96,8 @@ Once they choose:
 
 1. Offer to start a new project with `/learn [topic]`
 2. Set a timeline based on their pace
-3. Connect to their stated goal with a preview of the step after
+3. **Ask how they will know they have succeeded.** Per the `mentoring-theory` KB, the Will phase has three prompts: timeline (operationalized via `/learn`), commitment (operationalized via the `/learn` handoff), and success-measurement (otherwise absent). Ask: *"How will you know you have succeeded on this path? What evidence will you trust — a specific project shipped, a Bloom level on a topic, a feeling of fluency, a job offer, something else?"* Capture the answer in the learner's own words. This is what they will measure themselves against — not what the plugin will measure for them.
+4. Connect to their stated goal with a preview of the step after
 
 **Kram's Career Functions:** Coach honestly about valued skills. Suggest challenging projects that stretch abilities.
 

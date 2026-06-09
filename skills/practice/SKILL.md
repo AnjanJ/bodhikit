@@ -24,9 +24,13 @@ Determine the learner's current level for exercise targeting.
    - `.bodhi/state.json` — current module
    - `.bodhi/progress.md` — Bloom's level for relevant concepts
 
-3. If `$ARGUMENTS` is "next", use the next module's topic from the plan.
-   If `$ARGUMENTS` is a specific topic, use that topic.
-   If no argument, use the current module's topic.
+3. If `$ARGUMENTS` is "next" or absent, read `.bodhi/spaced-review.json` for Box-1 concepts tied to the current module. **Prefer one of those for the exercise topic if available** — Box 1 means either freshly introduced or recently demoted, and either way it is the highest-leverage deliberate-practice target the system can name. Announce the choice in the opening line:
+
+   > "Targeting `<concept>` — it has been in Box 1 since `<date>`. A targeted rep here is more valuable than moving forward right now."
+
+   Fall through to the plan-position topic only if no Box-1 concept exists for the current module.
+
+   If `$ARGUMENTS` is a specific topic, use that topic directly — do NOT override the explicit request with a Box-1 concept.
 
 4. If NO project found, ask: "What topic would you like to practice? And how would you rate your experience with it: beginner, intermediate, or advanced?"
 
@@ -36,11 +40,25 @@ Determine the learner's current level for exercise targeting.
 
 ## Phase 2: Exercise Delivery
 
-**For this phase, reference the `deliberate-practice` and `assessment-framework` knowledge bases.**
+**For this phase, reference the `deliberate-practice`, `desirable-difficulties`, and `assessment-framework` knowledge bases.**
 
 Design and deliver an exercise calibrated to the learner's level. Reference the `assessment-framework` knowledge base for exercise templates.
 
 Note: the Beginner / Intermediate / Advanced tiers below correspond to tiers 2-4 of the `constructivism` KB's project-progression ladder applied at exercise scope. The KB owns the full 5-tier ladder at project scope (via `/learn` and `/plan`); here we use it as a reference, not a restatement.
+
+### Sketch-before-scaffolding gate (Beginner and Intermediate tiers)
+
+Per the `desirable-difficulties` KB — specifically the **generation** principle: constructing a solution strengthens encoding more than recognizing one. Before delivering the calibrated scaffolding, run a 30-second sketch step:
+
+> "Before I give you the scaffolding, walk me through how you would approach this in 2-3 sentences. Just the shape — what would the function do, what is the rough structure?"
+
+Listen to the sketch. Surface any obvious wrong-turn before they invest in implementation ("Your sketch has the loop on the outside; this problem reads more naturally with the loop on the inside — want to think about why?"). If the sketch is solid, proceed with the calibrated scaffolding. If the sketch reveals a fundamental misread of the problem, do NOT silently fix it in the scaffolding — re-read the problem statement together, then ask for a revised sketch.
+
+Skip the sketch gate for Advanced tier (Bloom 5-6) — at that level the absence of scaffolding *is* the sketch step. The exercise's problem-statement-only format already enforces generation.
+
+### Variation enforcement (read prior exercises)
+
+Per the `desirable-difficulties` KB — **variation across reps** prevents rote pattern-matching. Before designing this exercise, read prior entries in `exercises/<current-module>/` (filename listing is sufficient; full content only if titles are ambiguous). If a prior exercise covers the same concept, vary the context: different domain (cooking → music), different data shape (array → tree), different success criterion (correctness → performance). Do not duplicate the prior shape with new variable names — that is repetition, not variation, and the `desirable-difficulties` KB names it as the failure mode.
 
 ### For Beginners (Bloom's Level 1-2)
 

@@ -2,6 +2,38 @@
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [1.10.5] - 2026-06-09
+
+### Changed
+- **Hardcoded Leitner box destinations replaced with KB references** (H4, M7). `/explain` Update Tracking no longer says "Strong → Box 2, Gaps → Box 1" (which silently demoted a learner already in Box 3); now it says "treat as correct recall per the `spaced-repetition` KB — move up one box (max 5)." `/teach` Phase 5 no longer says "Struggled but got there → Box 1" (which conflated productive struggle with failure); now treats struggled-but-arrived as correct (move up one box). The KB defines no "partial" demote rule, and the audit caught both skills inventing one.
+- **`/mentor` Phase 4 inverted to learner-generates-first** (H10). The original presented 2-3 paths for the learner to choose from, directly contradicting the `mentoring-theory` KB's explicit Options rule: "The learner generates options, not the mentor." The rewrite asks first ("From where you are now, what paths do you see ahead?"), handles "I do not know" via the negative-space prompt ("What do you NOT want to do next?"), and only after the learner has generated their own paths offers 1-2 augmentation options as a complement — never as the primary list.
+- **Canonical retention rollup view** added to the `spaced-repetition` KB (L2). The "Retention Rollup Views" section defines one named 3-tier rollup (Strong = Box 4-5, Building = Box 2-3, Needs review = Box 1). `/evaluate` Phase 4 and `/progress` Spaced Repetition Health both cite the section by name and display the same buckets. Previously each invented its own rollup with subtly different boundaries.
+- **`/explain` Phase 2 promoted to CHECKPOINT** (L3). The "Do NOT skip this phase" line read as guidance; the new CHECKPOINT marker matches the formatting used in `/teach-back` and makes the gate enforceable.
+- **`/explain` Phase 3 adds a fifth gap bucket: fluency-without-understanding** (A4). The `feynman-technique` KB names three failure signals (jargon-without-definition, vague hedging, skipped steps); Phase 3's original four buckets caught none of them. The new fifth bucket routes any of the three signals into Phase 4's mini-explanation loop.
+- **`/mentor` Phase 1 label corrected** from "(Reality)" to "(Kram: Acceptance)" (L6). Phase 3 is the canonical GROW Reality phase; Phase 1 is the Kram acceptance/setup phase. The duplicate label was a mis-tagging, not a phase-order issue — phases 2-5 already flow Goal → Reality → Options → Will canonically.
+- **`/practice` Phase 1 prioritizes Box-1 concepts from the current module** (A1). When `$ARGUMENTS` is "next" or absent, the skill now reads `.bodhi/spaced-review.json` for Box-1 concepts tied to the current module and prefers one of those for the exercise — Box 1 is the highest-leverage deliberate-practice target the system can name. Falls through to plan-position only if no Box-1 concept exists for the module. Explicit `$ARGUMENTS` always wins; the skill does not override the learner's stated choice.
+- **`/practice` Phase 2 sketch-before-scaffolding gate + variation enforcement** (A2). Per the `desirable-difficulties` KB's **generation** principle, Beginner and Intermediate tiers now run a 30-second sketch step before scaffolding is delivered ("Walk me through how you would approach this in 2-3 sentences"); obvious wrong-turns get surfaced before the learner invests in implementation. Per the **variation** principle, the skill reads prior entries in `exercises/<current-module>/` before designing the exercise and varies context if a prior exercise covers the same concept. Advanced tier skips the sketch gate — the absence of scaffolding *is* the sketch step.
+- **`/plan` View mode surfaces Spiral Revisits** (A7). New section in the view output reads each `plan/phase-{N}.md` and extracts concepts that reappear in later phases at higher target Bloom levels. If the plan does not declare target Bloom levels for revisits, the section says so honestly ("Spiral revisits not declared in current plan — run `/plan regenerate` to apply the constructivism principle.") rather than omitting silently.
+- **`/mentor` Phase 5 success-measurement prompt** (A8). The Will phase now asks the third canonical GROW-Will question — "How will you know you have succeeded?" — capturing the answer in the learner's own words. Timeline and commitment are already operationalized via the `/learn` handoff; success-measurement was the missing third.
+- **All M1-M5 lint warns promoted to hard fails.** `dev/check.sh` is now single-severity — every rule emits `err` and exits 1 on violation. The `warn()` helper is kept for future intentionally-soft checks but no current rule uses it. The pre-existing 1.7.0 soft-warn rules (12-15) are also promoted; the `docs/example-project/` is in v2 layout per 1.7.1 so the promotion is no-op on current data.
+
+### Why this exists
+M6 closes the remaining single-finding fixes the audit identified — eleven targeted edits across nine surfaces. The cluster has two themes: (a) the audit caught skills that *cited* the KB but then invented inline mechanics that contradicted it (H4, M7 hardcoded boxes; H10 inverted Options; L2 reinvented rollup), and (b) the audit caught skills that *honored* the KB in spirit but missed a specific operationalization the KB calls out by name (L3 missing CHECKPOINT; A4 missing fluency-without-understanding bucket; A1 missing Box-1 prioritization; A2 missing generation gate; A7 missing spiral revisits in View; A8 missing success-measurement prompt; L6 label correction). The fixes are individually small; in aggregate they tighten the contract between every cited KB and the skill that cites it. The lint promotion makes future drift catchable at PR time rather than surfacing in audit form months later — which was the whole point of the authoring contract in the first place.
+
+### Sprint summary (1.10.0 → 1.10.5)
+This release closes the pedagogy audit (`gaps_of_pedagogy.md`): **35 confirmed findings + 9 adjusted = 44 actionable items**, plus the sprint review's D1/D2/D3/D5 corrections, all landed across six minor releases. Per-release summaries:
+
+| Release | Closes | Theme |
+|---|---|---|
+| 1.10.0 | H1, H2, H3, M2, M3 | Per-concept Bloom + Feynman tracking makes mastery observable |
+| 1.10.1 | H5, H6, H9, M13, A5 | `/reflect` Phase 2 rewritten as retrieval-first calibration |
+| 1.10.2 | H11, H12, H13, M27, A3, A9 | 1.4.0 chains wired as opt-in offers (not auto-invocations) |
+| 1.10.3 | M10, M12, M14, M16, M18, M20, M23, M24, M26, A6 | KB references batch + `/evaluate` Phase 2.5 calibration |
+| 1.10.4 | M5, M6, M8, L8 | `/pair` fully wired with ZPD-signal-gated reversal |
+| 1.10.5 | H4, M7, H10, L2, L3, L6, A1, A2, A4, A7, A8 | Targeted fixes + lint promotion to single severity |
+
+**Total: 44 findings closed.** Lint is now hard-fail on every rule. The plugin's authoring contract is fully enforced — any future drift between cited KB and citing skill, between schema declaration and skill writer, between offer text and chain flag, will surface as a build failure.
+
 ## [1.10.4] - 2026-06-09
 
 ### Changed

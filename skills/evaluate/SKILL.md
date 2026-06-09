@@ -92,7 +92,7 @@ Present a comprehensive report including:
 - **Where You Shine:** 2-3 strengths with evidence
 - **Active Growth Areas:** 2-3 areas with positive trajectory
 - **Areas Needing Attention:** 1-2 areas needing focus (framed as opportunities)
-- **Spaced Repetition Health:** count/percentage by retention level (Strong Box 4-5, Building Box 2-3, Needs Review Box 1)
+- **Spaced Repetition Health:** count/percentage by retention level using the canonical 3-tier rollup from the `spaced-repetition` KB ("Retention Rollup Views" — Strong / Building / Needs review). Do not invent your own bucket boundaries.
 - **Key Concepts Status:** mastered, growing, review needed
 - **Calibration Check (Phase 2.5):** the learner's predictions alongside the data. For each prediction, name the gap honestly — not as a "wrong answer" but as a metacognition signal. *"You predicted `<X>` as biggest growth; the data shows `<Y>`. That is a calibration gap of <delta>. Over repeated evaluations, this gap shrinks — and that shrinkage is the metacognitive skill underneath every other skill."* If the predictions matched closely, name it as a win: *"Your prediction lined up with the data on `<topic>` — that is calibration in action, and it is real progress."*
 - **Recommendations:** specific next steps, suggested focus area with rationale, a project idea to solidify learning

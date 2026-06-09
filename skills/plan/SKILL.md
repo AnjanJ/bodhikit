@@ -41,9 +41,14 @@ Present a clear summary:
 ### Upcoming
 - [Module names with target Bloom's levels]
 
+### Spiral Revisits
+- [Concepts from earlier phases that reappear in later phases at a higher target Bloom level — surface them from the per-phase plan files. Each line: "<concept>: phase {N} (Bloom <X>) → phase {M} (Bloom <Y>)". This is the constructivism KB's spiral-curriculum mechanic made visible.]
+
 ### Spaced Review Schedule
 - [N] concepts due for review this week
 ```
+
+**Spiral Revisits source.** Read each `plan/phase-{N}.md` file and extract any concept that appears in more than one phase. Compare the target Bloom levels in the module success criteria of each phase. List only the upward revisits (higher target in a later phase). If the per-phase files do not declare target Bloom levels for revisited concepts, note "Spiral revisits not declared in current plan — run `/plan regenerate` to apply the constructivism principle." rather than omitting the section silently.
 
 If the learner is ahead of schedule: "You are moving with good momentum."
 If the learner is on track: "Steady progress. The path is clear."
