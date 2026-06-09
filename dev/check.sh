@@ -543,6 +543,21 @@ if [ -f skills/learn/SKILL.md ]; then
 fi
 
 # ---------------------------------------------------------------------------
+# 41. /housekeep migrate must declare per-target idempotency markers, not a
+#     single-marker exit (the 1.10.8 fix — a single .migration-1.7.0.md marker
+#     would short-circuit the v2 -> v3 transform for every 1.7.0-migrated
+#     project, leaving them stuck on v2 forever).
+# ---------------------------------------------------------------------------
+if [ -f skills/housekeep/SKILL.md ]; then
+  if ! grep -q 'migration-1.10' skills/housekeep/SKILL.md; then
+    err "skills/housekeep/SKILL.md missing .migration-1.10 marker (1.10.8 fix — per-target idempotency)"
+  fi
+  if ! grep -qiE 'per-target idempotency|per target idempotency' skills/housekeep/SKILL.md; then
+    err "skills/housekeep/SKILL.md missing per-target idempotency declaration (1.10.8 fix)"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
 # 40. Legacy fallthrough rule must NOT combine bloomLevel:0 with lastReviewed
 #     (the 1.10.7 corrected boundary — pre-v3 concepts routinely have
 #     populated lastReviewed; combining the two false-blocked every existing

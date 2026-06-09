@@ -2,6 +2,28 @@
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [1.10.8] - 2026-06-09
+
+### Fixed
+- **`/housekeep migrate` per-target idempotency model.** The 1.7.0 spec used a single marker (`.bodhi/.migration-1.7.0.md`) as the idempotency check — Phase 5 step 1 exited cleanly whenever that marker existed. This was correct for 1.7.0 (only one migration target), but became a showstopper as soon as 1.10 added a second target: every learner already-migrated to 1.7.0 had `.migration-1.7.0.md` on disk, so running `/housekeep migrate` would short-circuit on step 1 and **never run the v2 → v3 spaced-review transform**. The whole 1.10.0 schema fix would have been unreachable via the documented path. **Caught by the second dogfood step** (tracing the migration logic against `rails-react-scaling/.bodhi/`, which has the 1.7.0 marker but no v3 data).
+
+  The fix introduces a per-target marker model: each migration target gets its own marker (`.migration-1.7.0.md`, `.migration-1.10.md`); Phase 5 runs each target whose marker is missing; only when ALL target markers are present does migrate exit with "nothing to do." Already-1.7.0-migrated projects can now reach v3 by running `/housekeep migrate` — the 1.7.0 transforms are skipped (already on disk), 5f-bis fires, the new `.migration-1.10.md` marker is written.
+
+- **5f-bis step 1 (backup) now uses imperative writes** matching the 1.7.1 pattern. The original instruction ("Back up the pre-v3 file to `.bodhi/.pre-1.10-backup/spaced-review.json`") was declarative and could be interpreted by an executing model as a state-description rather than an action — the same defect 1.7.1 fixed across steps 5a/5b/5c. The corrected step uses explicit `mkdir -p` + Read + Write + re-Read verification, with rollback if any check fails. The backup must be on disk before any in-place transformation begins.
+
+- **5g precondition list extended.** The 1.7.0-target marker and 1.10-target marker now have separate precondition blocks. The 1.10 block verifies `.bodhi/.pre-1.10-backup/spaced-review.json` exists, parses as JSON, and carries `version: 2` — closing the loop on the imperative-write discipline above. Without this check, a silently-skipped backup write could not be caught at marker-write time.
+
+- **5h report block scoped to which targets ran.** The original report template described 1.7.0-era files (`plan.md` split, `assessments` rotation) regardless of which targets actually ran. The corrected version prints a 1.7.0 block, a 1.10 block, or both — describing only the transforms that actually ran in this invocation.
+
+### Added
+- **New marker template `.migration-1.10.md`** documents what 5f-bis did per project: which target version, what fields were added, byte-size deltas, and where the backup lives.
+- **`dev/check.sh` rule 41** enforces the per-target idempotency declaration in `/housekeep migrate` and the presence of the 1.10 marker reference. Prevents the single-marker model from creeping back.
+
+### Why this exists
+The second dogfood step (trace the migration logic without running it) caught four defects (D1–D4) in step 5f-bis and the surrounding flow. D3 was the showstopper: the single-marker idempotency model would have made the entire 1.10.0 schema fix unreachable for any learner with an existing project. D1 was the same declarative-vs-imperative defect 1.7.1 had already fixed in 5a/5b/5c, repeated in the new step 1 of 5f-bis. D2 closed the loop on D1 at the marker-write side. D4 was a reporting honesty issue — the report block was a 1.7.0-era artifact that did not describe a 1.10-only run.
+
+Pattern recognition: each dogfood step (1.10.7 from reading one file, 1.10.8 from tracing the spec) caught a category of bug that test data without a real environment would not have surfaced. The 1.10.0 sprint passed every lint rule and every CHANGELOG cross-check; both bugs needed a real `learn_with_bodhi/` shape to expose. Worth filing this as a habit — schema-touching changes get a dogfood pass against real v2 data before tagging.
+
 ## [1.10.7] - 2026-06-09
 
 ### Fixed

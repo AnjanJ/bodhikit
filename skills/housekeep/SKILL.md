@@ -94,19 +94,38 @@ If `--dry-run`, print what would collapse.
 
 ---
 
-## Phase 5: Migration Mode (One-Shot v1 → v2)
+## Phase 5: Migration Mode (chained v1 → v2 → v3)
 
 This phase runs only when `$ARGUMENTS` is `migrate`. Load the `state-migration` KB now if not already loaded.
 
+**Per-target idempotency model (1.10.8).** Each migration target gets its own marker file in `.bodhi/`. A marker's presence proves *that target's* transforms are complete; a marker's absence means *that target's* transforms must run. The migrate command runs every target whose marker is missing, in version order. This replaces the 1.7.0 model where one marker exit-short-circuited the entire phase — that model became wrong as soon as a second migration target (1.10) shipped, because every learner already-1.7.0-migrated had `.migration-1.7.0.md` on disk and could never reach v3.
+
+**Markers (in order):**
+
+- `.bodhi/.migration-1.7.0.md` — proves v1 → v2 transforms (steps 5a–5f) have run.
+- `.bodhi/.migration-1.10.md` — proves v2 → v3 transforms (step 5f-bis) have run.
+
 **Pre-flight:**
 
-1. Check for the migration marker. If `.bodhi/.migration-1.7.0.md` exists, exit cleanly:
-   "Already migrated on <date>. Nothing to do." Show the marker file's path so the learner can inspect it if curious.
-2. If working at the `learningWithBodhi/` root (multiple projects), iterate Phase 5 over each project. Profile migration runs once for the root.
-3. **Capture before sizes.** Record byte sizes of every existing `.bodhi/` file. These will be reported back.
-4. **Create the backup directory.** `.bodhi/.pre-1.7.0-backup/` — copy the unmodified monolithic files here before any conversion. This is removable in 1.8.0 but exists now as a safety net.
+1. **Determine which targets need to run.** Check for each marker file:
+   - `.bodhi/.migration-1.7.0.md` absent → 1.7.0 target must run (steps 5a–5f, plus 5f-bis).
+   - `.bodhi/.migration-1.7.0.md` present, `.bodhi/.migration-1.10.md` absent → 1.10 target must run (step 5f-bis only). The 1.7.0 transforms are already on disk; do NOT re-run them.
+   - Both markers present → migrate has nothing to do. Exit cleanly with:
+     > "Both migrations complete. 1.7.0 marker dated <date1>; 1.10 marker dated <date2>. Nothing to do."
 
-**Conversion steps (apply in this exact order, each step idempotent):**
+2. If working at the `learningWithBodhi/` root (multiple projects), iterate Phase 5 over each project. Profile migration runs once for the root.
+
+3. **Capture before sizes.** Record byte sizes of every existing `.bodhi/` file. These will be reported back, scoped to whichever targets ran.
+
+4. **Create backup directories for the target(s) that will run:**
+   - 1.7.0 target running → `.bodhi/.pre-1.7.0-backup/` (copy the monolithic files here before steps 5a–5f convert them; removable in 1.8.0 but exists now as a safety net).
+   - 1.10 target running → `.bodhi/.pre-1.10-backup/` (5f-bis populates this with the pre-v3 spaced-review.json; removable in 1.11).
+
+**Conversion steps (apply in this exact order, each step idempotent at the file level):**
+
+If the 1.7.0 marker is present, steps 5a–5f are skipped (their data is already on disk in v2 shape — running them again is technically a no-op given each step's own idempotency check, but skipping is cleaner and avoids the byte-size report showing 0-delta noise for files that did not change in this invocation).
+
+5f-bis always runs when the 1.10 marker is absent, regardless of whether 5a–5f ran in this invocation.
 
 ### 5a. State narrative extraction
 
@@ -204,7 +223,12 @@ Read `spaced-review.json` (after step 5f has it at version 2 in memory or on dis
 
 Otherwise:
 
-1. **Back up the pre-v3 file** to `.bodhi/.pre-1.10-backup/spaced-review.json` (create the directory if absent). This is parallel to the `.pre-1.7.0-backup/` safety net but scoped to the 1.10.0 schema change; it will be removed in 1.11. Skip this step if the backup file already exists (idempotency).
+1. **Back up the pre-v3 file using imperative writes.** Per the 1.7.1 imperative-write discipline (which 1.10.8 also applies here):
+   - **Idempotency check.** If `.bodhi/.pre-1.10-backup/spaced-review.json` already exists on disk, skip the backup write. Do NOT overwrite — the backup is the safety net for THIS migration invocation and any prior one's; preserving it is non-negotiable.
+   - **Create the backup directory** with the Bash tool: `mkdir -p .bodhi/.pre-1.10-backup` (the `-p` flag makes it idempotent).
+   - **Read the current `.bodhi/spaced-review.json`** with the Read tool.
+   - **Write the contents verbatim** to `.bodhi/.pre-1.10-backup/spaced-review.json` with the Write tool. Do not paraphrase, reformat, or strip fields — the backup is byte-for-byte the pre-migration state.
+   - **Verify the backup.** Re-read `.bodhi/.pre-1.10-backup/spaced-review.json`. Confirm the file exists, parses as JSON, and matches the source. If any check fails, do NOT proceed to step 2 — report which check failed and exit. The backup must exist before any in-place transformation begins; without it, a partial write to the source destroys the only copy of the pre-v3 data.
 2. **For each entry in `concepts[]`**, add the three new fields if absent — per the v2 → v3 row in the `state-migration` KB:
    - `bloomLevel: 0` (uninitialized — the legacy fallthrough rule in the `state-schema` KB makes this safe for prerequisite gates)
    - `feynmanPassed: false`
@@ -218,9 +242,11 @@ If `concepts[]` is empty or absent, still complete steps 2-4 to ensure `version:
 
 Track per-step stats for the report: number of concepts touched, number of fields added per concept (typically 3 × concept count for first migration; 0 for an already-migrated file).
 
-### 5g. Write the migration marker
+### 5g. Write the migration marker(s)
 
-**Precondition for writing the marker.** Before composing or writing this file, verify every preceding step persisted to disk:
+Per the per-target idempotency model declared in Phase 5's Pre-flight, this step writes one OR two markers depending on which targets ran in this invocation.
+
+**Precondition for writing `.migration-1.7.0.md`** (write only if the 1.7.0 target ran in this invocation). Verify every 1.7.0-target step persisted to disk:
 
 - `state.json` is on disk with `version: 2` (integer) and no `lastSessionSummary` / `bloomResetNote` fields.
 - `progress.md` is on disk and contains the literal heading `## Summary of earlier sessions`.
@@ -228,11 +254,18 @@ Track per-step stats for the report: number of concepts touched, number of field
 - `.bodhi/assessment.md` (flat singular file) does NOT exist on disk.
 - `plan/README.md` is on disk; the flat `plan.md` is at `.pre-1.7.0-backup/plan.md` (not at `.bodhi/plan.md`).
 - `learningWithBodhi/.bodhi-profile.projects.json` is on disk with `version: 2` (or the profile did not exist, in which case skip).
-- `spaced-review.json` carries `version: 3` AND every `concepts[]` entry has `bloomLevel`, `feynmanPassed`, and `consecutiveCorrectAtL4Plus` keys.
+- `spaced-review.json` carries `version: 2` or higher (1.7.0 target only requires v2; v3 is checked separately below).
 
-If any of these checks fails, do NOT write the marker. Report which check failed and exit non-zero. The presence of the marker is what makes future runs detect the migration as complete — writing it prematurely would falsely make a broken migration appear successful.
+**Precondition for writing `.migration-1.10.md`** (write only if the 1.10 target ran in this invocation). Verify the v2 → v3 transform persisted to disk:
 
-If every check passes, create `.bodhi/.migration-1.7.0.md`:
+- `.bodhi/.pre-1.10-backup/spaced-review.json` exists on disk, parses as JSON, and carries `version: 2`. The backup must be in place; without it, the v3 write happened without a safety net and the precondition fails even if the source file looks right.
+- `.bodhi/spaced-review.json` carries `version: 3` AND every `concepts[]` entry has `bloomLevel`, `feynmanPassed`, and `consecutiveCorrectAtL4Plus` keys.
+
+If any of these checks fails, do NOT write the corresponding marker. Report which check failed and exit non-zero. The presence of a marker is what makes future runs detect that target's migration as complete — writing it prematurely would falsely make a broken migration appear successful.
+
+If every check for a target passes, write that target's marker. If both targets ran successfully in one invocation, write both markers.
+
+For the 1.7.0 marker, create `.bodhi/.migration-1.7.0.md`:
 
 ```markdown
 # Migration to 1.7.0 — <YYYY-MM-DD>
@@ -272,22 +305,71 @@ Original monolithic files preserved at `.bodhi/.pre-1.7.0-backup/`. This directo
 <any cases that required manual judgment or fallback handling>
 ```
 
-The marker file's presence is what makes the migration idempotent.
+For the 1.10 marker, create `.bodhi/.migration-1.10.md`:
+
+```markdown
+# Migration to 1.10 — <YYYY-MM-DD>
+
+Performed by `/bodhikit:housekeep migrate`.
+
+## What changed
+
+`spaced-review.json` bumped from version 2 to version 3. Per-concept Bloom + Feynman fields added with safe defaults so the v3 mastery formula in the `state-schema` KB becomes computable:
+
+- `bloomLevel: 0` on every concept (uninitialized — the legacy fallthrough rule allows advancement; once a v3 writer sets a non-zero value, normal gate logic applies).
+- `feynmanPassed: false` on every concept.
+- `consecutiveCorrectAtL4Plus: 0` on every concept.
+
+## Before / after byte sizes
+
+| File | Before | After |
+|---|---|---|
+| spaced-review.json | N KB | M KB (N concepts × 3 new fields added) |
+
+## Backup
+
+Pre-v3 `spaced-review.json` preserved at `.bodhi/.pre-1.10-backup/spaced-review.json`. This directory will be removed in 1.11.
+
+## Notes
+
+<any cases that required manual judgment or fallback handling>
+```
+
+Each marker's presence is what makes its target idempotent for future invocations.
 
 ### 5h. Report to the learner
 
-Print a clear before/after summary (not the full marker file; a digest):
+Print a digest scoped to whichever target(s) ran in this invocation. Do NOT describe transforms that did not run — if only the 1.10 target ran (because 1.7.0 was already done), the report must not mention `plan.md` splits or assessments rotation.
+
+**If the 1.7.0 target ran in this invocation:**
 
 ```
-Migration complete.
+1.7.0 migration complete.
 
 Before: state.json 6.2 KB, plan.md 16 KB, progress.md 3.7 KB, assessments 58 KB total, ...
 After:  state.json 1.5 KB, plan/ (split: README 1 KB + 4 phase files), progress.md 2.1 KB live + 3 archive entries, assessments/latest.md 17 KB + 3 archive files, ...
 
 Routine skill reads drop substantially — what was loaded eagerly is now archived behind pointers, ready when you need it but out of the way until then.
 
-Archive content is permanent and accessible via pointers in live docs. Original files are at .bodhi/.pre-1.7.0-backup/ for one minor version.
+Original files are at .bodhi/.pre-1.7.0-backup/ for one minor version.
 ```
+
+**If the 1.10 target ran in this invocation:**
+
+```
+1.10 migration complete.
+
+spaced-review.json: bumped from v2 to v3. N concepts each received bloomLevel: 0, feynmanPassed: false, consecutiveCorrectAtL4Plus: 0.
+
+Before: spaced-review.json X.X KB
+After:  spaced-review.json Y.Y KB (+N concepts × 3 fields)
+
+Mastery now becomes observable as you continue: /quiz, /teach, /explain, /practice all write the new per-concept fields. Until those skills touch a concept, the prerequisite Bloom gate treats it as "no opinion yet" and lets you advance freely. /progress shows "—" for modules where no concept has been classified under v3 yet.
+
+Pre-v3 spaced-review.json is at .bodhi/.pre-1.10-backup/ for one minor version.
+```
+
+**If both targets ran in this invocation,** print both blocks in order (1.7.0 first, then 1.10).
 
 Use the personality voice for the closing line — patient, honest, no over-celebration. Something like: "The garden is tended. The path forward stays clear; nothing of your work has been lost."
 
