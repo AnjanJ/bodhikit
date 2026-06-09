@@ -2,6 +2,22 @@
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [1.10.4] - 2026-06-09
+
+### Changed
+- **`/pair` Mode 1 step 7 (role reversal) is now ZPD-signal-gated, not time-gated.** The hardcoded "After 10-15 minutes of strong-style, offer the switch" was scaffolding-by-clock, contradicting the `zone-of-proximal-development` KB's principle that scaffolding must fade as competence grows. The rewrite uses four observable-in-conversation signals (re-specified per the sprint review's D5 correction): the learner volunteers the next navigation step before being asked; their post-piece explain-back goes deeper than asked (trade-offs, edge cases, connections); a divergence they pushed turned out to be the better approach; or they preempt a syntax hint two or more times. When at least two fire, the switch is offered. A 5-minute floor prevents premature offers (the learner needs surface to demonstrate signals); a 25-minute ceiling triggers the Analogy-Escalation Protocol or sub-concept decomposition instead of pushing reversal that is not coming.
+- **`/pair` Session End now references the `spaced-repetition` KB** and writes the v3 per-concept fields per the `state-schema` KB — new concepts initialize with `bloomLevel: 0`, `feynmanPassed: false`, `consecutiveCorrectAtL4Plus: 0`; mastery-demonstrated concepts move up one box per the KB's correct-recall rule. `feynmanPassed` is NOT set here — pairing's step-6 explain-back is necessary-but-not-sufficient for the gate (that field is owned by `/teach` and `/explain` Phase 5). Closes the v3-fields lint warn that was deferred from M1.
+- **`/teach` Phase 4 has a Below-ZPD escalation gate.** Before delivering the calibrated exercise, the skill checks whether the Phase 2 Checkpoint signaled the learner is *Below* the ZPD (instant correctness AND flat acknowledgment AND no questions). If so, the planned exercise would be busywork; the skill instead skips ahead within the module, escalates the Bloom tier, or surfaces the choice to the learner. Beyond-ZPD is already covered via the Analogy-Escalation Protocol; this gate covers the opposite tail.
+- **`/practice` Phase 3 now offers `/pair` as a collaboration alternative** to decomposition when the learner is stuck before starting. The decomposition path stays available; pair is named as a peer alternative, not a replacement, for learners who would do better with collaboration than further breakdown.
+- **Four new lint rules in `dev/check.sh`** (warn for now, promoted in 1.10.5): `/pair` Mode 1 must reference ZPD for reversal gating; `/pair` Session End must reference spaced-repetition; `/teach` Phase 4 must reference ZPD (Below-ZPD gate); `/practice` Phase 3 must offer `/pair`.
+
+### Why this exists
+Four audit findings (M5, M6, M8, L8) clustered on `/pair`'s under-instrumentation relative to its documented pedagogical surface area. The audit named `/pair` as the most under-cited skill in the plugin: time-gated where it should be competence-gated, silent on the spaced-repetition contract it actually applies, and absent from `/practice`'s stuck-branch offer list. M3 already wired the `/teach → /pair` offer; M5 finishes the work — ZPD-gated reversal, spaced-repetition contract honored, and the bidirectional `/practice → /pair` offer added.
+
+The sprint review (D5) caught that the audit's original "typing without hesitation" / "anticipating the next step" signals were not observable in a chat-based skill (the AI sees turns, not keystrokes or pauses). The re-specified signals are observable-in-conversation: volunteering navigation, going deeper than asked, divergence-as-navigation, preempting hints. They map to the same Below-ZPD detection rationale without requiring keystroke analytics.
+
+The Below-ZPD gate in `/teach` closes the opposite tail of the ZPD gate the plugin already had. The original Phase 4 scaffolding selector keyed off Bloom level alone — never re-evaluating whether the learner's actual session signals matched the Bloom level on file. A learner who reaches Phase 4 with engaged-and-confident answers gets escalated; a learner who reaches it with flat-and-disengaged answers gets skipped past. Both responses respect what the conversation just showed.
+
 ## [1.10.3] - 2026-06-09
 
 ### Added

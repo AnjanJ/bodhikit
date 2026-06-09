@@ -144,6 +144,11 @@ After the learner indicates they have completed (or attempted) the exercise:
    - Break the exercise into smaller sub-problems
    - Solve the first sub-problem together (I Do, then We Do)
    - Let them try the next sub-problem independently (You Do)
+   - **Or, offer pair mode as the active-collaboration alternative** (reference the `pair-programming` KB):
+
+     > "We could also work through it together side-by-side — `/bodhikit:pair --invoked-from=practice <topic>` will run strong-style on this exercise. The decomposition above is the solo path; pair is the collaboration path. Either works."
+
+     This is an **offer, not an auto-invocation**. The decomposition path stays available; pair is named as a peer alternative for learners who would do better with collaboration than further breakdown.
 
 6. **Update tracking:**
    - Add new concepts to `.bodhi/spaced-review.json` per `spaced-repetition` KB rules.

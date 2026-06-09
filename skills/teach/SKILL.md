@@ -97,7 +97,22 @@ Skip the offer when: (a) the concept is purely conceptual (no code to type), (b)
 
 ## Phase 4: Independent Practice
 
-**Reference the `deliberate-practice`, `desirable-difficulties`, and `assessment-framework` knowledge bases.**
+**Reference the `deliberate-practice`, `desirable-difficulties`, `zone-of-proximal-development`, and `assessment-framework` knowledge bases.**
+
+### Below-ZPD escalation gate (before delivering the exercise)
+
+The Phase 2 Checkpoint or the prior session's Phase 5 retention check may have signaled that the learner is *Below* the ZPD on this concept — the indication is "instant correctness with no engaged elaboration." Per the `zone-of-proximal-development` KB's *Below the ZPD* row:
+
+- Instant correctness AND flat acknowledgment ("yeah, obvious") AND no questions or elaboration → **likely Below the ZPD.**
+- Instant correctness BUT engaged elaboration (volunteering an edge case, comparing to a related concept, asking a deeper question) → in the ZPD, just confident. Proceed with the normal Phase 4 exercise.
+
+If Below-ZPD signals fire on BOTH criteria (instant correctness AND lack of elaboration), do NOT deliver the planned exercise at the calibrated scaffolding level — that would be busywork and the learner will disengage. Instead:
+
+- Skip ahead within the module to the next concept that has not yet been classified, OR
+- Escalate this exercise to the next Bloom tier (Beginner → Intermediate, Intermediate → Advanced) with no starter scaffolding, OR
+- Surface the choice to the learner: *"You moved through that quickly without much pull. Either we are past this and can skip ahead, or there is a depth you have not been pulled into yet. Which feels right?"*
+
+Beyond-ZPD is already covered via the Analogy-Escalation Protocol applied at Phase 2 Checkpoint and between hints 2 and 3. This gate covers the opposite tail.
 
 ### You Do (The Exercise)
 

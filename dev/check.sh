@@ -475,6 +475,49 @@ if [ -f agents/skill-assessor.md ]; then
 fi
 
 # ---------------------------------------------------------------------------
+# 34. /pair Strong-Style step 7 must be ZPD-signal-gated, not time-gated (M5 fix).
+# ---------------------------------------------------------------------------
+# The audit caught the hardcoded "After 10-15 minutes" rule as scaffolding-by-
+# clock rather than scaffolding-by-competence. The rewrite (D5-corrected to
+# observable-in-conversation signals) must mention ZPD signals explicitly.
+if [ -f skills/pair/SKILL.md ]; then
+  mode1=$(awk '/^## Mode 1/,/^## Mode 2/' skills/pair/SKILL.md)
+  if ! printf '%s' "$mode1" | grep -qE 'ZPD|zone-of-proximal-development'; then
+    warn "skills/pair/SKILL.md Mode 1 does not reference ZPD for role-reversal gating (M5 fix)"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
+# 35. /pair Session End must reference spaced-repetition KB (M8 fix).
+# ---------------------------------------------------------------------------
+if [ -f skills/pair/SKILL.md ]; then
+  session_end=$(awk '/^## Session End/,/^## Pairing Principles/' skills/pair/SKILL.md)
+  if ! printf '%s' "$session_end" | grep -q 'spaced-repetition'; then
+    warn "skills/pair/SKILL.md Session End does not reference spaced-repetition KB (M8 fix)"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
+# 36. /teach Phase 4 must reference ZPD KB (M6 fix — Below-ZPD escalation gate).
+# ---------------------------------------------------------------------------
+if [ -f skills/teach/SKILL.md ]; then
+  phase4=$(awk '/^## Phase 4/,/^## Phase 5/' skills/teach/SKILL.md)
+  if ! printf '%s' "$phase4" | grep -q 'zone-of-proximal-development'; then
+    warn "skills/teach/SKILL.md Phase 4 does not reference zone-of-proximal-development KB (M6 fix)"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
+# 37. /practice Phase 3 must offer /pair (L8 fix — collaboration alternative).
+# ---------------------------------------------------------------------------
+if [ -f skills/practice/SKILL.md ]; then
+  phase3=$(awk '/^## Phase 3/,/^---$/' skills/practice/SKILL.md)
+  if ! printf '%s' "$phase3" | grep -qE 'bodhikit:pair.*invoked-from=practice'; then
+    warn "skills/practice/SKILL.md Phase 3 does not offer /pair with --invoked-from=practice (L8 fix)"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
 echo
 if [ "$warn_count" -gt 0 ]; then
   echo "$warn_count warning(s) above. v1.7.0 soft-warn; will be hard-fail in 1.10.5."

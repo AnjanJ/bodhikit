@@ -67,7 +67,20 @@ Explain this to the learner: "I will describe what to build. You type it. Even i
 
    **If their explanation is mechanical** (correct words, no underlying model — e.g. "it loops through and adds them") OR **if the next piece of navigation drew confusion** ("wait, why are we doing that?"), apply the **Analogy-Escalation Protocol** from the `feynman-technique` KB on the concept under their hands before navigating further. Strong-style fails silently when the driver can type what they cannot mentally model.
 
-7. **Role reversal as competence grows**: After 10-15 minutes of strong-style, offer: "Now let us switch. You tell me what to build next, and I will describe the approach. You decide."
+7. **Role reversal as competence grows (ZPD-signal-gated, not time-gated)**: Reference the `zone-of-proximal-development` KB. The signal that the learner is climbing out of the ZPD into "can do alone" territory — and is ready to navigate — is observable in conversation, not in the clock. Watch for ANY TWO of the following within the session:
+
+   - **They volunteer the next navigation step before being asked** ("Should this just be a list comprehension?" *before* the navigator's next instruction arrives).
+   - **Their post-piece explain-back (step 6) is non-mechanical and goes deeper than asked** — naming trade-offs, mentioning edge cases, connecting to a concept from earlier.
+   - **A divergence in step 5 turned out to be the better idea** (they navigated themselves while still nominally driving).
+   - **They preempt a syntax hint** — finishing the keyword or pattern before the navigator can name it, two or more times.
+
+   When at least two of these fire, offer the switch:
+
+   > "You are starting to navigate without me. Want to switch? You tell me what to build next, and I will describe the approach."
+
+   **Time floor:** do not offer reversal in the first 5 minutes of the session. The learner needs enough surface to demonstrate signals; an earlier offer is reading the signals too early. **Time ceiling:** if 25 minutes of strong-style have passed without two signals firing, the concept is likely above the learner's ZPD — apply the Analogy-Escalation Protocol (per step 6) or decompose to a smaller sub-concept rather than push reversal.
+
+   If the learner asks to switch on their own at any point, honor it immediately — that is itself a navigation move.
 
 ---
 
@@ -133,14 +146,17 @@ Explain this to the learner: "I will describe what to build. You type it. Even i
 
 ## Session End
 
+**Reference the `spaced-repetition` KB for the update rules below.**
+
 After any pairing mode:
 
 1. **Reflect on the session**: "What did you notice about how we worked together? What was different from coding alone?"
 
-2. **Update tracking**:
-   - Update `.bodhi/state.json` with pairing session info
-   - Add new concepts to `.bodhi/spaced-review.json`
-   - Update `.bodhi/progress.md` with Bloom's level observations
+2. **Update tracking** (apply the canonical update rules from the `spaced-repetition` KB — do not redeclare intervals):
+   - Update `.bodhi/state.json` with pairing session info (slim shape; `lastActivity` points at the `progress.md` entry).
+   - **For new concepts surfaced during pairing**, append to `.bodhi/spaced-review.json` per the v3 schema in the `state-schema` KB: `box: 1`, `nextReview: tomorrow`, `bloomLevel: 0`, `feynmanPassed: false`, `consecutiveCorrectAtL4Plus: 0` — defaults match the KB's "new concept" rule. If the file is at version 2, apply the inline-fill from the `state-migration` KB first.
+   - **For concepts the learner demonstrated mastery of during the session** (clean explain-back at step 6, navigated themselves at step 7, post-piece reflection showed an underlying mental model): apply the spaced-repetition KB's correct-recall update — move up one box (max 5), recompute `nextReview` from the box interval. Do NOT touch `feynmanPassed` here — that field is owned by `/teach` and `/explain` Phase 5 (skills that run an explicit explain-back gate; pairing's step 6 check is necessary-but-not-sufficient for the gate).
+   - Append a pair entry to `progress.md` at the top (live document, per the `state-schema` KB): `## YYYY-MM-DD — Pair (<mode>, <topic>)`, then **What we built**, **Mode signals observed** (which step-7 signals fired, if reversal happened), **Bloom adjustments**, **Next**.
 
 3. **Bridge to independence**: "Next time you work on something similar, try talking through your approach out loud before you write code. You do not need me for that. Your own voice is the best navigator."
 
