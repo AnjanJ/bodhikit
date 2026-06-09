@@ -601,6 +601,24 @@ if [ -f skills/housekeep/SKILL.md ]; then
   if ! grep -qiE 'key-for-key equal|parsed-JSON level|parsed-JSON equality' skills/housekeep/SKILL.md; then
     err "skills/housekeep/SKILL.md 5f-bis step 1 verify missing parsed-JSON equality specification (1.10.9 fix)"
   fi
+  # 1.10.11 — Phase 5 must lead with the STOP banner and a decision matrix
+  # before any marker check. The 1.10.8 explanatory framing was readable as
+  # "exit on the 1.7.0 marker" by an executing model; the prominence rewrite
+  # makes the matrix the first concrete instruction.
+  if ! grep -qE 'STOP — Read this before checking any marker file|Phase 5 decision matrix' skills/housekeep/SKILL.md; then
+    err "skills/housekeep/SKILL.md Phase 5 missing 1.10.11 STOP banner and decision matrix (prominence regression)"
+  fi
+  # 1.10.11 — Phase 5 must require naming aloud which matrix row each project
+  # lands in BEFORE running any step. This is the procedural checkpoint that
+  # prevents the silent short-circuit.
+  if ! grep -qiE 'Name aloud.*which row|CHECKPOINT.*matrix' skills/housekeep/SKILL.md; then
+    err "skills/housekeep/SKILL.md Phase 5 missing 1.10.11 name-aloud checkpoint"
+  fi
+  # 1.10.11 — 5f-bis must run its own defensive self-check independent of
+  # any upstream gating. Last line of defense against Pre-flight short-circuit.
+  if ! grep -qiE 'Defensive self-check|last line of defense|defensive check' skills/housekeep/SKILL.md; then
+    err "skills/housekeep/SKILL.md 5f-bis missing 1.10.11 defensive self-check"
+  fi
 fi
 
 # ---------------------------------------------------------------------------

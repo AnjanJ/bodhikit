@@ -98,34 +98,53 @@ If `--dry-run`, print what would collapse.
 
 This phase runs only when `$ARGUMENTS` is `migrate`. Load the `state-migration` KB now if not already loaded.
 
-**Per-target idempotency model (1.10.8).** Each migration target gets its own marker file in `.bodhi/`. A marker's presence proves *that target's* transforms are complete; a marker's absence means *that target's* transforms must run. The migrate command runs every target whose marker is missing, in version order. This replaces the 1.7.0 model where one marker exit-short-circuited the entire phase — that model became wrong as soon as a second migration target (1.10) shipped, because every learner already-1.7.0-migrated had `.migration-1.7.0.md` on disk and could never reach v3.
+---
 
-**Markers (in order):**
+### ⚠️ STOP — Read this before checking any marker file
+
+**The pre-1.10.8 broken behavior was: "if `.migration-1.7.0.md` exists, exit cleanly."** Do NOT do that. As of 1.10.0 there are TWO migration targets, and the presence of the 1.7.0 marker proves only that the v1→v2 transforms ran — it says nothing about whether v2→v3 ran. A project with `.migration-1.7.0.md` present and `.migration-1.10.md` absent **still needs migration work to run**.
+
+If your instinct is to short-circuit on a single marker, that instinct is the bug. Work through the decision matrix below before exiting.
+
+---
+
+### Phase 5 decision matrix (resolve THIS before any other action)
+
+For each project, check BOTH markers, then look up the row:
+
+| `.migration-1.7.0.md` | `.migration-1.10.md` | What to run | Exit condition |
+|---|---|---|---|
+| absent | absent | Steps 5a–5f AND step 5f-bis (full chained migration) | Run, then write BOTH markers |
+| absent | present | Steps 5a–5f only (this state is rare — 1.10 ran without 1.7.0 — but possible if a learner manually rolled forward) | Run 5a–5f, then write 1.7.0 marker |
+| **present** | **absent** | **Step 5f-bis ONLY** (1.7.0 already on disk; v2→v3 transform still needs to run) | Run 5f-bis, then write 1.10 marker |
+| present | present | Nothing | Exit cleanly: *"Both migrations complete. 1.7.0 marker dated `<date1>`; 1.10 marker dated `<date2>`. Nothing to do."* |
+
+**CHECKPOINT: Name aloud (in your response to the learner) which row each project lands in, and which steps you are about to run, BEFORE running any step.** This is the load-bearing moment of the entire migration flow. Skipping this checkpoint is what caused the 1.10.10 dogfood run to silently report "nothing to do" against four projects that all needed the v2→v3 transform.
+
+---
+
+**Markers (referenced by the matrix):**
 
 - `.bodhi/.migration-1.7.0.md` — proves v1 → v2 transforms (steps 5a–5f) have run.
 - `.bodhi/.migration-1.10.md` — proves v2 → v3 transforms (step 5f-bis) have run.
 
-**Pre-flight:**
+**Per-target idempotency model (1.10.8).** Each migration target gets its own marker file in `.bodhi/`. A marker's presence proves *that target's* transforms are complete; a marker's absence means *that target's* transforms must run. The migrate command runs every target whose marker is missing, in version order. This replaces the 1.7.0 model where one marker exit-short-circuited the entire phase — that model became wrong as soon as a second migration target (1.10) shipped, because every learner already-1.7.0-migrated had `.migration-1.7.0.md` on disk and could never reach v3.
 
-1. **Determine which targets need to run.** Check for each marker file:
-   - `.bodhi/.migration-1.7.0.md` absent → 1.7.0 target must run (steps 5a–5f, plus 5f-bis).
-   - `.bodhi/.migration-1.7.0.md` present, `.bodhi/.migration-1.10.md` absent → 1.10 target must run (step 5f-bis only). The 1.7.0 transforms are already on disk; do NOT re-run them.
-   - Both markers present → migrate has nothing to do. Exit cleanly with:
-     > "Both migrations complete. 1.7.0 marker dated <date1>; 1.10 marker dated <date2>. Nothing to do."
+**Other pre-flight steps (after the checkpoint above):**
 
-2. If working at the `learningWithBodhi/` root (multiple projects), iterate Phase 5 over each project. Profile migration runs once for the root.
+1. **Multi-project iteration.** If working at the `learningWithBodhi/` root (multiple projects), iterate Phase 5 over each project. Profile migration runs once for the root. **Each project gets its own row lookup in the decision matrix; do not assume four projects with the same 1.7.0-marker state share the same row** (they likely do, but the matrix lookup is per project).
 
-3. **Capture before sizes.** Record byte sizes of every existing `.bodhi/` file. These will be reported back, scoped to whichever targets ran.
+2. **Capture before sizes.** Record byte sizes of every existing `.bodhi/` file. These will be reported back, scoped to whichever targets ran.
 
-4. **Create backup directories for the target(s) that will run:**
+3. **Create backup directories for the target(s) that will run** (per the matrix row, not for every target unconditionally):
    - 1.7.0 target running → `.bodhi/.pre-1.7.0-backup/` (copy the monolithic files here before steps 5a–5f convert them; removable in 1.8.0 but exists now as a safety net).
    - 1.10 target running → `.bodhi/.pre-1.10-backup/` (5f-bis populates this with the pre-v3 spaced-review.json; removable in 1.11).
 
 **Conversion steps (apply in this exact order, each step idempotent at the file level):**
 
-If the 1.7.0 marker is present, steps 5a–5f are skipped (their data is already on disk in v2 shape — running them again is technically a no-op given each step's own idempotency check, but skipping is cleaner and avoids the byte-size report showing 0-delta noise for files that did not change in this invocation).
+If the 1.7.0 marker is present (matrix rows 3 and 4), steps 5a–5f are skipped — their data is already on disk in v2 shape, and skipping is cleaner than re-running for 0-delta.
 
-5f-bis always runs when the 1.10 marker is absent, regardless of whether 5a–5f ran in this invocation.
+5f-bis runs whenever the 1.10 marker is absent (matrix rows 1, 2 — wait, only row 1 in the strict sense; recheck the matrix). **Concretely: 5f-bis runs in matrix rows 1 and 3.**
 
 ### 5a. State narrative extraction
 
@@ -217,7 +236,9 @@ Read `spaced-review.json`. If `version` is 1 (or missing — many real v1 files 
 
 ### 5f-bis. spaced-review.json v2 → v3 (Bloom + Feynman field fill, 1.10.0)
 
-Read `spaced-review.json` (after step 5f has it at version 2 in memory or on disk).
+**Defensive self-check (1.10.11).** Before checking idempotency or trusting any upstream gating, **read `.bodhi/spaced-review.json` from disk right now.** If `version` is already `3` AND every concept entry carries all three new fields, this step has nothing to do — exit 5f-bis cleanly. If NOT — that is, the file is at v2 OR concepts are missing the new fields — this step MUST run regardless of what Phase 5's Pre-flight decided, what markers exist on disk, or what the model "concluded" earlier in the conversation. This defensive check exists because the 1.10.10 dogfood caught a real failure mode: the model short-circuited Pre-flight on the 1.7.0 marker and exited "nothing to do" while four real projects all needed the v2→v3 transform. 5f-bis is the last line of defense; running it costs nothing on already-migrated data (the idempotency check below catches that), and running it on un-migrated data is exactly what the learner asked for.
+
+Read `spaced-review.json` (after step 5f has it at version 2 in memory or on disk, OR — in matrix row 3 where 5f did not run — just read it from disk; it is already at v2).
 
 **Idempotency check.** If `version` is already `3` AND every entry in `concepts[]` has `bloomLevel`, `feynmanPassed`, and `consecutiveCorrectAtL4Plus` keys present, this step is already done. Skip to step 5g.
 

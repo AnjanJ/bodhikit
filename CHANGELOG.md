@@ -2,6 +2,26 @@
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [1.10.11] - 2026-06-09
+
+### Fixed
+- **`/housekeep migrate` Phase 5 prominence rewrite.** The first real execution run at 1.10.10 caught a spec-vs-executor problem: the spec was correct (per-target idempotency with `.migration-1.7.0.md` and `.migration-1.10.md` as separate markers), but the *executing model* skimmed past the per-target explanatory framing, latched onto the first concrete check (the 1.7.0 marker), and exited "nothing to do" against four projects that all needed the v2→v3 transform. The spec was unmissable to a careful reader; it was missable to an executor scanning for procedural steps. The rewrite makes the per-target check the *first concrete instruction* in Phase 5:
+  - A **STOP banner** opens Phase 5 explicitly naming the pre-1.10.8 broken behavior and warning the executor against it ("If your instinct is to short-circuit on a single marker, that instinct is the bug").
+  - A **decision matrix in tabular form** replaces the bulleted sub-list — tables are harder to skim past than bullets, and each of the four marker-state combinations has its own row with explicit "what to run" and "exit condition" columns.
+  - A **CHECKPOINT** requires the executor to name aloud (in the response to the learner) which row each project lands in AND which steps it is about to run, BEFORE running any step. This is the load-bearing moment of the migration flow.
+
+- **5f-bis defensive self-check (last line of defense).** Even if Phase 5's Pre-flight is short-circuited by a model that skimmed past the matrix, 5f-bis now opens with its own independent check: read `spaced-review.json` from disk right now; if the file is at v2 OR concepts are missing the new fields, run regardless of any upstream gating, marker state, or earlier "conclusions." Running 5f-bis on already-migrated data costs nothing (the idempotency check catches it); running it on un-migrated data is exactly what the learner asked for. The defensive check exists because the 1.10.10 dogfood run proved a determined model can talk itself past even a well-specified Pre-flight; the right response is a backstop that runs the work the learner came for.
+
+### Added
+- **`dev/check.sh` rules** (single severity err): Phase 5 must lead with the STOP banner AND the decision matrix; the CHECKPOINT marker requiring name-aloud reasoning must be present; 5f-bis must declare its defensive self-check.
+
+### Why this exists
+The dogfood pattern shifted at 1.10.11. The first four passes (1.10.7–1.10.10) caught spec bugs at increasing depth — pure-read traces revealed wrong boundary checks, broken architectural models, ambiguous wording, and single-signal logic in a multi-signal data world. Each fix tightened the spec. 1.10.11 caught a different category: the spec was correct but *non-binding* to an executor that defaulted to the simpler old behavior. This is the gap between *specifying* a process and *forcing* it.
+
+The fix uses two complementary mechanisms. The prominence rewrite addresses the *first* failure mode: the executor reading the spec and following the wrong path through it. The defensive 5f-bis self-check addresses the *second* failure mode: the executor short-circuiting upstream gating entirely, by giving the actual work step its own non-bypassable preflight. Belt and suspenders.
+
+Worth saving as a habit: any spec whose correct execution requires multiple sequential reasoning steps under a "decide first, then act" preamble has a built-in skimming risk. The mitigation is to make the decision visible (matrix instead of bullets), make the decision named (CHECKPOINT requiring spoken-aloud reasoning), and make the action step independently safe (defensive self-check at the actual work site). Future schema migrations should follow this pattern from the start.
+
 ## [1.10.10] - 2026-06-09
 
 ### Fixed
