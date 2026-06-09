@@ -72,7 +72,7 @@ BodhiKit will ask you questions to understand your background, goals, and curren
 
 ## Upgrading from Earlier Versions
 
-If you already have learning projects from 1.6.x or earlier, run the one-shot migration once per project:
+If you already have learning projects from any version before 1.10, run the one-shot migration once per project:
 
 ```
 /bodhikit:housekeep migrate
@@ -82,7 +82,9 @@ You can run it from inside a specific project folder, or from the `learningWithB
 
 ### What it does
 
-1.7.0 introduces a progressive-disclosure layout so routine skills load substantially less context per session. The migration converts:
+The migration is chained — it runs whichever transforms are missing for your project, in version order. Two targets exist as of 1.10:
+
+**1.7.0 target** (v1 → v2 layout — progressive disclosure). Converts:
 
 - `state.json` — strips long narrative fields (`lastSessionSummary`, `bloomResetNote`); they move to `progress.md` where prose belongs. State stays slim: pointers, counts, current values.
 - `plan.md` (monolithic) → `plan/README.md` + `plan/phase-{N}.md` (sectional). Skills like `/teach` and `/continue` load only the current phase, not the whole plan.
@@ -90,15 +92,25 @@ You can run it from inside a specific project folder, or from the `learningWithB
 - `assessment.md` (flat) → `assessments/latest.md` + `assessments/archive/`. Same pattern.
 - `.bodhi-profile.json` (monolithic) → `.bodhi-profile.json` (top-level: cumulative stats, patterns) + `.bodhi-profile.projects.json` (per-project metadata).
 
+**1.10 target** (v2 → v3 schema bump on `spaced-review.json`). Per-concept Bloom + Feynman tracking — the fields that make mastery observable end-to-end:
+
+- `concepts[].bloomLevel` (0–6, integer) — current Bloom's level for the concept. Set by `/quiz`, `/teach`, `/explain`, `/practice` as they observe the learner's level. Ratchet-up only.
+- `concepts[].feynmanPassed` (boolean) — set to `true` when the learner produces a clear, jargon-free explain-back. Owned by `/teach` (Phase 2 checkpoint / Phase 5) and `/explain` (Phase 5). Set, never unset.
+- `concepts[].consecutiveCorrectAtL4Plus` (integer) — running counter for the mastery criterion. Incremented by `/quiz` on correct answers at Bloom 4+; reset to 0 on any incorrect or on `/forget`.
+- New entries in `reviewHistory[]` also include `bloomLevel` to record which level a given quiz question tested at.
+
+Together these fields make the canonical mastery formula computable: `mastered = bloomLevel ≥ 4 AND consecutiveCorrectAtL4Plus ≥ 3 AND box ≥ 4 AND feynmanPassed`.
+
 ### Safety
 
-- **Idempotent.** Running `/housekeep migrate` twice in a row is a no-op the second time.
-- **Non-destructive.** The originals are preserved at `.bodhi/.pre-1.7.0-backup/` for one minor version (removed in 1.8.0). If anything looks off, you can restore from there.
-- **Transparent.** The command prints a before/after byte report for every file and lists every archive entry it created.
+- **Per-target idempotent.** Each transform's marker file (`.bodhi/.migration-1.7.0.md`, `.bodhi/.migration-1.10.md`) tracks whether it has run; running the command twice in a row is a no-op once both markers are present.
+- **Non-destructive.** Each transform backs up its pre-state to a dedicated directory (`.bodhi/.pre-1.7.0-backup/`, `.bodhi/.pre-1.10-backup/`) for one minor version each. If anything looks off, you can restore from there.
+- **Transparent.** The command prints a before/after byte report scoped to whichever transforms ran, and lists every archive entry it created.
+- **End-to-end dogfooded.** The 1.10 transform was hardened through a seven-pass live dogfood on real learning projects (see CHANGELOG 1.10.7 through 1.10.13 for the bugs caught and fixed).
 
 ### After migrating
 
-Your skills work exactly as before — just faster, because routine sessions read less context. Sessions you don't need (history, full plan arc, prior assessments) stay on disk, accessible by pointer when a situation justifies it (e.g., `/evaluate` reading the full history for trajectory analysis, `/continue` reading recent archive entries when you've been gone for over 30 days).
+Your skills work exactly as before — just faster, because routine sessions read less context, and Bloom/mastery is now observable in the data instead of inferred. Sessions you don't need (history, full plan arc, prior assessments) stay on disk, accessible by pointer when a situation justifies it (e.g., `/evaluate` reading the full history for trajectory analysis, `/continue` reading recent archive entries when you've been gone for over 30 days).
 
 The new `/housekeep` skill also handles ongoing rotation — at session boundaries, it moves the previous live session into `progress/archive/` and writes a one-line summary pointer. See [Housekeeping Your Tracking Files](#housekeeping-your-tracking-files) for details.
 

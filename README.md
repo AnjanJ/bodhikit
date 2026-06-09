@@ -1,6 +1,6 @@
 # BodhiKit
 
-[![Version](https://img.shields.io/badge/version-1.8.0-blue)](./CHANGELOG.md) [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow?logo=buymeacoffee)](https://buymeacoffee.com/anjanj) [![Sponsor](https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ea4aaa?logo=githubsponsors)](https://github.com/sponsors/AnjanJ)
+[![Version](https://img.shields.io/badge/version-1.10.13-blue)](./CHANGELOG.md) [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow?logo=buymeacoffee)](https://buymeacoffee.com/anjanj) [![Sponsor](https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ea4aaa?logo=githubsponsors)](https://github.com/sponsors/AnjanJ)
 
 **Research-backed interactive coding tutor for Claude Code.**
 
@@ -76,19 +76,22 @@ claude --plugin-dir ~/code/bodhikit
 
 That's it. All skills, agents, rules, and knowledge bases are immediately available.
 
-## Upgrading from 1.6.x
+## Upgrading
 
-1.7.0 introduces a progressive-disclosure layout for tracking files — live + archive + summary for narrative surfaces (sessions, assessments), a sectional plan, and a slimmer `state.json`. Existing projects are converted in one shot:
+**From 1.9.x or earlier** — `/bodhikit:housekeep migrate` handles the chained v1 → v2 → v3 conversion in one command, per-target idempotent and non-destructive. The 1.10.x release line introduced per-concept Bloom + Feynman tracking in `spaced-review.json` (v2 → v3 schema bump). Running migrate on a project with pre-existing tracking files:
 
 ```
 /bodhikit:housekeep migrate
 ```
 
-Run this once in each existing learning project (or once at the `learningWithBodhi/` root to convert all projects). The command is **idempotent** (running twice is a no-op) and **non-destructive** (the originals are preserved at `.bodhi/.pre-1.7.0-backup/` for one minor version). It reports before/after byte sizes so you can see exactly what changed.
+- If the project is on the pre-1.7.0 layout, both transforms run (1.7.0 first, then 1.10) and write two marker files (`.bodhi/.migration-1.7.0.md`, `.bodhi/.migration-1.10.md`).
+- If the project already migrated to 1.7.0, only the v2 → v3 transform runs.
+- Both targets back up their pre-state to dedicated directories (`.bodhi/.pre-1.7.0-backup/`, `.bodhi/.pre-1.10-backup/`) preserved for one minor version each.
+- Running twice in a row is a no-op once both markers are in place.
 
-Migration takes a few seconds per project. After it runs, routine skills like `/continue` and `/teach` read substantially less context per session (current phase plan + live session entry only, not the whole plan and full session history).
+The migration was hardened through an end-to-end dogfood pass on real learning projects — see the 1.10.7 through 1.10.13 CHANGELOG entries for the seven distinct classes of bugs caught and fixed during that pass.
 
-See the [1.7.0 CHANGELOG entry](./CHANGELOG.md) for the full set of changes.
+**From 1.6.x** — same command. The 1.7.0 transform (live + archive + summary for narrative surfaces, sectional plan, slimmer `state.json`) and the 1.10 transform (per-concept v3 fields) both run in one invocation.
 
 ## Quick Start
 
@@ -197,7 +200,7 @@ learningWithBodhi/
 
 We recommend backing this with git and a remote repository.
 
-See `docs/example-project/` for a realistic example of what these tracking files look like after a few sessions. Upgrading from 1.6.x: run `/bodhikit:housekeep migrate` once per project — see the [Upgrading from 1.6.x](#upgrading-from-16x) section above.
+See `docs/example-project/` for a realistic example of what these tracking files look like after a few sessions. Upgrading from any earlier version: run `/bodhikit:housekeep migrate` once per project — see the [Upgrading](#upgrading) section above.
 
 ## How a Session Works
 
