@@ -65,6 +65,20 @@ Present the dashboard in this format:
 |--------|--------|--------------|---------|
 | [name] | [Completed/In Progress/Upcoming] | [1-6] [name] | [N]% |
 
+**Mastery % formula** (per the `state-schema` KB canonical mastery rule; see `blooms-taxonomy` KB for criteria):
+
+```
+mastery_pct = (count of module concepts where mastered === true)
+            / (total module concepts) × 100
+
+mastered = (bloomLevel >= 4)
+       AND (consecutiveCorrectAtL4Plus >= 3)
+       AND (box >= 4)
+       AND (feynmanPassed === true)
+```
+
+**Legacy display rule.** If every concept in a module has `bloomLevel: 0` AND `lastReviewed: null` (pure post-migration state, never touched by a v3 writer), display `—` instead of `0%`. A zero would falsely imply the learner has tried and failed; an em dash honestly says "not yet observable." Once any concept in the module has `lastReviewed !== null`, switch to the formula above.
+
 ---
 
 ### Spaced Repetition Health

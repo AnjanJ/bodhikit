@@ -139,7 +139,8 @@ After the learner indicates they have completed (or attempted) the exercise:
 
 6. **Update tracking:**
    - Add new concepts to `.bodhi/spaced-review.json` per `spaced-repetition` KB rules.
-   - Append an exercise entry to `.bodhi/progress.md` at the top (the new live entry): `## YYYY-MM-DD — Exercise: <topic>`, then **What was attempted**, **Code-review findings**, **Bloom adjustments**, **Next**. Older entries stay in place until `/housekeep` rotates them.
+   - **Per-concept Bloom write (v3 schema, see `state-schema` KB):** on successful completion, update `concepts[].bloomLevel` to the exercise tier — Beginner = 2, Intermediate = 4, Advanced = 6 — capped at the highest level the learner actually demonstrated (a brute-force Advanced solve does not advance past 4). Preserve any higher prior value; never demote here. Apply the v2 → v3 inline-fill from the `state-migration` KB if needed. Do NOT set `feynmanPassed` here — that field is owned by `/teach` and `/explain` (skills that actually run an explain-back gate).
+   - Append an exercise entry to `.bodhi/progress.md` at the top (the new live entry): `## YYYY-MM-DD — Exercise: <topic>`, then **What was attempted**, **Code-review findings**, **Bloom adjustments** (write the numeric level), **Next**. Older entries stay in place until `/housekeep` rotates them.
    - Update `.bodhi/state.json` (slim shape, no narrative): bump `lastSessionAt` if this opens a new session, set `lastActivity` to ONE short sentence pointing to what `progress.md` describes.
    - On exercise completion, increment `learningWithBodhi/.bodhi-profile.json` `cumulativeStats.totalExercises` and update `lastUpdated`. Profile narrative belongs in `progress.md`, not in the profile file.
 

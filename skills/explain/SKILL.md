@@ -87,9 +87,14 @@ If an active learning project exists:
 
 1. Add or update the concept in `.bodhi/spaced-review.json` per the `spaced-repetition` KB rules. Strong final explanation → Box 2. Gaps remained → Box 1.
 
+   **Per-concept Bloom + Feynman writes (v3 schema, see `state-schema` KB):**
+   - **Feynman gate:** if the Phase 4 final explanation is clear, complete, jargon-free, and in the learner's own words (the `feynman-technique` KB's bar), set `concepts[].feynmanPassed = true`. Set, never unset.
+   - **Bloom write:** update `concepts[].bloomLevel` to the upper bound of the quality range below. Preserve any higher prior value (never demote here).
+   - Apply the v2 → v3 inline-fill from the `state-migration` KB if needed before writing.
+
 2. Update `.bodhi/state.json` (slim — no narrative): set `lastActivity` to ONE short sentence noting the explain session.
 
-3. Append an entry to `.bodhi/progress.md` (v2 live document) at the top: `## YYYY-MM-DD — Explain (<concept>)`, then **What was explained**, **Learner's explanation quality**, **Bloom adjustment** based on quality:
+3. Append an entry to `.bodhi/progress.md` (v2 live document) at the top: `## YYYY-MM-DD — Explain (<concept>)`, then **What was explained**, **Learner's explanation quality**, **Bloom adjustment** based on quality (write the numeric upper bound so prose and `concepts[].bloomLevel` agree):
    - Clear, complete explanation with good analogies = Level 2-3
    - Can explain AND apply in code = Level 3-4
    - Can explain trade-offs and when NOT to use it = Level 4-5

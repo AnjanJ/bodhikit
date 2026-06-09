@@ -2,6 +2,28 @@
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [1.10.0] - 2026-06-09
+
+### Added
+- **Per-concept Bloom + Feynman tracking** in `spaced-review.json`. Three new fields on `concepts[]`: `bloomLevel` (0–6, current per-concept level; ratchet-up only — never demoted by routine writers), `feynmanPassed` (boolean; set once by `/teach` Phase 2 Checkpoint or Phase 5 retention check or `/explain` Phase 5 on a strong explain-back; never unset), `consecutiveCorrectAtL4Plus` (counter; incremented by `/quiz` on correct AND `bloomLevel ≥ 4`; reset to 0 on any incorrect or on `/forget`). `reviewHistory[]` entries now also carry `bloomLevel` (which level the question tested at). The canonical mastery formula now lives in the `state-schema` KB: `mastered = (bloomLevel ≥ 4) AND (consecutiveCorrectAtL4Plus ≥ 3) AND (box ≥ 4) AND (feynmanPassed === true)`. Skills MUST NOT redeclare this formula inline.
+- **Prerequisite Bloom gate in `/teach` Phase 1.** When selecting a concept from a *new* module (not concept-to-concept within the same module), the skill reads `spaced-review.json` for the prior module's prerequisite concepts. If any has `bloomLevel < 3` AND has been observed post-migration (`lastReviewed !== null`), the gate fires — surfaces the gap to the learner with the seeds metaphor and offers revisit / defer / pause. Pure legacy entries (`bloomLevel: 0` AND `lastReviewed: null`) fall through as "allow advancement" — the gate cannot judge what was never observed.
+- **`/progress` Mastery % column is now computed**, not fabricated. Uses the canonical formula. When every concept in a module is in pure legacy state, displays `—` instead of `0%` to avoid the false implication that the learner tried and failed.
+- **`/housekeep migrate` v2 → v3 step (5f-bis).** Inline-fills the three new per-concept fields with safe defaults; preserves pre-v3 `spaced-review.json` at `.bodhi/.pre-1.10-backup/spaced-review.json` for one minor version; idempotent and step-verifying per the 1.7.1 imperative-write pattern. The migration marker is gated on `spaced-review.json` reaching `version: 3` with all three fields present on every concept.
+- **Three new lint rules in `dev/check.sh`** (currently `warn`, promoted to `err` in 1.10.5): skills writing `spaced-review.json` must mention at least one v3 field; `/teach` must mention the prerequisite Bloom gate; `/progress` must mention the canonical mastery formula or the legacy fallthrough.
+
+### Changed
+- `spaced-review.json` schema bumped to `version: 3`. All other tracking files remain `version: 2` — per-file version is a schema-shape generation, not a cohort marker; the `state-migration` KB documents the v2 / v3 split explicitly. Skills MUST read-tolerate v2 (auto-fill defaults) before writing v3.
+- `/quiz` Phase 3 now writes `bloomLevel` per `reviewHistory[]` entry, updates `concepts[].bloomLevel` to the highest correctly-answered level (never demote), and maintains the `consecutiveCorrectAtL4Plus` counter.
+- `/teach` Phase 2 Checkpoint and Phase 5 retention check now write `feynmanPassed: true` when the learner produces a clear, jargon-free explanation. Phase 5 writes per-concept `bloomLevel` (preserve higher; never demote).
+- `/explain` Phase 5 writes `feynmanPassed: true` on a strong final explanation and updates `concepts[].bloomLevel` to the inferred upper bound.
+- `/practice` Phase 3 step 6 writes `concepts[].bloomLevel` on successful exercise completion — capped at the highest level the learner actually demonstrated, not the exercise's nominal tier. Does NOT write `feynmanPassed` (that field is owned by skills that run an explicit explain-back gate).
+- `/forget` resets `consecutiveCorrectAtL4Plus: 0` on demote; preserves `feynmanPassed` (passed once is forever; the demote captures retention drift, not understanding regression).
+
+### Why this exists
+Five audit findings (H1, H2, H3, M2, M3 — see `gaps_of_pedagogy.md`) converged on a single root cause: the `blooms-taxonomy` KB defined mastery as "Level 4+ AND 3 consecutive correct AND Box 4–5 AND Feynman passed," but none of those pieces was tracked per concept. `state.json.currentBloomLevel` was sub-topic-coarse; `spaced-review.json.concepts[]` carried no Bloom or Feynman fields; no skill recorded the level a quiz question tested at. So every skill that surfaced "mastery" (the `/progress` Mastery column, the implied `/teach` advancement gate, the assessment-framework's Progression Gates) was either fabricating or silently omitting the answer. One schema extension closes all five — and makes Bloom advancement observable in the place a learner actually feels it: the moment `/teach` would otherwise wave them past a half-rooted prerequisite.
+
+The legacy fallthrough rule (`bloomLevel: 0` AND `lastReviewed: null` = allow advancement) is the M1.4 backfill-bug fix from the sprint review: the gate cannot judge concepts the migration created from thin air with no observation history. Once any v3 writer touches a concept, normal gate logic applies.
+
 ## [1.9.2] - 2026-06-08
 
 ### Changed

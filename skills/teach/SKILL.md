@@ -24,6 +24,21 @@ Can be auto-invoked by `/continue` when the learner proceeds with the next modul
 
 Read `.bodhi/progress.md` for the learner's current Bloom's level on related concepts.
 
+### Prerequisite Bloom Gate (before advancing to a new module)
+
+If selecting a concept from a module *different* from the learner's current module (i.e., the next module), read `.bodhi/spaced-review.json` and check the prerequisite concepts named in the prior module's `plan/phase-{N}.md` success criteria. Reference the `blooms-taxonomy` KB and `assessment-framework` KB.
+
+For each prerequisite concept:
+- **If `bloomLevel >= 3`** — prerequisite satisfied, proceed.
+- **If `bloomLevel === 0` AND `lastReviewed === null`** — legacy fallthrough per the `state-schema` KB. The concept is unmodified post-migration; allow advancement (the gate cannot judge what was never observed).
+- **If `bloomLevel < 3` AND `lastReviewed !== null`** — the prerequisite has been touched but has not reached Apply. Do NOT advance. Surface the gap to the learner with the seeds metaphor:
+
+  > "Before we plant the next seed, one of the earlier ones still needs more time to root. `<concept>` is at Bloom Level `<N>` — we want at least Level 3 (Apply) before building on it. Would you like to revisit `<concept>` first, or stay in the current module a little longer?"
+
+  Let the learner choose: revisit (re-enter Phase 2 on the prerequisite), defer (override the gate and continue, noting the choice in `progress.md`), or pause (end the session). Do not auto-override.
+
+This gate fires only at module-advancement boundaries, not at concept-to-concept within the same module.
+
 ---
 
 ## Phase 2: Explain the Concept
@@ -48,6 +63,8 @@ After explaining, verify understanding before continuing:
 - "How is this different from [related concept they know]?"
 
 If they struggle, apply the **Analogy-Escalation Protocol** from the `feynman-technique` KB: read `.bodhi-profile.json` `learnerBackground.domains[]` + `analogyHistory[]`, climb the 4-rung ladder (learner-domain → ask-once → universal-physical → code-restatement), cap at two analogies before decomposing to a smaller sub-concept. Do not repeat the same explanation.
+
+**Feynman gate (writes `feynmanPassed`):** if the learner produces a clear, jargon-free explanation in their own words at this Checkpoint — meeting the `feynman-technique` KB's bar for a genuine explain-back, not a mechanical paraphrase — set `concepts[].feynmanPassed = true` in `.bodhi/spaced-review.json` (per the v3 schema in the `state-schema` KB). Set, never unset. If no entry exists for this concept yet, create one with the standard defaults from the `spaced-repetition` KB plus `feynmanPassed: true`.
 
 ---
 
@@ -109,7 +126,11 @@ Ask 2-3 questions mixing Bloom's levels: Level 2 (explain in own words), Level 3
 
 Apply update rules from the `spaced-repetition` KB. Demonstrated understanding → move up one box from current. Struggled but got there → Box 1.
 
-Append a teaching entry to `progress.md` at the top — the new live entry. Structure: `## YYYY-MM-DD — Session N — <concept taught>`, then **Phases covered** (which of I-Do / We-Do / You-Do completed), **Outcomes**, **Bloom adjustments**, **Next**. Older live entries stay in place until `/housekeep` rotates them.
+**Write per-concept Bloom (v3 schema, see `state-schema` KB):** map this session's observed performance to a Bloom level using the `blooms-taxonomy` KB indicators, and update `concepts[].bloomLevel` for the taught concept. Preserve any higher prior value (never demote — that is `/forget`'s job). If the v2 → v3 inline-fill is needed (file at version 2, missing fields), perform it before writing, per the `state-migration` KB.
+
+**Feynman gate at retention check:** if the retention check explanation meets the `feynman-technique` KB's bar (clear, jargon-free, own words), set `concepts[].feynmanPassed = true`. Set, never unset. (May already be true from the Phase 2 Checkpoint — idempotent.)
+
+Append a teaching entry to `progress.md` at the top — the new live entry. Structure: `## YYYY-MM-DD — Session N — <concept taught>`, then **Phases covered** (which of I-Do / We-Do / You-Do completed), **Outcomes**, **Bloom adjustments** (write the per-concept numeric level so prose and state agree), **Next**. Older live entries stay in place until `/housekeep` rotates them.
 
 Update `state.json` (slim shape — no narrative): bump `lastSessionAt`, increment `totalSessions` if this opens a new session, update `currentModule`/`currentModuleIndex` if you advanced, set `lastActivity` to ONE short sentence pointing at what `progress.md` describes in full.
 

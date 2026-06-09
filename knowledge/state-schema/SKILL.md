@@ -271,7 +271,7 @@ Whole JSON; concepts grow but stay queryable. `/housekeep` does not rotate this 
 
 ```json
 {
-  "version": 2,
+  "version": 3,
   "lastReviewCheck": "ISO-8601",
   "concepts": [
     {
@@ -283,8 +283,11 @@ Whole JSON; concepts grow but stay queryable. `/housekeep` does not rotate this 
       "lastReviewed": "YYYY-MM-DD",
       "question": "string",
       "lastResult": "string",
+      "bloomLevel": 0,
+      "feynmanPassed": false,
+      "consecutiveCorrectAtL4Plus": 0,
       "reviewHistory": [
-        { "date": "YYYY-MM-DD", "result": "correct|incorrect|partial" }
+        { "date": "YYYY-MM-DD", "result": "correct|incorrect|partial", "bloomLevel": 0 }
       ]
     }
   ],
@@ -301,12 +304,34 @@ Whole JSON; concepts grow but stay queryable. `/housekeep` does not rotate this 
 ```
 
 - `box`: integer 1–5. Box→interval mapping is defined in the `spaced-repetition` KB. Skills MUST NOT redeclare intervals.
-- New concept: `box: 1`, `nextReview: tomorrow`.
+- New concept: `box: 1`, `nextReview: tomorrow`, `bloomLevel: 0`, `feynmanPassed: false`, `consecutiveCorrectAtL4Plus: 0`.
 - Correct recall: `box` up one (max 5), recompute `nextReview` from the spaced-repetition table.
 - Incorrect recall or learner-initiated `/forget`: `box: 1`, `nextReview: tomorrow`.
 - `sessionHistory` is append-only audit trail. `/evaluate` reads it; routine skills do not.
 
+**Per-concept Bloom + Feynman fields (v3, 1.10.0).** These three fields make the mastery criterion observable from state — the `blooms-taxonomy` KB names mastery as "Level 4+ AND 3 consecutive correct at L4+ AND Box 4-5 AND Feynman passed," but pre-v3 none of those pieces were tracked per concept.
+
+- `bloomLevel`: integer 0–6. Current Bloom's level for this concept. `0` means uninitialized (the concept has been introduced but no skill has classified it yet). Writers MUST preserve the highest observed value; never demote here — demotion is `/forget`'s job (which resets the counter but is recorded via `box: 1`, not by lowering `bloomLevel`).
+- `feynmanPassed`: boolean. Has the concept passed at least one Feynman explain-back gate? Set to `true` by `/teach` Phase 2 Checkpoint or Phase 5 retention check when the learner produces a clear, jargon-free explanation; set to `true` by `/explain` Phase 5 on a strong final explanation. **Set, never unset** (Feynman passed once is forever; retention drift is captured by `box`).
+- `consecutiveCorrectAtL4Plus`: integer ≥ 0. Incremented by `/quiz` Phase 3 when `result === "correct"` AND the question's `bloomLevel >= 4`. Reset to 0 on any incorrect answer (at any Bloom level) and on `/forget`.
+- `reviewHistory[].bloomLevel`: which Bloom level the question/check tested at on that date. `/quiz` writes this on every review entry.
+
+**Mastery formula (canonical).** Skills displaying mastery (`/progress`, `/evaluate`) compute:
+
+```
+mastered = (bloomLevel >= 4)
+       AND (consecutiveCorrectAtL4Plus >= 3)
+       AND (box >= 4)
+       AND (feynmanPassed === true)
+```
+
+Skills MUST NOT redefine this formula inline. See `blooms-taxonomy` KB for the underlying mastery criteria.
+
+**Legacy fallthrough (v2 → v3).** Concepts migrated from v2 receive `bloomLevel: 0`, `feynmanPassed: false`, `consecutiveCorrectAtL4Plus: 0`. A concept with `bloomLevel: 0` AND `lastReviewed: null` is a pure legacy entry that has not been touched since migration — skills checking prerequisite Bloom gates MUST treat this state as "backfill, allow advancement" rather than "stalled at zero, block." Once any skill writes to the concept post-migration (setting `lastReviewed` to a date), normal gate logic applies.
+
 **Concept retirement.** When `concepts.length` exceeds 200, `/housekeep` MAY (with user confirmation) move concepts with `lastReviewed` older than 180 days AND `box: 1` (i.e., demoted-and-forgotten) into a sibling `spaced-review.retired.json` file. Not automatic; surfaced as a suggestion in `/housekeep` output.
+
+**Schema cohort note.** `spaced-review.json` is the only v3 file as of 1.10.0; all other tracking surfaces remain v2. Per-file version is the schema-shape generation, not a cohort marker. The `state-migration` KB documents the v2 → v3 transform.
 
 ### `learningWithBodhi/<project>/.bodhi/assessment-history.json`
 

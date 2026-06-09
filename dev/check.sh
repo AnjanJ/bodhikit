@@ -268,9 +268,54 @@ if [ -f "$profile_file" ]; then
 fi
 
 # ---------------------------------------------------------------------------
+# 16. v3 spaced-review schema: writers must mention new per-concept fields.
+# ---------------------------------------------------------------------------
+# Skills that write to spaced-review.json after 1.10.0 MUST mention at least one
+# of the new v3 per-concept fields (bloomLevel, feynmanPassed,
+# consecutiveCorrectAtL4Plus). Catches regressions where a skill silently strips
+# the new fields by writing only the v2 shape. Warn for now; promotes to err in M6.
+#
+# Heuristic: a skill is a "writer" if it both references spaced-review.json AND
+# mentions either "Update tracking", "Apply the spaced-repetition KB", or
+# explicit append/update verbs near the file. Limit checks to the skills the
+# sprint actually wired (quiz, teach, explain, practice, forget, pair).
+for s in quiz teach explain practice forget pair; do
+  f="skills/$s/SKILL.md"
+  if [ ! -f "$f" ]; then continue; fi
+  if grep -q 'spaced-review\.json' "$f"; then
+    if ! grep -qE 'bloomLevel|feynmanPassed|consecutiveCorrectAtL4Plus' "$f"; then
+      warn "$f writes spaced-review.json but does not mention any v3 per-concept field (bloomLevel/feynmanPassed/consecutiveCorrectAtL4Plus)"
+    fi
+  fi
+done
+
+# ---------------------------------------------------------------------------
+# 17. /teach Phase 1 must mention the prerequisite Bloom gate.
+# ---------------------------------------------------------------------------
+# H3 fix from the 1.10.0 audit — Bloom advancement is contractual now.
+if [ -f skills/teach/SKILL.md ]; then
+  if ! grep -qiE 'prerequisite.*(bloom|gate)|(bloom|gate).*prerequisite' skills/teach/SKILL.md; then
+    warn "skills/teach/SKILL.md missing the prerequisite Bloom gate language (H3 fix)"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
+# 18. /progress must mention the canonical mastery formula or the legacy
+#     fallthrough display rule.
+# ---------------------------------------------------------------------------
+# M2 (audit) + H1 fix — Mastery % can no longer be fabricated. Either the
+# formula is cited inline (referencing the state-schema KB) or the column
+# explicitly handles the legacy display fallthrough.
+if [ -f skills/progress/SKILL.md ]; then
+  if ! grep -qE 'mastered === true|Mastery % formula|consecutiveCorrectAtL4Plus' skills/progress/SKILL.md; then
+    warn "skills/progress/SKILL.md missing the canonical mastery formula or fallthrough rule (H1/M2 fix)"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
 echo
 if [ "$warn_count" -gt 0 ]; then
-  echo "$warn_count warning(s) above. v1.7.0 soft-warn; will be hard-fail in 1.8.0."
+  echo "$warn_count warning(s) above. v1.7.0 soft-warn; will be hard-fail in 1.10.5."
 fi
 if [ "$fail" -eq 0 ]; then
   echo "All hard checks passed."

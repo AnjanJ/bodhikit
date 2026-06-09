@@ -106,7 +106,18 @@ After all questions are answered, present a summary:
 
 ### Update `spaced-review.json`
 
-Apply the update rules from the `spaced-repetition` KB. Append a `reviewHistory` entry per concept (date + result).
+Apply the update rules from the `spaced-repetition` KB. Per the v3 schema in the `state-schema` KB (1.10.0 — Bloom + Feynman become observable):
+
+1. **Read-tolerate v2:** if the file is at `version: 2`, inline-fill any concept missing `bloomLevel` / `feynmanPassed` / `consecutiveCorrectAtL4Plus` with the defaults from the `state-migration` KB before any writes.
+2. **Append a `reviewHistory` entry per concept reviewed** with `date`, `result`, AND `bloomLevel` (the level the question tested at — pulled from the Phase 2 Question Mix mapping).
+3. **Update `concepts[].bloomLevel`** to the highest Bloom level the learner answered correctly in this quiz, capped at the level actually tested. Never demote here — demotion is `/forget`'s job; this skill only ratchets up.
+4. **Update `concepts[].consecutiveCorrectAtL4Plus`:**
+   - If `result === "correct"` AND the question's `bloomLevel >= 4`: increment by 1.
+   - On any `result === "incorrect"` (at any Bloom level): reset to 0.
+   - On `result === "partial"`: leave unchanged.
+5. **Persist as `version: 3`** after writes (the inline-fill in step 1 makes this safe).
+
+Do NOT set `feynmanPassed` here — that field is owned by `/teach` Phase 2 Checkpoint / Phase 5 and `/explain` Phase 5 (skills that actually run an explain-back gate).
 
 ### Update `progress.md` (v2 live document — quiz narrative goes here)
 

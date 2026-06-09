@@ -32,6 +32,7 @@ Skills MUST NOT branch behavior on version (no "if v1 do X else do Y" littered t
 | `plan.md` | v1 (monolithic) → v2 (sectional) | One-shot by `/housekeep migrate`: split on `## Phase {N}` headings into `plan/phase-{N}.md`; generate `plan/README.md` as an arc index pointing to each phase file. Original `plan.md` removed after split. |
 | `.bodhi-profile.json` | v1 (monolithic) → v2 (split) | One-shot by `/housekeep migrate`: keep top-level fields and `cumulativeStats` + `patterns` in `.bodhi-profile.json`; move `activeProjects` and `completedProjects` arrays into `.bodhi-profile.projects.json`. Move `totalProjects` (formerly top-level) into `cumulativeStats.totalProjects`. |
 | `spaced-review.json` | v1 → v2 | Add `question` and `lastResult` fields per concept if absent (no-op data-wise; just shape declaration to match observed real-data usage). Persist v2 shape on next write. |
+| `spaced-review.json` | v2 → v3 | For each entry in `concepts[]`, add `bloomLevel: 0`, `feynmanPassed: false`, `consecutiveCorrectAtL4Plus: 0` if absent. `reviewHistory[]` entries without a `bloomLevel` field remain valid (readers treat absent as `0`); only new entries written post-v3 include it. Bump `version` to 3. **Legacy fallthrough:** a concept with `bloomLevel: 0` AND `lastReviewed: null` is unmodified post-migration; skills checking prerequisite Bloom gates MUST treat this as "allow advancement," not "block at zero." |
 
 ## One-Shot Conversion Procedure (`/housekeep migrate`)
 

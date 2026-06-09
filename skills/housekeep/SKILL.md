@@ -196,6 +196,28 @@ If the file does not exist, this step is a no-op (the profile is created lazily 
 
 Read `spaced-review.json`. If `version` is 1 (or missing — many real v1 files have no `version` field at all), bump to 2 and persist. No structural changes — observed real data already carries `question` and `lastResult` per concept; the bump just makes the schema declaration explicit.
 
+### 5f-bis. spaced-review.json v2 → v3 (Bloom + Feynman field fill, 1.10.0)
+
+Read `spaced-review.json` (after step 5f has it at version 2 in memory or on disk).
+
+**Idempotency check.** If `version` is already `3` AND every entry in `concepts[]` has `bloomLevel`, `feynmanPassed`, and `consecutiveCorrectAtL4Plus` keys present, this step is already done. Skip to step 5g.
+
+Otherwise:
+
+1. **Back up the pre-v3 file** to `.bodhi/.pre-1.10-backup/spaced-review.json` (create the directory if absent). This is parallel to the `.pre-1.7.0-backup/` safety net but scoped to the 1.10.0 schema change; it will be removed in 1.11. Skip this step if the backup file already exists (idempotency).
+2. **For each entry in `concepts[]`**, add the three new fields if absent — per the v2 → v3 row in the `state-migration` KB:
+   - `bloomLevel: 0` (uninitialized — the legacy fallthrough rule in the `state-schema` KB makes this safe for prerequisite gates)
+   - `feynmanPassed: false`
+   - `consecutiveCorrectAtL4Plus: 0`
+   - Do NOT touch `reviewHistory[]` entries — readers treat absent `bloomLevel` on history rows as `0`; only new history rows written post-v3 include it.
+3. **Construct the new file content in memory.** Set top-level `version` to the integer `3`. Preserve every other field verbatim.
+4. **Write `.bodhi/spaced-review.json`** using the Write tool, overwriting the existing file.
+5. **Verify the write.** Re-read the file. Confirm `version` is `3` and a sampled concept entry carries all three new fields. If the check fails, do NOT proceed to step 5g — report the failure and exit.
+
+If `concepts[]` is empty or absent, still complete steps 2-4 to ensure `version: 3` is on disk.
+
+Track per-step stats for the report: number of concepts touched, number of fields added per concept (typically 3 × concept count for first migration; 0 for an already-migrated file).
+
 ### 5g. Write the migration marker
 
 **Precondition for writing the marker.** Before composing or writing this file, verify every preceding step persisted to disk:
@@ -206,7 +228,7 @@ Read `spaced-review.json`. If `version` is 1 (or missing — many real v1 files 
 - `.bodhi/assessment.md` (flat singular file) does NOT exist on disk.
 - `plan/README.md` is on disk; the flat `plan.md` is at `.pre-1.7.0-backup/plan.md` (not at `.bodhi/plan.md`).
 - `learningWithBodhi/.bodhi-profile.projects.json` is on disk with `version: 2` (or the profile did not exist, in which case skip).
-- `spaced-review.json` carries `version: 2`.
+- `spaced-review.json` carries `version: 3` AND every `concepts[]` entry has `bloomLevel`, `feynmanPassed`, and `consecutiveCorrectAtL4Plus` keys.
 
 If any of these checks fails, do NOT write the marker. Report which check failed and exit non-zero. The presence of the marker is what makes future runs detect the migration as complete — writing it prematurely would falsely make a broken migration appear successful.
 
