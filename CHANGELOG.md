@@ -2,6 +2,17 @@
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [1.10.1] - 2026-06-09
+
+### Changed
+- **`/reflect` Phase 2 rewritten as a retrieval-first calibration loop.** The bare 1-10 confidence rating is gone; in its place, Q3 runs retrieval → rating → cross-check. Step 1 asks the learner to explain the concept in 2 sentences before rating, applying the `feynman-technique` KB's three fluency-without-understanding signals (jargon-without-definition, vague hedging, skipped steps) silently. Step 2 collects the rating. Step 3 cross-references today's `progress.md` and the day's `reviewHistory[]` entries on this concept. Only then does the Leitner update fire: promote ONLY IF confidence ≥ 8 AND retrieval was clean AND observed outcomes align; hold the box (naming the calibration gap aloud) if confidence is high but retrieval or outcomes disagree; demote to Box 1 on confidence ≤ 4, retrieval failure, or learner decline. The invented "5-7 → Box 1-2 depending on current box" rule is gone — there was no canonical home for it in the `spaced-repetition` KB; mid-band now holds and retests tomorrow.
+- **`/reflect` Phase 3 strategy-naming acknowledgment.** Per the `growth-mindset` KB's false-effort nuance, high-confidence-with-aligned-outcome acknowledgments now name the *strategy* that worked ("your approach of breaking it into smaller cases"), never the *trait* ("you got it"). The mismatched-outcome row reinforces the calibration framing rather than glossing it.
+- **`/reflect` → `/practice` handoff at weak signals.** For any concept named in Q1 as hard OR rated 1-4 in Q3 OR with retrieval failure, the skill offers (does not auto-invoke) `/practice <concept>` for the next session. Acceptance writes the concept into `state.json.lastActivity` so the next `/continue` opens with the targeted deliberate-practice rep.
+- **Four lint rules added in `dev/check.sh`** (warn for now; promoted in 1.10.5): `/reflect` Phase 2 must reference `metacognition` and `feynman-technique` KBs; Phase 3 must reference `growth-mindset` and `deliberate-practice` KBs.
+
+### Why this exists
+Five audit findings (H5, H6, H9, M13, A5) clustered in `/reflect` Phase 2 around a single mistake: the bare confidence rating promoted concepts up a Leitner box on self-report alone, with no comparison against demonstrated performance. That is exactly the Dunning-Kruger trap the `metacognition` KB names and the illusion-of-competence pattern the `feynman-technique` KB is designed to catch. The KB said "compare to actual result"; the skill compared to nothing. One Phase 2 rewrite closes all five — and changes the retention contract from "the learner reports retention" to "the learner demonstrates retention, then reports it, then we cross-check." The 30-60 seconds this adds per concept is itself a deliberate-practice rep (the `desirable-difficulties` KB's retrieval principle) — Bjork-correct cost.
+
 ## [1.10.0] - 2026-06-09
 
 ### Added

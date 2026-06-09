@@ -313,6 +313,44 @@ if [ -f skills/progress/SKILL.md ]; then
 fi
 
 # ---------------------------------------------------------------------------
+# 19. /reflect Phase 2 must reference metacognition KB.
+# ---------------------------------------------------------------------------
+# H5/H6/H9 fix — the retrieval-first calibration loop is grounded in the
+# metacognition KB's Dunning-Kruger calibration rule. Reference must be in
+# Phase 2 (where the rule applies), not buried elsewhere in the file.
+if [ -f skills/reflect/SKILL.md ]; then
+  if ! awk '/^## Phase 2/,/^## Phase 3/' skills/reflect/SKILL.md | grep -q 'metacognition'; then
+    warn "skills/reflect/SKILL.md Phase 2 does not reference metacognition KB (H5/H6/H9 fix)"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
+# 20. /reflect Phase 2 must reference feynman-technique KB.
+# ---------------------------------------------------------------------------
+# The fluency-without-understanding signals (jargon, hedging, skipped steps)
+# are the gate that catches Dunning-Kruger overconfidence at the explain-back.
+if [ -f skills/reflect/SKILL.md ]; then
+  if ! awk '/^## Phase 2/,/^## Phase 3/' skills/reflect/SKILL.md | grep -q 'feynman-technique'; then
+    warn "skills/reflect/SKILL.md Phase 2 does not reference feynman-technique KB (H6 fix)"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
+# 21. /reflect Phase 3 must reference growth-mindset KB and deliberate-practice KB.
+# ---------------------------------------------------------------------------
+# A5 fix — strategy-naming acknowledgment per Dweck's false-effort nuance.
+# M11 fix — the reflect→practice deliberate-practice handoff at weak signals.
+if [ -f skills/reflect/SKILL.md ]; then
+  phase3=$(awk '/^## Phase 3/,/^## Phase 4/' skills/reflect/SKILL.md)
+  if ! printf '%s' "$phase3" | grep -q 'growth-mindset'; then
+    warn "skills/reflect/SKILL.md Phase 3 does not reference growth-mindset KB (A5 fix)"
+  fi
+  if ! printf '%s' "$phase3" | grep -q 'deliberate-practice'; then
+    warn "skills/reflect/SKILL.md Phase 3 does not reference deliberate-practice KB (M11 fix)"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
 echo
 if [ "$warn_count" -gt 0 ]; then
   echo "$warn_count warning(s) above. v1.7.0 soft-warn; will be hard-fail in 1.10.5."
