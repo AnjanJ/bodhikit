@@ -128,7 +128,7 @@ done
 # ---------------------------------------------------------------------------
 # 9. Chainable skills must handle --invoked-from=
 # ---------------------------------------------------------------------------
-chainable="teach practice reflect status quiz forget"
+chainable="teach practice reflect status quiz forget pair debug-together mentor"
 for s in $chainable; do
   f="skills/$s/SKILL.md"
   if [ ! -f "$f" ]; then continue; fi
@@ -349,6 +349,65 @@ if [ -f skills/reflect/SKILL.md ]; then
     warn "skills/reflect/SKILL.md Phase 3 does not reference deliberate-practice KB (M11 fix)"
   fi
 fi
+
+# ---------------------------------------------------------------------------
+# 22. /teach Phase 3 must offer /pair (H11 + A9 fix, opt-in pattern).
+# ---------------------------------------------------------------------------
+# CHANGELOG 1.4.0 promised /teach -> /pair; 1.10.2 wires it as an offer per the
+# sprint's chain-shape decision. Check that Phase 3 mentions the offer with the
+# --invoked-from=teach chain flag.
+if [ -f skills/teach/SKILL.md ]; then
+  phase3=$(awk '/^## Phase 3/,/^## Phase 4/' skills/teach/SKILL.md)
+  if ! printf '%s' "$phase3" | grep -qE 'bodhikit:pair.*invoked-from=teach'; then
+    warn "skills/teach/SKILL.md Phase 3 does not offer /pair with --invoked-from=teach (H11/A9 fix)"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
+# 23. /practice Phase 3 must offer /debug-together (H12 fix).
+# ---------------------------------------------------------------------------
+if [ -f skills/practice/SKILL.md ]; then
+  phase3=$(awk '/^## Phase 3/,/^## Phase 4|^---/' skills/practice/SKILL.md)
+  if ! printf '%s' "$phase3" | grep -qE 'bodhikit:debug-together.*invoked-from=practice'; then
+    warn "skills/practice/SKILL.md Phase 3 does not offer /debug-together with --invoked-from=practice (H12 fix)"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
+# 24. /teach Phase 4 must offer /debug-together (H13/A3 fix).
+# ---------------------------------------------------------------------------
+if [ -f skills/teach/SKILL.md ]; then
+  phase4=$(awk '/^## Phase 4/,/^## Phase 5/' skills/teach/SKILL.md)
+  if ! printf '%s' "$phase4" | grep -qE 'bodhikit:debug-together.*invoked-from=teach'; then
+    warn "skills/teach/SKILL.md Phase 4 does not offer /debug-together with --invoked-from=teach (H13/A3 fix)"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
+# 25. /evaluate Closing must offer /mentor at project completion (M27 fix).
+# ---------------------------------------------------------------------------
+# Offer-only — auto-invoke is explicitly out of scope per the sprint decision.
+if [ -f skills/evaluate/SKILL.md ]; then
+  if ! grep -qE 'bodhikit:mentor' skills/evaluate/SKILL.md; then
+    warn "skills/evaluate/SKILL.md does not mention /bodhikit:mentor (M27 fix — opt-in offer at completion/milestone)"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
+# 26. Newly chainable skills (pair, debug-together, mentor) must declare
+#     the offer-only nature in their opening lines (consistency with the
+#     CHANGELOG 1.4.0 contract reset and the Capstone offer pattern).
+# ---------------------------------------------------------------------------
+# Looking for the literal "Offered" word OR the chain-guard sentence — either
+# proves the skill knows it is opted into rather than auto-fired.
+for s in pair debug-together mentor; do
+  f="skills/$s/SKILL.md"
+  if [ ! -f "$f" ]; then continue; fi
+  head30=$(head -30 "$f")
+  if ! printf '%s' "$head30" | grep -qiE 'offer|opt-in|chained invocation'; then
+    warn "$f opening 30 lines do not declare offer/opt-in/chained-invocation framing"
+  fi
+done
 
 # ---------------------------------------------------------------------------
 echo

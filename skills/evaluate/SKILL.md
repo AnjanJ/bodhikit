@@ -90,6 +90,20 @@ Do NOT auto-invoke `/teach-back`. The capstone is opt-in by design — see `skil
 
 If the project is not complete (this evaluation is mid-journey), skip the capstone offer entirely.
 
+### Mentor offer (project-completion or major-milestone)
+
+After the capstone offer (when shown), or as the sole offer at a major milestone that is NOT a project completion, surface a second opt-in path — the longer-arc conversation about *what next*:
+
+> "One more invitation. The path forward is yours to choose, but if you would like to step back and look at the larger arc — where this project fits in your broader journey, what could come next — `/bodhikit:mentor` can hold that conversation. It is not part of the course. Take it if it calls to you."
+
+Trigger conditions (offer when ANY fires):
+- This evaluation moved the project from `activeProjects` to `completedProjects` (project completion).
+- The trajectory report flags a major Bloom delta since the previous evaluation (≥ 2 levels on any major topic OR ≥ 1 level on 3+ topics simultaneously).
+
+Skip the offer when none of the above hold — mid-journey evaluations without a milestone should not interrupt momentum with cross-project reflection.
+
+Do NOT auto-invoke `/mentor`. Mirrors the `/teach-back` opt-in pattern exactly.
+
 ---
 
 ## Update Tracking

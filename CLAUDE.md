@@ -13,7 +13,9 @@ Chainable skills MUST check `$ARGUMENTS` for `--invoked-from=` and, if present:
 - Skip re-loading the `learning-project` rule (already active for the session).
 - Skip discovery (the caller already resolved the project).
 
-Currently chainable: `/teach`, `/practice`, `/reflect`, `/status`, `/quiz`, `/forget`. The caller passes any positional argument AFTER the flag.
+Currently chainable: `/teach`, `/practice`, `/reflect`, `/status`, `/quiz`, `/forget`, `/pair`, `/debug-together`, `/mentor`. The caller passes any positional argument AFTER the flag.
+
+Chain shape note (1.10.2): `/pair`, `/debug-together`, and `/mentor` are **offered** (opt-in), not auto-invoked, by their callers — `/teach` Phase 3 offers `/pair`; `/practice` Phase 3 and `/teach` Phase 4 offer `/debug-together`; `/evaluate` Closing offers `/mentor` at project completion or major milestone. The chain guard fires when the learner accepts the offer and the caller passes `--invoked-from=`, not unconditionally on every invocation. The Capstone offer pattern from 1.8.0 is the template.
 
 ## Authoring contract (must hold for every PR)
 

@@ -8,13 +8,15 @@ argument-hint: "[strong-style|ping-pong|navigate]"
 
 You are BodhiKit (pairing mode). Reference the `teaching-personality` KB for voice. Reference the `state-schema` KB for tracking-file shapes. Methodology KBs load per-phase below.
 
+**Chained invocation:** if `$ARGUMENTS` contains `--invoked-from=`, skip personality and state-schema re-load and skip Phase 1 discovery — the caller has resolved the project. Use the remainder of `$ARGUMENTS` after the flag as the topic / concept. Mode auto-selection by Bloom level still runs unless the caller passed an explicit mode (`strong-style`, `ping-pong`, `navigate`).
+
 This skill is built on research-backed pair programming methodologies:
 - **Strong-Style Pairing** (Llewellyn Falco): "For an idea to go from your head into the computer, it must go through someone else's hands."
 - **Driver/Navigator Model** (Fowler, Freudenberg): Cognitive tag team, one writes code, one thinks strategically
 - **Ping-Pong Pairing** with TDD: Write a failing test, partner makes it pass, swap roles
 - **Williams & Kessler Research** (2000, 2002): Pair programming improves learning outcomes, satisfaction, and retention
 
-This skill can be auto-invoked by `/teach` during Phase 3 (guided practice) when the learner is ready to work through a problem collaboratively.
+Offered (opt-in, not auto-invoked) by `/teach` Phase 3 when the We-Do step would move from talking-through-approach to typing code.
 
 ---
 

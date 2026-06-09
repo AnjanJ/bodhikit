@@ -2,6 +2,22 @@
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [1.10.2] - 2026-06-09
+
+### Changed
+- **CHANGELOG 1.4.0's auto-invoke chains are wired** — but as **opt-in offers**, not auto-invocations, mirroring the 1.8.0 Capstone pattern. The original 1.4.0 contract overstated the integration ("/teach Phase 3 auto-invokes /pair", "/practice + /teach auto-invoke /debug-together when code breaks", "/evaluate auto-invokes /mentor at milestones"); 1.10.2 honors the spirit (the partner skill is named, the chain flag is wired, the moment is identified) without the loss of learner agency that an unconditional auto-invoke would cause. Each offer surfaces at the canonical moment, names the trade-off ("the longer path that teaches the skill"), and lets the learner accept or decline.
+  - **`/teach` Phase 3** now offers `/bodhikit:pair --invoked-from=teach <concept>` when the We-Do step would move from talking-through-approach to typing code. Skipped when the concept is purely conceptual, the learner already declined pair this session, or the session is in its last 5-10 minutes.
+  - **`/practice` Phase 3 step 4** ("If the code does not work") now offers `/bodhikit:debug-together --invoked-from=practice <brief description>` after Hint 2 (Approach) — before the Near-solution hint, so accepting the offer routes to TRAFFIC rather than collapsing to a near-solution that teaches the fix more than the debugging.
+  - **`/teach` Phase 4 step 4** ("Not working") now offers `/bodhikit:debug-together --invoked-from=teach <brief description>` instead of going straight to the Socratic-method one-liner. Per the CLAUDE.md chain convention, the failing code is discovered from `exercises/<current-module>/` — no file path is passed positionally.
+  - **`/evaluate` Closing** now offers `/bodhikit:mentor` after the existing Capstone offer (when shown) or as the sole offer at a major milestone. Triggers: project moves to `completedProjects` OR ≥2-level Bloom delta on any major topic since the previous evaluation OR ≥1-level delta on 3+ topics simultaneously. Skipped on mid-journey evaluations without a milestone.
+- **Chain-guard pattern extended to `/pair`, `/debug-together`, and `/mentor`.** Each now checks `$ARGUMENTS` for `--invoked-from=`; when present, they skip personality/state-schema reload and skip their setup framing (the caller has context). `CLAUDE.md`'s "Currently chainable" list expands from 6 skills to 9, with a chain-shape note clarifying that the three new entries are offered (opt-in), not auto-invoked.
+- **Five new lint rules in `dev/check.sh`** (warn for now, promoted in 1.10.5): rule 9 expanded to enforce the chain guard on the new chainable trio; rules 22-26 enforce offer language at the canonical moments (`/teach` Phase 3 → `/pair`, `/practice` Phase 3 → `/debug-together`, `/teach` Phase 4 → `/debug-together`, `/evaluate` → `/mentor`) and check that the three new chainable skills declare their offer/opt-in framing in the opening 30 lines.
+
+### Why this exists
+Five audit findings (H11, H12, H13, M27, A3, A9) traced to the same gap: CHANGELOG 1.4.0 documented four auto-invoke chains, GUIDE.md referenced them, but none was actually wired in the relevant phases. The audit's recommended fix was to wire the chains; the sprint review (D2) pushed back against unconditional auto-invocation as a state-machine risk (no return semantics exist in the plugin today; the existing `/continue → /status → /teach → /reflect` chain is sequential composition by the caller, not nested with handback). Opt-in offers close the same findings — the partner skill is named at the moment the audit identified, the chain flag is wired, the learner's agency is preserved — without inventing new return semantics. Accepting an offer transfers control; declining keeps the current skill's flow intact. The Capstone pattern (1.8.0) is the template: a structured invitation framed as credibility-protection, not gatekeeping.
+
+The "decline by default" framing matters pedagogically. An auto-invoked `/debug-together` would teach the learner that bugs require a heavy ceremony; an *offered* `/debug-together` teaches that there is a longer path available when the shorter path stalls — and that choosing the longer path is itself a learning move. Same goes for `/pair` (collaboration is a tool, not a default mode) and `/mentor` (cross-project reflection is invited, not imposed at every milestone).
+
 ## [1.10.1] - 2026-06-09
 
 ### Changed

@@ -132,6 +132,12 @@ After the learner indicates they have completed (or attempted) the exercise:
      - Hint 3: Near-solution ("Try adding [specific thing] before [specific line]")
    - If 3 hints are not enough, re-teach the underlying concept, then let them try again.
 
+   **After Hint 2 (Approach), offer the scientific-debugging handoff** (reference the `scientific-debugging` KB for the methodology):
+
+   > "Hints can land the fix, but they teach the fix more than the debugging. Want to switch to `/bodhikit:debug-together --invoked-from=practice <brief description of what is failing>` and work through it as a hypothesis? Either way is fine; debug-together is the longer path that teaches the skill."
+
+   This is an **offer, not an auto-invocation**. If the learner accepts, control passes to `/debug-together` and they work through TRAFFIC + Reproduce + Hypothesize + Wolf Fence on the failing exercise (the sub-skill discovers the failing code from `exercises/<current-module>/` per the chain convention — do NOT pass a file path as positional argument). If they decline, continue with Hint 3 and the existing flow.
+
 5. **If they are stuck before starting:**
    - Break the exercise into smaller sub-problems
    - Solve the first sub-problem together (I Do, then We Do)

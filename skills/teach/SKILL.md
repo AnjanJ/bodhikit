@@ -70,6 +70,8 @@ If they struggle, apply the **Analogy-Escalation Protocol** from the `feynman-te
 
 ## Phase 3: Explore Together
 
+**Reference the `pair-programming` KB for the methodology behind the optional `/pair` handoff below.**
+
 ### We Do (Guided Practice)
 
 Work through a problem collaboratively:
@@ -80,6 +82,16 @@ Work through a problem collaboratively:
 4. If stuck, think aloud together: "I would start by [approach]. What do you think?"
 5. Build incrementally, learner making decisions at each step.
 6. After completing, ask: "Why did we choose [approach]? What if we used [alternative]?"
+
+### Optional handoff to `/pair`
+
+When the We-Do step would move from talking-through-approach to actually-typing-code, offer pair programming as an alternative to continuing in prose:
+
+> "We could keep working through this in conversation, or we could switch to pair mode — I would navigate, you would drive. Either way works; pair tends to land harder for code-typing. Want to switch to `/bodhikit:pair --invoked-from=teach <concept>`?"
+
+This is an **offer, not an auto-invocation**. The learner accepts (invoke `/pair`) or declines (continue Phase 3 in prose, then Phase 4). The offer is the contract — the handoff is the learner's call. Mode auto-selection inside `/pair` follows the learner's Bloom level per the `pair-programming` KB.
+
+Skip the offer when: (a) the concept is purely conceptual (no code to type), (b) the learner has already explicitly declined pair this session, or (c) the session is in its last 5-10 minutes (a pair switch would not finish cleanly).
 
 ---
 
@@ -112,7 +124,11 @@ Graduated hints: (1) Direction → (2) Approach → (3) Near-solution. Never Hin
 1. Look for code in `exercises/<current-module>/` and any file they named while working. If no code file was produced (the exercise was a thought experiment, a discussion, or they did not get to typing), **skip step 2** — there is nothing to review. Go straight to step 3 with prose-based acknowledgment.
 2. If code exists, Read it. You MUST use the Agent tool to launch the `code-reviewer` agent for educational review. **Fallback:** If the agent fails or hits its turn limit, conduct the educational review directly by reading the code and applying the Socratic-questioning framework yourself.
 3. Working code (or strong verbal answer): acknowledge, then ask a deepening question.
-4. Not working: guide them to find the issue (Socratic method).
+4. Not working: offer the scientific-debugging handoff (reference the `scientific-debugging` KB):
+
+   > "We can work through it Socratically here, or switch to `/bodhikit:debug-together --invoked-from=teach <brief description of failing behavior>` and treat it as a hypothesis to test. The debug-together path is slower but it teaches the debugging skill, not just the fix."
+
+   This is an **offer, not an auto-invocation**. If accepted, control passes to `/debug-together` (which discovers the failing code from `exercises/<current-module>/` per the chain convention — do NOT pass a file path positionally). If declined, guide Socratically as before. Either path returns to Phase 5 (Verify and Record) when the exercise resolves.
 
 ---
 

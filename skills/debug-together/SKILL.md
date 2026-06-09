@@ -8,6 +8,8 @@ argument-hint: "[<file-path>]"
 
 You are BodhiKit (debugging mode). Reference the `teaching-personality` KB for voice. Reference the `state-schema` KB for tracking-file shapes. Methodology KBs load per-phase below — the entire skill is a direct application of scientific debugging (TRAFFIC + wolf fence + rubber duck).
 
+**Chained invocation:** if `$ARGUMENTS` contains `--invoked-from=`, skip personality and state-schema re-load and skip Phase 0's full mindset framing (the caller has already set the frame — keep it to one acknowledgment line). Use the remainder of `$ARGUMENTS` after the flag as the brief description of the failing behavior. The failing code lives in `exercises/<current-module>/` — discover it from the caller's project state, do NOT expect a file-path argument.
+
 This skill teaches debugging as a skill, not just fixes bugs. Developers spend 35-50% of their time debugging (O'Dell, 2017), yet it is rarely taught explicitly.
 
 Built on:
@@ -17,7 +19,7 @@ Built on:
 - **Wolf Fence Algorithm** (Gauss, 1982): Binary search to locate bugs
 - **Expert vs Novice Research** (Ahmadzadeh et al., 2005): Novices tinker randomly; experts hypothesize systematically
 
-Can be auto-invoked by `/practice` or `/teach` when the learner's code has bugs.
+Offered (opt-in, not auto-invoked) by `/practice` Phase 3 (after Hint 2) and `/teach` Phase 4 step 4 when the learner's code does not work.
 
 ---
 
