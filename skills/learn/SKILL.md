@@ -138,6 +138,19 @@ Organize into **Phases** containing **Modules**. Each module specifies: target B
 - Build toward a meaningful project per phase
 - Map learner's existing materials (books, courses) to modules
 - Leave room for adaptation
+- **Each phase after Phase 0 MUST declare at least one Spiral Revisit** — a concept from an earlier phase that this phase revisits at a *higher* target Bloom level (per the `constructivism` KB's spiral-curriculum mechanic — depth comes from returning, not from forward march alone). The revisit is a contract, not a suggestion: a phase that does not name one has skipped a constructivism principle the plan is supposed to honor. Phase 0 is exempt because there is nothing earlier to revisit.
+
+### Per-phase Spiral Revisit declaration
+
+When writing each `plan/phase-{N}.md` file (Phase 4 scaffolds them, but the principle is set here), include a `## Spiral Revisits` section near the top of every phase file except phase-0.md. Format:
+
+```markdown
+## Spiral Revisits
+
+- **<concept>** — first reached Bloom <X> in Phase <N-K> (Module <name>). This phase takes it to Bloom <Y> via <which module / which exercise>.
+```
+
+At least one entry per phase. Multiple entries are encouraged when the phase deepens several earlier concepts. `/plan` View mode reads these sections to surface the spiral arc to the learner (added in 1.10.5); `/plan` Regenerate mode preserves them (per the `constructivism` KB reference added in 1.10.3).
 
 Present the plan. Ask: "How does this path look to you?" Adjust based on feedback.
 

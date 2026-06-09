@@ -521,6 +521,28 @@ if [ -f skills/practice/SKILL.md ]; then
 fi
 
 # ---------------------------------------------------------------------------
+# 38. /quiz Phase 2 must reference ZPD KB (M4 fix — within-quiz signal-gated
+#     escalation, not Bloom-distribution-only).
+# ---------------------------------------------------------------------------
+if [ -f skills/quiz/SKILL.md ]; then
+  phase2=$(awk '/^## Phase 2/,/^## Phase 3/' skills/quiz/SKILL.md)
+  if ! printf '%s' "$phase2" | grep -q 'zone-of-proximal-development'; then
+    err "skills/quiz/SKILL.md Phase 2 does not reference zone-of-proximal-development KB (M4 fix)"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
+# 39. /learn Phase 3 must require per-phase Spiral Revisits (M21 fix —
+#     constructivism spiral-curriculum mechanic made enforceable).
+# ---------------------------------------------------------------------------
+if [ -f skills/learn/SKILL.md ]; then
+  phase3=$(awk '/^## Phase 3/,/^## Phase 4/' skills/learn/SKILL.md)
+  if ! printf '%s' "$phase3" | grep -qiE 'spiral revisit'; then
+    err "skills/learn/SKILL.md Phase 3 does not declare the per-phase Spiral Revisit requirement (M21 fix)"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
 echo
 if [ "$warn_count" -gt 0 ]; then
   echo "$warn_count warning(s) above. (No current rule emits warns; this is a future-proofing fallback.)"

@@ -33,7 +33,7 @@ Open with: "Let us see what has taken root. This is not a test — it is a conve
 
 ## Phase 2: Adaptive Questions
 
-**For this phase, reference the `assessment-framework` KB for question templates and Bloom's-level mapping.**
+**For this phase, reference the `assessment-framework` KB for question templates and Bloom's-level mapping, AND the `zone-of-proximal-development` KB for the within-quiz escalation/de-escalation signals applied below.**
 
 Generate 5-7 questions.
 
@@ -45,6 +45,16 @@ Generate 5-7 questions.
 | Level 3 | 2 at Level 3, 3 at Level 4, 1-2 at Level 5 |
 | Level 4 | 2 at Level 4, 3 at Level 5, 1-2 at Level 6 |
 | Level 5-6 | 2 at Level 5, 3 at Level 6, 1-2 design/architecture |
+
+### Within-quiz ZPD signal adjustment
+
+The distribution above is the starting mix; the actual sequence adapts on the fly based on `zone-of-proximal-development` KB signals. The Mix is the prior; the signals are the update.
+
+- **Below the ZPD (too easy)** — quick, correct, no engagement, no questions back: the next question moves up one Bloom level in the mix (skip ahead to the next-level question rather than the next-in-mix). Two consecutive Below-ZPD signals: drop the rest of the easier band from this quiz and finish with higher-level questions only.
+- **In the ZPD (productive struggle)** — partial answer, asks a clarifying question, gets there with a small hint, errors show partial understanding: stay at the current level. This is where the quiz is doing its work.
+- **Beyond the ZPD (overwhelmed)** — repeated "I do not know," cannot articulate what they are confused about, hint did not help: the next question steps DOWN one Bloom level. Two consecutive Beyond-ZPD signals: drop the rest of the harder band from this quiz and ground out at a level where the learner can demonstrate something.
+
+Both adjustments respect the prior distribution as a budget — the total question count does not change, but the *distribution* shifts toward where the learner's ZPD actually is. The Bloom level recorded in `reviewHistory[].bloomLevel` (per the v3 schema in the `state-schema` KB) is the level the question actually tested at, not the level the original Mix proposed.
 
 ### Question Types (mix these)
 

@@ -2,6 +2,18 @@
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [1.10.6] - 2026-06-09
+
+### Changed
+- **`/quiz` Phase 2 now ZPD-signal-gated, not Bloom-distribution-only** (M4). The original Question Mix table set the prior distribution; the new within-quiz adjustment treats the mix as a *budget* and shifts the *distribution* on the fly based on `zone-of-proximal-development` KB signals. Below-ZPD signals (quick correct, no engagement) move the next question up one Bloom level; two consecutive Below signals drop the easier band entirely. Beyond-ZPD signals (repeated "I do not know," hint did not help) step down one level; two consecutive Beyond signals drop the harder band and ground out where the learner can demonstrate something. Total question count unchanged; the distribution adapts to where the learner actually is rather than where the prior assessment said they were.
+- **`/learn` Phase 3 Plan Principles now require a Spiral Revisit per phase** (M21). Each phase after Phase 0 MUST name at least one concept from an earlier phase that this phase revisits at a *higher* target Bloom level — the `constructivism` KB's spiral-curriculum mechanic made enforceable rather than aspirational. Each `plan/phase-{N}.md` file includes a `## Spiral Revisits` section near the top declaring which concepts are being deepened and from which earlier phase. `/plan` View mode (1.10.5) reads these sections to surface the spiral arc; `/plan` Regenerate (1.10.3) preserves them.
+- **Two new lint rules in `dev/check.sh`** (rules 38, 39 — single-severity err since 1.10.5): `/quiz` Phase 2 must reference `zone-of-proximal-development` KB; `/learn` Phase 3 must declare the per-phase Spiral Revisit requirement.
+
+### Why this exists
+Two audit findings (M4, M21) were missed during the 1.10.0–1.10.5 sprint despite each being listed and validated in `dev/gaps_of_pedagogy.md`. The post-tag verification turned them up by diffing the audit's finding-ID set against the CHANGELOG's references. Both fixes are small (one phase reference + one principle each); shipping them under their own patch release rather than retroactively editing the 1.10.5 tag preserves the as-shipped record while honestly closing the audit.
+
+With M4 and M21 closed, **every finding in the audit's confirmed and adjusted lists is now addressed in code**, with M32 documented as deliberately dropped per the sprint-review D3 rationale. The audit-closure receipt in `dev/gaps_of_pedagogy.md` and the sprint-summary table in the 1.10.5 CHANGELOG remain accurate for their respective releases; this entry adds the missing pair as a tail patch.
+
 ## [1.10.5] - 2026-06-09
 
 ### Changed

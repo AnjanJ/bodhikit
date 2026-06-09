@@ -12,9 +12,12 @@
 | **1.10.3** | M4 — KB references batch + `/evaluate` Phase 2.5 | M10, M12, M14, M16, M18, M20, M23, M24, M26, A6 |
 | **1.10.4** | M5 — `/pair` ZPD-signal-gated reversal + remaining wires | M5, M6, M8, L8 |
 | **1.10.5** | M6 — Targeted fixes + lint promotion (sprint close) | H4, M7, H10, L2, L3, L6, A1, A2, A4, A7, A8 |
+| **1.10.6** | tail patch — post-tag audit-completeness verify | M4, M21 |
 | **—** | dropped per sprint review | M32 (was M3.4 — would have collided with code-reviewer agent's pedagogical purpose, per D3) |
 
 **Total: 43 findings closed via skill/agent/KB edits + 1 dropped with documented rationale = 44 actionable findings resolved.**
+
+**Note on 1.10.6.** After tagging 1.10.5 and pushing to Codeberg, a post-release diff between the audit's finding-ID set and the CHANGELOG references caught two missed findings (M4: `/quiz` Phase 2 ZPD KB reference + within-quiz signal-gated escalation; M21: `/learn` Phase 3 per-phase Spiral Revisit requirement). Rather than retroactively edit the v1.10.5 tag, the fixes shipped as 1.10.6 — preserves the as-shipped record while honestly closing the audit.
 
 **Sprint review corrections applied during implementation:**
 - **D1** — M1.4 backfill rule corrected from `introduced > 7 days` to `lastReviewed === null` (the audit's original signal was backwards; legacy fallthrough now correctly identifies untouched-post-migration concepts).
