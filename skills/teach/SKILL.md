@@ -30,8 +30,8 @@ If selecting a concept from a module *different* from the learner's current modu
 
 For each prerequisite concept:
 - **If `bloomLevel >= 3`** — prerequisite satisfied, proceed.
-- **If `bloomLevel === 0` AND `lastReviewed === null`** — legacy fallthrough per the `state-schema` KB. The concept is unmodified post-migration; allow advancement (the gate cannot judge what was never observed).
-- **If `bloomLevel < 3` AND `lastReviewed !== null`** — the prerequisite has been touched but has not reached Apply. Do NOT advance. Surface the gap to the learner with the seeds metaphor:
+- **If `bloomLevel === 0`** — legacy fallthrough per the `state-schema` KB (1.10.7-corrected). The concept has not been classified by any v3 writer yet — `lastReviewed` may be populated from pre-v3 quizzes, but the v3 `bloomLevel` field has never been written. The gate has no opinion; allow advancement. Once a v3 writer sets `bloomLevel > 0` on this concept, normal gate logic applies.
+- **If `1 <= bloomLevel < 3`** — the prerequisite has been classified by a v3 writer but has not reached Apply (Level 3). Do NOT advance. Surface the gap to the learner with the seeds metaphor:
 
   > "Before we plant the next seed, one of the earlier ones still needs more time to root. `<concept>` is at Bloom Level `<N>` — we want at least Level 3 (Apply) before building on it. Would you like to revisit `<concept>` first, or stay in the current module a little longer?"
 

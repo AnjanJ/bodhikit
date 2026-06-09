@@ -77,7 +77,7 @@ mastered = (bloomLevel >= 4)
        AND (feynmanPassed === true)
 ```
 
-**Legacy display rule.** If every concept in a module has `bloomLevel: 0` AND `lastReviewed: null` (pure post-migration state, never touched by a v3 writer), display `—` instead of `0%`. A zero would falsely imply the learner has tried and failed; an em dash honestly says "not yet observable." Once any concept in the module has `lastReviewed !== null`, switch to the formula above.
+**Legacy display rule (1.10.7-corrected).** If every concept in a module has `bloomLevel: 0`, display `—` instead of `0%`. The concept has not been classified by any v3 writer yet — `lastReviewed` may be populated from pre-v3 quizzes, but the v3 `bloomLevel` field has never been written, so no mastery judgment can be honestly made. A zero would falsely imply the learner tried and failed; an em dash honestly says "not yet observable." Once at least one concept in the module has `bloomLevel > 0`, the formula computes against the v3-classified subset and the still-legacy concepts count as not-yet-mastered. `lastReviewed` is NOT part of this check (it was in 1.10.0; the rule was corrected after dogfooding against real v2 data showed pre-v3 concepts routinely have populated `lastReviewed`).
 
 ---
 

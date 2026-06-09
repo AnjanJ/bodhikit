@@ -543,6 +543,26 @@ if [ -f skills/learn/SKILL.md ]; then
 fi
 
 # ---------------------------------------------------------------------------
+# 40. Legacy fallthrough rule must NOT combine bloomLevel:0 with lastReviewed
+#     (the 1.10.7 corrected boundary — pre-v3 concepts routinely have
+#     populated lastReviewed; combining the two false-blocked every existing
+#     learner on first migration).
+# ---------------------------------------------------------------------------
+# The corrected rule keys off bloomLevel: 0 alone. Any file pairing
+# bloomLevel: 0 with lastReviewed === null in the SAME logical predicate
+# is using the pre-1.10.7 broken rule.
+for f in skills/*/SKILL.md knowledge/state-schema/SKILL.md knowledge/state-migration/SKILL.md; do
+  # historical-note paragraphs are allowed to MENTION the old rule for
+  # explanation. The check looks specifically for the broken predicate.
+  if grep -qE 'bloomLevel.*0.*AND.*lastReviewed.*null|lastReviewed.*null.*AND.*bloomLevel.*0' "$f"; then
+    # Allow if the line is inside a "Historical note" or explicitly marked as the broken/old rule
+    if ! grep -B 2 -E 'bloomLevel.*0.*AND.*lastReviewed.*null|lastReviewed.*null.*AND.*bloomLevel.*0' "$f" | grep -qiE 'historical|1\.10\.0 rule|was wrong|corrected|broken'; then
+      err "$f uses the pre-1.10.7 broken legacy-fallthrough predicate (bloomLevel:0 AND lastReviewed:null) — drop lastReviewed from the check"
+    fi
+  fi
+done
+
+# ---------------------------------------------------------------------------
 echo
 if [ "$warn_count" -gt 0 ]; then
   echo "$warn_count warning(s) above. (No current rule emits warns; this is a future-proofing fallback.)"

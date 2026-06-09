@@ -2,6 +2,24 @@
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [1.10.7] - 2026-06-09
+
+### Fixed
+- **Legacy fallthrough rule corrected — `bloomLevel: 0` alone is the predicate, not `bloomLevel: 0 AND lastReviewed: null`.** The 1.10.0 rule paired the two checks as a conservative guard: a concept with `bloomLevel: 0` only fell through to "allow advancement" if `lastReviewed` was also null. Dogfooding against a real v2 `spaced-review.json` (in `learn_with_bodhi/rails-react-scaling/`) showed every concept had a populated `lastReviewed` from pre-v3 quizzes — which is the normal state of real v2 data. The combined predicate would have **false-blocked module advancement on every existing learner immediately after migration** and would have made `/progress` Mastery % compute `0%` for legacy modules instead of displaying `—`. The corrected predicate uses `bloomLevel: 0` alone — the field has never been written by any v3 writer, so the gate has no opinion; `lastReviewed` is not part of the check.
+- **`/teach` Phase 1 prerequisite gate** now allows advancement on any prerequisite with `bloomLevel: 0` regardless of `lastReviewed`; only `1 <= bloomLevel < 3` blocks (the prerequisite has been classified but has not reached Apply).
+- **`/progress` Mastery % display** shows `—` for any module where every concept has `bloomLevel: 0`; once at least one concept has `bloomLevel > 0`, the formula computes against the v3-classified subset.
+- **`state-schema` and `state-migration` KBs** document the corrected predicate as canonical and carry a historical note explaining why the 1.10.0 rule was wrong, so future contributors do not re-derive the broken combination.
+
+### Added
+- **`dev/check.sh` rule 40** catches any file pairing `bloomLevel: 0` with `lastReviewed: null` in the same logical predicate, exempting paragraphs that explicitly mark the combination as historical / broken / corrected. Prevents the regression that the 1.10.0 → 1.10.7 chain just walked through.
+
+### Why this exists
+The first real dogfood pass — reading a single live `spaced-review.json` end-to-end before running any skill — surfaced this bug. The 1.10.0 design intent was correct (do not block on a value that no v3 writer ever wrote), but the implementation was overdetermined: requiring both `bloomLevel: 0` AND `lastReviewed: null` mis-modeled how migration interacts with pre-v3 data. The corrected rule keeps the design intent and matches the data shape that migration actually produces.
+
+The good news: the 1.10.7 fix is a four-file edit (`state-schema` KB, `state-migration` KB, `/teach`, `/progress`) and the lint rule preventing regression is one paragraph. The five other v3 writers (`/quiz`, `/explain`, `/practice`, `/forget`, `/pair`) never used the `lastReviewed`-paired check — they all set `bloomLevel` directly on the concepts they touch, which is the correct shape.
+
+This is a tail patch on a tail patch (1.10.6 closed the audit, 1.10.7 closes a regression the audit-closure work introduced) — but the rationale for keeping it as its own minor release is the same as 1.10.6's: v1.10.5 and v1.10.6 are tagged and on Codeberg. Retroactively editing them would mislead anyone who installed at the old SHA.
+
 ## [1.10.6] - 2026-06-09
 
 ### Changed
