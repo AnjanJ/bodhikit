@@ -84,20 +84,45 @@ This final explanation is the test. If it is clear and complete, the concept is 
 
 **For this section, reference the `spaced-repetition` KB for box→interval mapping.**
 
-If an active learning project exists:
+If an active learning project exists, three required file writes follow. **Per the 1.10.12 imperative-write discipline:** every "update X" instruction is a real Write call, not a state description. The closing prose is the receipt; the writes are what made it true.
 
-1. Add or update the concept in `.bodhi/spaced-review.json` per the canonical update rules in the `spaced-repetition` KB. **Strong final explanation:** treat as a correct recall — move up one box from current (max 5), per the KB's correct-recall rule. Do NOT hardcode a destination box; a learner already in Box 3 should not be demoted to Box 2 by a strong explanation. **Gaps remained:** treat as incorrect — move to Box 1, per the KB's demote rule. (For new concepts not yet in `spaced-review.json`, follow the KB's "new concept" rule: Box 1, `nextReview` = tomorrow.)
+**CHECKPOINT-before-writes (name aloud BEFORE any Write call):**
 
-   **Per-concept Bloom + Feynman writes (v3 schema, see `state-schema` KB):**
-   - **Feynman gate:** if the Phase 4 final explanation is clear, complete, jargon-free, and in the learner's own words (the `feynman-technique` KB's bar), set `concepts[].feynmanPassed = true`. Set, never unset.
-   - **Bloom write:** update `concepts[].bloomLevel` to the upper bound of the quality range below. Preserve any higher prior value (never demote here).
-   - Apply the v2 → v3 inline-fill from the `state-migration` KB if needed before writing.
+> "I am about to write three files: `.bodhi/spaced-review.json` (per-concept Bloom + Feynman gate), `.bodhi/state.json` (lastActivity), and `.bodhi/progress.md` (explain entry prepended). Computing now..."
 
-2. Update `.bodhi/state.json` (slim — no narrative): set `lastActivity` to ONE short sentence noting the explain session.
+**Step 1 — Update `spaced-review.json` (imperative).**
 
-3. Append an entry to `.bodhi/progress.md` (v2 live document) at the top: `## YYYY-MM-DD — Explain (<concept>)`, then **What was explained**, **Learner's explanation quality**, **Bloom adjustment** based on quality (write the numeric upper bound so prose and `concepts[].bloomLevel` agree):
+1. Read `.bodhi/spaced-review.json` from disk.
+2. Read-tolerate v2: if at `version: 2`, inline-fill per `state-migration` KB.
+3. Mutate the parsed JSON object in place (preserve non-canonical fields per 1.10.9 in-place mutation discipline):
+   - Apply the canonical update rules from the `spaced-repetition` KB. **Strong final explanation:** treat as a correct recall — move up one box from current (max 5), per the KB's correct-recall rule. Do NOT hardcode a destination box; a learner already in Box 3 should not be demoted to Box 2 by a strong explanation. **Gaps remained:** treat as incorrect — move to Box 1, per the KB's demote rule. (For new concepts not yet in `spaced-review.json`, follow the KB's "new concept" rule: Box 1, `nextReview` = tomorrow.)
+   - **Per-concept Bloom + Feynman writes (v3 schema, see `state-schema` KB):**
+     - **Feynman gate:** if the Phase 4 final explanation is clear, complete, jargon-free, and in the learner's own words (the `feynman-technique` KB's bar), set `concepts[<concept>].feynmanPassed = true`. Set, never unset.
+     - **Bloom write:** update `concepts[<concept>].bloomLevel` to the upper bound of the quality range below. Preserve any higher prior value (never demote here).
+   - Set top-level `version` to `3` if not already.
+4. Write `.bodhi/spaced-review.json` using the Write tool, overwriting the existing file.
+5. Verify: re-read. Confirm `version: 3`, the concept's `bloomLevel` is the new value, `feynmanPassed` set if the gate fired, non-canonical fields preserved on a spot-check.
+
+**Step 2 — Update `state.json` (imperative).**
+
+1. Read `.bodhi/state.json`.
+2. Mutate in place: set `lastActivity` to ONE short sentence noting the explain session.
+3. Write `.bodhi/state.json` using the Write tool, overwriting the existing file. Preserve every other field verbatim.
+4. Verify: re-read. Confirm `lastActivity` updated.
+
+**Step 3 — Update `progress.md` (imperative).**
+
+1. Read `.bodhi/progress.md`.
+2. Compose the new entry at the top: `## YYYY-MM-DD — Explain (<concept>)`, then **What was explained**, **Learner's explanation quality**, **Bloom adjustment** based on quality (write the numeric upper bound so prose and `concepts[].bloomLevel` agree):
    - Clear, complete explanation with good analogies = Level 2-3
    - Can explain AND apply in code = Level 3-4
    - Can explain trade-offs and when NOT to use it = Level 4-5
+3. Construct new full file content: new entry + separator + existing content (preserved verbatim).
+4. Write `.bodhi/progress.md` using the Write tool, overwriting the existing file.
+5. Verify: re-read. Confirm new entry at top, prior Summary block intact.
 
-Close with: "Understanding [concept] is like planting a tree. Today we gave it roots. The more you use it, the deeper those roots will grow."
+**CHECKPOINT-after-writes (name aloud):**
+
+> "Files written and verified: spaced-review.json, state.json, progress.md. Closing now."
+
+Then close with: "Understanding [concept] is like planting a tree. Today we gave it roots. The more you use it, the deeper those roots will grow."

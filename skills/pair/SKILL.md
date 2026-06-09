@@ -152,11 +152,38 @@ After any pairing mode:
 
 1. **Reflect on the session**: "What did you notice about how we worked together? What was different from coding alone?"
 
-2. **Update tracking** (apply the canonical update rules from the `spaced-repetition` KB — do not redeclare intervals):
-   - Update `.bodhi/state.json` with pairing session info (slim shape; `lastActivity` points at the `progress.md` entry).
-   - **For new concepts surfaced during pairing**, append to `.bodhi/spaced-review.json` per the v3 schema in the `state-schema` KB: `box: 1`, `nextReview: tomorrow`, `bloomLevel: 0`, `feynmanPassed: false`, `consecutiveCorrectAtL4Plus: 0` — defaults match the KB's "new concept" rule. If the file is at version 2, apply the inline-fill from the `state-migration` KB first.
-   - **For concepts the learner demonstrated mastery of during the session** (clean explain-back at step 6, navigated themselves at step 7, post-piece reflection showed an underlying mental model): apply the spaced-repetition KB's correct-recall update — move up one box (max 5), recompute `nextReview` from the box interval. Do NOT touch `feynmanPassed` here — that field is owned by `/teach` and `/explain` Phase 5 (skills that run an explicit explain-back gate; pairing's step 6 check is necessary-but-not-sufficient for the gate).
-   - Append a pair entry to `progress.md` at the top (live document, per the `state-schema` KB): `## YYYY-MM-DD — Pair (<mode>, <topic>)`, then **What we built**, **Mode signals observed** (which step-7 signals fired, if reversal happened), **Bloom adjustments**, **Next**.
+2. **Update tracking — imperative writes (1.10.12 discipline).** Apply the canonical update rules from the `spaced-repetition` KB; every "update X" below is a real Write tool call, not a state description.
+
+   **CHECKPOINT-before-writes (name aloud BEFORE any Write call):**
+
+   > "I am about to write three files: `.bodhi/state.json` (lastActivity), `.bodhi/spaced-review.json` (new concepts + box movements per the session), and `.bodhi/progress.md` (pair entry prepended). Computing now..."
+
+   **Step A — Update `.bodhi/spaced-review.json` (imperative).**
+   1. Read the file.
+   2. Read-tolerate v2: inline-fill per `state-migration` KB if at `version: 2`.
+   3. Mutate parsed JSON in place (preserve non-canonical fields per 1.10.9):
+      - **For new concepts surfaced during pairing**, append entries with `box: 1`, `nextReview: tomorrow`, `bloomLevel: 0`, `feynmanPassed: false`, `consecutiveCorrectAtL4Plus: 0` — defaults match the KB's "new concept" rule.
+      - **For concepts the learner demonstrated mastery of during the session** (clean explain-back at step 6, navigated themselves at step 7, post-piece reflection showed an underlying mental model): apply the spaced-repetition KB's correct-recall update — move up one box (max 5), recompute `nextReview` from the box interval. Do NOT touch `feynmanPassed` here — owned by `/teach` and `/explain` Phase 5 (pairing's step 6 check is necessary-but-not-sufficient for the gate).
+      - Set top-level `version: 3` if not already.
+   4. Write the file using the Write tool.
+   5. Verify: re-read; confirm `version: 3`, new/updated concepts present.
+
+   **Step B — Append to `.bodhi/progress.md` (imperative).**
+   1. Read the file.
+   2. Compose the new entry at the top: `## YYYY-MM-DD — Pair (<mode>, <topic>)`, then **What we built**, **Mode signals observed** (which step-7 signals fired, if reversal happened), **Bloom adjustments**, **Next**.
+   3. Construct new full file content: new entry + separator + existing content (preserved verbatim).
+   4. Write the file using the Write tool.
+   5. Verify: re-read; confirm new entry at top, prior Summary block intact.
+
+   **Step C — Update `.bodhi/state.json` (imperative).**
+   1. Read the file.
+   2. Mutate in place: slim shape, `lastActivity` points at the `progress.md` entry.
+   3. Write the file using the Write tool. Preserve every other field verbatim.
+   4. Verify: re-read; confirm `lastActivity` updated.
+
+   **CHECKPOINT-after-writes (name aloud):**
+
+   > "Files written and verified: spaced-review.json, progress.md, state.json."
 
 3. **Bridge to independence**: "Next time you work on something similar, try talking through your approach out loud before you write code. You do not need me for that. Your own voice is the best navigator."
 

@@ -96,7 +96,78 @@ After each response:
 
 **For this phase, reference the `spaced-repetition` KB for box→interval mapping and update rules.**
 
-After all questions are answered, present a summary:
+---
+
+### ⚠️ STOP — Read this before producing any output
+
+**The 1.10.11 dogfood run caught `/quiz` rendering a beautiful results table to the conversation and persisting nothing to disk.** Phase 3 has three required file writes (`spaced-review.json`, `progress.md`, `state.json`); if you finish the quiz without producing all three Write tool calls, the quiz has accomplished nothing the next session will see. The user-facing output is the *report on* the writes, not a substitute for them.
+
+If your instinct after the last question is "compose the results table and reply to the learner," **that instinct is the bug**. The correct order is: compute the writes → execute the writes → verify the writes → THEN render the report. The report is the receipt, not the action.
+
+### CHECKPOINT-before-writes (name aloud BEFORE any Write call)
+
+In your response to the learner, before any user-facing prose, name aloud:
+
+> "I am about to write three files: `.bodhi/spaced-review.json` (updated per-concept Bloom + counter + reviewHistory append), `.bodhi/progress.md` (quiz entry prepended), and `.bodhi/state.json` (lastActivity update). Computing the changes now..."
+
+Then perform the writes per the imperative steps below. This checkpoint exists because the 1.10.11 dogfood proved an executor will skip writes that are not announced — once the announcement is in your output, the writes become a contract you have publicly committed to.
+
+---
+
+### Step 1 — Update `spaced-review.json` (imperative)
+
+Apply the update rules from the `spaced-repetition` KB. Per the v3 schema in the `state-schema` KB (1.10.0 — Bloom + Feynman become observable). **This is a real file write, not a state-description.** Use the Write tool.
+
+1. **Read `.bodhi/spaced-review.json` from disk** with the Read tool.
+2. **Read-tolerate v2:** if the file is at `version: 2`, inline-fill any concept missing `bloomLevel` / `feynmanPassed` / `consecutiveCorrectAtL4Plus` with the defaults from the `state-migration` KB before any writes.
+3. **Mutate the parsed JSON object in place** (per the 1.10.9 in-place mutation discipline — do NOT re-serialize from a schema template; learner's non-canonical fields like `precisionGap`, `lastResult` prose, `boxChanges`, `precisionGapMovement`, `habitObservations` MUST be preserved):
+   - **Append a `reviewHistory` entry per concept reviewed** with `date`, `result`, AND `bloomLevel` (the level the question tested at — pulled from the Phase 2 Question Mix mapping).
+   - **Update `concepts[].bloomLevel`** to the highest Bloom level the learner answered correctly in this quiz, capped at the level actually tested. Never demote here — demotion is `/forget`'s job; this skill only ratchets up.
+   - **Update `concepts[].consecutiveCorrectAtL4Plus`:**
+     - If `result === "correct"` AND the question's `bloomLevel >= 4`: increment by 1.
+     - On any `result === "incorrect"` (at any Bloom level): reset to 0.
+     - On `result === "partial"`: leave unchanged.
+   - **Update `concepts[].box`, `concepts[].nextReview`, `concepts[].lastReviewed`, `concepts[].lastResult`** per the `spaced-repetition` KB box→interval rules.
+   - Set top-level `version` to the integer `3` if not already.
+4. **Write the new content to `.bodhi/spaced-review.json`** using the Write tool, overwriting the existing file. Do not skip this — "update X" means **rewrite the file to disk with the updates applied**.
+5. **Verify the write.** Re-read `.bodhi/spaced-review.json` with the Read tool. Confirm: top-level `version` is `3`; `concepts[].length` matches what you computed; every reviewed concept has a new `reviewHistory[]` entry dated today with the right `bloomLevel`; one spot-checked concept retains its non-canonical fields (`precisionGap` or similar) if any were present pre-write. If any check fails, do NOT proceed to step 2 — report what failed.
+
+Do NOT set `feynmanPassed` here — that field is owned by `/teach` Phase 2 Checkpoint / Phase 5 and `/explain` Phase 5 (skills that actually run an explain-back gate).
+
+### Step 2 — Update `progress.md` (imperative)
+
+This is the v2 live document — quiz narrative goes here. **Real Write call required.**
+
+1. **Read `.bodhi/progress.md`** from disk.
+2. **Compose the new entry** at the top: `## YYYY-MM-DD — Quiz (<topic>)` followed by score, concepts reviewed (with new boxes and Bloom adjustments), and any precision gaps noted from the answers.
+3. **Construct the new full file content in memory:** new entry + separator + existing content (which already contains the prior live entry + Summary of earlier sessions block — both must be preserved verbatim).
+4. **Write `.bodhi/progress.md`** using the Write tool, overwriting the existing file.
+5. **Verify the write.** Re-read `progress.md`. Confirm the new dated entry is at the top AND the prior "Summary of earlier sessions" block is still present. If either check fails, report what failed.
+
+### Step 3 — Update `state.json` (imperative)
+
+Slim shape — no narrative fields. **Real Write call required.**
+
+1. **Read `.bodhi/state.json`** from disk.
+2. **Mutate in place** (per the 1.10.9 in-place mutation discipline): set `lastActivity` to ONE short sentence (≤120 chars), e.g. "Quizzed on indexing; 5/7 passes, B-tree mechanism solid." Update `lastSessionAt` to today's ISO timestamp if this opens a new session (a new date in `sessionDates`). Do NOT write `lastSessionSummary` — that field is removed in v2.
+3. **Write `.bodhi/state.json`** using the Write tool, overwriting the existing file. Preserve every other field verbatim.
+4. **Verify the write.** Re-read `state.json`. Confirm `lastActivity` is the new sentence and no v1 narrative fields were re-introduced.
+
+---
+
+### CHECKPOINT-after-writes (name aloud AFTER all three Write calls)
+
+Before rendering the user-facing results table, name aloud:
+
+> "All three files written and verified: `.bodhi/spaced-review.json` (v3, N concepts updated), `.bodhi/progress.md` (new entry prepended), `.bodhi/state.json` (lastActivity updated)."
+
+Only THEN render the results table and the "What is growing well" / "What needs more sunlight" sections to the learner. The table is the receipt; the writes are what made it true.
+
+---
+
+### Render the user-facing results
+
+After the writes have landed and been verified, present the summary:
 
 ```
 ## Quiz Results: [Topic]
@@ -113,29 +184,5 @@ After all questions are answered, present a summary:
 ### What needs more sunlight
 - [Concepts that need review — specific, encouraging guidance]
 ```
-
-### Update `spaced-review.json`
-
-Apply the update rules from the `spaced-repetition` KB. Per the v3 schema in the `state-schema` KB (1.10.0 — Bloom + Feynman become observable):
-
-1. **Read-tolerate v2:** if the file is at `version: 2`, inline-fill any concept missing `bloomLevel` / `feynmanPassed` / `consecutiveCorrectAtL4Plus` with the defaults from the `state-migration` KB before any writes.
-2. **Append a `reviewHistory` entry per concept reviewed** with `date`, `result`, AND `bloomLevel` (the level the question tested at — pulled from the Phase 2 Question Mix mapping).
-3. **Update `concepts[].bloomLevel`** to the highest Bloom level the learner answered correctly in this quiz, capped at the level actually tested. Never demote here — demotion is `/forget`'s job; this skill only ratchets up.
-4. **Update `concepts[].consecutiveCorrectAtL4Plus`:**
-   - If `result === "correct"` AND the question's `bloomLevel >= 4`: increment by 1.
-   - On any `result === "incorrect"` (at any Bloom level): reset to 0.
-   - On `result === "partial"`: leave unchanged.
-5. **Persist as `version: 3`** after writes (the inline-fill in step 1 makes this safe).
-
-Do NOT set `feynmanPassed` here — that field is owned by `/teach` Phase 2 Checkpoint / Phase 5 and `/explain` Phase 5 (skills that actually run an explain-back gate).
-
-### Update `progress.md` (v2 live document — quiz narrative goes here)
-
-Append a quiz entry at the top of `progress.md`: `## YYYY-MM-DD — Quiz (<topic>)` followed by score, concepts reviewed, Bloom-level adjustments, and any precision gaps noted. This is the canonical narrative of what happened during the quiz.
-
-### Update `state.json` (slim — no narrative)
-
-- Update `lastActivity` with ONE short sentence (≤120 chars), e.g. "Quizzed on indexing; 5/7 passes, B-tree mechanism solid."
-- Do NOT write `lastSessionSummary` — that field is removed in v2. Quiz narrative lives in `progress.md`.
 
 Close with: "Every question you answer — right or wrong — waters the garden. The ones you got wrong are not failures. They are the spots that need the most sunlight."

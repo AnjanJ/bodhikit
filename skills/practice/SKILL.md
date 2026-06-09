@@ -168,11 +168,43 @@ After the learner indicates they have completed (or attempted) the exercise:
 
      This is an **offer, not an auto-invocation**. The decomposition path stays available; pair is named as a peer alternative for learners who would do better with collaboration than further breakdown.
 
-6. **Update tracking:**
-   - Add new concepts to `.bodhi/spaced-review.json` per `spaced-repetition` KB rules.
-   - **Per-concept Bloom write (v3 schema, see `state-schema` KB):** on successful completion, update `concepts[].bloomLevel` to the exercise tier — Beginner = 2, Intermediate = 4, Advanced = 6 — capped at the highest level the learner actually demonstrated (a brute-force Advanced solve does not advance past 4). Preserve any higher prior value; never demote here. Apply the v2 → v3 inline-fill from the `state-migration` KB if needed. Do NOT set `feynmanPassed` here — that field is owned by `/teach` and `/explain` (skills that actually run an explain-back gate).
-   - Append an exercise entry to `.bodhi/progress.md` at the top (the new live entry): `## YYYY-MM-DD — Exercise: <topic>`, then **What was attempted**, **Code-review findings**, **Bloom adjustments** (write the numeric level), **Next**. Older entries stay in place until `/housekeep` rotates them.
-   - Update `.bodhi/state.json` (slim shape, no narrative): bump `lastSessionAt` if this opens a new session, set `lastActivity` to ONE short sentence pointing to what `progress.md` describes.
-   - On exercise completion, increment `learningWithBodhi/.bodhi-profile.json` `cumulativeStats.totalExercises` and update `lastUpdated`. Profile narrative belongs in `progress.md`, not in the profile file.
+6. **Update tracking — imperative writes (1.10.12 discipline):**
+
+   **CHECKPOINT-before-writes (name aloud BEFORE any Write call):**
+
+   > "I am about to write up to four files: `.bodhi/spaced-review.json` (concept added/updated), `.bodhi/progress.md` (exercise entry prepended), `.bodhi/state.json` (lastActivity), and `learningWithBodhi/.bodhi-profile.json` (cumulativeStats.totalExercises incremented). Computing now..."
+
+   **Step A — Update `.bodhi/spaced-review.json` (imperative).**
+   1. Read the file from disk.
+   2. Read-tolerate v2: inline-fill per `state-migration` KB if at `version: 2`.
+   3. Mutate parsed JSON in place (preserve non-canonical fields per 1.10.9):
+      - Add new concept entries per `spaced-repetition` KB rules (Box 1, `nextReview` = tomorrow, the three v3 defaults).
+      - **Per-concept Bloom write:** on successful completion, update `concepts[<concept>].bloomLevel` to the exercise tier — Beginner = 2, Intermediate = 4, Advanced = 6 — capped at the highest level the learner actually demonstrated (a brute-force Advanced solve does not advance past 4). Preserve any higher prior value; never demote. Do NOT set `feynmanPassed` here — owned by `/teach` and `/explain`.
+      - Set top-level `version: 3` if not already.
+   4. Write the file using the Write tool.
+   5. Verify: re-read; confirm `version: 3`, concept's `bloomLevel` matches the new value, non-canonical fields preserved on spot-check.
+
+   **Step B — Append to `.bodhi/progress.md` (imperative).**
+   1. Read the file.
+   2. Compose the new entry at the top: `## YYYY-MM-DD — Exercise: <topic>`, then **What was attempted**, **Code-review findings**, **Bloom adjustments** (write the numeric level), **Next**.
+   3. Construct new full file content: new entry + separator + existing content (preserved verbatim — Summary block intact).
+   4. Write the file using the Write tool.
+   5. Verify: re-read; confirm new entry at top and prior Summary block intact.
+
+   **Step C — Update `.bodhi/state.json` (imperative).**
+   1. Read the file.
+   2. Mutate in place: bump `lastSessionAt` if this opens a new session, set `lastActivity` to ONE short sentence pointing to what `progress.md` describes.
+   3. Write the file using the Write tool. Preserve every other field verbatim.
+   4. Verify: re-read; confirm `lastActivity` is the new sentence.
+
+   **Step D — Update `learningWithBodhi/.bodhi-profile.json` (imperative).** Fires on every successful exercise completion (no double-count guard needed — exercises are per-completion).
+   1. Read the file.
+   2. Mutate in place: increment `cumulativeStats.totalExercises` by 1. Update `lastUpdated` to today's ISO timestamp.
+   3. Write the file using the Write tool. Preserve every other field verbatim.
+   4. Verify: re-read; confirm counter incremented exactly once. Profile narrative belongs in `progress.md`, NOT in the profile file.
+
+   **CHECKPOINT-after-writes (name aloud):**
+
+   > "Files written and verified: spaced-review.json, progress.md, state.json, .bodhi-profile.json. Closing now."
 
 Close with specific feedback: "You [specific thing they did well]. That shows [what it indicates about their growth]."

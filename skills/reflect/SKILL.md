@@ -84,12 +84,49 @@ Collect concepts flagged for demotion across Q1 and Q3; auto-invoke `/forget --i
 
 ## Phase 4: Close the Session
 
-Update tracking files (shapes per `state-schema` KB):
+Update tracking files (shapes per `state-schema` KB). Per the 1.10.12 imperative-write discipline: every "update X" is a real Write call. The closing prose is the receipt, not a substitute for the writes.
 
-1. **`state.json`** (slim shape — no narrative fields): Update `lastSessionAt`, increment `totalSessions`, append to `sessionDates`, update `currentStreak`, update `lastActivity` (one short sentence, ≤120 chars). Do NOT write `lastSessionSummary` or `bloomResetNote` — those fields are removed in v2.
-2. **`progress.md`** (v2 live document — narrative goes here): Append a reflection entry at the top, structured as `## YYYY-MM-DD — Session N (Reflection)` followed by the Q1/Q2/Q3/Q4 responses, Bloom adjustments, and concepts flagged for demotion. This is the canonical narrative of what happened — `state.json.lastActivity` is just the one-line pointer to it.
-3. **`spaced-review.json`:** Apply box movements from confidence ratings (per `spaced-repetition` KB), update `lastReviewCheck`.
-4. **`learningWithBodhi/.bodhi-profile.json`:** Increment `cumulativeStats.totalSessions` (once per session per project — guard against double-count by checking whether today's date is already in `state.json.sessionDates`). Update `lastUpdated`. Do NOT touch `activeProjects` here; that array lives in `.bodhi-profile.projects.json` and only `/learn`, `/evaluate`, and `/mentor` touch it.
+**CHECKPOINT-before-writes (name aloud BEFORE any Write call):**
+
+> "I am about to write up to four files: `.bodhi/state.json` (session counters + lastActivity), `.bodhi/progress.md` (reflection entry prepended), `.bodhi/spaced-review.json` (box movements from confidence ratings), and `learningWithBodhi/.bodhi-profile.json` (cumulativeStats.totalSessions if not already counted today). Computing now..."
+
+**Step 1 — Update `.bodhi/state.json` (imperative).**
+
+1. Read the file.
+2. Mutate in place: update `lastSessionAt`, increment `totalSessions`, append today's date to `sessionDates` (idempotent — skip if already present), update `currentStreak`, update `lastActivity` (one short sentence, ≤120 chars). Do NOT write `lastSessionSummary` or `bloomResetNote` — those fields are removed in v2.
+3. Write the file using the Write tool. Preserve every other field verbatim.
+4. Verify: re-read; confirm counters incremented and `lastActivity` updated.
+
+**Step 2 — Update `.bodhi/progress.md` (imperative).** This is the v2 live document — narrative goes here.
+
+1. Read the file.
+2. Compose the new entry at the top: `## YYYY-MM-DD — Session N (Reflection)` followed by the Q1/Q2/Q3/Q4 responses, Bloom adjustments, and concepts flagged for demotion. This is the canonical narrative of what happened — `state.json.lastActivity` is just the one-line pointer to it.
+3. Construct new full file content: new entry + separator + existing content (preserved verbatim).
+4. Write the file using the Write tool.
+5. Verify: re-read; confirm new entry at top, prior Summary block intact.
+
+**Step 3 — Update `.bodhi/spaced-review.json` (imperative).**
+
+1. Read the file.
+2. Read-tolerate v2: inline-fill per `state-migration` KB if at `version: 2`.
+3. Mutate parsed JSON in place (preserve non-canonical fields per 1.10.9):
+   - Apply box movements from confidence ratings (per `spaced-repetition` KB).
+   - Update `lastReviewCheck` to today's ISO date.
+   - Set top-level `version: 3` if not already.
+4. Write the file using the Write tool.
+5. Verify: re-read; confirm `version: 3`, box movements landed.
+
+**Step 4 — Update `learningWithBodhi/.bodhi-profile.json` (imperative).**
+
+1. Check the double-count guard: was today's date already in `state.json.sessionDates` BEFORE step 1's append? If yes, skip — `totalSessions` already counted today. If no, proceed.
+2. Read `.bodhi-profile.json`.
+3. Mutate in place: increment `cumulativeStats.totalSessions` by 1. Update `lastUpdated` to today's ISO timestamp. Do NOT touch `activeProjects` here; that array lives in `.bodhi-profile.projects.json` and only `/learn`, `/evaluate`, and `/mentor` touch it.
+4. Write the file using the Write tool. Preserve every other field verbatim.
+5. Verify: re-read; confirm counter incremented exactly once.
+
+**CHECKPOINT-after-writes (name aloud):**
+
+> "Files written and verified: state.json, progress.md, spaced-review.json [+ profile if step 4 fired]. Closing now."
 
 Close with warmth and specific encouragement. Use streak acknowledgment if appropriate.
 

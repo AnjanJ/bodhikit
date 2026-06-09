@@ -325,6 +325,25 @@ if [ -f skills/teach/SKILL.md ]; then
 fi
 
 # ---------------------------------------------------------------------------
+# 43. Skills that write tracking JSON/MD files MUST use the 1.10.12
+#     imperative-write discipline: CHECKPOINT-before-writes naming aloud
+#     which files are about to be written, AND CHECKPOINT-after-writes
+#     naming aloud which files were verified. The 1.10.11 dogfood caught
+#     /quiz computing correct results, rendering a beautiful table, and
+#     persisting nothing — the same descriptive-vs-imperative defect
+#     1.7.1 fixed in /housekeep migrate. The fix is the same: every
+#     "update X" instruction must be a real Write tool call announced
+#     before the fact and verified after.
+# ---------------------------------------------------------------------------
+for s in quiz teach explain practice forget reflect pair evaluate; do
+  f="skills/$s/SKILL.md"
+  if [ ! -f "$f" ]; then continue; fi
+  if ! grep -qE 'CHECKPOINT-before-writes|CHECKPOINT-after-writes' "$f"; then
+    err "$f missing 1.10.12 imperative-write CHECKPOINTs (descriptive-vs-imperative defect — see 1.10.12 CHANGELOG)"
+  fi
+done
+
+# ---------------------------------------------------------------------------
 # 42. /learn Phase 3 and /plan Regenerate must require per-module
 #     "Prerequisites for next module:" declarations (1.10.10 fix —
 #     feeds the /teach Phase 1 gate's structured-declaration path).

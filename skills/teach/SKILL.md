@@ -192,17 +192,54 @@ Ask 2-3 questions mixing Bloom's levels: Level 2 (explain in own words), Level 3
 
 ### Update Tracking
 
+**⚠️ STOP — Read this before producing the user-facing transition.** Phase 5 has up to four required file writes (`spaced-review.json`, `progress.md`, `state.json`, and conditionally `.bodhi-profile.json`). The 1.10.11 dogfood proved an executor can compute the right updates, describe them in conversation, and persist nothing. The transition prose at the end is the *receipt* of the writes, not a substitute for them. If you produce the "If continuing" / "If stopping" prose without four Write tool calls actually landing on disk first, you have made the session invisible to every future skill.
+
+**CHECKPOINT-before-writes (name aloud BEFORE any Write call):**
+
+> "I am about to write four files: `.bodhi/spaced-review.json` (per-concept Bloom + Feynman gate), `.bodhi/progress.md` (session entry prepended), `.bodhi/state.json` (lastActivity + session counters), and conditionally `learningWithBodhi/.bodhi-profile.json` (cumulativeStats if the concept just reached Bloom 3+). Computing the changes now..."
+
 Apply the canonical update rules from the `spaced-repetition` KB. **Demonstrated understanding:** move up one box from current (max 5). **Struggled but got there:** treat as correct (the learner reached the goal under their own steam); move up one box. Do NOT silently equate partial success with failure — the KB defines no "partial" demote rule, and conflating struggle-but-arrived with incorrect-recall punishes the productive struggle the plugin is designed to reward.
 
-**Write per-concept Bloom (v3 schema, see `state-schema` KB):** map this session's observed performance to a Bloom level using the `blooms-taxonomy` KB indicators, and update `concepts[].bloomLevel` for the taught concept. Preserve any higher prior value (never demote — that is `/forget`'s job). If the v2 → v3 inline-fill is needed (file at version 2, missing fields), perform it before writing, per the `state-migration` KB.
+**Step 1 — Update `spaced-review.json` (imperative).** Use the Write tool, not state-description.
 
-**Feynman gate at retention check:** if the retention check explanation meets the `feynman-technique` KB's bar (clear, jargon-free, own words), set `concepts[].feynmanPassed = true`. Set, never unset. (May already be true from the Phase 2 Checkpoint — idempotent.)
+1. Read `.bodhi/spaced-review.json` from disk.
+2. Read-tolerate v2: if at `version: 2`, inline-fill the three v3 per-concept fields per the `state-migration` KB before any writes.
+3. Mutate the parsed JSON object in place (per the 1.10.9 in-place mutation discipline — preserve non-canonical fields like `precisionGap`, `lastResult` prose, `boxChanges`, etc.):
+   - **Per-concept Bloom write:** update `concepts[<taught concept>].bloomLevel` to the inferred level from this session's observed performance using the `blooms-taxonomy` KB indicators. Preserve any higher prior value (never demote — that is `/forget`'s job).
+   - **Feynman gate:** if the retention check explanation meets the `feynman-technique` KB's bar (clear, jargon-free, own words), set `concepts[<taught concept>].feynmanPassed = true`. Set, never unset.
+   - **Box + nextReview + lastReviewed + lastResult:** update per the `spaced-repetition` KB rules.
+   - Set top-level `version` to `3` if not already.
+4. Write `.bodhi/spaced-review.json` using the Write tool, overwriting the existing file.
+5. Verify: re-read the file. Confirm `version: 3`, the taught concept's `bloomLevel` is the new value, `feynmanPassed` is set if the gate fired, non-canonical fields preserved on a spot-check.
 
-Append a teaching entry to `progress.md` at the top — the new live entry. Structure: `## YYYY-MM-DD — Session N — <concept taught>`, then **Phases covered** (which of I-Do / We-Do / You-Do completed), **Outcomes**, **Bloom adjustments** (write the per-concept numeric level so prose and state agree), **Next**. Older live entries stay in place until `/housekeep` rotates them.
+**Step 2 — Update `progress.md` (imperative).**
 
-Update `state.json` (slim shape — no narrative): bump `lastSessionAt`, increment `totalSessions` if this opens a new session, update `currentModule`/`currentModuleIndex` if you advanced, set `lastActivity` to ONE short sentence pointing at what `progress.md` describes in full.
+1. Read `.bodhi/progress.md`.
+2. Compose the new entry at the top: `## YYYY-MM-DD — Session N — <concept taught>`, then **Phases covered** (which of I-Do / We-Do / You-Do completed), **Outcomes**, **Bloom adjustments** (write the per-concept numeric level so prose and state agree), **Next**.
+3. Construct new full file content: new entry + separator + existing content (which contains the prior live entry + Summary of earlier sessions block — both preserved verbatim).
+4. Write `.bodhi/progress.md` using the Write tool, overwriting the existing file.
+5. Verify: re-read. Confirm new entry at top, prior Summary block intact.
 
-If the concept reaches Bloom's Level 3+ as a result of this session, increment `learningWithBodhi/.bodhi-profile.json` `cumulativeStats.totalConceptsLearned`. Double-count guard: check the new `progress.md` live entry plus the "Summary of earlier sessions" block for any prior mention of this concept reaching Bloom's 3+; only increment if this is the first time.
+**Step 3 — Update `state.json` (imperative).**
+
+1. Read `.bodhi/state.json`.
+2. Mutate in place: bump `lastSessionAt`, increment `totalSessions` if this opens a new session (today's date not in `sessionDates` yet), update `currentModule`/`currentModuleIndex` if you advanced, set `lastActivity` to ONE short sentence (≤120 chars) pointing at what `progress.md` describes in full.
+3. Write `.bodhi/state.json` using the Write tool, overwriting the existing file. Preserve every other field verbatim.
+4. Verify: re-read. Confirm `lastActivity` is the new sentence; no v1 narrative fields re-introduced.
+
+**Step 4 — Conditionally update `.bodhi-profile.json` (imperative).** Only fires if the concept reached Bloom's Level 3+ as a result of this session.
+
+1. Read the new `progress.md` live entry plus the "Summary of earlier sessions" block. Double-count guard: scan for any prior mention of this concept reaching Bloom's 3+. If found, skip this step (already counted).
+2. If not found AND the concept just reached Bloom 3+, read `learningWithBodhi/.bodhi-profile.json`.
+3. Mutate in place: increment `cumulativeStats.totalConceptsLearned` by 1. Update `lastUpdated` to today's ISO timestamp.
+4. Write `.bodhi-profile.json` using the Write tool. Preserve every other field verbatim (per `state-schema` KB Update Rules).
+5. Verify: re-read. Confirm the counter incremented exactly once.
+
+**CHECKPOINT-after-writes (name aloud AFTER all writes land):**
+
+> "Files written and verified: spaced-review.json (concept Bloom now N), progress.md (session entry prepended), state.json (lastActivity updated). [+ profile if step 4 fired]"
+
+THEN proceed to the Transition section.
 
 ### Transition
 

@@ -2,6 +2,32 @@
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [1.10.12] - 2026-06-09
+
+### Fixed
+- **Imperative-write discipline applied across every v3 writer.** The 1.10.11 dogfood ran `/quiz` against `system-design` post-migration. The executor computed correct results — Bloom levels assessed, box transitions decided, demote logic applied honestly to "I forgot" answers — and rendered a beautiful results table with growing-well / needs-sunlight commentary. **Zero files were written.** Phase 3's "Update spaced-review.json" / "Update progress.md" / "Update state.json" instructions were read descriptively (compute the change, describe it) instead of imperatively (compute the change, perform the Write tool call). Same defect 1.7.1 fixed in `/housekeep migrate`; same defect 1.10.8 fixed in 5f-bis; surfacing again in `/quiz` proved the pattern is structural across the codebase.
+
+  Fix: every skill that touches tracking state now has the imperative-write discipline applied to each file write — explicit Read → mutate-in-place → Write tool call → re-read verification, with **CHECKPOINT-before-writes** (name aloud the files about to be written, before any Write call) and **CHECKPOINT-after-writes** (name aloud verified writes, before any user-facing report). The user-facing report is now explicitly framed as *the receipt of the writes*, not a substitute for them.
+
+  Skills updated: `/quiz` Phase 3, `/teach` Phase 5, `/explain` Update Tracking, `/practice` Phase 3 step 6, `/forget` Phase 3, `/reflect` Phase 4, `/pair` Session End, `/evaluate` Update Tracking. Every "update X" / "append to X" / "write X" instruction now reads as a Write tool call, not state description.
+
+### Added
+- **`dev/check.sh` rule 43** enforces the imperative-write CHECKPOINT discipline. Any of the eight state-writing skills missing CHECKPOINT-before-writes or CHECKPOINT-after-writes markers fails the lint. Prevents the descriptive-vs-imperative defect from creeping back into any of them.
+
+### Why this exists
+The dogfood loop's catch at 1.10.12 was the largest in the series. Prior passes caught skill-by-skill bugs (`/housekeep migrate` at 1.10.8, `/teach` Phase 1 gate at 1.10.10, `/quiz` Phase 3 at 1.10.12). Each pattern was the same: spec correct, executor reading descriptively instead of imperatively. The cumulative evidence makes it a structural problem, not a per-skill bug — and the fix has to be structural too.
+
+The pattern now codified across the eight v3 writers:
+- **STOP banner or equivalent** at the top of the write section, naming the failure mode.
+- **CHECKPOINT-before-writes** — executor names aloud the files about to be written, before the Write calls. This makes the writes a public commitment the executor cannot silently skip.
+- **Imperative steps for each file**: Read → mutate in place (per the 1.10.9 in-place mutation discipline preserving non-canonical fields) → Write → re-read verify.
+- **CHECKPOINT-after-writes** — executor names aloud the verified writes, before any user-facing report.
+- **User-facing prose framed as receipt**, not substitute.
+
+The lint rule 43 enforces the discipline at PR time. Future skill additions that touch state must adopt this pattern from the start; the lint catches missing checkpoints.
+
+This is the deepest dogfood-driven fix yet. It does not catch a new spec bug — it catches the *structural* problem that produces spec bugs of this class across every skill that writes state. The case for "schema-touching changes get an end-to-end dogfood pass before tagging" is now complete: pure-read traces (passes 1-4) catch spec bugs; live execution (passes 5+) catches executor-discipline bugs that pure-read cannot see by design.
+
 ## [1.10.11] - 2026-06-09
 
 ### Fixed

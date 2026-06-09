@@ -44,15 +44,37 @@ Do NOT moralize. Do NOT re-teach here. This skill is purely the demote action.
 
 **For this phase, reference the `spaced-repetition` KB for the demote rule and update mechanics.**
 
-For every concept in the queue, update `.bodhi/spaced-review.json` per the `spaced-repetition` KB demote rule: `box: 1`, `nextReview: tomorrow`, append a `reviewHistory` entry with `result: "incorrect"` and a note that this was learner-initiated (or invoked from `/reflect`).
+Two required file writes follow. Per the 1.10.12 imperative-write discipline: "update X" means a real Write tool call, not a state description.
 
-**Per-concept Bloom + Feynman semantics (v3 schema, see `state-schema` KB):**
-- **Reset `concepts[].consecutiveCorrectAtL4Plus` to `0`** — the mastery streak is broken when the learner signals retention has slipped.
-- **Preserve `concepts[].feynmanPassed` as-is** — Feynman passed once is forever; the demote is about retention, not understanding. The learner can re-pass the gate later if needed, but they do not "lose" the explanation they once produced.
-- **Preserve `concepts[].bloomLevel` as-is** — this skill captures retention drift via the box, not Bloom regression. (If Bloom level itself needs to drop, the right path is a fresh assessment or `/teach` re-entry, not `/forget`.)
-- Apply the v2 → v3 inline-fill from the `state-migration` KB if the file is at version 2.
+**CHECKPOINT-before-writes (name aloud BEFORE any Write call):**
 
-Update `.bodhi/state.json` `lastActivity` with a summary like "Demoted N concepts: A, B, C".
+> "I am about to demote N concepts: [list]. Writing two files: `.bodhi/spaced-review.json` (box→1, counter reset, history append per concept) and `.bodhi/state.json` (lastActivity). Computing now..."
+
+**Step 1 — Update `.bodhi/spaced-review.json` (imperative).**
+
+1. Read the file from disk.
+2. Read-tolerate v2: inline-fill per `state-migration` KB if at `version: 2`.
+3. Mutate parsed JSON in place (preserve non-canonical fields per 1.10.9):
+   - For every concept in the queue, apply the `spaced-repetition` KB demote rule: set `box: 1`, `nextReview: tomorrow`.
+   - Append a `reviewHistory` entry with `date: <today>`, `result: "incorrect"`, and a note that this was learner-initiated (or invoked from `/reflect`).
+   - **Per-concept Bloom + Feynman semantics (v3 schema):**
+     - **Reset `concepts[<concept>].consecutiveCorrectAtL4Plus` to `0`** — the mastery streak is broken when the learner signals retention has slipped.
+     - **Preserve `concepts[<concept>].feynmanPassed` as-is** — Feynman passed once is forever; the demote is about retention, not understanding. The learner can re-pass the gate later if needed, but they do not "lose" the explanation they once produced.
+     - **Preserve `concepts[<concept>].bloomLevel` as-is** — this skill captures retention drift via the box, not Bloom regression. (If Bloom level itself needs to drop, the right path is a fresh assessment or `/teach` re-entry, not `/forget`.)
+   - Set top-level `version: 3` if not already.
+4. Write the file using the Write tool, overwriting the existing file.
+5. Verify: re-read; confirm each demoted concept has `box: 1`, today's history entry present, counter at 0, `feynmanPassed` and `bloomLevel` unchanged on at least one spot-checked concept.
+
+**Step 2 — Update `.bodhi/state.json` (imperative).**
+
+1. Read the file.
+2. Mutate in place: set `lastActivity` to a summary like "Demoted N concepts: A, B, C" (≤120 chars).
+3. Write the file using the Write tool. Preserve every other field verbatim.
+4. Verify: re-read; confirm `lastActivity` updated.
+
+**CHECKPOINT-after-writes (name aloud):**
+
+> "Files written and verified: spaced-review.json (N concepts demoted), state.json (lastActivity)."
 
 ---
 
