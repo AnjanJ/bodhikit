@@ -134,6 +134,8 @@ Apply the update rules from the `spaced-repetition` KB. Per the v3 schema in the
 
 Do NOT set `feynmanPassed` here — that field is owned by `/teach` Phase 2 Checkpoint / Phase 5 and `/explain` Phase 5 (skills that actually run an explain-back gate).
 
+6. **Append a `sessionHistory[]` entry** for this quiz invocation, per the canonical `sessionHistory[].type` vocabulary in the `state-schema` KB. Use `type: "spaced-review"` when the quiz was triggered by due concepts (no explicit topic, or `current`); use `type: "quiz"` when invoked with an explicit topic. Include `date`, `conceptsReviewed`, `passes`, `partials`, `misses`, and optionally `boxChanges` (concept → "from → to"), `precisionGapMovement`, `habitObservations`, `calibrationNote`, `notes`. Do NOT invent a new top-level type — use `other` with a `subtype` if the situation is genuinely novel, and update the `state-schema` KB vocabulary table if the new type is recurring.
+
 ### Step 2 — Update `progress.md` (imperative)
 
 This is the v2 live document — quiz narrative goes here. **Real Write call required.**

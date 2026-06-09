@@ -5,14 +5,14 @@
   },
   "metadata": {
     "description": "Research-backed interactive coding tutor — learn by doing, not by copying. 20 skills, 4 agents, 18 knowledge bases.",
-    "version": "1.10.12"
+    "version": "1.10.13"
   },
   "plugins": [
     {
       "name": "bodhikit",
       "source": "./",
       "description": "Learn anything in tech with a wise, patient guide. Personalized learning plans, hands-on exercises, spaced repetition, Feynman technique, Bloom's taxonomy assessment, optional Socratic teach-back capstone. 20 skills, 4 agents, 18 knowledge bases, 1 path-scoped rule.",
-      "version": "1.10.12",
+      "version": "1.10.13",
       "keywords": ["claude-code", "learning", "tutor", "education", "spaced-repetition"]
     }
   ]

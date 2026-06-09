@@ -62,8 +62,9 @@ Two required file writes follow. Per the 1.10.12 imperative-write discipline: "u
      - **Preserve `concepts[<concept>].feynmanPassed` as-is** — Feynman passed once is forever; the demote is about retention, not understanding. The learner can re-pass the gate later if needed, but they do not "lose" the explanation they once produced.
      - **Preserve `concepts[<concept>].bloomLevel` as-is** — this skill captures retention drift via the box, not Bloom regression. (If Bloom level itself needs to drop, the right path is a fresh assessment or `/teach` re-entry, not `/forget`.)
    - Set top-level `version: 3` if not already.
+   - **Append a `sessionHistory[]` entry** with `type: "learner-forget"` (canonical per the `state-schema` KB type vocabulary). Include `date`, `conceptsDemoted: [<names>]`, `boxChanges` (concept → "from → to"), and an optional `notes` field describing why the learner chose to demote. Do NOT invent a new top-level type; the `learner-forget` value is canonical for this case.
 4. Write the file using the Write tool, overwriting the existing file.
-5. Verify: re-read; confirm each demoted concept has `box: 1`, today's history entry present, counter at 0, `feynmanPassed` and `bloomLevel` unchanged on at least one spot-checked concept.
+5. Verify: re-read; confirm each demoted concept has `box: 1`, today's history entry present, counter at 0, `feynmanPassed` and `bloomLevel` unchanged on at least one spot-checked concept. Confirm the new `sessionHistory[]` entry has `type: "learner-forget"`.
 
 **Step 2 — Update `.bodhi/state.json` (imperative).**
 

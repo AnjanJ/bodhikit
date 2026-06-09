@@ -2,6 +2,36 @@
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [1.10.13] - 2026-06-09
+
+### Added
+- **Canonical `sessionHistory[].type` vocabulary** documented in the `state-schema` KB. The pre-1.10.13 schema declared only `spaced-review` as an example, but live data in the wild carried at least four other types (`quiz`, `targeted-reteach`, `diagnostic-after-gap`, `learner-forget`) that skill executors invented without spec guidance. The 1.10.13 fix enumerates the full vocabulary as canonical:
+
+  | `type` | Written by | Meaning |
+  |---|---|---|
+  | `spaced-review` | `/quiz`, `/reflect` (spaced-review batch) | Routine spaced-review session covering due concepts |
+  | `quiz` | `/quiz` (explicit-topic invocation) | Quiz on a specific topic, not by schedule |
+  | `targeted-reteach` | `/teach` (re-entering a demoted concept) | Focused re-teach after demotion or precision-gap surfacing |
+  | `diagnostic-after-gap` | `/learn` Phase 1.5, `/assess`, `/continue` (after absence) | Diagnostic after meaningful gap |
+  | `learner-forget` | `/forget` | Learner-initiated demotion |
+  | `pair` | `/pair` Session End | Pair session touching tracked concepts |
+  | `practice` | `/practice` | Exercise session that introduced or reviewed concepts |
+  | `evaluate` | `/evaluate` | Comprehensive evaluation snapshot |
+  | `other` | any skill (escape hatch) | Genuinely novel; **MUST pair with a `subtype` field**; update this table if recurring |
+
+  Skills MUST use one of the canonical types OR `"other"` with a `subtype`. Inventing a new top-level type without updating the KB first is a contract violation — the same discipline that applies to top-level file shapes now applies to `sessionHistory[].type`.
+
+- **`/quiz` Phase 3 step 6** explicitly directs writing a `sessionHistory[]` entry, picking `spaced-review` vs `quiz` based on invocation context (due-concepts vs explicit-topic). Optional fields listed: `boxChanges`, `precisionGapMovement`, `habitObservations`, `calibrationNote`, `notes`.
+- **`/forget` Phase 3 step 1** explicitly directs writing a `sessionHistory[]` entry with `type: "learner-forget"`, including `conceptsDemoted`, `boxChanges`, and optional `notes` describing why the learner chose to demote.
+- **`dev/check.sh` rule 44** enforces that any skill writing to `sessionHistory[]` cites the canonical type vocabulary. Narrow check — looks for "append/write sessionHistory" verbs near a sessionHistory mention, not bare reads (so `/evaluate`'s read-only mention does not trigger).
+
+### Why this exists
+The 1.10.12 dogfood caught two live skills (`/quiz` and `/forget`) writing useful, well-formed sessionHistory entries with novel types. The data was fine — `learner-forget` is a perfectly reasonable classification — but the executor was inventing the contract on the fly, with no schema constraint guiding what types are valid. The 1.10.12 imperative-write fix made writes happen; 1.10.13 makes them happen *within a declared vocabulary*. Without this, two different executors could write the same situation under different type strings (`learner-forget` vs `forget` vs `manual-demote`), and downstream readers (`/evaluate`, `/progress`) would either crash on the inconsistency or silently miss entries.
+
+The `other` escape hatch is deliberate. The vocabulary table is meant to grow when real usage justifies it (add the row, ship the update), but the moment-to-moment escape hatch exists for executors that genuinely encounter a novel case mid-skill. The required `subtype` field for `other` entries surfaces the novelty so a future audit can see what types should be promoted to canonical.
+
+The `/forget` spec violation I initially diagnosed (writing `bloomLevel: 3` against the preserve rule) was a misreading on my part — the value came from the prior `/quiz` write, and `/forget` correctly preserved it. The diff format that Write tools emit makes every line look "added" because the whole file is rewritten; that visual cue mislead me into thinking `/forget` was the source. The actual `/forget` behavior on the live disk state is correct.
+
 ## [1.10.12] - 2026-06-09
 
 ### Fixed

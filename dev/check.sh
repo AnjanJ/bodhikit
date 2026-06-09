@@ -344,6 +344,27 @@ for s in quiz teach explain practice forget reflect pair evaluate; do
 done
 
 # ---------------------------------------------------------------------------
+# 44. Skills that write to sessionHistory[] in spaced-review.json MUST
+#     reference the state-schema KB's canonical type vocabulary (1.10.13
+#     fix). The 1.10.12 dogfood found four undocumented session types in
+#     the wild (quiz, targeted-reteach, diagnostic-after-gap, learner-
+#     forget); 1.10.13 documents them all and adds an "other" escape
+#     hatch with required subtype. Writers should cite the table rather
+#     than invent types.
+# ---------------------------------------------------------------------------
+# Only flag skills that actually WRITE sessionHistory (have "append" or
+# "write" verbs near a sessionHistory mention), not skills that just read.
+for s in quiz teach forget reflect pair practice; do
+  f="skills/$s/SKILL.md"
+  if [ ! -f "$f" ]; then continue; fi
+  if grep -qE 'append.*sessionHistory|sessionHistory.*append|sessionHistory.*write|write.*sessionHistory' "$f"; then
+    if ! grep -qiE 'canonical .*type|sessionHistory.*type|state-schema.*sessionHistory|type.*vocabulary' "$f"; then
+      err "$f writes sessionHistory[] but does not reference the canonical type vocabulary in state-schema KB (1.10.13 fix)"
+    fi
+  fi
+done
+
+# ---------------------------------------------------------------------------
 # 42. /learn Phase 3 and /plan Regenerate must require per-module
 #     "Prerequisites for next module:" declarations (1.10.10 fix —
 #     feeds the /teach Phase 1 gate's structured-declaration path).

@@ -309,6 +309,24 @@ Whole JSON; concepts grow but stay queryable. `/housekeep` does not rotate this 
 - Incorrect recall or learner-initiated `/forget`: `box: 1`, `nextReview: tomorrow`.
 - `sessionHistory` is append-only audit trail. `/evaluate` reads it; routine skills do not.
 
+**`sessionHistory[].type` canonical vocabulary (1.10.13).** The 1.10.0–1.10.12 work documented `spaced-review` as the only `type` value, but real data in the wild carries several others (caught by the live dogfood at 1.10.12 — see CHANGELOG). The full canonical set:
+
+| `type` | Written by | Meaning |
+|---|---|---|
+| `spaced-review` | `/quiz`, `/reflect` (spaced-review batch) | Routine spaced-review session covering due concepts. |
+| `quiz` | `/quiz` (explicit-topic invocation) | Quiz invoked on a specific topic, not by spaced-review schedule. |
+| `targeted-reteach` | `/teach` (re-entering a concept that demoted) | Focused re-teach of one or a few concepts after demotion or precision-gap surfacing. |
+| `diagnostic-after-gap` | `/learn` Phase 1.5, `/assess`, `/continue` (after long absence) | Diagnostic session after a meaningful absence to check what held vs decayed. |
+| `learner-forget` | `/forget` | Learner-initiated demotion of one or more concepts. |
+| `pair` | `/pair` Session End | Pair-programming session that touched at least one tracked concept. |
+| `practice` | `/practice` (when surfacing new concepts to spaced review) | Exercise session that introduced or reviewed concepts. |
+| `evaluate` | `/evaluate` | Comprehensive evaluation (snapshot, not a per-concept review). |
+| `other` | any skill | Escape hatch for genuinely novel session classifications. **MUST be paired with a `subtype: "<short label>"` field describing the kind of session.** Use sparingly — prefer extending this table over reaching for `other`. |
+
+Skills writing to `sessionHistory[]` MUST use one of the canonical types OR `"other"` with a `subtype`. Inventing a new top-level type without updating this KB first is a contract violation — the same `state-schema` discipline that applies to top-level file shapes applies here. If a new session classification is genuinely needed, update this table first, then update the writing skill.
+
+Optional fields on `sessionHistory[]` entries (all writers MAY include, none REQUIRED beyond `date` and `type`): `conceptsReviewed`, `passes`, `misses`, `partials`, `boxChanges` (object: concept name → `"from → to"` string), `precisionGapMovement` (`{closed, preserved, newlyOpened}` arrays), `habitObservations` (object: habit name → observation string), `notes` (free-form string), `calibrationNote` (one-sentence summary), `conceptsDemoted` (array for `learner-forget`), `subtype` (REQUIRED if `type` is `"other"`). Writers MAY add more optional fields; readers MUST tolerate unknowns. Real data in the wild also carries fields like `precisionGapMovement.preserved` with prose — preserving learner annotation is non-negotiable per the in-place mutation discipline (1.10.9).
+
 **Per-concept Bloom + Feynman fields (v3, 1.10.0).** These three fields make the mastery criterion observable from state — the `blooms-taxonomy` KB names mastery as "Level 4+ AND 3 consecutive correct at L4+ AND Box 4-5 AND Feynman passed," but pre-v3 none of those pieces were tracked per concept.
 
 - `bloomLevel`: integer 0–6. Current Bloom's level for this concept. `0` means uninitialized (the concept has been introduced but no skill has classified it yet). Writers MUST preserve the highest observed value; never demote here — demotion is `/forget`'s job (which resets the counter but is recorded via `box: 1`, not by lowering `bloomLevel`).
