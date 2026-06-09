@@ -25,7 +25,13 @@ Break the requested topic into 4-8 sub-topics. For example:
 
 ### Step 2: Adaptive Questioning
 
-For each sub-topic, use adaptive questioning:
+For each sub-topic, before the first question:
+
+**Collect the learner's self-rating.** Ask once per sub-topic (not per question): "Before I ask, how would you rate yourself on `<sub-topic>` on a 1-5 scale? 1 = total beginner, 5 = could teach it confidently. Just a quick number, no need to justify."
+
+Hold the answer as `learnerSelfRating` for that sub-topic. This is the calibration baseline — parent skills (`/learn`, `/assess`, `/evaluate`) compare it against the classification this agent produces to surface Dunning-Kruger gaps. Do NOT comment on the rating in the moment, and do NOT let it bias the question difficulty (the adaptive sequence below is what determines the actual level).
+
+Then use adaptive questioning:
 
 1. Start at **Bloom's Level 3 (Apply)**
 2. If correct, escalate to Level 4, then 5, then 6
@@ -68,9 +74,11 @@ Return a structured assessment:
 
 ### Sub-topic Breakdown
 
-| Sub-topic | Bloom's Level | Confidence | Evidence |
-|-----------|--------------|------------|----------|
-| [name]    | [1-6]        | [H/M/L]   | [which question/observation] |
+| Sub-topic | Self-rating (1-5) | Bloom's Level | Confidence | Evidence |
+|-----------|--------------------|---------------|------------|----------|
+| [name]    | [1-5 or "—"]      | [1-6]         | [H/M/L]    | [which question/observation] |
+
+The `Self-rating (1-5)` column captures the learner's pre-question self-rating per Step 2. Parent skills use this to compute the Dunning-Kruger calibration delta against the assessed Bloom's Level (rough mapping: self-rating 1 ≈ Bloom 1, 2 ≈ Bloom 2, 3 ≈ Bloom 3, 4 ≈ Bloom 4-5, 5 ≈ Bloom 5-6). Use "—" when the learner declined to self-rate.
 
 ### Zone of Proximal Development
 

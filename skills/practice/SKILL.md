@@ -40,6 +40,8 @@ Determine the learner's current level for exercise targeting.
 
 Design and deliver an exercise calibrated to the learner's level. Reference the `assessment-framework` knowledge base for exercise templates.
 
+Note: the Beginner / Intermediate / Advanced tiers below correspond to tiers 2-4 of the `constructivism` KB's project-progression ladder applied at exercise scope. The KB owns the full 5-tier ladder at project scope (via `/learn` and `/plan`); here we use it as a reference, not a restatement.
+
 ### For Beginners (Bloom's Level 1-2)
 
 Create starter files in the project's `exercises/` directory:

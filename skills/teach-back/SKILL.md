@@ -119,6 +119,8 @@ When the answers to Q1–Q4 are concrete and specific, restate them back as a on
 
 **CHECKPOINT: Do not advance to Phase 5 until the learner declares the draft ready for review.**
 
+**Reference the `constructivism` KB.** Phase 4 is the plugin's clearest instance of the KB's "fully independent" tier — the capstone where the learner constructs the artifact without scaffolding, and the silence below is the contract. Knowing is not enough; the construction *is* the demonstration.
+
 Create the file: `learningWithBodhi/<project>/teach-backs/<YYYY-MM-DD>-<slug>.md`. If the `teach-backs/` directory does not exist, create it.
 
 Write the file with a minimal scaffold derived from the Phase 3 thesis brief:

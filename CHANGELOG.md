@@ -2,6 +2,28 @@
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [1.10.3] - 2026-06-09
+
+### Added
+- **`/evaluate` Phase 2.5 — Predict Your Trajectory.** Before the Phase 3 trajectory-analyzer reveal, the skill collects three quick predictions from the learner: biggest growth, biggest gap, per-topic Bloom snapshot. Phase 4's report surfaces the calibration delta explicitly — what was predicted vs what the data shows — framed as the metacognition signal underneath every other skill. Across multiple evaluations the gap should shrink; that shrinkage *is* the calibration meta-skill. Capped at 60 seconds; quick predictions, not deliberation.
+- **`predictionDelta` field on `assessment-history.json` entries** (optional). Populated by `/evaluate` Phase 2.5; absent for other triggers. Fields: `predictedBiggestGrowth`, `measuredBiggestGrowth`, `predictedBiggestGap`, `measuredBiggestGap`, `perTopicBloomPredictions[]` (each `{name, predicted, measured}`), one-sentence `calibrationNote`. Documented in `state-schema` KB.
+- **`learnerSelfRating` collection in `skill-assessor` agent.** Before the first question on each sub-topic, the agent asks a single 1-5 self-rating. Output table gains a `Self-rating (1-5)` column. Parent skills (`/learn`, `/assess`, `/evaluate`) can compute Dunning-Kruger calibration deltas at sub-topic granularity. The rating does not bias question difficulty — the adaptive sequence remains independent.
+
+### Changed
+- **Eight KB references added at the canonical phase / mode** where the methodology was implicitly honored but not cited — closing the audit's "implicit citation" pattern:
+  - `/pair` Mode 2 now references `deliberate-practice` (Ping-Pong IS deliberate practice — edge-of-ability per round, immediate red→green feedback, variation across rounds enforced).
+  - `/teach` Phase 4 now references `desirable-difficulties` (the "slightly harder" framing now grounds in **generation** and **variation** specifically).
+  - `/debug-together` Phase 0 now references `growth-mindset` (the "praise the debugging process" instruction grounds in the false-effort nuance with concrete strategy-praise examples).
+  - `/evaluate` now references `metacognition` (Phase 2.5 is the load-bearing application).
+  - `/teach-back` Phase 4 now references `constructivism` (the Phase 4 silence rule is the KB's "fully independent" tier; teach-back is the plugin's capstone instance of project progression by level).
+  - `/mentor` Phase 4 now references `constructivism` for the spiral-curriculum mechanic; each suggested option must name the concept it revisits at a higher Bloom level.
+  - `/plan` Regenerate now references `zone-of-proximal-development`, `constructivism`, and `spaced-repetition` at the top of the mode; the cross-reference fix points to `/learn` Phase 3 (principles) plus Phase 4 (layout), not Phase 4 alone.
+  - `/practice` Phase 2 now cross-references the `constructivism` KB's 5-tier project ladder, noting Beginner/Intermediate/Advanced map to tiers 2-4 at exercise scope.
+- **Six new lint rules in `dev/check.sh`** (warn for now, promoted in 1.10.5): rules 28-33 enforce each of the above references at the right phase / mode.
+
+### Why this exists
+Ten audit findings (M10, M12, M14, M16, M18, M20, M23, M24, M26, A6) flagged a single pattern: the methodology was honored in practice — the right framing, the right pacing, the right principles — but not cited explicitly. The progressive-disclosure contract requires the cite: a phase that uses a methodology MUST load its KB, both so a contributor can trust the file is the canonical home and so the lint can catch drift. The fixes are mostly one-line additions; `/evaluate` Phase 2.5 is the substantive change because the audit identified it as the highest-leverage Dunning-Kruger calibration moment in the plugin — and one the existing flow simply skipped past.
+
 ## [1.10.2] - 2026-06-09
 
 ### Changed

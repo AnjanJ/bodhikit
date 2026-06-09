@@ -66,9 +66,11 @@ Present honestly but not overwhelmingly. Frame gaps as opportunities: "This is n
 
 ## Phase 4: Generate Options (Options)
 
-Present 2-3 concrete learning path options, each with: what to learn, why it is the logical next step, estimated duration, and what it enables.
+**Reference the `constructivism` KB for the spiral-curriculum mechanic — each suggested option must name at least one concept from prior projects that the new path will revisit at a *higher* Bloom level, not as repetition but as deepening.**
 
-Principles: build on strength (strong in JS? suggest Node before a new language), follow ZPD, use spiral curriculum, respect motivation (excitement beats optimal sequencing).
+Present 2-3 concrete learning path options, each with: what to learn, why it is the logical next step, estimated duration, what it enables, AND **the spiral**: one specific concept from a completed project that this path revisits at a higher Bloom target (e.g., "you reached Bloom 3 on async/await in the Node project; this path takes it to Bloom 5 by writing a runtime that schedules them").
+
+Principles: build on strength (strong in JS? suggest Node before a new language), follow ZPD, use spiral curriculum (per the `constructivism` KB — name the spiral concept explicitly per option), respect motivation (excitement beats optimal sequencing).
 
 "These are three paths I see. Each is valid. Which one resonates with you?"
 

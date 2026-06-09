@@ -353,7 +353,17 @@ Structured assessment data for analytical skills like `/evaluate` and `/progress
           "evidence": "string"
         }
       ],
-      "overallNote": "string"
+      "overallNote": "string",
+      "predictionDelta": {
+        "predictedBiggestGrowth": "string",
+        "measuredBiggestGrowth": "string",
+        "predictedBiggestGap": "string",
+        "measuredBiggestGap": "string",
+        "perTopicBloomPredictions": [
+          { "name": "string", "predicted": 0, "measured": 0 }
+        ],
+        "calibrationNote": "string"
+      }
     }
   ]
 }
@@ -363,6 +373,8 @@ Structured assessment data for analytical skills like `/evaluate` and `/progress
 - Skills that run assessments (`/learn` Phase 2, `/assess`, `/evaluate` Phase 2, `/plan regenerate`) MUST write an entry here. The prose version goes to `assessments/latest.md` (with the prior latest rotated to archive by `/housekeep`).
 - `/evaluate` reads this file for Bloom's-level-over-time analysis. Without it, evaluation can only compare initial vs current, not trajectory.
 - Not housekept. Routine skills read tail-N; only `/evaluate` reads the full series.
+
+**`predictionDelta` (optional, 1.10.3).** Populated by `/evaluate` Phase 2.5 when the learner answers the predict-your-trajectory prompts BEFORE the Phase 3 trajectory-analyzer reveal. This is the highest-leverage Dunning-Kruger calibration moment in the plugin — the learner predicts, the data is revealed, and the calibration gap (predicted vs measured) becomes a metacognition signal that grows or shrinks over multiple evaluations. Other triggers (`learn-phase2`, `assess`, `plan-regenerate`) leave the field absent. Absence is fine; readers treat missing as "not predicted." See the `metacognition` KB for the underlying Flavell self-monitoring research and the rationale for predict-before-reveal sequencing.
 
 ### `learningWithBodhi/<project>/.bodhi/resources.md`
 

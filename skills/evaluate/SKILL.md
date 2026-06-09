@@ -42,9 +42,31 @@ You MUST use the Agent tool to launch the `skill-assessor` agent. Provide all pl
 
 ---
 
+## Phase 2.5: Predict Your Trajectory (metacognition calibration)
+
+**For this phase, reference the `metacognition` KB for the Flavell self-monitoring frame and the Dunning-Kruger calibration rationale.**
+
+Before Phase 3 reveals the trajectory-analyzer report, ask the learner three short prediction questions. This is the highest-leverage calibration moment in the plugin: the learner predicts, the data is revealed, and the gap between prediction and measurement is itself a metacognition signal. Across multiple evaluations the gap should shrink — that shrinkage is mastery of self-assessment, the meta-skill underneath every other skill.
+
+Frame as a calibration check, not a quiz:
+
+> "Before we look at the data, let me ask three quick predictions. There is no penalty for being off — the gap between what you predict and what the data shows is itself the lesson. Calibration is a skill, like any other; it gets sharper with each rep."
+
+Ask one at a time. Cap the phase at 60 seconds — quick predictions, not deliberation.
+
+**Q1 — Biggest growth.** "Which topic do you think has grown the most since this project started?"
+
+**Q2 — Biggest gap.** "Which topic do you think still has the biggest gap from where you want to be?"
+
+**Q3 — Per-topic Bloom snapshot.** "For each of the project's major topics, what Bloom level do you think you are at now? Just the number, 1-6, for each — no need to justify." (List the 3-6 major topics from the plan; capture one number per topic.)
+
+Hold the answers in memory. Do NOT reveal the trajectory data yet — Phase 3's comparison is what makes this work.
+
+---
+
 ## Phase 3: Comparative Analysis
 
-**For this phase, reference the `blooms-taxonomy` KB for level criteria and the `spaced-repetition` KB for Leitner box semantics.**
+**For this phase, reference the `blooms-taxonomy` KB for level criteria and the `spaced-repetition` KB for Leitner box semantics. After presenting the trajectory data, surface the calibration delta from Phase 2.5 as a metacognition observation — what the learner predicted vs what the data shows.**
 
 Use the trajectory report from Phase 1 (or the manual analysis from the fallback) plus the fresh assessment from Phase 2.
 
@@ -72,6 +94,7 @@ Present a comprehensive report including:
 - **Areas Needing Attention:** 1-2 areas needing focus (framed as opportunities)
 - **Spaced Repetition Health:** count/percentage by retention level (Strong Box 4-5, Building Box 2-3, Needs Review Box 1)
 - **Key Concepts Status:** mastered, growing, review needed
+- **Calibration Check (Phase 2.5):** the learner's predictions alongside the data. For each prediction, name the gap honestly — not as a "wrong answer" but as a metacognition signal. *"You predicted `<X>` as biggest growth; the data shows `<Y>`. That is a calibration gap of <delta>. Over repeated evaluations, this gap shrinks — and that shrinkage is the metacognitive skill underneath every other skill."* If the predictions matched closely, name it as a win: *"Your prediction lined up with the data on `<topic>` — that is calibration in action, and it is real progress."*
 - **Recommendations:** specific next steps, suggested focus area with rationale, a project idea to solidify learning
 
 ---
@@ -109,7 +132,7 @@ Do NOT auto-invoke `/mentor`. Mirrors the `/teach-back` opt-in pattern exactly.
 ## Update Tracking
 
 - Append a new assessment block at the top of `.bodhi/assessments/latest.md` with the date and full evaluation results (Growth Map, Strengths, Active Growth, Areas Needing Attention, Spaced Repetition Health, Key Concepts Status, Recommendations). The prior assessment block stays in place — `/housekeep` will rotate it to `assessments/archive/` on its next run.
-- Append a structured entry to `.bodhi/assessment-history.json` (`trigger: "evaluate"`) per the `state-schema` KB.
+- Append a structured entry to `.bodhi/assessment-history.json` (`trigger: "evaluate"`) per the `state-schema` KB. Include the `predictionDelta` block populated from Phase 2.5: `predictedBiggestGrowth` / `measuredBiggestGrowth`, `predictedBiggestGap` / `measuredBiggestGap`, `perTopicBloomPredictions` (array of `{name, predicted, measured}`), and a one-sentence `calibrationNote` summarizing the overall delta (e.g., "Predictions aligned on growth, off by 1 level on perf gap"). Skip the block entirely if Phase 2.5 was skipped for any reason.
 - Append an evaluation entry to `.bodhi/progress.md` (live document) at the top: `## YYYY-MM-DD — Evaluation (milestone)`, then **Headline trajectory** (1-2 sentences on growth), **Bloom adjustments**, **Next chapter**. Full detail stays in `assessments/latest.md`; the `progress.md` entry is just the pointer + headline.
 - Update `.bodhi/state.json` (slim — no narrative): set `lastActivity` to ONE short sentence noting the evaluation. Do NOT write narrative fields.
 - Update `learningWithBodhi/.bodhi-profile.json` (top-level profile — cumulative + patterns): bump `cumulativeStats.totalMilestonesReached`. If a topic now has 3+ entries in `assessment-history.json` at Bloom's <3, add to `patterns.persistentChallenges`; 3+ at Bloom's 4+ adds to `patterns.consistentStrengths`.

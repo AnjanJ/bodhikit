@@ -75,6 +75,8 @@ Explain this to the learner: "I will describe what to build. You type it. Even i
 
 **Research basis:** Combines pair programming with Test-Driven Development. Each participant writes tests and implementation alternately, ensuring both engage with all parts of the code.
 
+**Reference the `deliberate-practice` KB.** Ping-pong IS the textbook deliberate-practice loop — targeted skill at the learner's edge, immediate red→green feedback, repetition with variation. Each ping-pong test MUST isolate ONE skill at the learner's edge of ability and provide an immediate pass/fail signal. **Vary the behavior under test across rounds** — same shape twice in a row collapses to rote pattern-matching. Different input shape, different edge case, different domain.
+
 ### Flow
 
 1. **Explain the pattern**: "We are going to play ping-pong. I write a failing test. You make it pass. Then you write the next failing test. I describe how to make it pass. Back and forth."

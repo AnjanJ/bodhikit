@@ -97,7 +97,7 @@ Skip the offer when: (a) the concept is purely conceptual (no code to type), (b)
 
 ## Phase 4: Independent Practice
 
-**Reference the `deliberate-practice` and `assessment-framework` knowledge bases.**
+**Reference the `deliberate-practice`, `desirable-difficulties`, and `assessment-framework` knowledge bases.**
 
 ### You Do (The Exercise)
 
@@ -109,7 +109,7 @@ The learner works alone. Calibrate scaffolding to level:
 | 3-4 | Exercise description + test cases, no starter code |
 | 5-6 | Problem statement only |
 
-The exercise should be slightly harder than the guided example (desirable difficulty). Set clear success criteria.
+The exercise should be slightly harder than the guided example — per the `desirable-difficulties` KB, specifically **generation** (the learner constructs the solution, not recognizes it) and **variation** (different context from the guided example, not the same shape with different names). Set clear success criteria.
 
 Tell them: "Struggle is where the learning lives. Try for at least 5 minutes before asking."
 

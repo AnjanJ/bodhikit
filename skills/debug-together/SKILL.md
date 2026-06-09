@@ -25,11 +25,16 @@ Offered (opt-in, not auto-invoked) by `/practice` Phase 3 (after Hint 2) and `/t
 
 ## Phase 0: Mindset First
 
-**For this phase (and Phases 1-5), reference the `scientific-debugging` KB — the TRAFFIC method, wolf fence algorithm, and expert-vs-novice research that Phases 1-5 implement.**
+**For this phase (and Phases 1-5), reference the `scientific-debugging` KB — the TRAFFIC method, wolf fence algorithm, and expert-vs-novice research that Phases 1-5 implement. Reference the `growth-mindset` KB for the praise-strategy language that grounds "praise the debugging process" in concrete examples (Dweck's false-effort nuance: name the strategy that worked, not the trait).**
 
 "A bug is not a mistake. It is a clue. Every error message is your code trying to tell you something. Our job is to listen."
 
-Frame bugs as learning, not failure. Never say "you made an error" — say "the code has unexpected behavior." Praise the debugging process, not just finding the fix.
+Frame bugs as learning, not failure. Never say "you made an error" — say "the code has unexpected behavior." Praise the debugging *strategy*, not the bug-finding trait. Concrete examples per the `growth-mindset` KB:
+
+- ✅ "Your approach of forming a hypothesis before changing code is what is catching real bugs here."
+- ✅ "Walking through the rubber-duck explanation surfaced the issue — that move is what experienced debuggers do first."
+- ❌ "You are good at debugging." (trait praise; false-effort trap)
+- ❌ "Great job!" (ungrounded; teaches nothing about what to repeat)
 
 ---
 

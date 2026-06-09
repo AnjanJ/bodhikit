@@ -410,6 +410,71 @@ for s in pair debug-together mentor; do
 done
 
 # ---------------------------------------------------------------------------
+# 28. /pair Mode 2 must reference deliberate-practice KB (M10 fix).
+# ---------------------------------------------------------------------------
+# Ping-Pong is a textbook deliberate-practice loop; citing the KB makes
+# edge-of-ability targeting and per-round variation enforceable.
+if [ -f skills/pair/SKILL.md ]; then
+  mode2=$(awk '/^## Mode 2/,/^## Mode 3/' skills/pair/SKILL.md)
+  if ! printf '%s' "$mode2" | grep -q 'deliberate-practice'; then
+    warn "skills/pair/SKILL.md Mode 2 does not reference deliberate-practice KB (M10 fix)"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
+# 29. /teach Phase 4 must reference desirable-difficulties KB (M12 fix).
+# ---------------------------------------------------------------------------
+if [ -f skills/teach/SKILL.md ]; then
+  phase4=$(awk '/^## Phase 4/,/^## Phase 5/' skills/teach/SKILL.md)
+  if ! printf '%s' "$phase4" | grep -q 'desirable-difficulties'; then
+    warn "skills/teach/SKILL.md Phase 4 does not reference desirable-difficulties KB (M12 fix)"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
+# 30. /debug-together Phase 0 must reference growth-mindset KB (M16 fix).
+# ---------------------------------------------------------------------------
+if [ -f skills/debug-together/SKILL.md ]; then
+  phase0=$(awk '/^## Phase 0/,/^## Phase 1/' skills/debug-together/SKILL.md)
+  if ! printf '%s' "$phase0" | grep -q 'growth-mindset'; then
+    warn "skills/debug-together/SKILL.md Phase 0 does not reference growth-mindset KB (M16 fix)"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
+# 31. /evaluate must reference metacognition KB and have a Phase 2.5 prediction step (M18 fix).
+# ---------------------------------------------------------------------------
+if [ -f skills/evaluate/SKILL.md ]; then
+  if ! grep -q 'metacognition' skills/evaluate/SKILL.md; then
+    warn "skills/evaluate/SKILL.md does not reference metacognition KB (M18 fix)"
+  fi
+  if ! grep -qE '## Phase 2\.5|Predict Your Trajectory' skills/evaluate/SKILL.md; then
+    warn "skills/evaluate/SKILL.md missing Phase 2.5 prediction step (M18 fix)"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
+# 32. /teach-back, /mentor, /plan must reference constructivism KB
+#     (M23, M24, M26 fixes).
+# ---------------------------------------------------------------------------
+for s in teach-back mentor plan; do
+  f="skills/$s/SKILL.md"
+  if [ ! -f "$f" ]; then continue; fi
+  if ! grep -q 'constructivism' "$f"; then
+    warn "$f does not reference constructivism KB (M23/M24/M26 fix)"
+  fi
+done
+
+# ---------------------------------------------------------------------------
+# 33. skill-assessor agent must collect learner self-rating (M20 fix).
+# ---------------------------------------------------------------------------
+if [ -f agents/skill-assessor.md ]; then
+  if ! grep -qiE 'self-rating|learnerSelfRating|rate yourself' agents/skill-assessor.md; then
+    warn "agents/skill-assessor.md does not collect learner self-rating (M20 fix)"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
 echo
 if [ "$warn_count" -gt 0 ]; then
   echo "$warn_count warning(s) above. v1.7.0 soft-warn; will be hard-fail in 1.10.5."
