@@ -1,0 +1,817 @@
+#!/usr/bin/env python3
+"""bodhi-state — deterministic writer for BodhiKit tracking files.
+
+Skills decide WHAT happened (the pedagogical judgment); this script performs
+the file mutations (the mechanical part). It owns: Leitner box math, the
+bloomLevel ratchet, the consecutiveCorrectAtL4Plus counter, sessionHistory
+type vocabulary, unknown-field preservation, the mastery formula, the
+prerequisite gate verdict, and the v2->v3 spaced-review migration.
+
+Canonical shapes: knowledge/state-schema/SKILL.md. Canonical intervals and
+update rules: knowledge/spaced-repetition/SKILL.md. This script implements
+those KBs; if they change, change this script in the same PR (dev/check.sh
+pins the constants).
+
+No dependencies beyond the Python 3 standard library.
+
+All subcommands print a JSON result to stdout. Exit 0 = success, 1 = error
+(human-readable message on stderr plus JSON error object on stdout when
+possible), 2 = bad usage.
+"""
+
+import argparse
+import datetime
+import json
+import os
+import shutil
+import sys
+
+# --- Canonical constants (mirrors spaced-repetition KB; lint pins these) ---
+
+BOX_INTERVALS = {1: 1, 2: 3, 3: 7, 4: 14, 5: 30}
+MAX_BOX = 5
+
+# Canonical sessionHistory[].type vocabulary (state-schema KB, 1.10.13).
+SESSION_TYPES = {
+    "spaced-review", "quiz", "targeted-reteach", "diagnostic-after-gap",
+    "learner-forget", "pair", "practice", "evaluate", "other",
+}
+
+CONFIDENCE_VALUES = {"sure", "mostly", "guessing"}
+
+# Prerequisite-gate recency window (1.11.0): a bloomLevel >= 3 concept only
+# auto-satisfies the gate if its retention evidence is current — box >= 3 OR
+# reviewed within this many days. Otherwise it is "stale" and the gate offers
+# a quick reconfirm instead of a free pass.
+GATE_RECENCY_DAYS = 30
+
+PROFILE_COUNTERS = {
+    "totalSessions", "totalExercises", "totalConceptsLearned",
+    "totalMilestonesReached", "totalProjects", "teachBacksWritten",
+    "teachBacksPublished",
+}
+
+
+# --- Helpers ---------------------------------------------------------------
+
+def today():
+    return datetime.date.today()
+
+
+def iso(d):
+    return d.isoformat()
+
+
+def now_iso():
+    return datetime.datetime.now().replace(microsecond=0).isoformat()
+
+
+def parse_date(s):
+    if not s:
+        return None
+    try:
+        return datetime.date.fromisoformat(str(s)[:10])
+    except ValueError:
+        return None
+
+
+def die(msg, code=1):
+    print(json.dumps({"ok": False, "error": msg}))
+    print(f"bodhi-state: {msg}", file=sys.stderr)
+    sys.exit(code)
+
+
+def emit(obj):
+    obj.setdefault("ok", True)
+    print(json.dumps(obj, indent=2, ensure_ascii=False))
+
+
+def load_json(path):
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def write_json(path, obj):
+    """Atomic write: temp file in the same directory, then rename."""
+    tmp = path + ".bodhi-state.tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(obj, f, indent=2, ensure_ascii=False)
+        f.write("\n")
+    os.replace(tmp, path)
+
+
+def bodhi_dir(project):
+    d = os.path.join(project, ".bodhi")
+    if not os.path.isdir(d):
+        die(f"no .bodhi/ directory under {project!r} — is this a BodhiKit project?")
+    return d
+
+
+def sr_path(project):
+    return os.path.join(bodhi_dir(project), "spaced-review.json")
+
+
+def state_path(project):
+    return os.path.join(bodhi_dir(project), "state.json")
+
+
+def load_spaced_review(project, create=False):
+    path = sr_path(project)
+    if not os.path.exists(path):
+        if create:
+            return path, {"version": 3, "lastReviewCheck": None,
+                          "concepts": [], "sessionHistory": []}
+        die(f"{path} does not exist")
+    data = load_json(path)
+    # Read-tolerate v1/v2: fill v3 per-concept fields in memory; persisted on
+    # the next write (state-migration KB pattern).
+    for c in data.get("concepts", []):
+        c.setdefault("bloomLevel", 0)
+        c.setdefault("feynmanPassed", False)
+        c.setdefault("consecutiveCorrectAtL4Plus", 0)
+        c.setdefault("reviewHistory", [])
+    data.setdefault("sessionHistory", [])
+    return path, data
+
+
+def find_concept(data, name):
+    for c in data.get("concepts", []):
+        if c.get("name", "").strip().lower() == name.strip().lower():
+            return c
+    return None
+
+
+def new_concept(name, module, question=""):
+    t = today()
+    return {
+        "name": name,
+        "module": module,
+        "introduced": iso(t),
+        "box": 1,
+        "nextReview": iso(t + datetime.timedelta(days=BOX_INTERVALS[1])),
+        "lastReviewed": None,
+        "question": question,
+        "lastResult": "",
+        "bloomLevel": 0,
+        "feynmanPassed": False,
+        "consecutiveCorrectAtL4Plus": 0,
+        "reviewHistory": [],
+    }
+
+
+def find_profile(project):
+    """Walk up from the project dir looking for .bodhi-profile.json."""
+    d = os.path.abspath(project)
+    for _ in range(4):
+        p = os.path.join(d, ".bodhi-profile.json")
+        if os.path.exists(p):
+            return p
+        parent = os.path.dirname(d)
+        if parent == d:
+            break
+        d = parent
+    return None
+
+
+def apply_review(concept, result, tested_bloom, confidence=None, note=None,
+                 source=None):
+    """Canonical per-concept update (spaced-repetition + state-schema KBs).
+
+    correct   -> box up one (max 5), nextReview = today + new interval
+    incorrect -> box 1, nextReview tomorrow, counter reset
+    partial   -> box held, nextReview tomorrow (re-test soon)
+    bloomLevel only ever ratchets up (demotion is /forget's job, and even
+    /forget demotes the box, not the Bloom classification).
+    """
+    t = today()
+    old_box = concept.get("box", 1)
+    if result == "correct":
+        concept["box"] = min(old_box + 1, MAX_BOX)
+        concept["nextReview"] = iso(t + datetime.timedelta(days=BOX_INTERVALS[concept["box"]]))
+        if tested_bloom is not None:
+            concept["bloomLevel"] = max(concept.get("bloomLevel", 0), tested_bloom)
+            if tested_bloom >= 4:
+                concept["consecutiveCorrectAtL4Plus"] = concept.get("consecutiveCorrectAtL4Plus", 0) + 1
+    elif result == "incorrect":
+        concept["box"] = 1
+        concept["nextReview"] = iso(t + datetime.timedelta(days=1))
+        concept["consecutiveCorrectAtL4Plus"] = 0
+    elif result == "partial":
+        concept["nextReview"] = iso(t + datetime.timedelta(days=1))
+    else:
+        die(f"result must be correct|incorrect|partial, got {result!r}")
+    concept["lastReviewed"] = iso(t)
+    concept["lastResult"] = note or result
+    entry = {"date": iso(t), "result": result,
+             "bloomLevel": tested_bloom if tested_bloom is not None else 0}
+    if confidence:
+        entry["confidence"] = confidence
+    if source:
+        entry["source"] = source
+    concept.setdefault("reviewHistory", []).append(entry)
+    return {"concept": concept["name"], "box": f"{old_box} -> {concept['box']}",
+            "bloomLevel": concept.get("bloomLevel", 0),
+            "consecutiveCorrectAtL4Plus": concept.get("consecutiveCorrectAtL4Plus", 0),
+            "nextReview": concept["nextReview"]}
+
+
+# --- Subcommands ------------------------------------------------------------
+
+def cmd_add_concept(args):
+    path, data = load_spaced_review(args.project, create=True)
+    if find_concept(data, args.concept):
+        emit({"action": "noop", "reason": f"concept {args.concept!r} already tracked"})
+        return
+    data.setdefault("concepts", []).append(
+        new_concept(args.concept, args.module, args.question or ""))
+    data["version"] = 3
+    write_json(path, data)
+    emit({"action": "added", "concept": args.concept, "module": args.module,
+          "box": 1, "nextReview": data["concepts"][-1]["nextReview"]})
+
+
+def cmd_record_review(args):
+    if args.confidence and args.confidence not in CONFIDENCE_VALUES:
+        die(f"confidence must be one of {sorted(CONFIDENCE_VALUES)}")
+    path, data = load_spaced_review(args.project, create=True)
+    concept = find_concept(data, args.concept)
+    created = False
+    if concept is None:
+        if not args.module:
+            die(f"concept {args.concept!r} not tracked; pass --module to auto-create it")
+        concept = new_concept(args.concept, args.module, args.question or "")
+        data.setdefault("concepts", []).append(concept)
+        created = True
+    change = apply_review(concept, args.result, args.tested_bloom,
+                          confidence=args.confidence, note=args.note,
+                          source=args.source)
+    data["version"] = 3
+    data["lastReviewCheck"] = now_iso()
+    write_json(path, data)
+    change["created"] = created
+    emit(change)
+
+
+def cmd_set_feynman(args):
+    path, data = load_spaced_review(args.project)
+    concept = find_concept(data, args.concept)
+    if concept is None:
+        die(f"concept {args.concept!r} not tracked")
+    concept["feynmanPassed"] = True  # set, never unset
+    data["version"] = 3
+    write_json(path, data)
+    emit({"concept": concept["name"], "feynmanPassed": True})
+
+
+def cmd_record_session(args):
+    if args.type not in SESSION_TYPES:
+        die(f"type {args.type!r} is not in the canonical vocabulary "
+            f"{sorted(SESSION_TYPES)} (state-schema KB). Use 'other' with "
+            f"--subtype for genuinely novel sessions.")
+    if args.type == "other" and not args.subtype:
+        die("type 'other' requires --subtype (state-schema KB)")
+    extra = {}
+    if args.data:
+        try:
+            extra = json.loads(args.data)
+        except json.JSONDecodeError as e:
+            die(f"--data is not valid JSON: {e}")
+        if not isinstance(extra, dict):
+            die("--data must be a JSON object")
+    path, data = load_spaced_review(args.project, create=True)
+    entry = {"date": iso(today()), "type": args.type}
+    if args.subtype:
+        entry["subtype"] = args.subtype
+    entry.update(extra)
+    data.setdefault("sessionHistory", []).append(entry)
+    data["version"] = 3
+    write_json(path, data)
+    emit({"action": "session-recorded", "entry": entry})
+
+
+ASSESSMENT_TRIGGERS = {"learn-phase2", "assess", "evaluate", "plan-regenerate"}
+
+
+def cmd_record_assessment(args):
+    """Append an entry to the append-only assessment-history.json."""
+    if args.trigger not in ASSESSMENT_TRIGGERS:
+        die(f"trigger must be one of {sorted(ASSESSMENT_TRIGGERS)}")
+    try:
+        entry = json.loads(args.data)
+    except json.JSONDecodeError as e:
+        die(f"--data is not valid JSON: {e}")
+    if not isinstance(entry, dict):
+        die("--data must be a JSON object")
+    entry["date"] = entry.get("date") or iso(today())
+    entry["trigger"] = args.trigger
+    path = os.path.join(bodhi_dir(args.project), "assessment-history.json")
+    if os.path.exists(path):
+        data = load_json(path)
+    else:
+        data = {"version": 1, "entries": []}
+    data.setdefault("entries", []).append(entry)
+    write_json(path, data)
+    emit({"action": "assessment-recorded", "trigger": args.trigger,
+          "entries": len(data["entries"])})
+
+
+def cmd_forget(args):
+    names = [n.strip() for n in args.concepts.split(",") if n.strip()]
+    if not names:
+        die("no concepts given")
+    path, data = load_spaced_review(args.project)
+    missing = [n for n in names if find_concept(data, n) is None]
+    if missing:
+        die(f"not tracked: {', '.join(missing)} — resolve names first "
+            f"(or add-concept them)")
+    t = today()
+    box_changes = {}
+    for n in names:
+        c = find_concept(data, n)
+        box_changes[c["name"]] = f"{c.get('box', 1)} -> 1"
+        c["box"] = 1
+        c["nextReview"] = iso(t + datetime.timedelta(days=1))
+        c["consecutiveCorrectAtL4Plus"] = 0
+        # feynmanPassed and bloomLevel preserved by design (state-schema KB).
+        c.setdefault("reviewHistory", []).append(
+            {"date": iso(t), "result": "incorrect", "bloomLevel": 0,
+             "note": "learner-initiated demote"})
+        c["lastReviewed"] = iso(t)
+        c["lastResult"] = "learner-initiated demote"
+    entry = {"date": iso(t), "type": "learner-forget",
+             "conceptsDemoted": [find_concept(data, n)["name"] for n in names],
+             "boxChanges": box_changes}
+    if args.note:
+        entry["notes"] = args.note
+    data.setdefault("sessionHistory", []).append(entry)
+    data["version"] = 3
+    write_json(path, data)
+    # lastActivity pointer in state.json
+    sp = state_path(args.project)
+    if os.path.exists(sp):
+        state = load_json(sp)
+        state["lastActivity"] = (args.activity or
+                                 f"Demoted {len(names)} concept(s): {', '.join(names)}")[:120]
+        write_json(sp, state)
+    emit({"action": "demoted", "concepts": names, "boxChanges": box_changes})
+
+
+def cmd_touch_state(args):
+    sp = state_path(args.project)
+    if not os.path.exists(sp):
+        die(f"{sp} does not exist")
+    state = load_json(sp)
+    t = iso(today())
+    dates = state.setdefault("sessionDates", [])
+    new_session = t not in dates
+    if new_session:
+        yesterday = iso(today() - datetime.timedelta(days=1))
+        state["currentStreak"] = (state.get("currentStreak", 0) + 1
+                                  if yesterday in dates else 1)
+        dates.append(t)
+        state["totalSessions"] = state.get("totalSessions", 0) + 1
+    state["lastSessionAt"] = now_iso()
+    if args.activity:
+        state["lastActivity"] = args.activity[:120]
+    if args.module:
+        if state.get("currentModule") and state["currentModule"] != args.module:
+            state["previousModule"] = state["currentModule"]
+        state["currentModule"] = args.module
+    if args.module_index is not None:
+        state["currentModuleIndex"] = args.module_index
+    if args.phase:
+        state["currentPhase"] = args.phase
+    if args.completion is not None:
+        state["overallCompletion"] = max(0, min(100, args.completion))
+    state["version"] = 2
+    write_json(sp, state)
+    emit({"action": "state-updated", "newSession": new_session,
+          "currentStreak": state.get("currentStreak"),
+          "totalSessions": state.get("totalSessions"),
+          "lastActivity": state.get("lastActivity")})
+
+
+def cmd_bump_profile(args):
+    if args.counter not in PROFILE_COUNTERS:
+        die(f"counter must be one of {sorted(PROFILE_COUNTERS)}")
+    p = find_profile(args.project)
+    if not p:
+        die("no .bodhi-profile.json found walking up from the project "
+            "(it is created by /learn)")
+    profile = load_json(p)
+    stats = profile.setdefault("cumulativeStats", {})
+    stats[args.counter] = stats.get(args.counter, 0) + 1
+    profile["lastUpdated"] = now_iso()
+    write_json(p, profile)
+    emit({"action": "profile-bumped", "counter": args.counter,
+          "value": stats[args.counter], "file": p})
+
+
+def cmd_due(args):
+    _, data = load_spaced_review(args.project)
+    t = today()
+    due = []
+    for c in data.get("concepts", []):
+        nr = parse_date(c.get("nextReview"))
+        if nr and nr <= t:
+            due.append({"name": c["name"], "module": c.get("module", ""),
+                        "box": c.get("box", 1), "nextReview": c.get("nextReview"),
+                        "bloomLevel": c.get("bloomLevel", 0),
+                        "question": c.get("question", "")})
+    due.sort(key=lambda d: (d["box"], d["nextReview"]))
+    emit({"dueToday": len(due), "concepts": due})
+
+
+def is_mastered(c):
+    """Canonical mastery formula (state-schema KB). Do not redefine inline."""
+    return (c.get("bloomLevel", 0) >= 4
+            and c.get("consecutiveCorrectAtL4Plus", 0) >= 3
+            and c.get("box", 1) >= 4
+            and c.get("feynmanPassed", False) is True)
+
+
+def cmd_mastery(args):
+    _, data = load_spaced_review(args.project)
+    t = today()
+    modules = {}
+    rollup = {"strong": [], "building": [], "needs_review": []}
+    due_today, due_week = [], []
+    for c in data.get("concepts", []):
+        m = modules.setdefault(c.get("module", "(none)"),
+                               {"concepts": 0, "mastered": 0, "classified": 0})
+        m["concepts"] += 1
+        if c.get("bloomLevel", 0) > 0:
+            m["classified"] += 1
+        if is_mastered(c):
+            m["mastered"] += 1
+        box = c.get("box", 1)
+        tier = "strong" if box >= 4 else ("building" if box >= 2 else "needs_review")
+        rollup[tier].append(c["name"])
+        nr = parse_date(c.get("nextReview"))
+        if nr:
+            if nr <= t:
+                due_today.append(c["name"])
+            elif nr <= t + datetime.timedelta(days=7):
+                due_week.append(c["name"])
+    for m in modules.values():
+        # Legacy display rule (1.10.7): all-bloomLevel:0 module -> not computable.
+        m["masteryPct"] = (None if m["classified"] == 0
+                           else round(100 * m["mastered"] / m["concepts"]))
+    emit({"modules": modules, "retentionRollup": {k: len(v) for k, v in rollup.items()},
+          "retentionConcepts": rollup, "dueToday": due_today, "dueThisWeek": due_week})
+
+
+def cmd_calibration(args):
+    """Confidence-vs-outcome calibration from reviewHistory[].confidence."""
+    _, data = load_spaced_review(args.project)
+    buckets = {c: {"correct": 0, "incorrect": 0, "partial": 0}
+               for c in CONFIDENCE_VALUES}
+    overconfident_events = []
+    underconfident_events = []
+    total = 0
+    for c in data.get("concepts", []):
+        for h in c.get("reviewHistory", []):
+            conf = h.get("confidence")
+            if conf not in CONFIDENCE_VALUES:
+                continue
+            res = h.get("result")
+            if res not in ("correct", "incorrect", "partial"):
+                continue
+            buckets[conf][res] += 1
+            total += 1
+            if conf == "sure" and res == "incorrect":
+                overconfident_events.append({"concept": c["name"], "date": h.get("date")})
+            if conf == "guessing" and res == "correct":
+                underconfident_events.append({"concept": c["name"], "date": h.get("date")})
+    def rate(n, d):
+        return round(n / d, 2) if d else None
+    sure = buckets["sure"]
+    guess = buckets["guessing"]
+    emit({
+        "taggedAnswers": total,
+        "buckets": buckets,
+        "overconfidenceRate": rate(sure["incorrect"], sum(sure.values())),
+        "underconfidenceRate": rate(guess["correct"], sum(guess.values())),
+        "overconfidentEvents": overconfident_events[-5:],
+        "underconfidentEvents": underconfident_events[-5:],
+    })
+
+
+def gate_status(c, t):
+    """Per-prerequisite verdict for the /teach gate (canonical, 1.11.0)."""
+    bloom = c.get("bloomLevel", 0)
+    box = c.get("box", 1)
+    last = parse_date(c.get("lastReviewed"))
+    recent = last is not None and (t - last).days <= GATE_RECENCY_DAYS
+    if bloom == 0:
+        return "no-opinion"        # never classified by a v3 writer; allow
+    if bloom >= 3:
+        if box >= 3 or recent:
+            return "satisfied"
+        return "stale-reconfirm"   # Bloom ratchet alone is not current evidence
+    # 1 <= bloom < 3: strong v2 retention evidence fallthrough (1.10.10)
+    hist = [h.get("result") for h in c.get("reviewHistory", [])]
+    if box >= 3 and len(hist) >= 2 and hist[-1] == hist[-2] == "correct":
+        return "apply-equivalent"  # gate-time read only; bloomLevel untouched
+    return "gap"
+
+
+def cmd_gate_check(args):
+    sp = state_path(args.project)
+    if not os.path.exists(sp):
+        die(f"{sp} does not exist")
+    state = load_json(sp)
+    current = args.module or state.get("currentModule", "")
+    _, data = load_spaced_review(args.project, create=True)
+    concepts = data.get("concepts", [])
+    t = today()
+
+    started = [c for c in concepts
+               if c.get("module", "").strip().lower() == current.strip().lower()]
+    if not concepts:
+        emit({"fires": False, "reason": "first-ever session — nothing to gate against",
+              "currentModule": current})
+        return
+    if started:
+        emit({"fires": False,
+              "reason": f"continuation session — {len(started)} concept(s) already "
+                        f"tracked for module {current!r}",
+              "currentModule": current})
+        return
+
+    # First session on a new module: identify prerequisites.
+    inferred = False
+    if args.prereqs:
+        names = [n.strip().lower() for n in args.prereqs.split(",") if n.strip()]
+        prereqs = [c for c in concepts
+                   if c.get("name", "").strip().lower() in names]
+    else:
+        prior = args.prior_module or state.get("previousModule")
+        if not prior:
+            # Infer: the non-current module introduced most recently.
+            others = [c for c in concepts
+                      if c.get("module", "").strip().lower() != current.strip().lower()]
+            if not others:
+                emit({"fires": False, "reason": "no prior-module concepts found",
+                      "currentModule": current})
+                return
+            prior = max(others, key=lambda c: c.get("introduced") or "").get("module")
+            inferred = True
+        prereqs = [c for c in concepts
+                   if c.get("module", "").strip().lower() == str(prior).strip().lower()]
+
+    report = [{"name": c["name"], "bloomLevel": c.get("bloomLevel", 0),
+               "box": c.get("box", 1), "lastReviewed": c.get("lastReviewed"),
+               "status": gate_status(c, t)} for c in prereqs]
+    gaps = [r for r in report if r["status"] == "gap"]
+    stale = [r for r in report if r["status"] == "stale-reconfirm"]
+    emit({"fires": True, "currentModule": current,
+          "prerequisiteSource": "declared" if args.prereqs else "inferred-prior-module",
+          "inferred": inferred,
+          "prerequisites": report,
+          "gaps": [r["name"] for r in gaps],
+          "staleReconfirm": [r["name"] for r in stale],
+          "verdict": ("offer" if gaps or stale else "clear")})
+
+
+def cmd_migrate(args):
+    """spaced-review.json v1/v2 -> v3. Idempotent, backed up, marker-writing.
+
+    Replaces the prose 5f-bis procedure in /housekeep migrate. Preserves every
+    non-canonical field by mutating the parsed JSON in place.
+    """
+    bdir = bodhi_dir(args.project)
+    path = os.path.join(bdir, "spaced-review.json")
+    if not os.path.exists(path):
+        die(f"{path} does not exist")
+    data = load_json(path)
+    version = data.get("version", 1)
+    concepts = data.get("concepts", [])
+    already = (version == 3 and all(
+        all(k in c for k in ("bloomLevel", "feynmanPassed", "consecutiveCorrectAtL4Plus"))
+        for c in concepts))
+    if already:
+        emit({"action": "noop", "reason": "already at v3 with all per-concept fields"})
+        return
+
+    # Backup (never overwrite an existing backup — it may be the only pre-v3 copy).
+    backup_dir = os.path.join(bdir, ".pre-1.10-backup")
+    backup = os.path.join(backup_dir, "spaced-review.json")
+    if not os.path.exists(backup):
+        os.makedirs(backup_dir, exist_ok=True)
+        shutil.copyfile(path, backup)
+    # Verify backup at the parsed-JSON level.
+    if load_json(backup) is None:  # pragma: no cover - json.load raises instead
+        die("backup verification failed")
+
+    fields_added = 0
+    for c in concepts:
+        for key, default in (("bloomLevel", 0), ("feynmanPassed", False),
+                             ("consecutiveCorrectAtL4Plus", 0)):
+            if key not in c:
+                c[key] = default
+                fields_added += 1
+        if "question" not in c:
+            c["question"] = ""
+        if "lastResult" not in c:
+            c["lastResult"] = ""
+    data["version"] = 3
+    write_json(path, data)
+
+    # Post-write verification against the backup.
+    after = load_json(path)
+    before = load_json(backup)
+    if len(after.get("concepts", [])) != len(before.get("concepts", [])):
+        die("verification failed: concept count changed — restore from "
+            f"{backup}")
+    for b, a in zip(before.get("concepts", []), after.get("concepts", [])):
+        lost = set(b.keys()) - set(a.keys())
+        if lost:
+            die(f"verification failed: concept {b.get('name')!r} lost fields "
+                f"{sorted(lost)} — restore from {backup}")
+
+    marker = os.path.join(bdir, ".migration-1.10.md")
+    if not os.path.exists(marker):
+        with open(marker, "w", encoding="utf-8") as f:
+            f.write(f"# Migration to 1.10 — {iso(today())}\n\n"
+                    f"Performed by `bodhi-state migrate-spaced-review`.\n\n"
+                    f"- spaced-review.json: v{version} -> v3\n"
+                    f"- concepts touched: {len(concepts)}\n"
+                    f"- fields added: {fields_added}\n"
+                    f"- backup: `.bodhi/.pre-1.10-backup/spaced-review.json`\n")
+    emit({"action": "migrated", "fromVersion": version, "toVersion": 3,
+          "concepts": len(concepts), "fieldsAdded": fields_added,
+          "backup": backup, "marker": marker})
+
+
+def cmd_verify(args):
+    """Schema sanity check. Used by dev/check.sh and the Stop hook."""
+    errors, warnings = [], []
+    project = args.project
+    bdir = os.path.join(project, ".bodhi")
+    if not os.path.isdir(bdir):
+        die(f"no .bodhi/ under {project!r}")
+
+    sp = os.path.join(bdir, "state.json")
+    if os.path.exists(sp):
+        try:
+            state = load_json(sp)
+            if state.get("version") != 2:
+                warnings.append(f"state.json version is {state.get('version')!r}, expected 2")
+            for legacy in ("lastSessionSummary", "bloomResetNote"):
+                if legacy in state:
+                    errors.append(f"state.json carries v1 narrative field {legacy!r}")
+            if not isinstance(state.get("sessionDates", []), list):
+                errors.append("state.json sessionDates is not a list")
+            la = state.get("lastActivity", "")
+            if isinstance(la, str) and len(la) > 160:
+                warnings.append("state.json lastActivity exceeds 120-char guidance")
+        except (json.JSONDecodeError, OSError) as e:
+            errors.append(f"state.json unreadable: {e}")
+    else:
+        errors.append("state.json missing")
+
+    srp = os.path.join(bdir, "spaced-review.json")
+    if os.path.exists(srp):
+        try:
+            sr = load_json(srp)
+            v = sr.get("version")
+            if v not in (1, 2, 3):
+                errors.append(f"spaced-review.json version is {v!r}")
+            elif v != 3:
+                warnings.append(f"spaced-review.json at v{v} — run "
+                                "`bodhi-state migrate-spaced-review`")
+            for c in sr.get("concepts", []):
+                name = c.get("name", "(unnamed)")
+                if not c.get("name"):
+                    errors.append("spaced-review concept missing name")
+                box = c.get("box")
+                if not isinstance(box, int) or not 1 <= box <= MAX_BOX:
+                    errors.append(f"concept {name!r} box {box!r} not int 1-{MAX_BOX}")
+                if v == 3:
+                    for k in ("bloomLevel", "feynmanPassed", "consecutiveCorrectAtL4Plus"):
+                        if k not in c:
+                            errors.append(f"concept {name!r} missing v3 field {k!r}")
+                bl = c.get("bloomLevel", 0)
+                if not isinstance(bl, int) or not 0 <= bl <= 6:
+                    errors.append(f"concept {name!r} bloomLevel {bl!r} not int 0-6")
+            for s in sr.get("sessionHistory", []):
+                st = s.get("type")
+                if st not in SESSION_TYPES:
+                    errors.append(f"sessionHistory type {st!r} not in canonical vocabulary")
+                elif st == "other" and not s.get("subtype"):
+                    errors.append("sessionHistory 'other' entry missing subtype")
+        except (json.JSONDecodeError, OSError) as e:
+            errors.append(f"spaced-review.json unreadable: {e}")
+
+    pp = find_profile(project)
+    if pp:
+        try:
+            profile = load_json(pp)
+            if profile.get("version") != 2:
+                warnings.append(f"profile version is {profile.get('version')!r}, expected 2")
+            for inline in ("activeProjects", "completedProjects"):
+                if inline in profile:
+                    errors.append(f"profile carries {inline!r} inline — belongs in "
+                                  ".bodhi-profile.projects.json (v2 split)")
+        except (json.JSONDecodeError, OSError) as e:
+            errors.append(f"profile unreadable: {e}")
+
+    result = {"ok": not errors, "project": project,
+              "errors": errors, "warnings": warnings}
+    print(json.dumps(result, indent=2))
+    sys.exit(0 if not errors else 1)
+
+
+# --- CLI --------------------------------------------------------------------
+
+def main():
+    p = argparse.ArgumentParser(prog="bodhi-state", description=__doc__,
+                                formatter_class=argparse.RawDescriptionHelpFormatter)
+    p.add_argument("--project", default=".",
+                   help="path to the learning project (the dir containing .bodhi/)")
+    sub = p.add_subparsers(dest="cmd", required=True)
+
+    s = sub.add_parser("add-concept", help="track a new concept (Box 1, review tomorrow)")
+    s.add_argument("--concept", required=True)
+    s.add_argument("--module", required=True)
+    s.add_argument("--question", default="")
+    s.set_defaults(fn=cmd_add_concept)
+
+    s = sub.add_parser("record-review",
+                       help="record a retrieval outcome (Leitner + Bloom ratchet + history)")
+    s.add_argument("--concept", required=True)
+    s.add_argument("--result", required=True, choices=["correct", "incorrect", "partial"])
+    s.add_argument("--tested-bloom", type=int, choices=range(0, 7), default=None,
+                   help="Bloom level the question actually tested at")
+    s.add_argument("--confidence", choices=sorted(CONFIDENCE_VALUES), default=None,
+                   help="learner's pre-reveal confidence tag")
+    s.add_argument("--module", default=None, help="auto-create the concept under this module if untracked")
+    s.add_argument("--question", default="")
+    s.add_argument("--note", default=None, help="short lastResult note")
+    s.add_argument("--source", default=None, help="which skill produced this review")
+    s.set_defaults(fn=cmd_record_review)
+
+    s = sub.add_parser("set-feynman", help="mark a concept's Feynman explain-back gate passed")
+    s.add_argument("--concept", required=True)
+    s.set_defaults(fn=cmd_set_feynman)
+
+    s = sub.add_parser("record-session", help="append a sessionHistory entry (vocabulary-checked)")
+    s.add_argument("--type", required=True)
+    s.add_argument("--subtype", default=None)
+    s.add_argument("--data", default=None, help="JSON object of optional fields")
+    s.set_defaults(fn=cmd_record_session)
+
+    s = sub.add_parser("record-assessment",
+                       help="append an entry to assessment-history.json (append-only)")
+    s.add_argument("--trigger", required=True)
+    s.add_argument("--data", required=True, help="JSON object: topic, subTopics[], overallNote, predictionDelta")
+    s.set_defaults(fn=cmd_record_assessment)
+
+    s = sub.add_parser("forget", help="learner-initiated demote (box 1, counter reset, history)")
+    s.add_argument("--concepts", required=True, help="comma-separated concept names")
+    s.add_argument("--note", default=None)
+    s.add_argument("--activity", default=None, help="override the state.json lastActivity line")
+    s.set_defaults(fn=cmd_forget)
+
+    s = sub.add_parser("touch-state", help="update state.json session bookkeeping")
+    s.add_argument("--activity", default=None, help="lastActivity one-liner (<=120 chars)")
+    s.add_argument("--module", default=None, help="advance currentModule (records previousModule)")
+    s.add_argument("--module-index", type=int, default=None)
+    s.add_argument("--phase", default=None)
+    s.add_argument("--completion", type=int, default=None)
+    s.set_defaults(fn=cmd_touch_state)
+
+    s = sub.add_parser("bump-profile", help="increment a cumulativeStats counter")
+    s.add_argument("--counter", required=True)
+    s.set_defaults(fn=cmd_bump_profile)
+
+    s = sub.add_parser("due", help="list concepts due for review")
+    s.set_defaults(fn=cmd_due)
+
+    s = sub.add_parser("mastery", help="per-module mastery + retention rollup (canonical formula)")
+    s.set_defaults(fn=cmd_mastery)
+
+    s = sub.add_parser("calibration", help="confidence-vs-outcome calibration summary")
+    s.set_defaults(fn=cmd_calibration)
+
+    s = sub.add_parser("gate-check", help="prerequisite Bloom gate verdict for /teach Phase 1")
+    s.add_argument("--module", default=None, help="module to gate (default: state.json currentModule)")
+    s.add_argument("--prior-module", default=None)
+    s.add_argument("--prereqs", default=None,
+                   help="comma-separated declared prerequisite concepts (from the plan file)")
+    s.set_defaults(fn=cmd_gate_check)
+
+    s = sub.add_parser("migrate-spaced-review",
+                       help="one-shot spaced-review.json v1/v2 -> v3 (backed up, idempotent)")
+    s.set_defaults(fn=cmd_migrate)
+
+    s = sub.add_parser("verify", help="schema sanity check (lint + Stop hook)")
+    s.set_defaults(fn=cmd_verify)
+
+    args = p.parse_args()
+    args.fn(args)
+
+
+if __name__ == "__main__":
+    main()

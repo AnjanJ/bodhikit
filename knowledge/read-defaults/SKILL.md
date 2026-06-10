@@ -19,9 +19,9 @@ The learner's accumulated work is theirs. Every skill MAY read every file when t
 
 | Skill | Reads by default | Reaches into archive when |
 |---|---|---|
-| `/status` | `state.json` | never |
+| `/progress quick` / `all` | `state.json` (per project; `all` also reads `.bodhi-profile.projects.json`) | never |
 | `/continue` | `state.json`, `progress.md` (live + summary block), `plan/README.md`, `plan/phase-{currentPhase}.md`, `spaced-review.json.concepts` | learner has been gone >30 days (then last few `progress/archive/` entries for re-onboarding) |
-| `/teach` | `state.json`, `plan/phase-{currentPhase}.md`, `progress.md` | building explicitly on a prior session the learner names |
+| `/teach` | `state.json`, `plan/phase-{currentPhase}.md`, `progress.md` (understanding-only sessions skip the plan file) | building explicitly on a prior session the learner names |
 | `/practice` | `state.json`, `plan/phase-{currentPhase}.md`, `spaced-review.json.concepts` | calibrating against a past struggle the learner references |
 | `/quiz` | `spaced-review.json.concepts` (filtered to due) | never |
 | `/reflect` | `state.json`, `progress.md` | rarely |
@@ -33,7 +33,6 @@ The learner's accumulated work is theirs. Every skill MAY read every file when t
 | `/assess` | `state.json`, `assessments/latest.md` | re-baselining against a prior assessment the learner names |
 | `/review` | `state.json`, current code path under review | reviewing a past session's code |
 | `/resources` | `state.json`, `resources.md` | never |
-| `/explain` | `state.json`, current concept in `spaced-review.json.concepts` | learner asks about historical confusion |
 | `/learn` | `.bodhi-profile.json` (for context), then writes new project | reading `.bodhi-profile.projects.json` to detect overlapping projects |
 | `/debug-together` | `state.json`, current code | never (scoped to current bug) |
 | `/pair` | `state.json`, `plan/phase-{currentPhase}.md` | learner asks to revisit a past pairing pattern |

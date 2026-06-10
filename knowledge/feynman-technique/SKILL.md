@@ -50,7 +50,7 @@ Do NOT trigger on:
 
 - A single wrong answer to a Bloom-3+ question (that is normal productive struggle).
 - A request for "more examples" (that is engagement, not stuckness — give the example, no analogy needed).
-- Time pressure ("I need to ship this") — switch to `/explain` or just answer the question; analogy ladders cost time.
+- Time pressure ("I need to ship this") — just answer the question directly; analogy ladders cost time.
 
 ### The 4-rung ladder
 

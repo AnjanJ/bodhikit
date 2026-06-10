@@ -1,0 +1,16 @@
+{
+  "description": "BodhiKit safety net: verify tracking-file schemas before the session stops. Fail-open; blocks at most once per turn.",
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-stop-hook.py\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}

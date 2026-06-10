@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "activeProjects": [
+    {
+      "name": "sql-deep-dive",
+      "topic": "SQL and database internals",
+      "startedAt": "2026-04-01",
+      "currentPhase": "1",
+      "currentModule": "Query Optimization",
+      "bloomLevel": 2,
+      "pace": "steady",
+      "status": "active",
+      "trackPurpose": "depth"
+    }
+  ],
+  "completedProjects": []
+}

@@ -1,0 +1,62 @@
+{
+  "version": 2,
+  "lastReviewCheck": "2026-05-20T18:00:00",
+  "concepts": [
+    {
+      "name": "B-tree indexes",
+      "module": "Indexing",
+      "introduced": "2026-04-10",
+      "box": 3,
+      "nextReview": "2026-05-27",
+      "lastReviewed": "2026-05-20",
+      "question": "How does a B-tree index change how the database finds a row?",
+      "lastResult": "clean recall with a real-world analogy",
+      "precisionGap": "clustered vs non-clustered still blurry",
+      "reviewHistory": [
+        { "date": "2026-04-22", "result": "correct" },
+        { "date": "2026-05-06", "result": "correct" },
+        { "date": "2026-05-20", "result": "correct" }
+      ]
+    },
+    {
+      "name": "Query planning",
+      "module": "Indexing",
+      "introduced": "2026-04-22",
+      "box": 1,
+      "nextReview": "2026-05-21",
+      "lastReviewed": "2026-05-20",
+      "question": "What does the planner consider when choosing an index scan vs a seq scan?",
+      "lastResult": "could name cost factors but not why",
+      "reviewHistory": [
+        { "date": "2026-05-06", "result": "partial" },
+        { "date": "2026-05-20", "result": "incorrect" }
+      ]
+    },
+    {
+      "name": "Normalization trade-offs",
+      "module": "Schema Design",
+      "introduced": "2026-04-03",
+      "box": 4,
+      "nextReview": "2026-06-03",
+      "lastReviewed": "2026-05-20",
+      "question": "When is denormalizing the right call?",
+      "lastResult": "strong",
+      "reviewHistory": [
+        { "date": "2026-04-10", "result": "correct" },
+        { "date": "2026-04-22", "result": "correct" },
+        { "date": "2026-05-20", "result": "correct" }
+      ]
+    }
+  ],
+  "sessionHistory": [
+    {
+      "date": "2026-05-20",
+      "type": "spaced-review",
+      "conceptsReviewed": 3,
+      "passes": 2,
+      "misses": 1,
+      "boxChanges": { "Query planning": "2 -> 1" },
+      "habitObservations": { "hedging": "hedges on planner internals" }
+    }
+  ]
+}

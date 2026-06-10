@@ -40,7 +40,7 @@ Determine the learner's current level for exercise targeting.
 
 ## Phase 2: Exercise Delivery
 
-**For this phase, reference the `deliberate-practice`, `desirable-difficulties`, and `assessment-framework` knowledge bases.**
+**For this phase, reference the `deliberate-practice`, `desirable-difficulties`, `cognitive-load`, and `assessment-framework` knowledge bases.**
 
 Design and deliver an exercise calibrated to the learner's level. Reference the `assessment-framework` knowledge base for exercise templates.
 
@@ -62,26 +62,25 @@ Per the `desirable-difficulties` KB — **variation across reps** prevents rote 
 
 ### For Beginners (Bloom's Level 1-2)
 
-Create starter files in the project's `exercises/` directory:
+Per the `cognitive-load` KB faded-scaffolding sequence — worked example → completion problem → full problem. Create the fade in the project's `exercises/` directory:
 
 ```
 exercises/[NN]-[topic-name]/
-├── README.md          # Clear instructions with examples and expected output
-├── starter.[ext]      # Code with TODO comments marking what to fill in
-└── test.[ext]         # Tests they can run to verify their solution
+├── README.md          # What they will learn, the fade sequence, how to run tests
+├── worked-example.[ext]   # Complete, inline-annotated solution to STUDY and explain back
+├── completion.[ext]   # Same shape with 1-2 key steps blanked (TODO), boilerplate provided
+└── test.[ext]         # Tests for the completion (and the full problem if they get there)
 ```
 
 The README should include:
 - What they will learn
-- Step-by-step instructions
-- Expected output examples
-- How to run the tests to check their work
+- Step 1: study `worked-example` and answer one "why does step X come before Y?" question
+- Step 2: fill the gaps in `completion`
+- Step 3 (optional this session): the full problem, in a varied context
+- Expected output examples and how to run the tests
 - Estimated time (5-15 minutes for beginners)
 
-The starter file should:
-- Have clear TODO comments
-- Include any boilerplate they should not have to write
-- Have comments explaining the structure
+Per the `cognitive-load` KB split-attention rule, annotations live inline with the code — never "see explanation above."
 
 ### For Intermediate (Bloom's Level 3-4)
 
@@ -168,43 +167,27 @@ After the learner indicates they have completed (or attempted) the exercise:
 
      This is an **offer, not an auto-invocation**. The decomposition path stays available; pair is named as a peer alternative for learners who would do better with collaboration than further breakdown.
 
-6. **Update tracking — imperative writes (1.10.12 discipline):**
+6. **Update tracking** — per the `state-schema` KB write path and the `spaced-repetition` KB judgment rules:
 
-   **CHECKPOINT-before-writes (name aloud BEFORE any Write call):**
+   a. **Record the exercise outcome:**
 
-   > "I am about to write up to four files: `.bodhi/spaced-review.json` (concept added/updated), `.bodhi/progress.md` (exercise entry prepended), `.bodhi/state.json` (lastActivity), and `learningWithBodhi/.bodhi-profile.json` (cumulativeStats.totalExercises incremented). Computing now..."
+      ```
+      "${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> record-review \
+        --concept "<exercise concept>" --result correct|incorrect|partial \
+        --tested-bloom <highest level actually demonstrated> \
+        --module "<current module>" --source practice
+      ```
 
-   **Step A — Update `.bodhi/spaced-review.json` (imperative).**
-   1. Read the file from disk.
-   2. Read-tolerate v2: inline-fill per `state-migration` KB if at `version: 2`.
-   3. Mutate parsed JSON in place (preserve non-canonical fields per 1.10.9):
-      - Add new concept entries per `spaced-repetition` KB rules (Box 1, `nextReview` = tomorrow, the three v3 defaults).
-      - **Per-concept Bloom write:** on successful completion, update `concepts[<concept>].bloomLevel` to the exercise tier — Beginner = 2, Intermediate = 4, Advanced = 6 — capped at the highest level the learner actually demonstrated (a brute-force Advanced solve does not advance past 4). Preserve any higher prior value; never demote. Do NOT set `feynmanPassed` here — owned by `/teach` and `/explain`.
-      - Set top-level `version: 3` if not already.
-   4. Write the file using the Write tool.
-   5. Verify: re-read; confirm `version: 3`, concept's `bloomLevel` matches the new value, non-canonical fields preserved on spot-check.
+      `--tested-bloom` caps at what was demonstrated, not the exercise tier (a brute-force Advanced solve does not advance past 4; the script ratchets `bloomLevel` and never demotes). Completion = `correct`; abandoned = `incorrect`; got there with heavy hints = `partial`. Do NOT call `set-feynman` here — that gate is owned by `/teach` (including its understanding-only sessions).
 
-   **Step B — Append to `.bodhi/progress.md` (imperative).**
-   1. Read the file.
-   2. Compose the new entry at the top: `## YYYY-MM-DD — Exercise: <topic>`, then **What was attempted**, **Code-review findings**, **Bloom adjustments** (write the numeric level), **Next**.
-   3. Construct new full file content: new entry + separator + existing content (preserved verbatim — Summary block intact).
-   4. Write the file using the Write tool.
-   5. Verify: re-read; confirm new entry at top and prior Summary block intact.
+   b. **If the exercise introduced or reviewed tracked concepts**, record the session once: `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" record-session --type practice --data '{"notes": "<exercise name>"}'`.
 
-   **Step C — Update `.bodhi/state.json` (imperative).**
-   1. Read the file.
-   2. Mutate in place: bump `lastSessionAt` if this opens a new session, set `lastActivity` to ONE short sentence pointing to what `progress.md` describes.
-   3. Write the file using the Write tool. Preserve every other field verbatim.
-   4. Verify: re-read; confirm `lastActivity` is the new sentence.
+   c. **Session pointer:** `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" touch-state --activity "<one line pointing at the progress.md entry>"`.
 
-   **Step D — Update `learningWithBodhi/.bodhi-profile.json` (imperative).** Fires on every successful exercise completion (no double-count guard needed — exercises are per-completion).
-   1. Read the file.
-   2. Mutate in place: increment `cumulativeStats.totalExercises` by 1. Update `lastUpdated` to today's ISO timestamp.
-   3. Write the file using the Write tool. Preserve every other field verbatim.
-   4. Verify: re-read; confirm counter incremented exactly once. Profile narrative belongs in `progress.md`, NOT in the profile file.
+   d. **Profile counter** (every successful completion): `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" bump-profile --counter totalExercises`.
 
-   **CHECKPOINT-after-writes (name aloud):**
+   e. **Append the exercise entry to `.bodhi/progress.md` with the Write tool**: `## YYYY-MM-DD — Exercise: <topic>`, then **What was attempted**, **Code-review findings**, **Bloom adjustments** (numeric, matching the script call), **Next**. Existing content preserved verbatim below.
 
-   > "Files written and verified: spaced-review.json, progress.md, state.json, .bodhi-profile.json. Closing now."
+   **Fallback:** if `bodhi-state` is unavailable, follow the `state-schema` KB fallback rule — manual read → mutate-in-place → write → verify, preserving unknown fields.
 
 Close with specific feedback: "You [specific thing they did well]. That shows [what it indicates about their growth]."

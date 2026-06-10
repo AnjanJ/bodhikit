@@ -28,14 +28,19 @@ Each successful recall resets and flattens the curve. The first review is the mo
 | 4   | 14 days        | Strong retention |
 | 5   | 30 days        | Long-term mastery |
 
-**Rules (canonical — skills MUST cite this KB, not redeclare):**
+**Rules (canonical — skills MUST cite this KB, not redeclare; implemented in code by `bodhi-state record-review`):**
 - New concepts start in Box 1, `nextReview` = tomorrow
 - Correct recall: move up one box (max 5), `nextReview` = today + new box interval
 - Incorrect recall: move to Box 1, `nextReview` = tomorrow
+- Partial recall: box held, `nextReview` = tomorrow (re-test soon; partial is neither punished nor rewarded)
 - Learner-initiated demote (`/forget` or self-rated low confidence in `/reflect`): same as incorrect recall
 - `nextReview` = `lastReviewed` + box interval
 
-For the JSON shape of `spaced-review.json`, see the `state-schema` KB.
+For the JSON shape of `spaced-review.json` and the write path, see the `state-schema` KB.
+
+## Successive Relearning (Rawson & Dunlosky)
+
+A missed retrieval should not end with the demotion. Within the same session, after the remaining items, **re-ask the missed concept (reframed, not verbatim) until the learner produces one successful retrieval** — cap at 2 retries, then explain and move on. The demotion to Box 1 stands either way; the in-session relearning rep is additional, not a substitute. Combining retrieval practice with relearning-to-criterion roughly doubles long-term retention versus single-shot retrieval (Rawson & Dunlosky, *Optimizing schedules of retrieval practice for durable and efficient learning*, 2011). `/quiz` Phase 3 implements this loop; the retry outcomes are recorded as separate `reviewHistory` entries.
 
 ## Retention Rollup Views (canonical — skills MUST cite this section)
 

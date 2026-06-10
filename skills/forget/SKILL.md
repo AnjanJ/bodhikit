@@ -42,40 +42,19 @@ Do NOT moralize. Do NOT re-teach here. This skill is purely the demote action.
 
 ## Phase 3: Apply the Demotes
 
-**For this phase, reference the `spaced-repetition` KB for the demote rule and update mechanics.**
+**For this phase, reference the `spaced-repetition` KB for the demote rule — implemented by `bodhi-state` per the `state-schema` KB write path.**
 
-Two required file writes follow. Per the 1.10.12 imperative-write discipline: "update X" means a real Write tool call, not a state description.
+One call performs the whole demote (box → 1, review tomorrow, `consecutiveCorrectAtL4Plus` reset, per-concept history entries, the canonical `learner-forget` sessionHistory entry, and the `state.json` lastActivity pointer — while preserving `bloomLevel` and `feynmanPassed`, which `/forget` never touches: the demote is about retention, not understanding):
 
-**CHECKPOINT-before-writes (name aloud BEFORE any Write call):**
+```
+"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> forget \
+  --concepts "<concept-1>, <concept-2>" \
+  --note "<why the learner chose to demote, if they said>"
+```
 
-> "I am about to demote N concepts: [list]. Writing two files: `.bodhi/spaced-review.json` (box→1, counter reset, history append per concept) and `.bodhi/state.json` (lastActivity). Computing now..."
+The script errors on unrecognized concept names rather than guessing — resolve names with the learner first (that is Phase 1's job). Report the box changes from the script's JSON output.
 
-**Step 1 — Update `.bodhi/spaced-review.json` (imperative).**
-
-1. Read the file from disk.
-2. Read-tolerate v2: inline-fill per `state-migration` KB if at `version: 2`.
-3. Mutate parsed JSON in place (preserve non-canonical fields per 1.10.9):
-   - For every concept in the queue, apply the `spaced-repetition` KB demote rule: set `box: 1`, `nextReview: tomorrow`.
-   - Append a `reviewHistory` entry with `date: <today>`, `result: "incorrect"`, and a note that this was learner-initiated (or invoked from `/reflect`).
-   - **Per-concept Bloom + Feynman semantics (v3 schema):**
-     - **Reset `concepts[<concept>].consecutiveCorrectAtL4Plus` to `0`** — the mastery streak is broken when the learner signals retention has slipped.
-     - **Preserve `concepts[<concept>].feynmanPassed` as-is** — Feynman passed once is forever; the demote is about retention, not understanding. The learner can re-pass the gate later if needed, but they do not "lose" the explanation they once produced.
-     - **Preserve `concepts[<concept>].bloomLevel` as-is** — this skill captures retention drift via the box, not Bloom regression. (If Bloom level itself needs to drop, the right path is a fresh assessment or `/teach` re-entry, not `/forget`.)
-   - Set top-level `version: 3` if not already.
-   - **Append a `sessionHistory[]` entry** with `type: "learner-forget"` (canonical per the `state-schema` KB type vocabulary). Include `date`, `conceptsDemoted: [<names>]`, `boxChanges` (concept → "from → to"), and an optional `notes` field describing why the learner chose to demote. Do NOT invent a new top-level type; the `learner-forget` value is canonical for this case.
-4. Write the file using the Write tool, overwriting the existing file.
-5. Verify: re-read; confirm each demoted concept has `box: 1`, today's history entry present, counter at 0, `feynmanPassed` and `bloomLevel` unchanged on at least one spot-checked concept. Confirm the new `sessionHistory[]` entry has `type: "learner-forget"`.
-
-**Step 2 — Update `.bodhi/state.json` (imperative).**
-
-1. Read the file.
-2. Mutate in place: set `lastActivity` to a summary like "Demoted N concepts: A, B, C" (≤120 chars).
-3. Write the file using the Write tool. Preserve every other field verbatim.
-4. Verify: re-read; confirm `lastActivity` updated.
-
-**CHECKPOINT-after-writes (name aloud):**
-
-> "Files written and verified: spaced-review.json (N concepts demoted), state.json (lastActivity)."
+**Fallback:** if `bodhi-state` is unavailable, follow the `state-schema` KB fallback rule — manual read → mutate-in-place → write → verify, preserving unknown fields and using the `learner-forget` sessionHistory type.
 
 ---
 
@@ -84,4 +63,4 @@ Two required file writes follow. Per the 1.10.12 imperative-write discipline: "u
 Single concept: "It will surface tomorrow. We will look at it then with fresh eyes."
 Multiple concepts: "All [N] will surface across the next few days as they cycle through review."
 
-If the learner wants to revisit immediately rather than wait, suggest `/explain <concept>` or `/teach <concept>` — but do not force it.
+If the learner wants to revisit immediately rather than wait, suggest `/teach <concept>` (its understanding-only path is enough if they just want it explained again) — but do not force it.

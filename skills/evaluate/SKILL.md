@@ -131,50 +131,26 @@ Do NOT auto-invoke `/mentor`. Mirrors the `/teach-back` opt-in pattern exactly.
 
 ## Update Tracking
 
-Six required file writes follow. Per the 1.10.12 imperative-write discipline: every "append/update X" is a real Write tool call, not a state description. The closing offers above (capstone/mentor) are the receipt; the writes are what made the evaluation persistent.
+The closing offers above (capstone/mentor) are the receipt; these writes are what make the evaluation persistent. Per the `state-schema` KB write path:
 
-**CHECKPOINT-before-writes (name aloud BEFORE any Write call):**
+1. **Structured assessment entry** (replaces hand-editing the append-only JSON):
 
-> "I am about to write six files: `.bodhi/assessments/latest.md` (new assessment block prepended), `.bodhi/assessment-history.json` (structured entry appended), `.bodhi/progress.md` (evaluation entry prepended), `.bodhi/state.json` (lastActivity), `learningWithBodhi/.bodhi-profile.json` (cumulative + patterns), and `learningWithBodhi/.bodhi-profile.projects.json` (active/completed project entry). Computing now..."
+   ```
+   "${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> record-assessment --trigger evaluate \
+     --data '{"topic": "...", "subTopics": [{"name": "...", "bloomLevel": N, "confidence": "high|medium|low", "evidence": "..."}], "overallNote": "...", "predictionDelta": { ... }}'
+   ```
 
-**Step 1 — Update `.bodhi/assessments/latest.md` (imperative).**
-1. Read the file.
-2. Compose the new assessment block at the top with the date and full evaluation results (Growth Map, Strengths, Active Growth, Areas Needing Attention, Spaced Repetition Health, Key Concepts Status, Recommendations).
-3. Construct new full file content: new block + separator + existing content (the prior assessment block stays in place — `/housekeep` will rotate it to `assessments/archive/` on its next run).
-4. Write the file using the Write tool.
-5. Verify: re-read; confirm new block at top, prior block intact.
+   Populate `predictionDelta` from Phase 2.5 (`predictedBiggestGrowth`/`measuredBiggestGrowth`, `predictedBiggestGap`/`measuredBiggestGap`, `perTopicBloomPredictions` as `{name, predicted, measured}`, one-sentence `calibrationNote`). Omit the key entirely if Phase 2.5 was skipped.
 
-**Step 2 — Append to `.bodhi/assessment-history.json` (imperative).**
-1. Read the file.
-2. Mutate parsed JSON in place: append a structured entry with `trigger: "evaluate"` per the `state-schema` KB. Include the `predictionDelta` block populated from Phase 2.5: `predictedBiggestGrowth` / `measuredBiggestGrowth`, `predictedBiggestGap` / `measuredBiggestGap`, `perTopicBloomPredictions` (array of `{name, predicted, measured}`), and a one-sentence `calibrationNote` (e.g., "Predictions aligned on growth, off by 1 level on perf gap"). Skip the `predictionDelta` block entirely if Phase 2.5 was skipped for any reason.
-3. Write the file using the Write tool. Preserve every other field verbatim.
-4. Verify: re-read; confirm the new entry is the last in the array.
+2. **Session + milestone bookkeeping:**
+   - `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" record-session --type evaluate --data '{"notes": "<headline trajectory>"}'`
+   - `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" touch-state --activity "<one line noting the evaluation>"`
+   - `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" bump-profile --counter totalMilestonesReached`
 
-**Step 3 — Append to `.bodhi/progress.md` (imperative).**
-1. Read the file.
-2. Compose the new evaluation entry at the top: `## YYYY-MM-DD — Evaluation (milestone)`, then **Headline trajectory** (1-2 sentences on growth), **Bloom adjustments**, **Next chapter**. Full detail stays in `assessments/latest.md`; the `progress.md` entry is just the pointer + headline.
-3. Construct new full file content: new entry + separator + existing content (preserved verbatim).
-4. Write the file using the Write tool.
-5. Verify: re-read; confirm new entry at top, prior Summary block intact.
+3. **Append the new assessment block to `.bodhi/assessments/latest.md` with the Write tool**: date + full evaluation results (Growth Map, Strengths, Active Growth, Areas Needing Attention, Spaced Repetition Health, Key Concepts Status, Calibration Check, Recommendations) at the top; the prior assessment block stays in place (`/housekeep` rotates it later).
 
-**Step 4 — Update `.bodhi/state.json` (imperative).**
-1. Read the file.
-2. Mutate in place: set `lastActivity` to ONE short sentence noting the evaluation. Do NOT write narrative fields.
-3. Write the file using the Write tool. Preserve every other field verbatim.
-4. Verify: re-read; confirm `lastActivity` updated.
+4. **Append the evaluation entry to `.bodhi/progress.md` with the Write tool**: `## YYYY-MM-DD — Evaluation (milestone)`, **Headline trajectory**, **Bloom adjustments**, **Next chapter**. Full detail stays in `assessments/latest.md`; this is the pointer + headline. Existing content preserved verbatim below.
 
-**Step 5 — Update `learningWithBodhi/.bodhi-profile.json` (imperative).**
-1. Read the file.
-2. Mutate in place: bump `cumulativeStats.totalMilestonesReached`. If a topic now has 3+ entries in `assessment-history.json` at Bloom's <3, add to `patterns.persistentChallenges`; 3+ at Bloom's 4+ adds to `patterns.consistentStrengths`. Update `lastUpdated` to today's ISO timestamp.
-3. Write the file using the Write tool. Preserve every other field verbatim.
-4. Verify: re-read; confirm the bump landed and patterns are correct.
+5. **Patterns + project status (manual JSON, the one mutation the script does not own).** Read `learningWithBodhi/.bodhi-profile.json`: if a topic now has 3+ assessment-history entries at Bloom <3, append it to `patterns.persistentChallenges`; 3+ at Bloom 4+ appends to `patterns.consistentStrengths`; update `lastUpdated`. Read `.bodhi-profile.projects.json`: refresh this project's `activeProjects` entry; if complete, move it to `completedProjects` with `completedAt` and `finalBloomLevel`. For both files: mutate the parsed JSON in place preserving every unknown field, Write, then re-read to verify (the `state-schema` KB fallback discipline).
 
-**Step 6 — Update `learningWithBodhi/.bodhi-profile.projects.json` (imperative).** This is the projects file from the v2 split.
-1. Read the file.
-2. Mutate in place: refresh this project's entry in `activeProjects` (current phase, bloom level, status). If the project is complete, move the entry from `activeProjects` to `completedProjects` with `completedAt` and `finalBloomLevel`.
-3. Write the file using the Write tool. Preserve every other field verbatim.
-4. Verify: re-read; confirm the project entry is in the correct array with the correct fields.
-
-**CHECKPOINT-after-writes (name aloud):**
-
-> "Files written and verified: assessments/latest.md, assessment-history.json, progress.md, state.json, .bodhi-profile.json, .bodhi-profile.projects.json."
+**Fallback:** if `bodhi-state` is unavailable, apply the same manual discipline to steps 1-2's files as well.

@@ -262,7 +262,7 @@ The capstone is complete. <one sentence honoring whichever ending the learner ch
 
 **`.bodhi/state.json`** — slim shape, no narrative: set `lastActivity` to one short sentence pointing at the entry just written.
 
-**`learningWithBodhi/.bodhi-profile.json`** — bump `cumulativeStats.teachBacksWritten`. If the learner self-reports they published it, also bump `cumulativeStats.teachBacksPublished`. Both fields are integers, default 0; initialize if absent. Update `lastUpdated`.
+**`learningWithBodhi/.bodhi-profile.json`** — `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" bump-profile --counter teachBacksWritten` (per the `state-schema` KB write path). If the learner self-reports they published it, also `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" bump-profile --counter teachBacksPublished`.
 
 ### Close
 

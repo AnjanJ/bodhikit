@@ -131,7 +131,7 @@ done
 # ---------------------------------------------------------------------------
 # 9. Chainable skills must handle --invoked-from=
 # ---------------------------------------------------------------------------
-chainable="teach practice reflect status quiz forget pair debug-together mentor"
+chainable="teach practice reflect progress quiz forget pair debug-together mentor"
 for s in $chainable; do
   f="skills/$s/SKILL.md"
   if [ ! -f "$f" ]; then continue; fi
@@ -144,7 +144,7 @@ done
 # 10. /continue must pass --invoked-from=continue to every chained sub-skill
 # ---------------------------------------------------------------------------
 if [ -f skills/continue/SKILL.md ]; then
-  for sub in status teach practice reflect; do
+  for sub in progress teach practice reflect; do
     if grep -qE "Auto-invoke .\/${sub}\b" skills/continue/SKILL.md; then
       if ! grep -qE "\/${sub}([[:space:]]|--)[^\`]*--invoked-from=continue" skills/continue/SKILL.md; then
         err "skills/continue/SKILL.md auto-invokes /$sub but without --invoked-from=continue"
@@ -164,15 +164,15 @@ fi
 
 # ---------------------------------------------------------------------------
 # 12. v2 schema: no writes to lastSessionSummary or bloomResetNote outside
-#     the v1-boundary skills (/housekeep, /status).
+#     the v1-boundary skills (/housekeep, /progress all).
 # ---------------------------------------------------------------------------
 # These fields were removed from state.json in v2. The only legitimate
 # references are inside skills that straddle the v1↔v2 boundary by design:
-# /housekeep migrates them; /status all detects them as a health flag.
+# /housekeep migrates them; /progress all detects them as a health flag.
 # Everywhere else, mentioning these fields is drift.
 # Applies to skills AND agents — both can touch tracking files.
 for f in skills/*/SKILL.md agents/*.md; do
-  case "$f" in *housekeep*|*status*) continue;; esac
+  case "$f" in *housekeep*|*progress*) continue;; esac
   while IFS= read -r line; do
     case "$line" in
       *"Do NOT write"*|*"do not write"*|*"removed in v2"*|*"v2 — narrative"*) continue;;
@@ -190,11 +190,11 @@ done
 # ---------------------------------------------------------------------------
 # assessment.md (singular, root of .bodhi/) and plan.md (root of .bodhi/) are
 # v1 paths. v2 uses assessments/latest.md and plan/README.md + plan/phase-*.md.
-# /housekeep references both during migration; /status all references them
+# /housekeep references both during migration; /progress all references them
 # as legacy-layout health flags. Everywhere else is drift.
 # Applies to skills AND agents.
 for f in skills/*/SKILL.md agents/*.md; do
-  case "$f" in *housekeep*|*status*) continue;; esac
+  case "$f" in *housekeep*|*progress*) continue;; esac
   # Match `.bodhi/assessment.md` (NOT `.bodhi/assessments/...`) and
   # `.bodhi/plan.md` (NOT `.bodhi/plan/...`).
   if grep -qE '\.bodhi/assessment\.md([^/s]|$)' "$f"; then
@@ -221,7 +221,7 @@ for f in skills/*/SKILL.md; do
   top=$(awk 'BEGIN{n=0} /^---$/{n++; next} n>=2 || (n==1 && NR>1) {print}' "$f" | head -8)
   for kb in $kb_names; do
     case "$kb" in
-      teaching-personality|state-schema|read-defaults|state-migration) continue;;
+      teaching-personality|state-schema|read-defaults|state-migration|state-lifecycle) continue;;
     esac
     if printf '%s' "$top" | grep -qE "\`$kb\`"; then
       err "$f loads \`$kb\` top-of-file (lines 1-8) — consider moving into the phase that uses it"
@@ -281,13 +281,13 @@ fi
 # Heuristic: a skill is a "writer" if it both references spaced-review.json AND
 # mentions either "Update tracking", "Apply the spaced-repetition KB", or
 # explicit append/update verbs near the file. Limit checks to the skills the
-# sprint actually wired (quiz, teach, explain, practice, forget, pair).
-for s in quiz teach explain practice forget pair; do
+# sprint actually wired (quiz, teach, practice, forget, pair; /explain merged into /teach in 1.11.0).
+for s in quiz teach practice forget pair; do
   f="skills/$s/SKILL.md"
   if [ ! -f "$f" ]; then continue; fi
   if grep -q 'spaced-review\.json' "$f"; then
-    if ! grep -qE 'bloomLevel|feynmanPassed|consecutiveCorrectAtL4Plus' "$f"; then
-      err "$f writes spaced-review.json but does not mention any v3 per-concept field (bloomLevel/feynmanPassed/consecutiveCorrectAtL4Plus)"
+    if ! grep -qE 'bloomLevel|feynmanPassed|consecutiveCorrectAtL4Plus|record-review|set-feynman' "$f"; then
+      err "$f writes spaced-review.json but routes through neither the v3 per-concept fields nor bodhi-state (record-review/set-feynman)"
     fi
   fi
 done
@@ -304,65 +304,59 @@ if [ -f skills/teach/SKILL.md ]; then
   if ! grep -qiE 'prerequisite.*(bloom|gate)|(bloom|gate).*prerequisite' skills/teach/SKILL.md; then
     err "skills/teach/SKILL.md missing the prerequisite Bloom gate language (H3 fix)"
   fi
-  # 1.10.10 — trigger model must be the corrected "first session on a new
-  # currentModule" detection, not the broken "different module" string match.
-  if ! grep -qiE 'first .*session on a new |first /teach invocation|module-start|scan .*concept array' skills/teach/SKILL.md; then
-    err "skills/teach/SKILL.md prerequisite gate missing first-session-on-new-module trigger (1.10.10 fix)"
+  # 1.11.0 — the gate's trigger/verdict logic lives in bodhi-state gate-check
+  # (canonical doc: state-schema KB). The skill must delegate, not re-derive.
+  if ! grep -q 'gate-check' skills/teach/SKILL.md; then
+    err "skills/teach/SKILL.md prerequisite gate does not invoke bodhi-state gate-check (1.11.0)"
   fi
-  # 1.10.10 — strong v2 retention evidence fallthrough must be declared so
-  # concepts with high box + recent correct results are not falsely blocked
-  # by an artificially-low v3 bloomLevel.
-  if ! grep -qiE 'box >= 3|strong v2 retention|Apply-equivalent' skills/teach/SKILL.md; then
-    err "skills/teach/SKILL.md prerequisite gate missing strong-v2-evidence fallthrough (1.10.10 fix)"
-  fi
-  # 1.10.10 — gate must be offer-shaped (opt-in offers per the 1.10.2 chain
-  # discipline), not auto-block. The check looks for an offer/choice
-  # affordance rather than scanning for auto-block strings (the negation
-  # "does NOT auto-block" would have matched a naive auto-block scan).
+  # 1.10.10 — gate must be offer-shaped, not auto-block.
   if ! grep -qiE 'offer|let the learner (choose|decide|pick)|learner decides|opt-in' skills/teach/SKILL.md; then
     err "skills/teach/SKILL.md prerequisite gate missing offer-shape language (1.10.10 fix — gate must be offer-shaped per 1.10.2 discipline)"
+  fi
+  # 1.11.0 — pretesting must open Phase 2 (desirable-difficulties KB).
+  if ! grep -qiE 'pretest' skills/teach/SKILL.md; then
+    err "skills/teach/SKILL.md Phase 2 missing the pretest step (1.11.0 — desirable-difficulties KB Pretesting)"
   fi
 fi
 
 # ---------------------------------------------------------------------------
-# 43. Skills that write tracking JSON/MD files MUST use the 1.10.12
-#     imperative-write discipline: CHECKPOINT-before-writes naming aloud
-#     which files are about to be written, AND CHECKPOINT-after-writes
-#     naming aloud which files were verified. The 1.10.11 dogfood caught
-#     /quiz computing correct results, rendering a beautiful table, and
-#     persisting nothing — the same descriptive-vs-imperative defect
-#     1.7.1 fixed in /housekeep migrate. The fix is the same: every
-#     "update X" instruction must be a real Write tool call announced
-#     before the fact and verified after.
+# 43. State-writing skills MUST route JSON mutations through bodhi-state
+#     (1.11.0). This replaces the 1.10.12 CHECKPOINT prose discipline: the
+#     descriptive-vs-imperative defect class is closed by moving the writes
+#     into a deterministic script instead of defending against it with
+#     louder markdown. Each writer must (a) invoke bodhi-state and (b) NOT
+#     reintroduce the retired CHECKPOINT prose (a reappearance means someone
+#     is hand-writing JSON again).
 # ---------------------------------------------------------------------------
-for s in quiz teach explain practice forget reflect pair evaluate; do
+for s in quiz teach practice forget reflect pair evaluate continue; do
   f="skills/$s/SKILL.md"
   if [ ! -f "$f" ]; then continue; fi
-  if ! grep -qE 'CHECKPOINT-before-writes|CHECKPOINT-after-writes' "$f"; then
-    err "$f missing 1.10.12 imperative-write CHECKPOINTs (descriptive-vs-imperative defect — see 1.10.12 CHANGELOG)"
+  if ! grep -q 'bodhi-state' "$f"; then
+    err "$f writes tracking state but never invokes bodhi-state (1.11.0 write path)"
+  fi
+  if grep -qE 'CHECKPOINT-before-writes|CHECKPOINT-after-writes' "$f"; then
+    err "$f reintroduces retired CHECKPOINT prose — JSON writes belong in bodhi-state, not hand-edited (1.11.0)"
+  fi
+  if ! grep -qiE '\*\*Fallback' "$f"; then
+    err "$f invokes bodhi-state but has no **Fallback:** paragraph for script-unavailable"
   fi
 done
 
 # ---------------------------------------------------------------------------
-# 44. Skills that write to sessionHistory[] in spaced-review.json MUST
-#     reference the state-schema KB's canonical type vocabulary (1.10.13
-#     fix). The 1.10.12 dogfood found four undocumented session types in
-#     the wild (quiz, targeted-reteach, diagnostic-after-gap, learner-
-#     forget); 1.10.13 documents them all and adds an "other" escape
-#     hatch with required subtype. Writers should cite the table rather
-#     than invent types.
+# 44. sessionHistory[] writers use record-session (vocabulary enforced in
+#     code by bodhi-state; the prose just has to route through it). Skills
+#     that hand-append sessionHistory are drift.
 # ---------------------------------------------------------------------------
-# Only flag skills that actually WRITE sessionHistory (have "append" or
-# "write" verbs near a sessionHistory mention), not skills that just read.
-for s in quiz teach forget reflect pair practice; do
+for s in quiz forget reflect pair practice evaluate; do
   f="skills/$s/SKILL.md"
   if [ ! -f "$f" ]; then continue; fi
-  if grep -qE 'append.*sessionHistory|sessionHistory.*append|sessionHistory.*write|write.*sessionHistory' "$f"; then
-    if ! grep -qiE 'canonical .*type|sessionHistory.*type|state-schema.*sessionHistory|type.*vocabulary' "$f"; then
-      err "$f writes sessionHistory[] but does not reference the canonical type vocabulary in state-schema KB (1.10.13 fix)"
-    fi
+  if grep -qE 'append.*sessionHistory|sessionHistory.*append' "$f"; then
+    err "$f hand-appends sessionHistory — use bodhi-state record-session (1.11.0)"
   fi
 done
+if ! grep -q 'record-session' skills/quiz/SKILL.md; then
+  err "skills/quiz/SKILL.md does not invoke bodhi-state record-session"
+fi
 
 # ---------------------------------------------------------------------------
 # 42. /learn Phase 3 and /plan Regenerate must require per-module
@@ -617,10 +611,11 @@ if [ -f skills/learn/SKILL.md ]; then
 fi
 
 # ---------------------------------------------------------------------------
-# 41. /housekeep migrate must declare per-target idempotency markers, not a
-#     single-marker exit (the 1.10.8 fix — a single .migration-1.7.0.md marker
-#     would short-circuit the v2 -> v3 transform for every 1.7.0-migrated
-#     project, leaving them stuck on v2 forever).
+# 41. /housekeep migrate: per-target idempotency markers (1.10.8) with the
+#     v2->v3 transform delegated to bodhi-state migrate-spaced-review
+#     (1.11.0 — idempotent in code; the STOP-banner/matrix/defensive-check
+#     prose apparatus from 1.10.9-1.10.11 was retired with it). 5f-bis must
+#     run the script unconditionally for every project.
 # ---------------------------------------------------------------------------
 if [ -f skills/housekeep/SKILL.md ]; then
   if ! grep -q 'migration-1.10' skills/housekeep/SKILL.md; then
@@ -629,35 +624,15 @@ if [ -f skills/housekeep/SKILL.md ]; then
   if ! grep -qiE 'per-target idempotency|per target idempotency' skills/housekeep/SKILL.md; then
     err "skills/housekeep/SKILL.md missing per-target idempotency declaration (1.10.8 fix)"
   fi
-  # 1.10.9 — 5f-bis step 2 must declare in-place mutation discipline so an
-  # executing model does not re-serialize from a schema template and silently
-  # drop learner's non-canonical fields (precisionGap, lastResult prose, etc.).
-  if ! grep -qiE 'mutate the parsed JSON object in place|in-place mutation' skills/housekeep/SKILL.md; then
-    err "skills/housekeep/SKILL.md 5f-bis step 2 missing in-place mutation discipline (1.10.9 fix — prevents silent drop of non-canonical learner fields)"
+  if ! grep -q 'migrate-spaced-review' skills/housekeep/SKILL.md; then
+    err "skills/housekeep/SKILL.md 5f-bis does not invoke bodhi-state migrate-spaced-review (1.11.0)"
   fi
-  # 1.10.9 — 5f-bis step 1 verify must specify parsed-JSON equality, not
-  # byte-for-byte (Write tool routinely reformats; byte-compare would
-  # false-fail on healthy backups).
-  if ! grep -qiE 'key-for-key equal|parsed-JSON level|parsed-JSON equality' skills/housekeep/SKILL.md; then
-    err "skills/housekeep/SKILL.md 5f-bis step 1 verify missing parsed-JSON equality specification (1.10.9 fix)"
+  if ! grep -qiE 'unconditionally|every project, regardless' skills/housekeep/SKILL.md; then
+    err "skills/housekeep/SKILL.md must direct running migrate-spaced-review unconditionally (the 1.10.10 single-marker short-circuit class)"
   fi
-  # 1.10.11 — Phase 5 must lead with the STOP banner and a decision matrix
-  # before any marker check. The 1.10.8 explanatory framing was readable as
-  # "exit on the 1.7.0 marker" by an executing model; the prominence rewrite
-  # makes the matrix the first concrete instruction.
-  if ! grep -qE 'STOP — Read this before checking any marker file|Phase 5 decision matrix' skills/housekeep/SKILL.md; then
-    err "skills/housekeep/SKILL.md Phase 5 missing 1.10.11 STOP banner and decision matrix (prominence regression)"
-  fi
-  # 1.10.11 — Phase 5 must require naming aloud which matrix row each project
-  # lands in BEFORE running any step. This is the procedural checkpoint that
-  # prevents the silent short-circuit.
-  if ! grep -qiE 'Name aloud.*which row|CHECKPOINT.*matrix' skills/housekeep/SKILL.md; then
-    err "skills/housekeep/SKILL.md Phase 5 missing 1.10.11 name-aloud checkpoint"
-  fi
-  # 1.10.11 — 5f-bis must run its own defensive self-check independent of
-  # any upstream gating. Last line of defense against Pre-flight short-circuit.
-  if ! grep -qiE 'Defensive self-check|last line of defense|defensive check' skills/housekeep/SKILL.md; then
-    err "skills/housekeep/SKILL.md 5f-bis missing 1.10.11 defensive self-check"
+  # Fallback path keeps the in-place mutation discipline for script-less runs.
+  if ! grep -qiE 'mutate the parsed JSON in place|in-place mutation' skills/housekeep/SKILL.md; then
+    err "skills/housekeep/SKILL.md fallback missing in-place mutation discipline (1.10.9 fix)"
   fi
 fi
 
@@ -678,6 +653,82 @@ for f in skills/*/SKILL.md knowledge/state-schema/SKILL.md knowledge/state-migra
     if ! grep -B 2 -E 'bloomLevel.*0.*AND.*lastReviewed.*null|lastReviewed.*null.*AND.*bloomLevel.*0' "$f" | grep -qiE 'historical|1\.10\.0 rule|was wrong|corrected|broken'; then
       err "$f uses the pre-1.10.7 broken legacy-fallthrough predicate (bloomLevel:0 AND lastReviewed:null) — drop lastReviewed from the check"
     fi
+  fi
+done
+
+# ---------------------------------------------------------------------------
+# 45. bodhi-state integrity: present, executable, compiles, constants pinned
+#     to the spaced-repetition KB (intervals) and state-schema KB (vocab).
+# ---------------------------------------------------------------------------
+if [ ! -x scripts/bodhi-state ]; then
+  err "scripts/bodhi-state missing or not executable"
+else
+  if ! python3 -m py_compile scripts/bodhi-state 2>/dev/null; then
+    err "scripts/bodhi-state does not compile"
+  fi
+  # Pin the Leitner table — if the spaced-repetition KB intervals change,
+  # the script must change in the same PR.
+  if ! grep -q 'BOX_INTERVALS = {1: 1, 2: 3, 3: 7, 4: 14, 5: 30}' scripts/bodhi-state; then
+    err "scripts/bodhi-state BOX_INTERVALS drifted from the spaced-repetition KB table (1d/3d/7d/14d/30d)"
+  fi
+  for t in spaced-review quiz targeted-reteach diagnostic-after-gap learner-forget; do
+    if ! grep -q "\"$t\"" scripts/bodhi-state; then
+      err "scripts/bodhi-state SESSION_TYPES missing canonical type '$t' (state-schema KB)"
+    fi
+  done
+fi
+
+# ---------------------------------------------------------------------------
+# 46. Deterministic test suite must pass (free, every run).
+# ---------------------------------------------------------------------------
+if [ -f dev/eval/test_bodhi_state.py ]; then
+  if ! python3 dev/eval/test_bodhi_state.py >/tmp/bodhi-state-tests.log 2>&1; then
+    err "bodhi-state test suite failed — see /tmp/bodhi-state-tests.log"
+  else
+    ok "bodhi-state test suite passed"
+  fi
+else
+  err "dev/eval/test_bodhi_state.py missing"
+fi
+
+# ---------------------------------------------------------------------------
+# 47. docs/example-project must pass bodhi-state verify with zero errors
+#     (ties the in-repo example to the live schema).
+# ---------------------------------------------------------------------------
+if [ -d docs/example-project ]; then
+  if ! python3 scripts/bodhi-state --project docs/example-project verify >/dev/null 2>&1; then
+    err "docs/example-project fails bodhi-state verify"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
+# 48. Hook manifest: valid JSON, references an existing executable hook
+#     script via CLAUDE_PLUGIN_ROOT.
+# ---------------------------------------------------------------------------
+if [ -f hooks/hooks.json ]; then
+  if ! python3 -c 'import json,sys; json.load(open("hooks/hooks.json"))' 2>/dev/null; then
+    err "hooks/hooks.json is not valid JSON"
+  fi
+  if ! grep -q 'CLAUDE_PLUGIN_ROOT' hooks/hooks.json; then
+    err "hooks/hooks.json must address scripts via \${CLAUDE_PLUGIN_ROOT}"
+  fi
+  if [ ! -f scripts/bodhi-stop-hook.py ]; then
+    err "hooks/hooks.json present but scripts/bodhi-stop-hook.py missing"
+  fi
+else
+  err "hooks/hooks.json missing (1.11.0 Stop-hook safety net)"
+fi
+
+# ---------------------------------------------------------------------------
+# 49. Skill size budget. Context weight is a feature: every SKILL.md must
+#     stay under 18 KB (the 1.11.0 trim baseline; ratchet down, never up —
+#     prose that wants to grow past this belongs in a phase-loaded KB or in
+#     bodhi-state).
+# ---------------------------------------------------------------------------
+for f in skills/*/SKILL.md; do
+  bytes=$(wc -c < "$f" | tr -d ' ')
+  if [ "$bytes" -gt 18432 ]; then
+    err "$f is ${bytes} bytes (> 18 KB budget) — move detail into a phase-loaded KB or bodhi-state"
   fi
 done
 

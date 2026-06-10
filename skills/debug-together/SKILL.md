@@ -111,7 +111,7 @@ After fixing: (1) Run the original test case. (2) Test other inputs that might s
 
 Ask: (1) What was the root cause (not what you changed, but why)? (2) How could you have caught this earlier? (3) What will you look for next time with similar symptoms?
 
-**If the bug stemmed from a conceptual misunderstanding, reference the `spaced-repetition` KB and add the concept to `.bodhi/spaced-review.json` per its rules (new concept → Box 1).**
+**If the bug stemmed from a conceptual misunderstanding, reference the `spaced-repetition` KB and track the concept: `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" add-concept --concept "<misunderstood concept>" --module "<current module>"` (per the `state-schema` KB write path — new concept → Box 1, review tomorrow).**
 
 ---
 

@@ -2,6 +2,47 @@
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [1.11.0] - 2026-06-10
+
+The structural release. The 1.10.x dogfood arc established that the recurring failure class — specs read descriptively instead of imperatively, fields silently dropped, vocabulary invented — could not be closed with more prose. 1.11.0 closes it with architecture, then spends the freed budget on pedagogy.
+
+### Added — deterministic state layer
+- **`scripts/bodhi-state`** (Python 3, stdlib-only): every tracking-JSON mutation now runs in code. Subcommands: `add-concept`, `record-review` (Leitner box math, bloomLevel ratchet, `consecutiveCorrectAtL4Plus` rules, confidence tags), `set-feynman`, `record-session` (canonical type vocabulary enforced — invalid types are rejected, `other` requires `subtype`), `record-assessment`, `forget`, `touch-state` (streak/session bookkeeping that never double-counts a day), `bump-profile`, `due`, `mastery` (canonical formula + legacy `—` display rule + 3-tier retention rollup), `calibration`, `gate-check` (full prerequisite-gate verdict), `migrate-spaced-review` (backup → in-place transform preserving non-canonical fields → field-loss verification → marker), `verify`. Unknown learner fields preserved in code; writes are atomic (temp + rename).
+- **Stop hook** (`hooks/hooks.json` + `scripts/bodhi-stop-hook.py`): verifies tracking-file schemas for recently-touched projects before a session stops; blocks once with a repair instruction on structural breakage. Fail-open, `stop_hook_active`-guarded, bounded walk.
+- **Two-layer test harness** (`dev/eval/`): 61 deterministic tests for the script (run by `dev/check.sh` on every change) + headless LLM evals (`run-llm-evals.sh`: migrate / forget / quiz scenarios against a realistic v2 fixture with non-canonical learner annotations, asserting on resulting file state). The automated successor to the 1.10.7–1.10.13 manual dogfood passes.
+
+### Changed — skills rewired to the script
+- All eight v3 writers (`/quiz`, `/teach`, `/explain`, `/practice`, `/forget`, `/reflect`, `/pair`, `/evaluate`) plus `/continue`, `/progress`, `/assess`, `/plan`, `/debug-together`, `/teach-back` now route JSON writes through `bodhi-state`. The CHECKPOINT-before/after-writes prose discipline (1.10.12), the `/housekeep` STOP banner + decision matrix + defensive self-check (1.10.11), and the per-skill imperative-write step lists are **retired** — the failure mode they defended against is now structurally impossible, and `dev/check.sh` fails any skill that reintroduces the prose or hand-appends `sessionHistory`.
+- **`/housekeep migrate` 5f-bis** is one idempotent script call run unconditionally per project (the single-marker short-circuit class is dead by construction). The 1.7.0 step bodies (5a–5f) moved into the `state-migration` KB — default-mode rotation runs no longer pay for migration-only prose. `/housekeep` shrinks 23.3 KB → 14.7 KB.
+
+### Changed — context diet
+- **`state-schema` KB split**: lifecycle content (rotation protocol, summary collapse, retirement) moved to the new `state-lifecycle` KB, loaded by `/housekeep` only. `state-schema` (loaded by nearly everything) shrinks 521 → ~300 lines while gaining the write-path table and gate documentation.
+- **`dev/check.sh` rule 49**: hard 18 KB size budget per SKILL.md — ratchet down, never up.
+
+### Added — pedagogy
+- **Prerequisite-gate recency rule.** `bloomLevel` is a ratchet (nothing ever lowers it — `/forget` demotes the box, not the classification), so Bloom ≥ 3 alone is stale evidence. The gate's happy path now requires current evidence (`box >= 3` OR reviewed within 30 days); otherwise the verdict is `stale-reconfirm` and `/teach` asks one quick reconfirm question instead of waving the concept through.
+- **Per-item confidence calibration** (Koriat 1997, new `metacognition` KB section): `/quiz` collects a sure/mostly/guessing tag with every answer BEFORE the reveal; tags land in `reviewHistory[].confidence`; `bodhi-state calibration` aggregates over/underconfidence; `/progress` gains a Calibration section; `/reflect` maps its 1-10 ratings onto the same tags.
+- **Pretesting** (Kornell, Hays & Bjork 2009, new `desirable-difficulties` KB section): `/teach` Phase 2 opens with one ungraded guess-first question before the I-Do explanation, and the explanation resolves it.
+- **Cognitive Load Theory KB** (Sweller — worked-example effect, faded scaffolding, expertise reversal): the Bloom 1-2 scaffolding tier in `/teach` and `/practice` becomes a worked-example → completion-problem → full-problem fade instead of TODO-starter files; Bloom 3+ gets no worked examples (expertise reversal).
+- **Successive relearning** (Rawson & Dunlosky 2011, new `spaced-repetition` KB section): `/quiz` re-asks missed concepts (reframed) at the end of the session until one successful retrieval, capped at 2 retries; the demotion stands.
+- **Bloom probes**: each `/quiz` includes one question pitched one level above a strong concept's recorded level, giving classifications a channel to rise outside `/teach`.
+- **Canonical `partial` rule** in the `spaced-repetition` KB: box held, re-test tomorrow (formalizing what `/reflect` already practiced).
+
+### Removed — two skills merged, zero capability lost (20 → 18)
+- **`/explain` merged into `/teach`.** `/teach` already ran explain → explain-back → analogy escalation → Feynman gate; `/explain` was that flow without the exercise. `/teach` Phase 2 now has an explicit **understanding-only path**: when the learner just wants to understand ("explain X", declines the exercise offer), it runs the full Feynman depth — uninterrupted explain-back, gap analysis with the three fluency-without-understanding signals, per-gap refinement, final full explanation — records via `record-review` with the quality ladder (+ the Feynman gate), and stops without guilt-tripping toward the exercise.
+- **`/status` merged into `/progress` as modes.** `/progress quick` is the flourish-free 3-line check-in (2 file reads, chained by `/continue` as `/progress quick --invoked-from=continue`); `/progress all` is the one-line-per-project table with staleness + health flags (v1 fields, unparseable JSON, missing files, legacy layout); no argument stays the full dashboard. One dashboard skill with three depths replaces two overlapping entry points.
+- Lint updated in lockstep: chainable set, `/continue` chain check, v1-boundary exemptions (now `/housekeep` + `/progress`), and writer lists all reflect the new topology; the README count check enforces 18.
+
+### Changed — docs and framing
+- README/manifests reframed from "research-backed" to **"research-informed"**, with an explicit honesty note: the design follows the literature; outcome validation is ongoing. New "Reliability Architecture" README section; Science section gains Sweller, Kornell/Hays/Bjork, Rawson & Dunlosky, and Koriat citations. Counts: 20 skills, 4 agents, 20 KBs.
+- `docs/example-project` migrated to spaced-review v3 (via the script itself) and now pinned by lint: `bodhi-state verify` must pass on it.
+
+### First catch (before this release even shipped)
+The eval harness's very first run failed — and the failure was the thesis in miniature. The headless executor could not locate `bodhi-state` (bare name, not on PATH), silently degraded to the manual fallback, and the fallback under-delivered while *claiming success in prose*: box demoted, but no v3 fields filled, version left at 2, and (first run) no `learner-forget` session entry despite the closing message saying one was written. Fixes, all caught pre-tag by file-state assertions: every skill snippet now carries the full `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state"` path (the command itself is the resolution — unskippable), the harness exports `CLAUDE_PLUGIN_ROOT` for `--plugin-dir` runs, and the `state-schema` KB fallback rule now requires v3 read-tolerance and both lookup paths to fail before hand-editing is permitted. All three scenarios pass against a live model.
+
+### Why this exists
+Each 1.10.x fix was a correct patch to an instance of the same disease: prose cannot bind an executor. 1.10.12's own CHANGELOG named the problem structural; this release gives it the structural answer. Moving the writes into code simultaneously (a) deletes the bug class, (b) deletes the defensive prose that was crowding out teaching content, (c) makes the contracts testable for free, and (d) creates the portable core (script + fixtures + evals) that any future runtime can reuse. The pedagogy additions are the dividend: pretesting, faded worked examples, confidence calibration, and successive relearning are among the most-replicated effects in the learning literature, and they fit in the budget the deleted prose freed up.
+
 ## [1.10.13] - 2026-06-09
 
 ### Added

@@ -10,9 +10,9 @@
 - [End-of-Session Reflection](#end-of-session-reflection)
 - [Skills Reference](#skills-reference)
   - [The four routine skills](#the-four-routine-skills) — `/learn`, `/continue`, `/teach`, `/reflect`
-  - [Self-knowledge and tracking](#self-knowledge-and-tracking) — `/status`, `/progress`, `/plan`, `/assess`
+  - [Self-knowledge and tracking](#self-knowledge-and-tracking) — `/progress`, `/plan`, `/assess`
   - [Active recall and retention](#active-recall-and-retention) — `/quiz`, `/forget`, `/housekeep`
-  - [Deep work skills](#deep-work-skills) — `/explain`, `/practice`, `/review`, `/resources`
+  - [Deep work skills](#deep-work-skills) — `/practice`, `/review`, `/resources`
   - [When you are stuck or stepping up](#when-you-are-stuck-or-stepping-up) — `/pair`, `/debug-together`
   - [Looking back and looking forward](#looking-back-and-looking-forward) — `/evaluate`, `/mentor`, `/teach-back`
 - [How Agents Work Behind the Scenes](#how-agents-work-behind-the-scenes)
@@ -40,7 +40,7 @@ Install BodhiKit:
 
 Restart Claude Code after installing.
 
-**Context tip:** BodhiKit loads 18 knowledge bases. To keep other projects lean, enable it only where you need it. Add to your `learningWithBodhi/.claude/settings.json`:
+**Context tip:** BodhiKit loads 20 knowledge bases. To keep other projects lean, enable it only where you need it. Add to your `learningWithBodhi/.claude/settings.json`:
 
 ```json
 {
@@ -94,8 +94,8 @@ The migration is chained — it runs whichever transforms are missing for your p
 
 **1.10 target** (v2 → v3 schema bump on `spaced-review.json`). Per-concept Bloom + Feynman tracking — the fields that make mastery observable end-to-end:
 
-- `concepts[].bloomLevel` (0–6, integer) — current Bloom's level for the concept. Set by `/quiz`, `/teach`, `/explain`, `/practice` as they observe the learner's level. Ratchet-up only.
-- `concepts[].feynmanPassed` (boolean) — set to `true` when the learner produces a clear, jargon-free explain-back. Owned by `/teach` (Phase 2 checkpoint / Phase 5) and `/explain` (Phase 5). Set, never unset.
+- `concepts[].bloomLevel` (0–6, integer) — current Bloom's level for the concept. Set by `/quiz`, `/teach`, `/practice` as they observe the learner's level. Ratchet-up only.
+- `concepts[].feynmanPassed` (boolean) — set to `true` when the learner produces a clear, jargon-free explain-back. Owned by `/teach` (Phase 2 checkpoint / understanding-only path / Phase 5). Set, never unset.
 - `concepts[].consecutiveCorrectAtL4Plus` (integer) — running counter for the mastery criterion. Incremented by `/quiz` on correct answers at Bloom 4+; reset to 0 on any incorrect or on `/forget`.
 - New entries in `reviewHistory[]` also include `bloomLevel` to record which level a given quiz question tested at.
 
@@ -160,7 +160,7 @@ Priya opens Claude Code the next day and types one command:
 
 That single command runs her entire session. Here is what happens under the hood:
 
-1. **`/status`** fires first — a 3-line check-in: project, current module, streak (today = day 2, streak = 2), concepts due for review (1 concept from Day 1).
+1. **`/progress quick`** fires first — a 3-line check-in: project, current module, streak (today = day 2, streak = 2), concepts due for review (1 concept from Day 1).
 2. **Spaced review** — the one due concept gets a quick quiz question. Priya gets it right; the concept moves from Box 1 to Box 2 (next review in 3 days).
 3. **`/teach`** is auto-invoked for the next module — *Borrowing*. BodhiKit follows the **I Do → We Do → You Do** flow ([How Teaching Works](#how-teaching-works)). It explains immutable vs mutable borrows with a metaphor about library books, walks her through a sample function, then gives her an exercise. Priya gets stuck — she cannot articulate why the borrow checker is rejecting her code. BodhiKit detects this is the moment for the [Analogy-Escalation Protocol](#when-bodhikit-reaches-for-an-analogy): it has no `learnerBackground.domains[]` on Priya yet, so it asks her once — *"what is a field, hobby, or job you know well?"* She says she gardens. Borrowing gets re-explained as "two people sharing a single pair of pruning shears — they can both look at them, but only one person can be using them at a time, and they have to give them back before the gardener can claim them again." That lands. The exercise unsticks. BodhiKit saves `cooking` and `gardening` to her profile.
 4. **`/reflect`** fires when Priya says she is done. Three questions: hardest thing today? (lifetimes peeked their head out and were scary), confidence on borrowing (7/10), would you do anything differently? (she would re-read the chapter slower). Borrowing goes to Box 1 with `nextReview` tomorrow.
@@ -185,10 +185,10 @@ Lifetimes are not making sense. Three sessions in a row Priya has gotten the syn
 A standalone assessment, ~8 questions, 15 minutes. The result lands honestly: *Lifetimes: Level 1 (HIGH confidence) — recognition only, no productive use.* No shame, no judgment. The result also gets written to `assessment-history.json` so `/evaluate` can plot her trajectory later.
 
 ```
-/bodhikit:explain lifetime elision
+/bodhikit:teach lifetime elision
 ```
 
-A Feynman-style deep dive on the specific sub-concept she suspects is the gap. BodhiKit explains it simply, asks her to explain back, finds the gap (she thinks all references need explicit lifetimes), refines with a counter-example. The gap closes. She updates `spaced-review.json` — the concept goes into Box 1 to be revisited.
+Priya tells `/teach` she just wants to understand, not exercise — its understanding-only path runs the Feynman deep dive on the specific sub-concept she suspects is the gap. BodhiKit explains it simply, asks her to explain back, finds the gap (she thinks all references need explicit lifetimes), refines with a counter-example. The gap closes, and the concept goes into spaced review to be revisited.
 
 That night she runs `/continue` again and gets back into the rhythm with the foundation a bit firmer.
 
@@ -285,10 +285,10 @@ The post lives at `learningWithBodhi/rust-network-services/teach-backs/2026-08-1
 |---|---|---|
 | Day 1 | Onboarding | `/learn` |
 | Week 1–2 | Settling in | `/continue` (daily), `/reflect` (auto) |
-| Week 3–4 | First stalls and corrections | `/assess`, `/explain`, `/forget`, `/quiz` |
+| Week 3–4 | First stalls and corrections | `/assess`, `/teach`, `/forget`, `/quiz` |
 | Week 5–6 | First real-world building and bugs | `/pair`, `/debug-together`, `/practice` |
 | Week 7 | Mid-journey checkpoint | `/evaluate`, `/mentor` |
-| Week 8–9 | Steady deep work | `/continue`, `/explain`, `/review` |
+| Week 8–9 | Steady deep work | `/continue`, `/teach`, `/review` |
 | Week 10 | Completion | `/evaluate` → optional `/teach-back` |
 | After | Looking back / next project | `/mentor`, then `/learn <next-topic>` |
 
@@ -314,7 +314,7 @@ The key rule: BodhiKit never lectures for more than 5 minutes without interactio
 
 ## When BodhiKit Reaches for an Analogy
 
-Sometimes the first explanation does not land. The words are right, the code example is correct, but the concept has not arrived. When this happens, BodhiKit follows a deliberate four-rung ladder rather than throwing random analogies at you. This applies inside `/teach`, `/explain`, `/debug-together`, and `/pair`.
+Sometimes the first explanation does not land. The words are right, the code example is correct, but the concept has not arrived. When this happens, BodhiKit follows a deliberate four-rung ladder rather than throwing random analogies at you. This applies inside `/teach` (full sessions and understanding-only deep dives), `/debug-together`, and `/pair`.
 
 ### How BodhiKit notices you are stuck
 
@@ -395,15 +395,15 @@ Expect ~60–90 minutes for the full Day 1: discovery, ~8 assessment questions, 
 
 #### `/bodhikit:continue [project-name]`
 
-**What it does.** The orchestrator. Resolves your project (auto-detect or by name), runs `/status`, surfaces any concepts due for spaced review, auto-invokes `/teach` on the next module, and auto-invokes `/reflect` when you indicate you are done. One command runs an entire session.
+**What it does.** The orchestrator. Resolves your project (auto-detect or by name), runs `/progress quick`, surfaces any concepts due for spaced review, auto-invokes `/teach` on the next module, and auto-invokes `/reflect` when you indicate you are done. One command runs an entire session.
 
 **When to use.** Every regular learning session after Day 1. This should be your default.
 
-**When NOT to use.** You have a specific, focused need (`/explain` a single concept, `/quiz` yourself, `/debug-together` a bug). For routine practice, prefer this.
+**When NOT to use.** You have a specific, focused need (`/teach` a single concept — understanding-only is fine, `/quiz` yourself, `/debug-together` a bug). For routine practice, prefer this.
 
 **Pairs well with.**
 - Every other skill — `/continue` auto-invokes the right ones at the right time.
-- `/progress` — when you want a wider view than the 3-line `/status` check-in.
+- `/progress` — when you want a wider view than its own 3-line quick check-in.
 
 **Example.**
 ```
@@ -417,7 +417,7 @@ Expect ~60–90 minutes for the full Day 1: discovery, ~8 assessment questions, 
 
 **When to use.** You want focused instruction on a specific concept (e.g., `/teach pattern matching`). Auto-invoked by `/continue` for the next-untaught concept in your plan.
 
-**When NOT to use.** You have not started a project (use `/learn` first — there is no Bloom calibration to teach from). You want to test yourself rather than be taught (use `/quiz` or `/assess`). You want the *why* of a concept explained deeply, not procedurally (use `/explain` — it is Feynman-style).
+**When NOT to use.** You have not started a project (use `/learn` first — there is no Bloom calibration to teach from). You want to test yourself rather than be taught (use `/quiz` or `/assess`).
 
 **Pairs well with.**
 - `/practice` — invoked inside `/teach` for the You-Do phase, but standalone for follow-up exercises.
@@ -456,47 +456,30 @@ Expect ~60–90 minutes for the full Day 1: discovery, ~8 assessment questions, 
 
 ### Self-knowledge and tracking
 
-These four skills let you see what you know, what you have planned, and where you are heading.
+These three skills let you see what you know, what you have planned, and where you are heading.
 
-#### `/bodhikit:status [project-name|all]`
+#### `/bodhikit:progress [quick|all|project-name]`
 
-**What it does.** A quick check-in. Default mode: 3-line summary for the active project (project, current module, streak, concepts due today). `all` mode: a one-line-per-project table across active, stale, and dormant tracks with health flags. `<project-name>` mode: focuses on a specific project regardless of which is most recently active.
+**What it does.** Three views on the same question, at three depths. **`quick`**: a flourish-free 3-line check-in (project, current module + completion, streak, concepts due today) — this is what `/continue` shows first. **No argument** (or a project name): the full dashboard — module completion with mastery %, Bloom level per sub-topic, spaced-review retention by box, confidence calibration once you have tagged quiz answers, and a growth-trajectory closing. **`all`**: a one-line-per-project table across active, stale, and dormant tracks with health flags (unmigrated files, broken JSON, incomplete layouts).
 
-**When to use.** You want to know "where am I?" without committing to a full session. You have multiple projects and want a portfolio view (`/status all`).
+**When to use.** `quick` when you want "where am I?" without committing to a session. The dashboard weekly or bi-weekly to take stock, or before deciding whether to push forward or shore up foundations. `all` when you run multiple projects and want the portfolio view.
 
-**When NOT to use.** You want detail, not a glance — use `/progress`.
-
-**Pairs well with.**
-- `/continue` — auto-invokes `/status` as its first phase.
-- `/progress` — when the 3-line view is not enough.
-
-**Example.**
-```
-/bodhikit:status all
-```
-> | Project | Last session | Phase | Streak | Due | Flags |
-> |---|---|---|---|---|---|
-> | rust-network-services | 2 days ago | 1/3 (60%) | 8 | 2 | — |
-> | react-fundamentals | 47 days ago | 2/3 (78%) | — | 14 | ⚠ stale |
-> | system-design | 6 mo ago | 0/4 (10%) | — | 0 | ⚠ dormant |
-
-#### `/bodhikit:progress [project-name|all]`
-
-**What it does.** A full progress dashboard. Module completion, Bloom level per sub-topic with trend arrows, current streak, spaced-review box distribution, recent quiz pass rate, mastery milestones reached.
-
-**When to use.** Weekly or bi-weekly to take stock. Before deciding whether to push forward or shore up foundations. Before `/evaluate` if you want a quick read first.
-
-**When NOT to use.** You want a 3-line glance — use `/status`. You want trajectory analysis ("how did I get here?") — use `/evaluate`, which is much deeper.
+**When NOT to use.** You want trajectory analysis ("how did I get here, and what next?") — use `/evaluate`, which is much deeper and narrative.
 
 **Pairs well with.**
+- `/continue` — auto-invokes `/progress quick` as its first phase.
 - `/evaluate` — when you want narrative + recommendations on top of the numbers.
 - `/plan adjust` — when the dashboard suggests pacing problems.
 
 **Example.**
 ```
-/bodhikit:progress
+/bodhikit:progress all
 ```
-> Shows your Bloom-per-topic table, completion percentages, streak, retention by box, and a "what is going well / what to watch" closing paragraph.
+> | Project | Phase/Module | Done | Last session | Status | Health |
+> |---|---|---|---|---|---|
+> | rust-network-services | Phase 1 · M1.3 | 60% | 2d ago | active | |
+> | react-fundamentals | Phase 2 · M2.4 | 78% | 6w ago | dormant | |
+> | system-design | Phase 0 · M0.2 | 10% | 6mo ago | dormant | ⚠ v1 fields |
 
 #### `/bodhikit:plan [view|adjust|regenerate]`
 
@@ -525,7 +508,7 @@ These four skills let you see what you know, what you have planned, and where yo
 **When NOT to use.** You want to *learn* the topic — use `/learn` (which includes an assessment). You want to quickly test a single concept — use `/quiz`. You want to know how much you have grown over time — use `/evaluate`.
 
 **Pairs well with.**
-- `/explain` — when an assessment surfaces a specific gap.
+- `/teach` — when an assessment surfaces a specific gap (its understanding-only path is enough to close it).
 - `/learn` — when the assessment reveals you should formalize this into a project.
 
 **Example.**
@@ -570,7 +553,7 @@ These three skills keep what you have learned from leaking out.
 
 **Pairs well with.**
 - `/reflect` — auto-invokes `/forget` for low-confidence concepts.
-- `/explain` — once a concept is back in Box 1, deep-dive it to make the next quiz land.
+- `/teach` — once a concept is back in Box 1, an understanding-only deep dive makes the next quiz land.
 
 **Example.**
 ```
@@ -602,27 +585,7 @@ These three skills keep what you have learned from leaking out.
 
 ### Deep work skills
 
-These four go beyond the routine when you need depth, materials, or a code-level conversation.
-
-#### `/bodhikit:explain <concept>`
-
-**What it does.** Feynman-style deep dive on a single concept. Phase 1: BodhiKit explains it simply with a learner-domain analogy if one fits (from your `learnerBackground.domains[]`). Phase 2: you explain it back. Phase 3: gap analysis — what you nailed, what is missing, what is misconception. Phase 4: targeted refinement per gap. Final test: explain it again, end to end. Updates Bloom level and spaced-review box based on quality.
-
-**When to use.** A concept is foggy and you want to *understand* it, not just be able to *use* it. You "passed" a quiz but feel like you do not have the model. Before teaching the concept to someone else. After a confusing book chapter or talk.
-
-**When NOT to use.** You want hands-on practice — use `/practice`. You want to be taught a concept you have never seen — use `/teach` (it covers ground first). You want to test recall — use `/quiz`.
-
-**Pairs well with.**
-- `/assess` — surfaces the gap; `/explain` closes it.
-- `/quiz` — verifies the gap stayed closed a day later.
-
-**Example.**
-```
-/bodhikit:explain trait objects vs generics
-```
-> Simple-language opening, your explain-back, gap analysis ("you correctly distinguished static vs dynamic dispatch but missed the size implication for trait objects"), refinement, final test. Typically 15–30 minutes for a meaty concept.
-
-**Pedagogy:** [Feynman](#4-feynman-technique) (the entire skill), [Analogy Protocol](#when-bodhikit-reaches-for-an-analogy) (when stuck).
+These three go beyond the routine when you need depth, materials, or a code-level conversation. (Want a Feynman-style deep dive on a single foggy concept? That lives inside `/teach` now — say "explain X" or decline the exercise, and `/teach` runs explain → explain-back → gap analysis → refinement at full depth, records the result, and stops. Typically 15–30 minutes for a meaty concept.)
 
 #### `/bodhikit:practice [topic|next]`
 
@@ -655,7 +618,7 @@ These four go beyond the routine when you need depth, materials, or a code-level
 
 **Pairs well with.**
 - `/practice` — for the post-exercise review.
-- `/explain` — when the review surfaces a gap worth Feynman-treating.
+- `/teach` — when the review surfaces a gap worth Feynman-treating (understanding-only path).
 
 **Example.**
 ```
@@ -669,7 +632,7 @@ These four go beyond the routine when you need depth, materials, or a code-level
 
 **When to use.** Starting a new project and want a curated reading/practice list. The plan mentions a concept and you want concrete materials for it. You bought a book/course and want BodhiKit to use it as a primary or supplementary material.
 
-**When NOT to use.** You want BodhiKit to *teach* a concept rather than point you at materials — use `/teach` or `/explain`. You want recent news/blogposts on a topic — `find` prioritizes durable resources (official docs, structured courses, top books), not freshness.
+**When NOT to use.** You want BodhiKit to *teach* a concept rather than point you at materials — use `/teach`. You want recent news/blogposts on a topic — `find` prioritizes durable resources (official docs, structured courses, top books), not freshness.
 
 **Pairs well with.**
 - `/learn` — at project start, find resources for the plan.
@@ -723,7 +686,7 @@ These two skills are for the moments learning gets concrete: real bugs, real cod
 **Pairs well with.**
 - `/practice` — auto-invokes `/debug-together` when your practice code has a real bug.
 - `/teach` — auto-invokes when an exercise produces a bug.
-- `/explain` — when the bug reveals a concept gap, `/explain` it after the bug is fixed.
+- `/teach` — when the bug reveals a concept gap, an understanding-only deep dive after the fix closes it.
 
 **Example.**
 ```
@@ -907,9 +870,9 @@ A concept is considered **mastered** when:
 
 ## The Pedagogy Behind BodhiKit
 
-BodhiKit is built on twelve research-backed methodologies. None of them are decorative — each one solves a specific learning problem that comes up during a real journey, and each one fires inside specific skills at specific moments. This section is the map: what each methodology is, what problem it solves, when BodhiKit reaches for it, and where to read the primary source if you want to go deeper.
+BodhiKit is built on sixteen research-backed methodologies. None of them are decorative — each one solves a specific learning problem that comes up during a real journey, and each one fires inside specific skills at specific moments. This section maps the twelve core ones in full cards: what each methodology is, what problem it solves, when BodhiKit reaches for it, and where to read the primary source. The four added in 1.11.0 — cognitive load / faded worked examples (Sweller), pretesting (Kornell, Hays & Bjork), successive relearning (Rawson & Dunlosky), and confidence calibration (Koriat) — are cited in the README's Science section; in short: `/teach` opens with an ungraded guess-first question and fades scaffolding from worked example to full problem, `/quiz` collects a sure/mostly/guessing tag before every reveal and re-asks missed concepts until one successful retrieval, and `/progress` shows you what your confidence is worth.
 
-If you only have time for one paragraph: **BodhiKit's job is to make the next move in your learning the one most likely to grow durable, transferable understanding — not the one most likely to feel productive in the moment.** The twelve methodologies below are the operationalization of that.
+If you only have time for one paragraph: **BodhiKit's job is to make the next move in your learning the one most likely to grow durable, transferable understanding — not the one most likely to feel productive in the moment.** The methodologies below are the operationalization of that.
 
 ---
 
@@ -941,7 +904,7 @@ If you only have time for one paragraph: **BodhiKit's job is to make the next mo
 - `/continue` Phase 4: surfaces concepts where `nextReview ≤ today`.
 - `/quiz`: every answer updates the box per the canonical mapping (Box 1 → 1 day, Box 2 → 3, Box 3 → 7, Box 4 → 14, Box 5 → 30).
 - `/forget`: learner-initiated demotion to Box 1 — honest self-assessment.
-- `/teach` Phase 5 and `/explain` Phase 4: new and refined concepts enter the system.
+- `/teach` Phase 5 (and its understanding-only path): new and refined concepts enter the system.
 
 **Go deeper.**
 - Hermann Ebbinghaus, *[Memory: A Contribution to Experimental Psychology](https://en.wikipedia.org/wiki/Memory:_A_Contribution_to_Experimental_Psychology)* (1885) — the original forgetting-curve experiments.
@@ -972,7 +935,7 @@ If you only have time for one paragraph: **BodhiKit's job is to make the next mo
 **Why BodhiKit uses it.** Recognition feels like understanding but is not. You can "follow along" with a lecture on monads and still not be able to write one. Forcing you to *generate* the explanation in your own words breaks the illusion of competence and surfaces the actual gap.
 
 **When it fires.**
-- `/explain` — the entire skill is a direct application of all four steps.
+- `/teach`'s understanding-only path — a direct application of all four steps.
 - `/teach` Phase 5: explain-back check.
 - `/teach-back`: a Feynman application scaled to a blog post; reading the masters happens *after* drafting so your gaps surface before they get hidden.
 - The [Analogy-Escalation Protocol](#when-bodhikit-reaches-for-an-analogy): operationalizes Feynman step 4 ("create better analogies") with a structured ladder.
@@ -1125,7 +1088,7 @@ If you only have time for one paragraph: **BodhiKit's job is to make the next mo
 | Day 1 — `/learn` onboarding | Bloom (assessment), Constructivism (start by building, not reading) |
 | Daily — `/continue` rhythm | Spaced Repetition (due reviews), ZPD (next-concept calibration) |
 | Teaching a concept — `/teach` | ZPD (Gradual Release), Feynman (explain-back), Bloom (exercise calibration), Desirable Difficulties (interleaving) |
-| A concept stalls — `/explain`, analogy protocol | Feynman (4-step refinement), ZPD (Beyond signals → protocol fires) |
+| A concept stalls — `/teach` understanding-only, analogy protocol | Feynman (4-step refinement), ZPD (Beyond signals → protocol fires) |
 | Honest self-assessment — `/reflect`, `/forget` | Metacognition, Growth Mindset, Spaced Repetition (box updates) |
 | Hands-on building — `/practice`, `/pair` | Deliberate Practice, Pair Programming, Constructivism |
 | A real bug — `/debug-together` | Scientific Debugging, Growth Mindset (bugs as clues) |

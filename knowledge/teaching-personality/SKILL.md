@@ -85,7 +85,7 @@ This is Ambedkar's vision applied to code: educate so the learner can stand on t
 | No assessment history yet | "No assessment on record yet. We can start one with `/bodhikit:assess <topic>`." |
 | Tracking file missing where expected | "I expected to find `[file]` but it is not there. The project may have been moved or is mid-setup. Want me to look elsewhere?" |
 
-`/status` is the one exception: it MAY use the bare data form ("No active learning projects.") without warmth, because it is explicitly the flourish-free skill.
+`/progress` quick and `all` modes are the one exception: they MAY use the bare data form ("No active learning projects.") without warmth, because they are explicitly the flourish-free modes.
 
 ## Aphorisms (max 1 per session)
 

@@ -9,7 +9,7 @@ argument-hint: "[<project-name>]"
 You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-schema` KB for all file shapes and discovery procedure. Methodology KBs load per-phase below. Pedagogical research on spacing and interleaving (Bjork's desirable-difficulties) is internalized in this skill's ordering and is not loaded as a KB here.
 
 This skill orchestrates a complete learning session. It auto-invokes other BodhiKit skills as needed:
-- `/status` — shown first as a quick check-in
+- `/progress quick` — shown first as a quick check-in
 - `/quiz` — for spaced review of due concepts
 - `/teach` — when the learner continues with the next module
 - `/reflect` — when the learner indicates they are done
@@ -44,7 +44,7 @@ Which path shall we walk today?
 
 ## Phase 2: Quick Status
 
-**Auto-invoke `/status --invoked-from=continue`** to show the learner a quick 3-line check-in of where they are. The flag tells `/status` to skip discovery (we already have the project) and skip personality re-loading.
+**Auto-invoke `/progress quick --invoked-from=continue`** to show the learner a quick 3-line check-in of where they are. The flag tells `/progress` to skip discovery (we already have the project), skip personality re-loading, and stay in project-scoped quick mode.
 
 ---
 
@@ -115,23 +115,20 @@ When the learner indicates they are done (says goodbye, "I am done," "that is en
 
 ### Session State Updates
 
-After reflection (or if the learner declines reflection), update tracking:
+After reflection (or if the learner declines reflection), update tracking per the `state-schema` KB write path. Sub-skills that ran (`/teach`, `/practice`, `/reflect`) already performed their own writes — do not repeat them; cover only what happened outside the sub-skills:
 
-1. Update `state.json` (slim shape per `state-schema` KB — no narrative fields):
-   - `lastSessionAt` → current timestamp
-   - `totalSessions` → increment
-   - Append today to `sessionDates` (if not already present)
-   - `currentModule` → wherever they ended up
-   - `lastActivity` → ONE short sentence (≤120 chars), e.g. "Taught indexing; learner reached Bloom's 3 on B-tree intuition."
-   - `overallCompletion` → recalculate based on modules completed
-   - Do NOT write `lastSessionSummary` or `bloomResetNote` — those fields are removed in v2. Narrative goes to `progress.md` instead.
+1. **Session bookkeeping** (the script counts the session, maintains the streak, and never double-counts a day):
 
-2. Append a session entry to `progress.md` (v2 live document — full narrative goes here, not in `state.json`):
-   - Insert at the top as the new live entry. Older live entry stays in place (it will be archived by `/housekeep` on the next run).
-   - Structure: `## YYYY-MM-DD — Session N (<short label>)`, then **Duration**, **Activities** bullets, **Outcomes**, **Bloom adjustments** (if any), **Next**.
-   - 1-2 paragraph narrative is enough for routine sessions. Milestone sessions (phase complete, breakthrough) can go up to 20 lines.
+   ```
+   "${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> touch-state \
+     --activity "<one line, ≤120 chars>" [--module "<where they ended up>"] [--completion N]
+   ```
 
-3. Update `spaced-review.json` if any concepts were reviewed or new concepts introduced.
+2. **Spaced-review updates for concepts reviewed in this skill's due-concepts branch** (Phase 4), if `/quiz` was not invoked to handle them: one `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" record-review --concept "<c>" --result correct|incorrect|partial --tested-bloom N --source continue` per concept.
+
+3. **Append a session entry to `progress.md` with the Write tool** — only if no sub-skill already wrote today's entry: `## YYYY-MM-DD — Session N (<short label>)`, then **Duration**, **Activities**, **Outcomes**, **Bloom adjustments**, **Next**. 1-2 paragraphs for routine sessions; up to 20 lines for milestones. Existing content preserved verbatim below.
+
+**Fallback:** if `bodhi-state` is unavailable, follow the `state-schema` KB fallback rule — manual read → mutate-in-place → write → verify, preserving unknown fields.
 
 4. Close warmly: "Good work today. [Specific mention of what they accomplished]. Rest well — the mind does its deepest learning in the quiet moments between sessions."
 
@@ -149,7 +146,7 @@ Use the canonical streak table from the `teaching-personality` KB. Do not restat
 
 ```
 /continue
-  ├── /status (quick 3-line check-in)
+  ├── /progress quick (3-line check-in)
   ├── spaced review for due concepts
   ├── learner chooses what to do
   │     ├── option 1 → /teach (guided teaching session)

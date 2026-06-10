@@ -50,7 +50,7 @@ For each main concept from today's session (batch the three steps per concept if
 
 2. **Confidence rating.** "Now, how confident — 1 to 10?" Do NOT judge the rating. "Honesty is where growth starts."
 
-3. **Cross-check against today's observed outcomes.** Before deciding the Leitner update, read `progress.md` (the live entry just written by today's `/teach` / `/quiz` / `/practice` / `/explain`) and the `reviewHistory[]` entries dated today on this concept in `spaced-review.json`. The cross-check answers: did the learner demonstrate this concept at the level their confidence implies?
+3. **Cross-check against today's observed outcomes.** Before deciding the Leitner update, read `progress.md` (the live entry just written by today's `/teach` / `/quiz` / `/practice`) and the `reviewHistory[]` entries dated today on this concept in `spaced-review.json`. The cross-check answers: did the learner demonstrate this concept at the level their confidence implies?
 
 4. **Apply the canonical Leitner update (per the `spaced-repetition` KB):**
    - **Promote one box** ONLY IF confidence ≥ 8 AND the retrieval was clean (no fluency-failure signals) AND today's observed outcomes align (no Level-3+ misses on this concept in `reviewHistory[]`). Acknowledge the alignment by name.
@@ -84,49 +84,28 @@ Collect concepts flagged for demotion across Q1 and Q3; auto-invoke `/forget --i
 
 ## Phase 4: Close the Session
 
-Update tracking files (shapes per `state-schema` KB). Per the 1.10.12 imperative-write discipline: every "update X" is a real Write call. The closing prose is the receipt, not a substitute for the writes.
+Update tracking per the `state-schema` KB write path:
 
-**CHECKPOINT-before-writes (name aloud BEFORE any Write call):**
+1. **Record each Q3 box decision** (promote / hold / demote were decided in Phase 2). Map the decision onto one `record-review` call per concept, with the confidence tag (rating ≥ 8 → `sure`, 5-7 → `mostly`, ≤ 4 → `guessing`):
 
-> "I am about to write up to four files: `.bodhi/state.json` (session counters + lastActivity), `.bodhi/progress.md` (reflection entry prepended), `.bodhi/spaced-review.json` (box movements from confidence ratings), and `learningWithBodhi/.bodhi-profile.json` (cumulativeStats.totalSessions if not already counted today). Computing now..."
+   ```
+   "${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> record-review \
+     --concept "<concept>" --result correct|partial|incorrect \
+     --tested-bloom <level the retrieval prompt demonstrated> \
+     --confidence sure|mostly|guessing --source reflect
+   ```
 
-**Step 1 — Update `.bodhi/state.json` (imperative).**
+   Promote = `correct`; hold = `partial` (box held, re-test soon — the canonical mid-band rule); demote-list concepts are NOT recorded here — they go through `/forget` in Phase 3, which writes their history itself.
 
-1. Read the file.
-2. Mutate in place: update `lastSessionAt`, increment `totalSessions`, append today's date to `sessionDates` (idempotent — skip if already present), update `currentStreak`, update `lastActivity` (one short sentence, ≤120 chars). Do NOT write `lastSessionSummary` or `bloomResetNote` — those fields are removed in v2.
-3. Write the file using the Write tool. Preserve every other field verbatim.
-4. Verify: re-read; confirm counters incremented and `lastActivity` updated.
+2. **Record the reflection batch once** (only when Q3 reviewed tracked concepts): `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" record-session --type spaced-review --data '{"conceptsReviewed": N, "calibrationNote": "<one sentence on confidence-vs-outcome alignment>"}'`.
 
-**Step 2 — Update `.bodhi/progress.md` (imperative).** This is the v2 live document — narrative goes here.
+3. **Session bookkeeping** (the script counts the session and maintains the streak; it never double-counts a day): `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" touch-state --activity "<one line>"`.
 
-1. Read the file.
-2. Compose the new entry at the top: `## YYYY-MM-DD — Session N (Reflection)` followed by the Q1/Q2/Q3/Q4 responses, Bloom adjustments, and concepts flagged for demotion. This is the canonical narrative of what happened — `state.json.lastActivity` is just the one-line pointer to it.
-3. Construct new full file content: new entry + separator + existing content (preserved verbatim).
-4. Write the file using the Write tool.
-5. Verify: re-read; confirm new entry at top, prior Summary block intact.
+4. **Profile session counter** — only if `touch-state` reported `"newSession": true`: `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" bump-profile --counter totalSessions`.
 
-**Step 3 — Update `.bodhi/spaced-review.json` (imperative).**
+5. **Append the reflection entry to `.bodhi/progress.md` with the Write tool**: `## YYYY-MM-DD — Session N (Reflection)`, the Q1/Q2/Q3/Q4 responses, Bloom adjustments, concepts flagged for demotion. This is the canonical narrative; `lastActivity` is just the pointer. Existing content preserved verbatim below.
 
-1. Read the file.
-2. Read-tolerate v2: inline-fill per `state-migration` KB if at `version: 2`.
-3. Mutate parsed JSON in place (preserve non-canonical fields per 1.10.9):
-   - Apply box movements from confidence ratings (per `spaced-repetition` KB).
-   - Update `lastReviewCheck` to today's ISO date.
-   - Set top-level `version: 3` if not already.
-4. Write the file using the Write tool.
-5. Verify: re-read; confirm `version: 3`, box movements landed.
-
-**Step 4 — Update `learningWithBodhi/.bodhi-profile.json` (imperative).**
-
-1. Check the double-count guard: was today's date already in `state.json.sessionDates` BEFORE step 1's append? If yes, skip — `totalSessions` already counted today. If no, proceed.
-2. Read `.bodhi-profile.json`.
-3. Mutate in place: increment `cumulativeStats.totalSessions` by 1. Update `lastUpdated` to today's ISO timestamp. Do NOT touch `activeProjects` here; that array lives in `.bodhi-profile.projects.json` and only `/learn`, `/evaluate`, and `/mentor` touch it.
-4. Write the file using the Write tool. Preserve every other field verbatim.
-5. Verify: re-read; confirm counter incremented exactly once.
-
-**CHECKPOINT-after-writes (name aloud):**
-
-> "Files written and verified: state.json, progress.md, spaced-review.json [+ profile if step 4 fired]. Closing now."
+**Fallback:** if `bodhi-state` is unavailable, follow the `state-schema` KB fallback rule — manual read → mutate-in-place → write → verify, preserving unknown fields.
 
 Close with warmth and specific encouragement. Use streak acknowledgment if appropriate.
 

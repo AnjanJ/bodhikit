@@ -152,38 +152,26 @@ After any pairing mode:
 
 1. **Reflect on the session**: "What did you notice about how we worked together? What was different from coding alone?"
 
-2. **Update tracking — imperative writes (1.10.12 discipline).** Apply the canonical update rules from the `spaced-repetition` KB; every "update X" below is a real Write tool call, not a state description.
+2. **Update tracking** per the `state-schema` KB write path, applying the `spaced-repetition` KB judgment rules:
 
-   **CHECKPOINT-before-writes (name aloud BEFORE any Write call):**
+   a. **New concepts surfaced during pairing:** `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" add-concept --concept "<name>" --module "<current module>"` (canonical Box-1 defaults).
 
-   > "I am about to write three files: `.bodhi/state.json` (lastActivity), `.bodhi/spaced-review.json` (new concepts + box movements per the session), and `.bodhi/progress.md` (pair entry prepended). Computing now..."
+   b. **Concepts the learner demonstrated command of** (clean explain-back at step 6, navigated themselves at step 7, post-piece reflection showed an underlying mental model):
 
-   **Step A — Update `.bodhi/spaced-review.json` (imperative).**
-   1. Read the file.
-   2. Read-tolerate v2: inline-fill per `state-migration` KB if at `version: 2`.
-   3. Mutate parsed JSON in place (preserve non-canonical fields per 1.10.9):
-      - **For new concepts surfaced during pairing**, append entries with `box: 1`, `nextReview: tomorrow`, `bloomLevel: 0`, `feynmanPassed: false`, `consecutiveCorrectAtL4Plus: 0` — defaults match the KB's "new concept" rule.
-      - **For concepts the learner demonstrated mastery of during the session** (clean explain-back at step 6, navigated themselves at step 7, post-piece reflection showed an underlying mental model): apply the spaced-repetition KB's correct-recall update — move up one box (max 5), recompute `nextReview` from the box interval. Do NOT touch `feynmanPassed` here — owned by `/teach` and `/explain` Phase 5 (pairing's step 6 check is necessary-but-not-sufficient for the gate).
-      - Set top-level `version: 3` if not already.
-   4. Write the file using the Write tool.
-   5. Verify: re-read; confirm `version: 3`, new/updated concepts present.
+      ```
+      "${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" record-review --concept "<name>" --result correct \
+        --tested-bloom <level demonstrated> --source pair
+      ```
 
-   **Step B — Append to `.bodhi/progress.md` (imperative).**
-   1. Read the file.
-   2. Compose the new entry at the top: `## YYYY-MM-DD — Pair (<mode>, <topic>)`, then **What we built**, **Mode signals observed** (which step-7 signals fired, if reversal happened), **Bloom adjustments**, **Next**.
-   3. Construct new full file content: new entry + separator + existing content (preserved verbatim).
-   4. Write the file using the Write tool.
-   5. Verify: re-read; confirm new entry at top, prior Summary block intact.
+      Do NOT call `set-feynman` here — pairing's step-6 check is necessary-but-not-sufficient for that gate (owned by `/teach`, including its understanding-only sessions).
 
-   **Step C — Update `.bodhi/state.json` (imperative).**
-   1. Read the file.
-   2. Mutate in place: slim shape, `lastActivity` points at the `progress.md` entry.
-   3. Write the file using the Write tool. Preserve every other field verbatim.
-   4. Verify: re-read; confirm `lastActivity` updated.
+   c. **Record the session once** (when at least one tracked concept was touched): `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" record-session --type pair --data '{"notes": "<mode>, <topic>"}'`.
 
-   **CHECKPOINT-after-writes (name aloud):**
+   d. **Session pointer:** `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" touch-state --activity "<one line pointing at the progress.md entry>"`.
 
-   > "Files written and verified: spaced-review.json, progress.md, state.json."
+   e. **Append the pair entry to `.bodhi/progress.md` with the Write tool**: `## YYYY-MM-DD — Pair (<mode>, <topic>)`, then **What we built**, **Mode signals observed** (which step-7 signals fired, if reversal happened), **Bloom adjustments**, **Next**. Existing content preserved verbatim below.
+
+   **Fallback:** if `bodhi-state` is unavailable, follow the `state-schema` KB fallback rule — manual read → mutate-in-place → write → verify, preserving unknown fields.
 
 3. **Bridge to independence**: "Next time you work on something similar, try talking through your approach out loud before you write code. You do not need me for that. Your own voice is the best navigator."
 

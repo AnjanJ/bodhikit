@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "lastReviewCheck": "2026-03-14",
   "concepts": [
     {
@@ -10,11 +10,31 @@
       "lastReviewed": "2026-03-12",
       "nextReview": "2026-03-26",
       "reviewHistory": [
-        {"date": "2026-03-08", "result": "correct", "boxBefore": 1, "boxAfter": 2},
-        {"date": "2026-03-10", "result": "correct", "boxBefore": 2, "boxAfter": 3},
-        {"date": "2026-03-12", "result": "correct", "boxBefore": 3, "boxAfter": 4}
+        {
+          "date": "2026-03-08",
+          "result": "correct",
+          "boxBefore": 1,
+          "boxAfter": 2
+        },
+        {
+          "date": "2026-03-10",
+          "result": "correct",
+          "boxBefore": 2,
+          "boxAfter": 3
+        },
+        {
+          "date": "2026-03-12",
+          "result": "correct",
+          "boxBefore": 3,
+          "boxAfter": 4
+        }
       ],
-      "relatedExercise": "exercises/01-hello-jsx/"
+      "relatedExercise": "exercises/01-hello-jsx/",
+      "bloomLevel": 0,
+      "feynmanPassed": false,
+      "consecutiveCorrectAtL4Plus": 0,
+      "question": "",
+      "lastResult": ""
     },
     {
       "id": "component-functions",
@@ -24,10 +44,25 @@
       "lastReviewed": "2026-03-13",
       "nextReview": "2026-03-20",
       "reviewHistory": [
-        {"date": "2026-03-10", "result": "correct", "boxBefore": 1, "boxAfter": 2},
-        {"date": "2026-03-13", "result": "correct", "boxBefore": 2, "boxAfter": 3}
+        {
+          "date": "2026-03-10",
+          "result": "correct",
+          "boxBefore": 1,
+          "boxAfter": 2
+        },
+        {
+          "date": "2026-03-13",
+          "result": "correct",
+          "boxBefore": 2,
+          "boxAfter": 3
+        }
       ],
-      "relatedExercise": "exercises/02-first-component/"
+      "relatedExercise": "exercises/02-first-component/",
+      "bloomLevel": 0,
+      "feynmanPassed": false,
+      "consecutiveCorrectAtL4Plus": 0,
+      "question": "",
+      "lastResult": ""
     },
     {
       "id": "props-passing",
@@ -37,11 +72,31 @@
       "lastReviewed": "2026-03-13",
       "nextReview": "2026-03-20",
       "reviewHistory": [
-        {"date": "2026-03-10", "result": "incorrect", "boxBefore": 1, "boxAfter": 1},
-        {"date": "2026-03-12", "result": "correct", "boxBefore": 1, "boxAfter": 2},
-        {"date": "2026-03-13", "result": "correct", "boxBefore": 2, "boxAfter": 3}
+        {
+          "date": "2026-03-10",
+          "result": "incorrect",
+          "boxBefore": 1,
+          "boxAfter": 1
+        },
+        {
+          "date": "2026-03-12",
+          "result": "correct",
+          "boxBefore": 1,
+          "boxAfter": 2
+        },
+        {
+          "date": "2026-03-13",
+          "result": "correct",
+          "boxBefore": 2,
+          "boxAfter": 3
+        }
       ],
-      "relatedExercise": "exercises/03-user-card/"
+      "relatedExercise": "exercises/03-user-card/",
+      "bloomLevel": 0,
+      "feynmanPassed": false,
+      "consecutiveCorrectAtL4Plus": 0,
+      "question": "",
+      "lastResult": ""
     },
     {
       "id": "props-destructuring",
@@ -51,11 +106,31 @@
       "lastReviewed": "2026-03-13",
       "nextReview": "2026-03-16",
       "reviewHistory": [
-        {"date": "2026-03-12", "result": "correct", "boxBefore": 1, "boxAfter": 2},
-        {"date": "2026-03-13", "result": "incorrect", "boxBefore": 2, "boxAfter": 1},
-        {"date": "2026-03-13", "result": "correct", "boxBefore": 1, "boxAfter": 2}
+        {
+          "date": "2026-03-12",
+          "result": "correct",
+          "boxBefore": 1,
+          "boxAfter": 2
+        },
+        {
+          "date": "2026-03-13",
+          "result": "incorrect",
+          "boxBefore": 2,
+          "boxAfter": 1
+        },
+        {
+          "date": "2026-03-13",
+          "result": "correct",
+          "boxBefore": 1,
+          "boxAfter": 2
+        }
       ],
-      "relatedExercise": "exercises/03-user-card/"
+      "relatedExercise": "exercises/03-user-card/",
+      "bloomLevel": 0,
+      "feynmanPassed": false,
+      "consecutiveCorrectAtL4Plus": 0,
+      "question": "",
+      "lastResult": ""
     },
     {
       "id": "usestate-basics",
@@ -65,10 +140,25 @@
       "lastReviewed": "2026-03-14",
       "nextReview": "2026-03-17",
       "reviewHistory": [
-        {"date": "2026-03-13", "result": "correct", "boxBefore": 1, "boxAfter": 2},
-        {"date": "2026-03-14", "result": "correct", "boxBefore": 2, "boxAfter": 2}
+        {
+          "date": "2026-03-13",
+          "result": "correct",
+          "boxBefore": 1,
+          "boxAfter": 2
+        },
+        {
+          "date": "2026-03-14",
+          "result": "correct",
+          "boxBefore": 2,
+          "boxAfter": 2
+        }
       ],
-      "relatedExercise": "exercises/04-counter/"
+      "relatedExercise": "exercises/04-counter/",
+      "bloomLevel": 0,
+      "feynmanPassed": false,
+      "consecutiveCorrectAtL4Plus": 0,
+      "question": "",
+      "lastResult": ""
     },
     {
       "id": "immutable-state-updates",
@@ -78,9 +168,19 @@
       "lastReviewed": "2026-03-14",
       "nextReview": "2026-03-15",
       "reviewHistory": [
-        {"date": "2026-03-14", "result": "incorrect", "boxBefore": 1, "boxAfter": 1}
+        {
+          "date": "2026-03-14",
+          "result": "incorrect",
+          "boxBefore": 1,
+          "boxAfter": 1
+        }
       ],
-      "relatedExercise": "exercises/05-todo-list/"
+      "relatedExercise": "exercises/05-todo-list/",
+      "bloomLevel": 0,
+      "feynmanPassed": false,
+      "consecutiveCorrectAtL4Plus": 0,
+      "question": "",
+      "lastResult": ""
     },
     {
       "id": "event-handlers",
@@ -90,9 +190,19 @@
       "lastReviewed": "2026-03-14",
       "nextReview": "2026-03-17",
       "reviewHistory": [
-        {"date": "2026-03-14", "result": "correct", "boxBefore": 1, "boxAfter": 2}
+        {
+          "date": "2026-03-14",
+          "result": "correct",
+          "boxBefore": 1,
+          "boxAfter": 2
+        }
       ],
-      "relatedExercise": "exercises/05-todo-list/"
+      "relatedExercise": "exercises/05-todo-list/",
+      "bloomLevel": 0,
+      "feynmanPassed": false,
+      "consecutiveCorrectAtL4Plus": 0,
+      "question": "",
+      "lastResult": ""
     },
     {
       "id": "conditional-rendering",
@@ -102,7 +212,12 @@
       "lastReviewed": null,
       "nextReview": "2026-03-15",
       "reviewHistory": [],
-      "relatedExercise": null
+      "relatedExercise": null,
+      "bloomLevel": 0,
+      "feynmanPassed": false,
+      "consecutiveCorrectAtL4Plus": 0,
+      "question": "",
+      "lastResult": ""
     }
   ]
 }
