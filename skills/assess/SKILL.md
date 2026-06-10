@@ -80,9 +80,9 @@ Translate Bloom's levels into plain language:
 
 If inside an active learning project:
 - Append a new assessment block at the top of `.bodhi/assessments/latest.md`: `## <Topic> — <YYYY-MM-DD>`, then the per-area Bloom table, evidence, recommendations. The prior assessment block stays in place — `/housekeep` will rotate it to `assessments/archive/` on its next run.
-- Append the structured entry via `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" record-assessment --trigger assess --data '<entry JSON>'` per the `state-schema` KB write path (fallback: manual append preserving the file's shape).
+- Append the structured entry via `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> record-assessment --trigger assess --data '<entry JSON>'` per the `state-schema` KB write path (fallback: manual append preserving the file's shape).
 - Append a short assessment entry to `.bodhi/progress.md` (live document): `## YYYY-MM-DD — Assessment (<topic>)`, then **Bloom levels** table summary + **Headline finding**. Full detail stays in `assessments/latest.md`; the `progress.md` entry is just the pointer + key result.
-- Update `.bodhi/state.json` (slim — no narrative): set `lastActivity` to ONE short sentence; bump `currentBloomLevel` per topic if the assessment surfaced changes.
+- `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> touch-state --activity "<one line>"`. If the assessment shifted any per-topic level, also update `state.json.currentBloomLevel` manually per the `state-schema` KB fallback discipline (the Bloom maps are an explicit manual carve-out — read, mutate in place, write, verify).
 - Offer: "Would you like me to adjust your learning plan based on this assessment?"
 
 If no active project:

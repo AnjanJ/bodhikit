@@ -82,6 +82,8 @@ Summarize what the code reveals about their learning journey:
 
 "Your code shows [specific strength]. You are clearly developing [skill]. The areas we discussed — [brief list] — are natural next steps in your growth."
 
-If an active learning project exists, update:
-- `.bodhi/state.json` (slim — no narrative) — set `lastActivity` to ONE short sentence pointing at the review.
-- `.bodhi/progress.md` (v2 live document — narrative goes here) — append a review entry at the top: `## YYYY-MM-DD — Code review (<file or topic>)`, then **What was reviewed**, **Strengths shown**, **Growth areas**, **Bloom adjustments** (if any).
+If an active learning project exists, update per the `state-schema` KB write path:
+- `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> touch-state --activity "<one line pointing at the review>"`
+- `.bodhi/progress.md` (v2 live document — narrative goes here) — append a review entry at the top with the Write tool: `## YYYY-MM-DD — Code review (<file or topic>)`, then **What was reviewed**, **Strengths shown**, **Growth areas**, **Bloom adjustments** (if any).
+
+**Fallback:** if `bodhi-state` is unavailable, follow the `state-schema` KB fallback rule.

@@ -1,6 +1,6 @@
 # BodhiKit
 
-[![Version](https://img.shields.io/badge/version-1.11.0-blue)](./CHANGELOG.md) [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow?logo=buymeacoffee)](https://buymeacoffee.com/anjanj) [![Sponsor](https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ea4aaa?logo=githubsponsors)](https://github.com/sponsors/AnjanJ)
+[![Version](https://img.shields.io/badge/version-1.11.1-blue)](./CHANGELOG.md) [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow?logo=buymeacoffee)](https://buymeacoffee.com/anjanj) [![Sponsor](https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ea4aaa?logo=githubsponsors)](https://github.com/sponsors/AnjanJ)
 
 **Research-informed interactive coding tutor for Claude Code.**
 
@@ -80,7 +80,7 @@ That's it. All skills, agents, rules, and knowledge bases are immediately availa
 
 ## Upgrading
 
-**From 1.10.x** — no data migration. 1.11.0 adds the deterministic state layer (`scripts/bodhi-state`), which requires `python3` on PATH (present by default on macOS and Linux). Tracking files are unchanged; skills simply stop hand-editing them. Two commands moved: `/explain <concept>` is now `/teach <concept>` (tell it you just want to understand — same Feynman deep dive, no exercise), and `/status` is now `/progress quick` (with `/progress all` for the cross-project table).
+**From 1.10.x** — no data migration. 1.11.0 adds the deterministic state layer (`scripts/bodhi-state`), which requires `python3` on PATH (present by default on macOS and Linux). **Windows:** use WSL, or ensure a `python3` alias exists on PATH — without it the plugin degrades to hand-edited JSON fallbacks (the Stop-hook safety net stays silent rather than erroring). Tracking files are unchanged; skills simply stop hand-editing them. Two commands moved: `/explain <concept>` is now `/teach <concept>` (tell it you just want to understand — same Feynman deep dive, no exercise), and `/status` is now `/progress quick` (with `/progress all` for the cross-project table).
 
 **From 1.9.x or earlier** — `/bodhikit:housekeep migrate` handles the chained v1 → v2 → v3 conversion in one command, per-target idempotent and non-destructive. The 1.10.x release line introduced per-concept Bloom + Feynman tracking in `spaced-review.json` (v2 → v3 schema bump). Running migrate on a project with pre-existing tracking files:
 

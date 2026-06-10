@@ -48,6 +48,9 @@ for f in skills/*/SKILL.md; do
   if ! head -10 "$f" | grep -q '^user-invocable: true'; then
     err "$f missing 'user-invocable: true'"
   fi
+done
+# Voice contract applies to skills AND agents (CLAUDE.md authoring contract).
+for f in skills/*/SKILL.md agents/*.md; do
   if ! grep -q 'teaching-personality' "$f"; then
     err "$f does not reference teaching-personality KB"
   fi
@@ -276,12 +279,12 @@ fi
 # Skills that write to spaced-review.json after 1.10.0 MUST mention at least one
 # of the new v3 per-concept fields (bloomLevel, feynmanPassed,
 # consecutiveCorrectAtL4Plus). Catches regressions where a skill silently strips
-# the new fields by writing only the v2 shape. Warn for now; promotes to err in M6.
+# the new fields by writing only the v2 shape.
 #
 # Heuristic: a skill is a "writer" if it both references spaced-review.json AND
 # mentions either "Update tracking", "Apply the spaced-repetition KB", or
-# explicit append/update verbs near the file. Limit checks to the skills the
-# sprint actually wired (quiz, teach, practice, forget, pair; /explain merged into /teach in 1.11.0).
+# explicit append/update verbs near the file. Scope: the v3 writer set
+# (quiz, teach, practice, forget, pair; /explain merged into /teach in 1.11.0).
 for s in quiz teach practice forget pair; do
   f="skills/$s/SKILL.md"
   if [ ! -f "$f" ]; then continue; fi
@@ -671,7 +674,7 @@ else
   if ! grep -q 'BOX_INTERVALS = {1: 1, 2: 3, 3: 7, 4: 14, 5: 30}' scripts/bodhi-state; then
     err "scripts/bodhi-state BOX_INTERVALS drifted from the spaced-repetition KB table (1d/3d/7d/14d/30d)"
   fi
-  for t in spaced-review quiz targeted-reteach diagnostic-after-gap learner-forget; do
+  for t in spaced-review quiz targeted-reteach diagnostic-after-gap learner-forget pair practice evaluate other; do
     if ! grep -q "\"$t\"" scripts/bodhi-state; then
       err "scripts/bodhi-state SESSION_TYPES missing canonical type '$t' (state-schema KB)"
     fi
@@ -731,6 +734,42 @@ for f in skills/*/SKILL.md; do
     err "$f is ${bytes} bytes (> 18 KB budget) — move detail into a phase-loaded KB or bodhi-state"
   fi
 done
+
+# ---------------------------------------------------------------------------
+# 50. 1.11.1 state-integrity contracts.
+# ---------------------------------------------------------------------------
+# Successive-relearning retries must use --retry (no box movement).
+if ! grep -q -- '--retry' skills/quiz/SKILL.md; then
+  err "skills/quiz/SKILL.md relearning loop does not use record-review --retry (1.11.1 — retries must not undo the demotion)"
+fi
+if ! grep -q -- '--retry' scripts/bodhi-state; then
+  err "scripts/bodhi-state missing the --retry flag"
+fi
+# /reflect must carry the same-day guard (no double box movement per day).
+if ! grep -qi 'same-day guard' skills/reflect/SKILL.md; then
+  err "skills/reflect/SKILL.md missing the same-day guard (1.11.1 — one day of evidence, one box movement)"
+fi
+# /evaluate must carry the canonical completion criterion and the explicit ask.
+if ! grep -qi 'completion criterion' skills/evaluate/SKILL.md; then
+  err "skills/evaluate/SKILL.md missing the canonical completion criterion (1.11.1)"
+fi
+if ! grep -qi 'Project completion (canonical' knowledge/state-schema/SKILL.md; then
+  err "knowledge/state-schema/SKILL.md missing the Project completion section (1.11.1)"
+fi
+# Pretest fires on first exposure only.
+if ! grep -qi 'first exposure' skills/teach/SKILL.md; then
+  err "skills/teach/SKILL.md pretest not gated on first exposure (1.11.1 — pretesting research covers untaught material only)"
+fi
+# Every bodhi-state invocation in a skill carries --project.
+for f in skills/*/SKILL.md; do
+  if grep 'scripts/bodhi-state" ' "$f" | grep -vq -- '--project'; then
+    err "$f has a bodhi-state invocation without --project (defaults to cwd and errors outside the project dir)"
+  fi
+done
+# ai-learning-safeguards KB must not re-orphan.
+if ! grep -rq 'ai-learning-safeguards' skills/; then
+  err "ai-learning-safeguards KB is orphaned again — no skill references it"
+fi
 
 # ---------------------------------------------------------------------------
 echo

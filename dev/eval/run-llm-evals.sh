@@ -26,10 +26,11 @@ if ! command -v claude >/dev/null 2>&1; then
 fi
 
 run_scenario() {
-  name="$1"; prompt="$2"; assert="$3"
+  name="$1"; prompt="$2"; assert="$3"; prep="${4:-}"
   tmp=$(mktemp -d "/tmp/bodhi-eval-$name.XXXXXX")
   cp -r "$FIXTURE" "$tmp/learningWithBodhi"
   echo "== scenario: $name  (workdir $tmp)"
+  if [ -n "$prep" ]; then "$prep" "$tmp/learningWithBodhi/sql-deep-dive" || { echo "FAIL: $name prep"; FAIL=1; return; }; fi
   # --dangerously-skip-permissions is safe here: the run is confined to a
   # throwaway temp copy of the fixture. Without it, headless runs cannot
   # execute bodhi-state via Bash and silently degrade to the manual fallback
@@ -78,6 +79,20 @@ if [ "$want" = "all" ] || [ "$want" = "quiz" ]; then
   run_scenario quiz \
     "/bodhikit:quiz current — I cannot answer interactively in this headless run; simulate a brief 3-question quiz on the due concepts, assume I answered the first correctly (confidence: sure) and the rest incorrectly (confidence: mostly), then complete ALL tracking updates exactly as the skill specifies." \
     quiz
+fi
+
+# Scenario 4: reflect — the 1.11.1 same-day guard. Prep simulates a quiz
+# earlier the same day; reflect must NOT re-move that concept's box, must
+# record the un-reviewed concept, and touch-state must bump the profile once.
+prep_reflect() {
+  python3 "$REPO/scripts/bodhi-state" --project "$1" record-review \
+    --concept "B-tree indexes" --result correct --tested-bloom 3 \
+    --confidence sure --source quiz > /dev/null
+}
+if [ "$want" = "all" ] || [ "$want" = "reflect" ]; then
+  run_scenario reflect \
+    "/bodhikit:reflect — headless eval run: simulate my answers. Q1: honestly nothing felt hard today. Q2: normalization clicked faster than expected. Q3 covers today's two main concepts: for 'B-tree indexes' I give a clean, jargon-free 2-sentence explanation and rate myself 9; for 'Normalization trade-offs' I also give a clean 2-sentence explanation and rate myself 6. Q4: skip. Then complete ALL tracking updates exactly as the skill specifies, including the same-day guard." \
+    reflect prep_reflect
 fi
 
 echo

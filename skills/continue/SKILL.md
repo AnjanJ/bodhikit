@@ -58,14 +58,11 @@ Read these files (and only these):
 2. `.bodhi/plan/README.md` — arc overview, plus the current phase pointer
 3. `.bodhi/plan/phase-{currentPhase}.md` — detailed plan for the current phase only, NOT other phase files
 4. `.bodhi/progress.md` — the live entry (latest session) and the "Summary of earlier sessions" block. Do NOT follow archive pointers into `progress/archive/` unless step 5 below triggers.
-5. `.bodhi/spaced-review.json` — filter to concepts where `nextReview <= today`
+5. The due list via `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> due --limit 10` — never Read `spaced-review.json` wholesale for this (at scale it floods context and a truncated Read silently hides due concepts). Surface any `unparseableDates` the script reports.
 
-**Reach into the archive only when justified.** If `state.json.lastSessionAt` is more than 30 days ago, read the most recent 2-3 entries from `progress/archive/` to re-onboard the learner. Announce this in your turn output ("Loading the last few sessions for context since it has been a while").
+**Reach into the archive only when justified.** If `state.json.lastSessionAt` is more than 30 days ago, read the most recent 2-3 entries from `progress/archive/` to re-onboard the learner, announce it ("Loading the last few sessions for context since it has been a while"), and after the Phase 4 review record the diagnostic once: `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> record-session --type diagnostic-after-gap --data '{"notes": "<what held vs decayed>"}'`.
 
-Calculate streak:
-- Check if `sessionDates` includes yesterday or today
-- If yesterday: streak continues. If today: already counted. If older: streak resets to 1.
-- Update `sessionDates` and `currentStreak`
+Compute the streak FOR DISPLAY ONLY (if `sessionDates` includes yesterday, the streak continues; if today, already counted; older, it will reset). Do NOT edit `state.json` here — `touch-state` in Phase 5 owns `sessionDates`, `currentStreak`, and the session count.
 
 ---
 
@@ -77,14 +74,9 @@ Present a warm, brief recap:
 
 ### If concepts are due for spaced review:
 
-**For this branch, reference the `spaced-repetition` KB for the box→interval mapping and update rules applied below.**
-
 "Before we continue, there are seeds planted in earlier sessions that need tending today. Let us spend a few minutes reviewing [N] concepts."
 
-For each due concept:
-- Ask a quick recall question (Bloom's Level 3+)
-- Apply the update rules from the `spaced-repetition` KB
-- Keep review brief — 1-2 minutes per concept maximum
+**Auto-invoke `/quiz current --invoked-from=continue`** for the due batch — `/quiz` is the canonical review surface (confidence tags, successive relearning, per-concept question levels, session recording all live there; a hand-rolled inline review would be a second-class copy missing all four). Keep it brief: ask `/quiz` for the due concepts only, not a full 5-7 question mix, when fewer than 3 are due.
 
 ### After review (or if no review needed):
 
@@ -99,11 +91,11 @@ What feels right?"
 
 ### If the learner chooses option 1 (continue):
 
-**Auto-invoke `/teach --invoked-from=continue`** to proactively teach the next concept in the current module. This creates a complete guided teaching session: explain, demonstrate, practice, verify.
+**Auto-invoke `/teach --invoked-from=continue <next concept or module>`** — pass the resolved topic positionally after the flag (the callee skips discovery and expects the caller to name the target). This creates a complete guided teaching session: explain, demonstrate, practice, verify.
 
 ### If the learner chooses option 2 (practice):
 
-**Auto-invoke `/practice --invoked-from=continue`** to give them a hands-on exercise on the most recent topic.
+**Auto-invoke `/practice --invoked-from=continue <topic>`** — pass the most recent topic positionally; if a Box-1 concept for the current module exists, pass THAT (preserving practice's highest-leverage targeting, which its skipped discovery phase would otherwise have done).
 
 ---
 
@@ -124,7 +116,7 @@ After reflection (or if the learner declines reflection), update tracking per th
      --activity "<one line, ≤120 chars>" [--module "<where they ended up>"] [--completion N]
    ```
 
-2. **Spaced-review updates for concepts reviewed in this skill's due-concepts branch** (Phase 4), if `/quiz` was not invoked to handle them: one `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" record-review --concept "<c>" --result correct|incorrect|partial --tested-bloom N --source continue` per concept.
+2. **Spaced-review updates** are already done — the Phase 4 due batch went through `/quiz`, which wrote its own reviews and session entry. Do not repeat them.
 
 3. **Append a session entry to `progress.md` with the Write tool** — only if no sub-skill already wrote today's entry: `## YYYY-MM-DD — Session N (<short label>)`, then **Duration**, **Activities**, **Outcomes**, **Bloom adjustments**, **Next**. 1-2 paragraphs for routine sessions; up to 20 lines for milestones. Existing content preserved verbatim below.
 
@@ -147,7 +139,7 @@ Use the canonical streak table from the `teaching-personality` KB. Do not restat
 ```
 /continue
   ├── /progress quick (3-line check-in)
-  ├── spaced review for due concepts
+  ├── /quiz (chained, for due concepts)
   ├── learner chooses what to do
   │     ├── option 1 → /teach (guided teaching session)
   │     └── option 2 → /practice (hands-on exercise)

@@ -235,7 +235,7 @@ This is **not** a quiz. BodhiKit announces upfront that it is going to take a fe
 
 > "Here is the path you have walked. Ownership went 2 → 3 → 4 over Weeks 1–6, evidence from your Week-3 session: 'I rewrote the function so the caller owns the buffer.' Lifetimes went 0 → 1 → 2 — you have a working model now but stumble on multi-lifetime signatures (Week 5 quiz miss). Strong work on testing — Level 3 transferred from Python, now Level 4. Persistent challenge: trait bounds, three rounds of demote-and-recover. The plan still fits; suggest staying the course for Phase 2 (async/tokio). One thing worth naming: you have built a real CLI, debugged a real bug, and shipped your own tests. That is what Phase 1 was for."
 
-Mid-journey `/evaluate` does NOT trigger the capstone offer — that only fires when a project moves to `completedProjects`. It can, however, auto-invoke `/mentor` if she is at a fork in the road.
+Mid-journey `/evaluate` does NOT trigger the capstone offer — that only fires when a project moves to `completedProjects`. It can, however, *offer* `/mentor` when she is at a fork in the road (a major Bloom milestone) — accepting is always her call.
 
 ### Week 8 — A path question
 
@@ -366,7 +366,7 @@ Why this matters: research shows learners who reflect on their learning process 
 
 ## Skills Reference
 
-Twenty user-invocable skills, grouped by what they do for you. Each entry follows the same five-field structure: **What it does · When to use · When NOT to use · Pairs well with · Example**. The journey arc above shows them in context; this reference is the manual you reach for when you have a specific need.
+Eighteen user-invocable skills, grouped by what they do for you. Each entry follows the same five-field structure: **What it does · When to use · When NOT to use · Pairs well with · Example**. The journey arc above shows them in context; this reference is the manual you reach for when you have a specific need.
 
 ### The four routine skills
 
@@ -391,7 +391,7 @@ These four are the ones you will run most often. Together they orchestrate a com
 ```
 > "Welcome. Before we begin: what is driving Rust for you — a project, a job, or curiosity? Any languages you bring with you? How much time per week, and what does 'done' look like to you?"
 
-Expect ~60–90 minutes for the full Day 1: discovery, ~8 assessment questions, plan generation, first exercise, and a closing `/reflect`. Subsequent sessions are 30–90 minutes via `/continue`.
+Expect ~60–90 minutes for the full Day 1: discovery, ~8 assessment questions, plan generation, project scaffolding, and the first exercise (it closes by pointing you at `/bodhikit:continue` for tomorrow). Subsequent sessions are 30–90 minutes via `/continue`.
 
 #### `/bodhikit:continue [project-name]`
 
@@ -421,8 +421,8 @@ Expect ~60–90 minutes for the full Day 1: discovery, ~8 assessment questions, 
 
 **Pairs well with.**
 - `/practice` — invoked inside `/teach` for the You-Do phase, but standalone for follow-up exercises.
-- `/pair` — auto-invoked during the We-Do phase when collaborative coding fits better than guided discussion.
-- `/debug-together` — auto-invoked from the You-Do phase if your exercise produces a bug worth debugging together.
+- `/pair` — offered during the We-Do phase when collaborative coding fits better than guided discussion (you accept or decline).
+- `/debug-together` — offered from the You-Do phase if your exercise produces a bug worth debugging together.
 
 **Example.**
 ```
@@ -434,7 +434,7 @@ Expect ~60–90 minutes for the full Day 1: discovery, ~8 assessment questions, 
 
 #### `/bodhikit:reflect`
 
-**What it does.** End-of-session metacognitive reflection. Asks four short questions (hardest concept today, what surprised you, confidence ratings, what would you do differently), updates spaced-review boxes based on your self-rated confidence (auto-invokes `/forget` when confidence ≤ 4 on a concept), and writes the session summary to `progress.md`. May invoke `/housekeep` at the boundary.
+**What it does.** End-of-session metacognitive reflection. Asks four short questions (hardest concept today, what surprised you, confidence ratings, what would you do differently), records a Leitner update for concepts not already reviewed today — the retrieval outcome decides the box, the rating is pure calibration signal — auto-invokes `/forget` when confidence ≤ 4 or retrieval fails, and writes the session summary to `progress.md`. You can run `/housekeep` afterwards when the live docs feel heavy.
 
 **When to use.** Every session, at the end. Auto-invoked by `/continue` when you say goodbye. Even when you are running solo skills, take 3 minutes to reflect — research shows reflection is where ~20–30% of retention comes from.
 
@@ -442,7 +442,7 @@ Expect ~60–90 minutes for the full Day 1: discovery, ~8 assessment questions, 
 
 **Pairs well with.**
 - `/forget` — auto-invoked when you rate a concept low.
-- `/housekeep` — auto-invoked at session boundary to rotate the previous session entry into the archive.
+- `/housekeep` — run it at session boundaries to rotate the previous entry into the archive (`/continue` may offer it after long sessions).
 
 **Example.**
 ```
@@ -567,13 +567,13 @@ These three skills keep what you have learned from leaking out.
 
 **What it does.** Tends the garden of your `.bodhi/` tracking files. Default mode rotates the previous live session entry into `progress/archive/` and writes a one-line summary pointer back. Same for assessments. `migrate` converts pre-1.7.0 tracking files to the v2 layout (one-shot, idempotent, non-destructive). `--dry-run` reports what would change without writing.
 
-**When to use.** Routine: never — `/reflect` and `/continue` invoke it for you at session boundaries. Manually: when `progress.md` feels heavy and you want to compact before continuing. After upgrading from 1.6.x → 1.7+ — run `/housekeep migrate` once per project (or once at the `learningWithBodhi/` root for all projects).
+**When to use.** `/continue` may invoke it at session end when entries pile up, but do not rely on that — run it yourself when `progress.md` feels heavy and you want to compact before continuing. After upgrading from 1.6.x → 1.7+ — run `/housekeep migrate` once per project (or once at the `learningWithBodhi/` root for all projects).
 
 **When NOT to use.** You think it might lose data — it cannot. Archives are permanent and never edited.
 
 **Pairs well with.**
-- `/reflect` — auto-invokes at session end.
-- `/continue` — auto-invokes if un-housekept state is detected at session start.
+- `/continue` — MAY invoke it silently when un-housekept state is detected.
+- `/reflect` — pairs naturally; housekeep right after closing a session.
 
 **Example.**
 ```
@@ -589,7 +589,7 @@ These three go beyond the routine when you need depth, materials, or a code-leve
 
 #### `/bodhikit:practice [topic|next]`
 
-**What it does.** A hands-on exercise calibrated to your current Bloom level on the topic. Beginners get starter files with TODOs; intermediate learners get a description and test cases; advanced learners get a problem statement only. After you solve it, the code-reviewer agent runs an educational review (what your code reveals about your understanding, not production-quality nits). May auto-invoke `/debug-together` if your code has a real bug.
+**What it does.** A hands-on exercise calibrated to your current Bloom level on the topic. Beginners get a faded sequence (annotated worked example → completion problem → full problem, per cognitive-load theory); intermediate learners get a description and test cases; advanced learners get a problem statement only. After you solve it, the code-reviewer agent runs an educational review (what your code reveals about your understanding, not production-quality nits). Offers `/debug-together` if your code has a real bug (after the second hint).
 
 **When to use.** You want to *do*, not just understand. You finished a `/teach` and want a second rep at greater independence. You want a calibrated drill on a specific weak spot.
 
@@ -598,7 +598,7 @@ These three go beyond the routine when you need depth, materials, or a code-leve
 **Pairs well with.**
 - `/teach` — invokes `/practice` for the You-Do phase.
 - `/review` — once you have working code, review it for what it reveals.
-- `/debug-together` — auto-invoked when your practice code has a real bug.
+- `/debug-together` — offered when your practice code has a real bug.
 
 **Example.**
 ```
@@ -610,7 +610,7 @@ These three go beyond the routine when you need depth, materials, or a code-leve
 
 #### `/bodhikit:review [file-path|repo-url]`
 
-**What it does.** Educational code review. Works on local files, GitHub, GitLab, Codeberg URLs. Launches the code-reviewer agent in its own context to read the code; the agent returns observations about what the code reveals about your understanding (concepts demonstrated, misconceptions visible, idiomatic patterns you are ready to learn). NOT a production review — no nit-picking style or naming unless they reveal a learning opportunity. Updates `progress.md` and `spaced-review.json` based on what the code revealed.
+**What it does.** Educational code review. Works on local files, GitHub, GitLab, Codeberg URLs. Launches the code-reviewer agent in its own context to read the code; the agent returns observations about what the code reveals about your understanding (concepts demonstrated, misconceptions visible, idiomatic patterns you are ready to learn). NOT a production review — no nit-picking style or naming unless they reveal a learning opportunity. Appends what the code revealed to `progress.md`.
 
 **When to use.** You wrote something on your own (outside a `/practice` exercise) and want a learning-focused read. You wrote code last month and want a re-read with fresh eyes. You inherited code from a tutorial and want to be questioned about what each part does.
 
@@ -663,7 +663,7 @@ These two skills are for the moments learning gets concrete: real bugs, real cod
 **When NOT to use.** You do not yet know the concept — use `/teach` first. You want passive instruction — `/pair` is high-engagement, always typing. You have only 10 minutes — `/pair` sessions are 20–40 minutes minimum.
 
 **Pairs well with.**
-- `/teach` — auto-invokes `/pair` during the We-Do phase for collaborative coding.
+- `/teach` — offers `/pair` during the We-Do phase for collaborative coding (you accept or decline).
 - `/practice` — `/pair` is an active alternative when a solo exercise feels too lonely.
 - `/debug-together` — when pairing surfaces a bug worth a systematic dive.
 
@@ -684,8 +684,8 @@ These two skills are for the moments learning gets concrete: real bugs, real cod
 **When NOT to use.** You need the fix immediately for production and learning comes second — get the fix elsewhere; come back later with `/debug-together` for the lesson. You are confident this is a typo, not a model gap — fix it directly.
 
 **Pairs well with.**
-- `/practice` — auto-invokes `/debug-together` when your practice code has a real bug.
-- `/teach` — auto-invokes when an exercise produces a bug.
+- `/practice` — offers `/debug-together` when your practice code has a real bug.
+- `/teach` — offers it when an exercise produces a bug.
 - `/teach` — when the bug reveals a concept gap, an understanding-only deep dive after the fix closes it.
 
 **Example.**
@@ -704,11 +704,11 @@ These three skills are the long-arc ones — for evaluating where you have been 
 
 #### `/bodhikit:evaluate [project-name]`
 
-**What it does.** A comprehensive evaluation of your entire journey on a project. Launches the trajectory-analyzer agent to read your full history (every archive, every assessment, every plan phase, the spaced-review trail) in the agent's context so your conversation stays light. Then runs a fresh ~15-question assessment via the skill-assessor agent. Then synthesizes: per-topic Bloom trajectory with evidence quotes, retention distribution, biggest growth areas, persistent challenges, what to do next. May auto-invoke `/mentor` at a fork in the road. If the evaluation moves the project to `completedProjects`, the closing turn offers `/teach-back` as an opt-in.
+**What it does.** A comprehensive evaluation of your entire journey on a project. Launches the trajectory-analyzer agent to read your full history (every archive, every assessment, every plan phase, the spaced-review trail) in the agent's context so your conversation stays light. Then asks you three quick predictions (biggest growth, biggest gap, per-topic Bloom guesses) BEFORE any evidence — calibration is measured against your standing self-model, not how the last 20 minutes felt. Then runs a fresh ~15-question assessment via the skill-assessor agent. Then synthesizes: per-topic Bloom trajectory with evidence quotes, retention distribution, biggest growth areas, persistent challenges, what to do next. At completion or a major milestone the closing turn offers `/mentor` and (on completion, which you confirm explicitly) `/teach-back` — both opt-in, never auto-invoked.
 
 **When to use.** Mid-journey checkpoint (every 6–10 weeks, or at the end of a major phase). End-of-project for the completion verdict. After a long break (1+ month) to recalibrate.
 
-**When NOT to use.** You want a quick read — use `/progress`. You want to test a single concept — use `/quiz` or `/assess`. You want career-arc guidance — use `/mentor` (though `/evaluate` may auto-invoke it for you).
+**When NOT to use.** You want a quick read — use `/progress`. You want to test a single concept — use `/quiz` or `/assess`. You want career-arc guidance — use `/mentor` (`/evaluate` offers it at milestones).
 
 **Pairs well with.**
 - `/mentor` — auto-invoked from `/evaluate` when it spots a fork.
@@ -862,7 +862,7 @@ BodhiKit tracks your skill level per concept using Bloom's Taxonomy:
 
 A concept is considered **mastered** when:
 - Bloom's Level 4 or higher
-- 3 consecutive correct quiz answers
+- 3 consecutive correct quiz answers at Bloom's Level 4+ questions
 - Spaced repetition Box 4 or 5
 - Can explain it to someone else (Feynman check)
 
@@ -1039,7 +1039,7 @@ If you only have time for one paragraph: **BodhiKit's job is to make the next mo
 
 **When it fires.**
 - `/mentor`: the entire skill is a direct application of GROW + Kram.
-- `/evaluate` may auto-invoke `/mentor` at major milestones.
+- `/evaluate` offers `/mentor` at major milestones (opt-in).
 
 **Go deeper.**
 - Kathy Kram, *[Mentoring at Work](https://www.researchgate.net/publication/232463073_Mentoring_at_Work_Developmental_Relationships_in_Organisational_Life)* (1985) — the foundational study.

@@ -260,9 +260,9 @@ Regardless of the publish decision, append the work to the learner's history.
 The capstone is complete. <one sentence honoring whichever ending the learner chose>
 ```
 
-**`.bodhi/state.json`** — slim shape, no narrative: set `lastActivity` to one short sentence pointing at the entry just written.
+**`.bodhi/state.json`** — `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> touch-state --activity "<one line pointing at the entry just written>"` (the script also counts the session — capstone work is a session).
 
-**`learningWithBodhi/.bodhi-profile.json`** — `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" bump-profile --counter teachBacksWritten` (per the `state-schema` KB write path). If the learner self-reports they published it, also `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" bump-profile --counter teachBacksPublished`.
+**`learningWithBodhi/.bodhi-profile.json`** — `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> bump-profile --counter teachBacksWritten` (per the `state-schema` KB write path). If the learner self-reports they published it, also `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> bump-profile --counter teachBacksPublished`.
 
 ### Close
 

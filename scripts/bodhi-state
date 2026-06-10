@@ -25,6 +25,12 @@ import json
 import os
 import shutil
 import sys
+import tempfile
+
+try:
+    import fcntl  # POSIX only; locking degrades gracefully elsewhere
+except ImportError:  # pragma: no cover
+    fcntl = None
 
 # --- Canonical constants (mirrors spaced-repetition KB; lint pins these) ---
 
@@ -86,18 +92,65 @@ def emit(obj):
     print(json.dumps(obj, indent=2, ensure_ascii=False))
 
 
-def load_json(path):
+def load_json_raw(path):
+    """Raw loader — raises. Used by `verify`, which reports errors itself."""
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
+def load_json(path, expect=dict):
+    """Loader for every other subcommand: clean error instead of a traceback."""
+    try:
+        data = load_json_raw(path)
+    except json.JSONDecodeError as e:
+        die(f"{path} is not valid JSON ({e.msg} at line {e.lineno}) — do not "
+            f"hand-edit; run `bodhi-state verify` and restore from a backup "
+            f"if needed")
+    except OSError as e:
+        die(f"cannot read {path}: {e}")
+    if expect is not None and not isinstance(data, expect):
+        die(f"{path} top level is {type(data).__name__}, expected "
+            f"{expect.__name__} — the file is structurally broken; run "
+            f"`bodhi-state verify`")
+    return data
+
+
 def write_json(path, obj):
-    """Atomic write: temp file in the same directory, then rename."""
-    tmp = path + ".bodhi-state.tmp"
-    with open(tmp, "w", encoding="utf-8") as f:
-        json.dump(obj, f, indent=2, ensure_ascii=False)
-        f.write("\n")
-    os.replace(tmp, path)
+    """Atomic write: unique temp file in the same directory, then rename."""
+    fd, tmp = tempfile.mkstemp(dir=os.path.dirname(os.path.abspath(path)),
+                               prefix=os.path.basename(path) + ".",
+                               suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            json.dump(obj, f, indent=2, ensure_ascii=False)
+            f.write("\n")
+        os.replace(tmp, path)
+    except BaseException:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
+
+
+_LOCK_HANDLES = []  # held until process exit
+
+
+def acquire_lock(directory):
+    """Exclusive per-directory lock spanning the whole read-mutate-write run.
+
+    Prevents the two-terminal lost-update race. POSIX-only; on platforms
+    without fcntl the script still works, just without the guard.
+    """
+    if fcntl is None:
+        return
+    lock_path = os.path.join(directory, ".bodhi-state.lock")
+    try:
+        handle = open(lock_path, "a")
+        fcntl.flock(handle, fcntl.LOCK_EX)
+        _LOCK_HANDLES.append(handle)
+    except OSError:
+        pass  # locking is best-effort; never block the actual work on it
 
 
 def bodhi_dir(project):
@@ -173,43 +226,59 @@ def find_profile(project):
     return None
 
 
+HISTORY_CAP = 100  # per concept; older entries roll into reviewHistoryArchived
+
+
 def apply_review(concept, result, tested_bloom, confidence=None, note=None,
-                 source=None):
+                 source=None, retry=False):
     """Canonical per-concept update (spaced-repetition + state-schema KBs).
 
     correct   -> box up one (max 5), nextReview = today + new interval
     incorrect -> box 1, nextReview tomorrow, counter reset
     partial   -> box held, nextReview tomorrow (re-test soon)
+    retry     -> successive-relearning rep (1.11.1): history entry only.
+                 The Rawson & Dunlosky in-session retry is additional evidence,
+                 not a substitute — the original miss's Box-1 demotion and
+                 tomorrow's review stand; no box/counter/bloom movement.
     bloomLevel only ever ratchets up (demotion is /forget's job, and even
     /forget demotes the box, not the Bloom classification).
     """
     t = today()
     old_box = concept.get("box", 1)
-    if result == "correct":
-        concept["box"] = min(old_box + 1, MAX_BOX)
-        concept["nextReview"] = iso(t + datetime.timedelta(days=BOX_INTERVALS[concept["box"]]))
-        if tested_bloom is not None:
-            concept["bloomLevel"] = max(concept.get("bloomLevel", 0), tested_bloom)
-            if tested_bloom >= 4:
-                concept["consecutiveCorrectAtL4Plus"] = concept.get("consecutiveCorrectAtL4Plus", 0) + 1
-    elif result == "incorrect":
-        concept["box"] = 1
-        concept["nextReview"] = iso(t + datetime.timedelta(days=1))
-        concept["consecutiveCorrectAtL4Plus"] = 0
-    elif result == "partial":
-        concept["nextReview"] = iso(t + datetime.timedelta(days=1))
-    else:
+    if result not in ("correct", "incorrect", "partial"):
         die(f"result must be correct|incorrect|partial, got {result!r}")
+    if not retry:
+        if result == "correct":
+            concept["box"] = min(old_box + 1, MAX_BOX)
+            concept["nextReview"] = iso(t + datetime.timedelta(days=BOX_INTERVALS[concept["box"]]))
+            if tested_bloom is not None:
+                concept["bloomLevel"] = max(concept.get("bloomLevel", 0), tested_bloom)
+                if tested_bloom >= 4:
+                    concept["consecutiveCorrectAtL4Plus"] = concept.get("consecutiveCorrectAtL4Plus", 0) + 1
+        elif result == "incorrect":
+            concept["box"] = 1
+            concept["nextReview"] = iso(t + datetime.timedelta(days=1))
+            concept["consecutiveCorrectAtL4Plus"] = 0
+        elif result == "partial":
+            concept["nextReview"] = iso(t + datetime.timedelta(days=1))
     concept["lastReviewed"] = iso(t)
-    concept["lastResult"] = note or result
+    concept["lastResult"] = note or (f"{result} (relearning retry)" if retry else result)
     entry = {"date": iso(t), "result": result,
              "bloomLevel": tested_bloom if tested_bloom is not None else 0}
+    if retry:
+        entry["retry"] = True
     if confidence:
         entry["confidence"] = confidence
     if source:
         entry["source"] = source
-    concept.setdefault("reviewHistory", []).append(entry)
+    history = concept.setdefault("reviewHistory", [])
+    history.append(entry)
+    if len(history) > HISTORY_CAP:
+        overflow = len(history) - HISTORY_CAP
+        concept["reviewHistoryArchived"] = concept.get("reviewHistoryArchived", 0) + overflow
+        del history[:overflow]
     return {"concept": concept["name"], "box": f"{old_box} -> {concept['box']}",
+            "retry": retry,
             "bloomLevel": concept.get("bloomLevel", 0),
             "consecutiveCorrectAtL4Plus": concept.get("consecutiveCorrectAtL4Plus", 0),
             "nextReview": concept["nextReview"]}
@@ -244,7 +313,7 @@ def cmd_record_review(args):
         created = True
     change = apply_review(concept, args.result, args.tested_bloom,
                           confidence=args.confidence, note=args.note,
-                          source=args.source)
+                          source=args.source, retry=args.retry)
     data["version"] = 3
     data["lastReviewCheck"] = now_iso()
     write_json(path, data)
@@ -278,6 +347,11 @@ def cmd_record_session(args):
             die(f"--data is not valid JSON: {e}")
         if not isinstance(extra, dict):
             die("--data must be a JSON object")
+    # Reserved keys come from flags only — --data must not bypass the
+    # vocabulary check (1.11.1: a smuggled "type" defeated enforcement and
+    # then tripped the Stop hook on the script's own write).
+    for reserved in ("type", "subtype", "date"):
+        extra.pop(reserved, None)
     path, data = load_spaced_review(args.project, create=True)
     entry = {"date": iso(today()), "type": args.type}
     if args.subtype:
@@ -316,9 +390,14 @@ def cmd_record_assessment(args):
 
 
 def cmd_forget(args):
-    names = [n.strip() for n in args.concepts.split(",") if n.strip()]
+    # --concept (repeatable) is the exact-name path — required for names that
+    # themselves contain commas. --concepts remains the comma-list convenience.
+    names = list(args.concept or [])
+    if args.concepts:
+        names.extend(n.strip() for n in args.concepts.split(",") if n.strip())
+    names = [n for n in names if n]
     if not names:
-        die("no concepts given")
+        die("no concepts given (use --concept, repeatable, or --concepts \"a, b\")")
     path, data = load_spaced_review(args.project)
     missing = [n for n in names if find_concept(data, n) is None]
     if missing:
@@ -363,13 +442,28 @@ def cmd_touch_state(args):
     state = load_json(sp)
     t = iso(today())
     dates = state.setdefault("sessionDates", [])
+    if not isinstance(dates, list):
+        die(f"state.json sessionDates is {type(dates).__name__}, expected a "
+            f"list — run `bodhi-state verify`")
     new_session = t not in dates
+    profile_bumped = False
     if new_session:
         yesterday = iso(today() - datetime.timedelta(days=1))
         state["currentStreak"] = (state.get("currentStreak", 0) + 1
                                   if yesterday in dates else 1)
         dates.append(t)
         state["totalSessions"] = state.get("totalSessions", 0) + 1
+        # 1.11.1: the script owns the cross-project session counter too —
+        # the first touch-state of the day bumps it, so it no longer depends
+        # on which skill in the chain happens to run touch-state first.
+        pp = find_profile(args.project)
+        if pp:
+            profile = load_json(pp)
+            stats = profile.setdefault("cumulativeStats", {})
+            stats["totalSessions"] = stats.get("totalSessions", 0) + 1
+            profile["lastUpdated"] = now_iso()
+            write_json(pp, profile)
+            profile_bumped = True
     state["lastSessionAt"] = now_iso()
     if args.activity:
         state["lastActivity"] = args.activity[:120]
@@ -388,6 +482,7 @@ def cmd_touch_state(args):
     emit({"action": "state-updated", "newSession": new_session,
           "currentStreak": state.get("currentStreak"),
           "totalSessions": state.get("totalSessions"),
+          "profileSessionsBumped": profile_bumped,
           "lastActivity": state.get("lastActivity")})
 
 
@@ -410,16 +505,29 @@ def cmd_bump_profile(args):
 def cmd_due(args):
     _, data = load_spaced_review(args.project)
     t = today()
-    due = []
+    due, unparseable = [], []
     for c in data.get("concepts", []):
-        nr = parse_date(c.get("nextReview"))
-        if nr and nr <= t:
+        raw = c.get("nextReview")
+        nr = parse_date(raw)
+        if nr is None:
+            # A concept with an unparseable schedule silently leaves rotation
+            # forever — surface it, never skip it quietly (1.11.1).
+            unparseable.append({"name": c.get("name", "(unnamed)"),
+                                "nextReview": raw})
+            continue
+        if nr <= t:
             due.append({"name": c["name"], "module": c.get("module", ""),
-                        "box": c.get("box", 1), "nextReview": c.get("nextReview"),
+                        "box": c.get("box", 1), "nextReview": raw,
                         "bloomLevel": c.get("bloomLevel", 0),
                         "question": c.get("question", "")})
     due.sort(key=lambda d: (d["box"], d["nextReview"]))
-    emit({"dueToday": len(due), "concepts": due})
+    out = {"dueToday": len(due), "concepts": due}
+    if args.limit is not None and len(due) > args.limit:
+        out["concepts"] = due[:args.limit]
+        out["truncated"] = len(due) - args.limit
+    if unparseable:
+        out["unparseableDates"] = unparseable
+    emit(out)
 
 
 def is_mastered(c):
@@ -457,8 +565,18 @@ def cmd_mastery(args):
         # Legacy display rule (1.10.7): all-bloomLevel:0 module -> not computable.
         m["masteryPct"] = (None if m["classified"] == 0
                            else round(100 * m["mastered"] / m["concepts"]))
+    # Quiz-only learners hit every criterion except the /teach-owned explain-back
+    # gate; name the blockage so /progress can tell them the one step left.
+    blocked_on_feynman = [
+        c["name"] for c in data.get("concepts", [])
+        if not c.get("feynmanPassed", False)
+        and c.get("bloomLevel", 0) >= 4
+        and c.get("consecutiveCorrectAtL4Plus", 0) >= 3
+        and c.get("box", 1) >= 4
+    ]
     emit({"modules": modules, "retentionRollup": {k: len(v) for k, v in rollup.items()},
-          "retentionConcepts": rollup, "dueToday": due_today, "dueThisWeek": due_week})
+          "retentionConcepts": rollup, "dueToday": due_today, "dueThisWeek": due_week,
+          "blockedOnFeynman": blocked_on_feynman})
 
 
 def cmd_calibration(args):
@@ -522,6 +640,12 @@ def cmd_gate_check(args):
         die(f"{sp} does not exist")
     state = load_json(sp)
     current = args.module or state.get("currentModule", "")
+    if not str(current).strip():
+        emit({"fires": False,
+              "reason": "no currentModule set in state.json — set it via "
+                        "touch-state --module before gating",
+              "currentModule": current})
+        return
     _, data = load_spaced_review(args.project, create=True)
     concepts = data.get("concepts", [])
     t = today()
@@ -594,15 +718,19 @@ def cmd_migrate(args):
         emit({"action": "noop", "reason": "already at v3 with all per-concept fields"})
         return
 
+    # Snapshot THIS RUN's input before any mutation — post-write verification
+    # compares against this, never against an on-disk backup that may predate
+    # this run (1.11.1: a stale backup produced a false mismatch whose error
+    # message advised a data-destroying restore).
+    snapshot = json.loads(json.dumps(data))
+
     # Backup (never overwrite an existing backup — it may be the only pre-v3 copy).
     backup_dir = os.path.join(bdir, ".pre-1.10-backup")
     backup = os.path.join(backup_dir, "spaced-review.json")
     if not os.path.exists(backup):
         os.makedirs(backup_dir, exist_ok=True)
         shutil.copyfile(path, backup)
-    # Verify backup at the parsed-JSON level.
-    if load_json(backup) is None:  # pragma: no cover - json.load raises instead
-        die("backup verification failed")
+        load_json(backup)  # backup must parse before we mutate the source
 
     fields_added = 0
     for c in concepts:
@@ -618,17 +746,18 @@ def cmd_migrate(args):
     data["version"] = 3
     write_json(path, data)
 
-    # Post-write verification against the backup.
+    # Post-write verification against this run's input snapshot.
     after = load_json(path)
-    before = load_json(backup)
-    if len(after.get("concepts", [])) != len(before.get("concepts", [])):
-        die("verification failed: concept count changed — restore from "
-            f"{backup}")
-    for b, a in zip(before.get("concepts", []), after.get("concepts", [])):
+    if len(after.get("concepts", [])) != len(snapshot.get("concepts", [])):
+        die("verification failed: concept count changed during this run — "
+            "the live file may be partially written; inspect it before "
+            f"considering the backup at {backup}")
+    for b, a in zip(snapshot.get("concepts", []), after.get("concepts", [])):
         lost = set(b.keys()) - set(a.keys())
         if lost:
             die(f"verification failed: concept {b.get('name')!r} lost fields "
-                f"{sorted(lost)} — restore from {backup}")
+                f"{sorted(lost)} during this run — inspect the live file; "
+                f"backup at {backup}")
 
     marker = os.path.join(bdir, ".migration-1.10.md")
     if not os.path.exists(marker):
@@ -655,7 +784,7 @@ def cmd_verify(args):
     sp = os.path.join(bdir, "state.json")
     if os.path.exists(sp):
         try:
-            state = load_json(sp)
+            state = load_json_raw(sp)
             if state.get("version") != 2:
                 warnings.append(f"state.json version is {state.get('version')!r}, expected 2")
             for legacy in ("lastSessionSummary", "bloomResetNote"):
@@ -674,20 +803,34 @@ def cmd_verify(args):
     srp = os.path.join(bdir, "spaced-review.json")
     if os.path.exists(srp):
         try:
-            sr = load_json(srp)
+            sr = load_json_raw(srp)
             v = sr.get("version")
             if v not in (1, 2, 3):
                 errors.append(f"spaced-review.json version is {v!r}")
             elif v != 3:
                 warnings.append(f"spaced-review.json at v{v} — run "
                                 "`bodhi-state migrate-spaced-review`")
+            seen_names = {}
             for c in sr.get("concepts", []):
                 name = c.get("name", "(unnamed)")
                 if not c.get("name"):
                     errors.append("spaced-review concept missing name")
+                key = name.strip().lower()
+                if key in seen_names:
+                    errors.append(f"duplicate concept names (case-insensitive): "
+                                  f"{seen_names[key]!r} and {name!r} — writers "
+                                  f"match first-found; merge them")
+                seen_names[key] = name
                 box = c.get("box")
                 if not isinstance(box, int) or not 1 <= box <= MAX_BOX:
                     errors.append(f"concept {name!r} box {box!r} not int 1-{MAX_BOX}")
+                if c.get("nextReview") is not None and parse_date(c.get("nextReview")) is None:
+                    errors.append(f"concept {name!r} nextReview "
+                                  f"{c.get('nextReview')!r} is not an ISO date — "
+                                  f"the concept has silently left review rotation")
+                if c.get("lastReviewed") is not None and parse_date(c.get("lastReviewed")) is None:
+                    warnings.append(f"concept {name!r} lastReviewed "
+                                    f"{c.get('lastReviewed')!r} is not an ISO date")
                 if v == 3:
                     for k in ("bloomLevel", "feynmanPassed", "consecutiveCorrectAtL4Plus"):
                         if k not in c:
@@ -703,11 +846,14 @@ def cmd_verify(args):
                     errors.append("sessionHistory 'other' entry missing subtype")
         except (json.JSONDecodeError, OSError) as e:
             errors.append(f"spaced-review.json unreadable: {e}")
+    elif os.path.exists(os.path.join(bdir, "state.json")):
+        warnings.append("spaced-review.json missing while state.json exists — "
+                        "the review schedule may have been deleted")
 
     pp = find_profile(project)
     if pp:
         try:
-            profile = load_json(pp)
+            profile = load_json_raw(pp)
             if profile.get("version") != 2:
                 warnings.append(f"profile version is {profile.get('version')!r}, expected 2")
             for inline in ("activeProjects", "completedProjects"):
@@ -750,6 +896,9 @@ def main():
     s.add_argument("--question", default="")
     s.add_argument("--note", default=None, help="short lastResult note")
     s.add_argument("--source", default=None, help="which skill produced this review")
+    s.add_argument("--retry", action="store_true",
+                   help="successive-relearning retry: history entry only, no "
+                        "box/counter/bloom movement (the original demotion stands)")
     s.set_defaults(fn=cmd_record_review)
 
     s = sub.add_parser("set-feynman", help="mark a concept's Feynman explain-back gate passed")
@@ -769,7 +918,9 @@ def main():
     s.set_defaults(fn=cmd_record_assessment)
 
     s = sub.add_parser("forget", help="learner-initiated demote (box 1, counter reset, history)")
-    s.add_argument("--concepts", required=True, help="comma-separated concept names")
+    s.add_argument("--concept", action="append", default=None,
+                   help="exact concept name (repeatable; use for names containing commas)")
+    s.add_argument("--concepts", default=None, help="comma-separated concept names")
     s.add_argument("--note", default=None)
     s.add_argument("--activity", default=None, help="override the state.json lastActivity line")
     s.set_defaults(fn=cmd_forget)
@@ -787,6 +938,8 @@ def main():
     s.set_defaults(fn=cmd_bump_profile)
 
     s = sub.add_parser("due", help="list concepts due for review")
+    s.add_argument("--limit", type=int, default=None,
+                   help="cap the listed concepts (full count still reported)")
     s.set_defaults(fn=cmd_due)
 
     s = sub.add_parser("mastery", help="per-module mastery + retention rollup (canonical formula)")
@@ -810,6 +963,15 @@ def main():
     s.set_defaults(fn=cmd_verify)
 
     args = p.parse_args()
+    # One exclusive lock per project for the whole read-mutate-write run —
+    # closes the two-terminal lost-update race (1.11.1). Profile writes lock
+    # the profile's directory too.
+    bdir = os.path.join(args.project, ".bodhi")
+    if os.path.isdir(bdir):
+        acquire_lock(bdir)
+    profile = find_profile(args.project)
+    if profile:
+        acquire_lock(os.path.dirname(profile))
     args.fn(args)
 
 

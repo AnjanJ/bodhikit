@@ -16,12 +16,12 @@ You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference t
 
 1. If `$ARGUMENTS` is "current" or empty:
    - Look for an active learning project (search for `.bodhi/state.json`)
-   - Run `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" due` (invocation per the `state-schema` KB) to list concepts due for review — prioritize them
+   - Run `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> due --limit 10` (invocation per the `state-schema` KB) to list concepts due for review — prioritize them. If the output carries `unparseableDates`, tell the learner and fix those entries before quizzing.
    - Read `state.json` for the current module
 
 2. If `$ARGUMENTS` is a specific topic:
    - Use that topic
-   - Still run `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" due` for related due concepts
+   - Still run `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> due --limit 10` for related due concepts
 
 3. If no project found and no argument:
    - Ask: "What topic would you like to be quizzed on?"
@@ -44,6 +44,8 @@ Generate 5-7 questions.
 | Level 3 | 2 at Level 3, 3 at Level 4, 1-2 at Level 5 |
 | Level 4 | 2 at Level 4, 3 at Level 5, 1-2 at Level 6 |
 | Level 5-6 | 2 at Level 5, 3 at Level 6, 1-2 design/architecture |
+
+For tracked due concepts, pitch each question at THAT concept's recorded `bloomLevel` (+1 when its `box >= 3`) — per the `blooms-taxonomy` KB, levels are per concept, not global. The table above is the prior for untracked-topic quizzes.
 
 **Bloom probe (1.11.0).** Include ONE question pitched exactly one level above a strong concept's recorded `bloomLevel` (pick a due concept with `box >= 3`). This is the quiz's channel for moving classifications up — without it, a concept's Bloom level can only rise when `/teach` revisits it, and the prerequisite gate's inputs go stale. Announce nothing; it is just one of the questions.
 
@@ -84,7 +86,7 @@ After each tagged response:
 
 ### Successive relearning loop (end of questioning)
 
-**Reference the `spaced-repetition` KB (Successive Relearning section).** After the last planned question, return to each missed concept with a *reframed* question (different angle, same concept). Cap at 2 retries per concept; a success here is recorded as its own review entry; the original miss and its Box-1 demotion stand regardless. "Let us close the loop on the ones that slipped — one more pass, different angle."
+**Reference the `spaced-repetition` KB (Successive Relearning section).** After the last planned question, return to each missed concept with a *reframed* question (different angle, same concept). Cap at 2 retries per concept. Record each retry with the `--retry` flag (Phase 3 step 1) — the script appends the history entry WITHOUT moving the box, so the original miss's Box-1 demotion and tomorrow's review stand exactly as the KB requires. "Let us close the loop on the ones that slipped — one more pass, different angle."
 
 ---
 
@@ -94,7 +96,7 @@ After each tagged response:
 
 The writes are the product of the quiz; the results table is the receipt. Per the `state-schema` KB write path:
 
-1. **Per answer (including relearning-loop retries), run** — one call per question asked:
+1. **Per answer, run** — one call per question asked (relearning-loop retries add `--retry`, which records the entry without box/schedule movement):
 
    ```
    "${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> record-review \
@@ -103,7 +105,7 @@ The writes are the product of the quiz; the results table is the receipt. Per th
      --confidence sure|mostly|guessing --source quiz
    ```
 
-   For a concept not yet tracked, add `--module "<current module>"` to auto-create it. The script applies box transitions, the bloomLevel ratchet, and the counter rules; its JSON output tells you the box movement to report. Do NOT set `feynmanPassed` here — that gate belongs to `/teach` (including its understanding-only sessions).
+   For a concept not yet tracked, add `--module "<current module>"` to auto-create it. **No active project** (topic quiz outside a learning project): skip steps 1-4 entirely — there is nothing to write to; just give the results and suggest `/learn` if they want the tracking. The script applies box transitions, the bloomLevel ratchet, and the counter rules; its JSON output tells you the box movement to report. Do NOT set `feynmanPassed` here — that gate belongs to `/teach` (including its understanding-only sessions).
 
 2. **Once, record the session:**
 

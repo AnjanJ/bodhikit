@@ -136,6 +136,7 @@ Present the dashboard in this format:
 
 Notes on the sections:
 
+- **If `mastery` reports a non-empty `blockedOnFeynman` list**, render one line under the Module Breakdown: *"[N] concept(s) meet every mastery criterion except the explain-back gate: [names]. One `/teach <concept>` session (understanding-only is enough) completes each."* A quiz-only learner otherwise watches mastery sit at 0% with no visible reason.
 - **Mastery %** comes from `bodhi-state mastery`, which implements the canonical Mastery % formula from the `state-schema` KB (`mastered === true` requires `bloomLevel >= 4` AND `consecutiveCorrectAtL4Plus >= 3` AND `box >= 4` AND `feynmanPassed`; see `blooms-taxonomy` KB for the underlying criteria). When the script reports `masteryPct: null` for a module, display `—` instead of `0%` — the legacy display rule: no v3 writer has classified the module's concepts yet, and a zero would falsely imply the learner tried and failed.
 - **Spaced Repetition Health** uses the canonical 3-tier rollup from the `spaced-repetition` KB ("Retention Rollup Views"). Do not invent bucket boundaries.
 - **Calibration** shows only when the script reports `taggedAnswers > 0`; reference the `metacognition` KB for framing — where confidence and outcomes disagree is the signal, never a scolding (e.g. "Your 'sure' answers on indexing held up; on the planner they did not. That gap, not the misses themselves, is the thing to watch.").

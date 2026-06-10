@@ -75,9 +75,43 @@ def assert_quiz(project):
     ok("state.json still v2-clean")
 
 
+def assert_reflect(project):
+    import datetime
+    today = datetime.date.today().isoformat()
+    sr = load(project, ".bodhi", "spaced-review.json")
+    btree = next(c for c in sr["concepts"] if c["name"] == "B-tree indexes")
+    today_entries = [h for h in btree["reviewHistory"] if h.get("date") == today]
+    if len(today_entries) != 1:
+        fail(f"same-day guard violated: B-tree indexes has {len(today_entries)} reviews today (expected 1 — the prep quiz)")
+    ok("same-day guard held: one review, one box movement")
+    if btree["box"] != 4:
+        fail(f"B-tree box is {btree['box']}, expected 4 (quiz promotion intact, no reflect clobber)")
+    nr = (datetime.date.today() + datetime.timedelta(days=14)).isoformat()
+    if btree["nextReview"] != nr:
+        fail(f"B-tree nextReview {btree['nextReview']} != {nr} — the earned 14-day interval was clobbered")
+    ok("earned 14-day interval preserved")
+    norm = next(c for c in sr["concepts"] if c["name"] == "Normalization trade-offs")
+    norm_today = [h for h in norm["reviewHistory"] if h.get("date") == today]
+    if not norm_today:
+        fail("un-reviewed concept got no reflect review")
+    if norm_today[-1].get("result") != "correct":
+        fail(f"clean retrieval at rating 6 recorded as {norm_today[-1].get('result')!r} — confidence must not gate the outcome")
+    ok("clean mid-confidence retrieval recorded as correct (no confidence gate)")
+    if norm["box"] != 5:
+        fail(f"Normalization box is {norm['box']}, expected 5 (promoted on clean retrieval)")
+    ok("box promoted on outcome")
+    profile_path = os.path.join(os.path.dirname(project.rstrip("/")), ".bodhi-profile.json")
+    with open(profile_path) as f:
+        sessions = json.load(f)["cumulativeStats"]["totalSessions"]
+    if sessions != 7:
+        fail(f"profile totalSessions is {sessions}, expected 7 (auto-bump exactly once)")
+    ok("profile session counter bumped exactly once")
+
+
 def main():
     name, project = sys.argv[1], sys.argv[2]
-    {"migrate": assert_migrate, "forget": assert_forget, "quiz": assert_quiz}[name](project)
+    {"migrate": assert_migrate, "forget": assert_forget, "quiz": assert_quiz,
+     "reflect": assert_reflect}[name](project)
     sys.exit(0)
 
 

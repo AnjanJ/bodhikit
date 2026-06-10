@@ -31,13 +31,14 @@ If `CLAUDE_PLUGIN_ROOT` is not set in the Bash environment, locate the script on
 | Subcommand | Owns |
 |---|---|
 | `add-concept --concept N --module M [--question Q]` | New concept with canonical Box-1 defaults |
-| `record-review --concept N --result correct\|incorrect\|partial --tested-bloom 0-6 [--confidence sure\|mostly\|guessing] [--module M] [--note S] [--source skill]` | Leitner box math, nextReview dates, bloomLevel ratchet, `consecutiveCorrectAtL4Plus` rules, `reviewHistory[]` append |
+| `record-review --concept N --result correct\|incorrect\|partial --tested-bloom 0-6 [--confidence sure\|mostly\|guessing] [--module M] [--note S] [--source skill] [--retry]` | Leitner box math, nextReview dates, bloomLevel ratchet, `consecutiveCorrectAtL4Plus` rules, `reviewHistory[]` append. `--retry` = successive-relearning rep: history entry only, no box/counter/bloom movement (the original demotion stands) |
 | `set-feynman --concept N` | `feynmanPassed = true` (set, never unset) |
-| `record-session --type T [--subtype S] [--data '<json>']` | `sessionHistory[]` append, canonical-type enforcement |
-| `forget --concepts "A, B" [--note S]` | Learner-initiated demote: box 1, counter reset, history + `learner-forget` session entry, `lastActivity` |
-| `touch-state [--activity S] [--module M] [--module-index N] [--phase P] [--completion N]` | `state.json` session bookkeeping: dates, streak, totalSessions, module advance (records `previousModule`) |
+| `record-session --type T [--subtype S] [--data '<json>']` | `sessionHistory[]` append, canonical-type enforcement (`type`/`subtype`/`date` in `--data` are ignored — flags only) |
+| `record-assessment --trigger learn-phase2\|assess\|evaluate\|plan-regenerate --data '<entry json>'` | Append-only `assessment-history.json` entry, date-stamped |
+| `forget --concepts "A, B" \| --concept N (repeatable) [--note S] [--activity S]` | Learner-initiated demote: box 1, counter reset, history + `learner-forget` session entry, `lastActivity`. Use `--concept` for names containing commas |
+| `touch-state [--activity S] [--module M] [--module-index N] [--phase P] [--completion N]` | `state.json` session bookkeeping: dates, streak, totalSessions, module advance (records `previousModule`). The first touch of a new day also bumps the profile's `cumulativeStats.totalSessions` — no skill calls `bump-profile --counter totalSessions` |
 | `bump-profile --counter <name>` | `cumulativeStats` increments in `.bodhi-profile.json` |
-| `due` / `mastery` / `calibration` | Read-side rollups: due concepts, canonical mastery %, retention tiers, confidence calibration |
+| `due [--limit N]` / `mastery` / `calibration` | Read-side rollups: due concepts (plus `unparseableDates` for schedule-broken entries — never silently skipped), canonical mastery % + `blockedOnFeynman` (concepts meeting every criterion except the explain-back gate), retention tiers, confidence calibration |
 | `gate-check [--module M] [--prereqs "A,B"] [--prior-module M]` | Prerequisite Bloom gate verdict (see below) |
 | `migrate-spaced-review` | One-shot v1/v2 → v3 transform: backup, in-place field fill, marker, verification |
 | `verify` | Schema sanity check (also run by the plugin's Stop hook and `dev/check.sh`) |
@@ -118,6 +119,7 @@ Slim. No long narrative fields — session narrative lives in `progress.md`.
 
 - `currentStreak`: consecutive days. Reset to 1 if `sessionDates` gap exceeds 1 day. Maintained by `bodhi-state touch-state`.
 - `previousModule`: set automatically by `touch-state --module` when the module advances; read by `gate-check`.
+- `initialBloomLevel` / `currentBloomLevel`: the per-topic Bloom maps are an explicit **manual carve-out** — no script subcommand owns them. `/learn` seeds both; `/assess` and `/evaluate` may update `currentBloomLevel` via the fallback discipline (read → mutate in place → write → verify).
 - `lastActivity`: one short sentence (≤120 chars) used by `/progress quick` and `/continue`. Anything longer belongs in `progress.md`.
 - **No `lastSessionSummary` / `bloomResetNote` in v2** — migrated to `progress.md`.
 
@@ -196,6 +198,7 @@ Whole JSON; written exclusively through `bodhi-state`. `/housekeep` does not rot
 ```
 
 - `box`: integer 1–5; intervals and update rules in the `spaced-repetition` KB, implemented by `record-review`.
+- `reviewHistory[].retry` (optional, 1.11.1): `true` marks a successive-relearning rep — recorded evidence that did NOT move the box. `reviewHistory[].note` (optional): short free-text annotation (e.g. "learner-initiated demote"). The script caps `reviewHistory` at the most recent 100 entries per concept; older entries roll into a `reviewHistoryArchived` integer counter.
 - `reviewHistory[].confidence` (optional, 1.11.0): the learner's pre-reveal confidence tag — `sure` / `mostly` / `guessing`, collected by `/quiz` and `/reflect` BEFORE the answer is judged. `bodhi-state calibration` aggregates these into overconfidence/underconfidence rates (see `metacognition` KB for why predict-before-reveal is the load-bearing order).
 - `reviewHistory[].source` (optional): which skill produced the review.
 - `sessionHistory` is an append-only audit trail. `/evaluate` reads it; routine skills do not.
@@ -324,8 +327,12 @@ Cross-project learner profile (v2 split layout: this file holds top-level fields
 }
 ```
 
-- `cumulativeStats` counters are incremented via `bodhi-state bump-profile` (the skill decides WHEN — e.g. `/teach` bumps `totalConceptsLearned` only when a concept first reaches Bloom 3+ and `progress.md` shows no prior count for it).
+- `cumulativeStats` counters are incremented via `bodhi-state bump-profile` (the skill decides WHEN — e.g. `/teach` bumps `totalConceptsLearned` only when a concept first reaches Bloom 3+ and `progress.md` shows no prior count for it). Exception: `totalSessions` is bumped automatically by `touch-state` on the first touch of a new day — no skill calls it directly.
 - `learnerBackground.domains[]` / `analogyHistory[]`: populated by the analogy-escalation protocol (see `feynman-technique` KB). Read-then-append; never overwrite.
+
+### Project completion (canonical, 1.11.1)
+
+A project is **complete** when every module in every plan phase is finished or explicitly skipped AND the learner confirms. Completion is never inferred silently — `/evaluate` asks ("Shall we mark this path complete?") and only the learner's yes moves the entry from `activeProjects` to `completedProjects`. Completion gates the capstone offer, the mentor offer, and `/teach-back` eligibility.
 
 ### `learningWithBodhi/.bodhi-profile.projects.json`
 

@@ -111,7 +111,9 @@ After fixing: (1) Run the original test case. (2) Test other inputs that might s
 
 Ask: (1) What was the root cause (not what you changed, but why)? (2) How could you have caught this earlier? (3) What will you look for next time with similar symptoms?
 
-**If the bug stemmed from a conceptual misunderstanding, reference the `spaced-repetition` KB and track the concept: `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" add-concept --concept "<misunderstood concept>" --module "<current module>"` (per the `state-schema` KB write path — new concept → Box 1, review tomorrow).**
+**If the bug stemmed from a conceptual misunderstanding, reference the `spaced-repetition` KB and track the concept: `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> add-concept --concept "<misunderstood concept>" --module "<current module>"` (per the `state-schema` KB write path — new concept → Box 1, review tomorrow).**
+
+**Session bookkeeping (when an active project exists):** a debugging session is a learning session — make it visible to the next `/continue`. Run `touch-state --activity "<one line: bug + root cause>"`, and when at least one tracked concept was touched, `record-session --type other --subtype debug-together --data '{"notes": "<root cause in a phrase>"}'`. Then append a short `## YYYY-MM-DD — Debug (<bug>)` entry to `progress.md` with the Write tool. **Fallback:** if `bodhi-state` is unavailable, follow the `state-schema` KB fallback rule. If invoked via `--invoked-from=teach|practice`, skip all of this — the caller does the session writes when control returns.
 
 ---
 

@@ -101,7 +101,7 @@ This phase runs only when `$ARGUMENTS` is `migrate`. Load the `state-migration` 
 **Two migration targets, per-target idempotency (1.10.8):**
 
 - **1.7.0 target** (steps 5a–5f, prose below): v1 monolithic files → v2 layout. Marker: `.bodhi/.migration-1.7.0.md`. Run these steps only when the marker is absent.
-- **1.10 target** (step 5f-bis): `spaced-review.json` v1/v2 → v3. Performed entirely by `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" migrate-spaced-review` (per the `state-schema` KB write path), which is **idempotent in code** — it backs up, transforms in place preserving every non-canonical learner field, verifies, and writes its own `.bodhi/.migration-1.10.md` marker. **Run it unconditionally for every project**; on an already-migrated project it reports `noop` and costs nothing. The presence of the 1.7.0 marker says NOTHING about this target — that conflation was the pre-1.10.8 bug.
+- **1.10 target** (step 5f-bis): `spaced-review.json` v1/v2 → v3. Performed entirely by `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> migrate-spaced-review` (per the `state-schema` KB write path), which is **idempotent in code** — it backs up, transforms in place preserving every non-canonical learner field, verifies, and writes its own `.bodhi/.migration-1.10.md` marker. **Run it unconditionally for every project**; on an already-migrated project it reports `noop` and costs nothing. The presence of the 1.7.0 marker says NOTHING about this target — that conflation was the pre-1.10.8 bug.
 
 **Pre-flight:**
 
@@ -138,7 +138,7 @@ The script performs the entire transform: backs up the pre-v3 file to `.bodhi/.p
 
 ### 5g. Write the migration marker(s)
 
-The 1.10 marker is written by `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" migrate-spaced-review` itself in 5f-bis — nothing to do here for that target. This step writes the 1.7.0 marker only, and only if the 1.7.0 target ran in this invocation.
+The 1.10 marker is written by `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> migrate-spaced-review` itself in 5f-bis — nothing to do here for that target. This step writes the 1.7.0 marker only, and only if the 1.7.0 target ran in this invocation.
 
 **Precondition for writing `.migration-1.7.0.md`.** Verify every 1.7.0-target step persisted to disk:
 

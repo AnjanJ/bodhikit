@@ -342,6 +342,219 @@ def t_mastery_due_calibration():
               out["modules"]["Module A"]["masteryPct"] == 50, out)
 
 
+def t_retry_and_relearning():
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review=json.loads(json.dumps(V2_SR)))
+        run(proj, "migrate-spaced-review")
+        # Miss -> Box 1, review tomorrow
+        run(proj, "record-review", "--concept", "B-tree indexes",
+            "--result", "incorrect", "--tested-bloom", "3", "--source", "quiz")
+        c = read_sr(proj)["concepts"][0]
+        tomorrow = (TODAY + datetime.timedelta(days=1)).isoformat()
+        check("retry: miss demoted to box 1", c["box"] == 1 and c["nextReview"] == tomorrow)
+        # Successful relearning retry: history entry, NO box/schedule movement
+        out = run(proj, "record-review", "--concept", "B-tree indexes",
+                  "--result", "correct", "--tested-bloom", "3", "--retry",
+                  "--source", "quiz")
+        c = read_sr(proj)["concepts"][0]
+        check("retry: box unchanged", c["box"] == 1, out)
+        check("retry: nextReview still tomorrow (demotion stands)",
+              c["nextReview"] == tomorrow)
+        check("retry: counter unchanged", c["consecutiveCorrectAtL4Plus"] == 0)
+        check("retry: history entry flagged",
+              c["reviewHistory"][-1].get("retry") is True
+              and c["reviewHistory"][-1]["result"] == "correct")
+        check("retry: bloom not ratcheted by retry", c["bloomLevel"] == 0)
+
+
+def t_touch_state_profile_bump():
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root)
+        with open(os.path.join(root, ".bodhi-profile.json"), "w") as f:
+            json.dump({"version": 2, "cumulativeStats": {"totalSessions": 6}}, f)
+        out = run(proj, "touch-state", "--activity", "first touch today")
+        check("bump: first touch of the day bumps profile",
+              out["profileSessionsBumped"] is True, out)
+        out2 = run(proj, "touch-state", "--activity", "second touch today")
+        check("bump: same-day touch does not re-bump",
+              out2["profileSessionsBumped"] is False, out2)
+        with open(os.path.join(root, ".bodhi-profile.json")) as f:
+            check("bump: profile counter incremented exactly once",
+                  json.load(f)["cumulativeStats"]["totalSessions"] == 7)
+
+
+def t_data_reserved_keys():
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review=json.loads(json.dumps(V2_SR)))
+        run(proj, "migrate-spaced-review")
+        run(proj, "record-session", "--type", "quiz",
+            "--data", '{"type": "hax", "date": "1999-01-01", "notes": "kept"}')
+        e = read_sr(proj)["sessionHistory"][-1]
+        check("reserved: --data cannot override type", e["type"] == "quiz", e)
+        check("reserved: --data cannot override date", e["date"] == TODAY.isoformat())
+        check("reserved: non-reserved keys kept", e.get("notes") == "kept")
+        r = subprocess.run([sys.executable, SCRIPT, "--project", proj, "verify"],
+                           capture_output=True, text=True)
+        check("reserved: verify stays clean after the write", r.returncode == 0)
+
+
+def t_migrate_stale_backup():
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review=json.loads(json.dumps(V2_SR)))
+        run(proj, "migrate-spaced-review")
+        # Simulate a sync-restore: live file back at v2 with an EXTRA concept,
+        # while the old (smaller) backup is still on disk.
+        sr = json.loads(json.dumps(V2_SR))
+        sr["concepts"].append({"name": "Extra", "module": "Module A",
+                               "introduced": "2026-06-01", "box": 1,
+                               "nextReview": "2026-06-02", "lastReviewed": None,
+                               "reviewHistory": []})
+        with open(os.path.join(proj, ".bodhi", "spaced-review.json"), "w") as f:
+            json.dump(sr, f)
+        os.remove(os.path.join(proj, ".bodhi", ".migration-1.10.md"))
+        out = run(proj, "migrate-spaced-review")
+        check("stale-backup: re-migration succeeds against this run's input",
+              out.get("action") == "migrated" and out["concepts"] == 3, out)
+        check("stale-backup: extra concept survived",
+              any(c["name"] == "Extra" for c in read_sr(proj)["concepts"]))
+        backup = os.path.join(proj, ".bodhi", ".pre-1.10-backup", "spaced-review.json")
+        with open(backup) as f:
+            check("stale-backup: original backup never overwritten",
+                  len(json.load(f)["concepts"]) == 2)
+
+
+def t_forget_comma_names():
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review=json.loads(json.dumps(V2_SR)))
+        run(proj, "migrate-spaced-review")
+        run(proj, "add-concept", "--concept", "ACID, isolation levels",
+            "--module", "Module A")
+        out = run(proj, "forget", "--concept", "ACID, isolation levels")
+        check("forget: comma-containing name demotable via --concept",
+              out["concepts"] == ["ACID, isolation levels"], out)
+        out = run(proj, "forget", "--concept", "B-tree indexes",
+                  "--concept", "Query planning")
+        check("forget: repeatable --concept demotes both", len(out["concepts"]) == 2)
+
+
+def t_robustness():
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review=json.loads(json.dumps(V2_SR)))
+        run(proj, "migrate-spaced-review")
+        # Corrupt JSON -> clean die, no traceback
+        srp = os.path.join(proj, ".bodhi", "spaced-review.json")
+        good = open(srp).read()
+        open(srp, "w").write(good[:50])
+        r = subprocess.run([sys.executable, SCRIPT, "--project", proj, "due"],
+                           capture_output=True, text=True)
+        check("robust: corrupt JSON dies cleanly", r.returncode == 1
+              and "Traceback" not in r.stderr and "not valid JSON" in r.stderr,
+              r.stderr[:120])
+        open(srp, "w").write(good)
+        # Unparseable nextReview surfaced by due + flagged by verify
+        sr = read_sr(proj)
+        sr["concepts"][0]["nextReview"] = "not-a-date"
+        with open(srp, "w") as f:
+            json.dump(sr, f)
+        out = run(proj, "due")
+        check("robust: unparseable nextReview surfaced",
+              out.get("unparseableDates")
+              and out["unparseableDates"][0]["name"] == "B-tree indexes", out)
+        r = subprocess.run([sys.executable, SCRIPT, "--project", proj, "verify"],
+                           capture_output=True, text=True)
+        check("robust: verify errors on unparseable nextReview", r.returncode == 1)
+        sr["concepts"][0]["nextReview"] = "2026-06-01"
+        # Case-insensitive duplicate -> verify error
+        sr["concepts"].append(dict(sr["concepts"][0], name="B-TREE INDEXES"))
+        with open(srp, "w") as f:
+            json.dump(sr, f)
+        r = subprocess.run([sys.executable, SCRIPT, "--project", proj, "verify"],
+                           capture_output=True, text=True)
+        check("robust: duplicate names flagged",
+              r.returncode == 1 and "duplicate" in r.stdout)
+        # state.json as a list -> clean die
+        spath = os.path.join(proj, ".bodhi", "state.json")
+        sgood = open(spath).read()
+        open(spath, "w").write("[1, 2]")
+        r = subprocess.run([sys.executable, SCRIPT, "--project", proj, "gate-check"],
+                           capture_output=True, text=True)
+        check("robust: list-typed state.json dies cleanly",
+              r.returncode == 1 and "Traceback" not in r.stderr)
+        open(spath, "w").write(sgood)
+        # gate-check with empty currentModule declines
+        st = json.loads(sgood)
+        st["currentModule"] = ""
+        with open(spath, "w") as f:
+            json.dump(st, f)
+        out = run(proj, "gate-check")
+        check("robust: empty currentModule declines to gate",
+              out["fires"] is False and "currentModule" in out["reason"], out)
+        # missing spaced-review.json -> verify warns
+        os.remove(srp)
+        r = subprocess.run([sys.executable, SCRIPT, "--project", proj, "verify"],
+                           capture_output=True, text=True)
+        outj = json.loads(r.stdout)
+        check("robust: missing spaced-review warned",
+              any("missing" in w for w in outj["warnings"]), outj)
+
+
+def t_concurrency():
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review=json.loads(json.dumps(V2_SR)))
+        run(proj, "migrate-spaced-review")
+        for i in range(8):
+            run(proj, "add-concept", "--concept", f"c{i}", "--module", "Module B")
+        procs = [subprocess.Popen(
+            [sys.executable, SCRIPT, "--project", proj, "record-review",
+             "--concept", f"c{i}", "--result", "correct", "--tested-bloom", "2"],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            for i in range(8)]
+        errs = []
+        for p in procs:
+            _, err = p.communicate()
+            if p.returncode != 0 or "Traceback" in err:
+                errs.append(err[:120])
+        check("concurrency: 8 parallel writers, zero failures", not errs, errs)
+        sr = read_sr(proj)
+        lost = [f"c{i}" for i in range(8)
+                if next(c for c in sr["concepts"] if c["name"] == f"c{i}")["box"] != 2]
+        check("concurrency: zero lost updates", not lost, lost)
+
+
+def t_history_cap():
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review=json.loads(json.dumps(V2_SR)))
+        run(proj, "migrate-spaced-review")
+        sr = read_sr(proj)
+        sr["concepts"][0]["reviewHistory"] = [
+            {"date": "2026-01-01", "result": "correct"} for _ in range(105)]
+        with open(os.path.join(proj, ".bodhi", "spaced-review.json"), "w") as f:
+            json.dump(sr, f)
+        run(proj, "record-review", "--concept", "B-tree indexes",
+            "--result", "correct", "--tested-bloom", "2")
+        c = read_sr(proj)["concepts"][0]
+        check("cap: history capped at 100", len(c["reviewHistory"]) == 100,
+              len(c["reviewHistory"]))
+        check("cap: archived count recorded", c.get("reviewHistoryArchived") == 6)
+        check("cap: newest entry kept",
+              c["reviewHistory"][-1]["date"] == TODAY.isoformat())
+
+
+def t_mastery_blocked_on_feynman():
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review=json.loads(json.dumps(V2_SR)))
+        run(proj, "migrate-spaced-review")
+        for _ in range(3):
+            run(proj, "record-review", "--concept", "B-tree indexes",
+                "--result", "correct", "--tested-bloom", "5")
+        out = run(proj, "mastery")
+        check("blocked: quiz-only concept named",
+              out["blockedOnFeynman"] == ["B-tree indexes"], out)
+        run(proj, "set-feynman", "--concept", "B-tree indexes")
+        out = run(proj, "mastery")
+        check("blocked: cleared after the gate", out["blockedOnFeynman"] == [])
+
+
 def t_verify():
     with tempfile.TemporaryDirectory() as root:
         proj = make_project(root, spaced_review=json.loads(json.dumps(V2_SR)))
@@ -363,7 +576,11 @@ def t_verify():
 def main():
     for t in (t_migrate, t_record_review, t_sessions_and_forget,
               t_touch_state_and_profile, t_gate_check,
-              t_mastery_due_calibration, t_verify):
+              t_mastery_due_calibration, t_verify,
+              t_retry_and_relearning, t_touch_state_profile_bump,
+              t_data_reserved_keys, t_migrate_stale_backup,
+              t_forget_comma_names, t_robustness, t_concurrency,
+              t_history_cap, t_mastery_blocked_on_feynman):
         print(f"-- {t.__name__}")
         t()
     print(f"\n{PASS} passed, {FAIL} failed")

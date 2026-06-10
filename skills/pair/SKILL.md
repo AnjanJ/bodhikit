@@ -154,20 +154,22 @@ After any pairing mode:
 
 2. **Update tracking** per the `state-schema` KB write path, applying the `spaced-repetition` KB judgment rules:
 
-   a. **New concepts surfaced during pairing:** `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" add-concept --concept "<name>" --module "<current module>"` (canonical Box-1 defaults).
+   a. **New concepts surfaced during pairing:** `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> add-concept --concept "<name>" --module "<current module>"` (canonical Box-1 defaults).
 
    b. **Concepts the learner demonstrated command of** (clean explain-back at step 6, navigated themselves at step 7, post-piece reflection showed an underlying mental model):
 
       ```
-      "${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" record-review --concept "<name>" --result correct \
+      "${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> record-review --concept "<name>" --result correct \
         --tested-bloom <level demonstrated> --source pair
       ```
 
       Do NOT call `set-feynman` here — pairing's step-6 check is necessary-but-not-sufficient for that gate (owned by `/teach`, including its understanding-only sessions).
 
-   c. **Record the session once** (when at least one tracked concept was touched): `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" record-session --type pair --data '{"notes": "<mode>, <topic>"}'`.
+   b-bis. **Concepts the learner visibly struggled with** (mechanical explain-backs that never improved, repeated syntax stalls on the same construct, a step-6 walk-through they could not produce): record the evidence too — `record-review --concept "<name>" --result partial --tested-bloom <level attempted> --source pair` (auto-create via `--module` if untracked). Pairing that only ever records wins leaves the Leitner system blind to where the session actually strained.
 
-   d. **Session pointer:** `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" touch-state --activity "<one line pointing at the progress.md entry>"`.
+   c. **Record the session once** (when at least one tracked concept was touched): `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> record-session --type pair --data '{"notes": "<mode>, <topic>"}'`.
+
+   d. **Session pointer:** `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> touch-state --activity "<one line pointing at the progress.md entry>"`.
 
    e. **Append the pair entry to `.bodhi/progress.md` with the Write tool**: `## YYYY-MM-DD — Pair (<mode>, <topic>)`, then **What we built**, **Mode signals observed** (which step-7 signals fired, if reversal happened), **Bloom adjustments**, **Next**. Existing content preserved verbatim below.
 

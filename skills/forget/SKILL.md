@@ -52,6 +52,8 @@ One call performs the whole demote (box → 1, review tomorrow, `consecutiveCorr
   --note "<why the learner chose to demote, if they said>"
 ```
 
+(For a concept whose name itself contains a comma, use the repeatable exact-name flag instead: `--concept "ACID, isolation levels"`.)
+
 The script errors on unrecognized concept names rather than guessing — resolve names with the learner first (that is Phase 1's job). Report the box changes from the script's JSON output.
 
 **Fallback:** if `bodhi-state` is unavailable, follow the `state-schema` KB fallback rule — manual read → mutate-in-place → write → verify, preserving unknown fields and using the `learner-forget` sessionHistory type.
@@ -61,6 +63,6 @@ The script errors on unrecognized concept names rather than guessing — resolve
 ## Phase 4: Close
 
 Single concept: "It will surface tomorrow. We will look at it then with fresh eyes."
-Multiple concepts: "All [N] will surface across the next few days as they cycle through review."
+Multiple concepts: "All [N] will surface tomorrow — fresh eyes, one at a time."
 
 If the learner wants to revisit immediately rather than wait, suggest `/teach <concept>` (its understanding-only path is enough if they just want it explained again) — but do not force it.

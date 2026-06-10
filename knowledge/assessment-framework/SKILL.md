@@ -148,14 +148,15 @@ Programming examples:
 
 ### Beginner (Bloom's 1-2)
 
-**Structure**: Maximum scaffolding. Starter files with TODO comments, clear instructions, expected output provided, test file included.
+**Structure**: Faded scaffolding per the `cognitive-load` KB — worked example → completion problem → full problem. Never a bare TODO list (problem-solving search consumes the working memory schema-building needs).
 
 ```
 exercises/01-topic-name/
-├── README.md          # Instructions with examples
-├── starter.ext        # Code with TODO comments marking what to fill in
-├── test.ext           # Tests that verify the solution
-└── expected-output.md # What success looks like
+├── README.md             # The fade sequence: study → fill gaps → (optional) full problem
+├── worked-example.ext    # Complete, inline-annotated solution to STUDY and explain back
+├── completion.ext        # Same shape, 1-2 key steps blanked; boilerplate provided
+├── test.ext              # Tests for the completion step
+└── expected-output.md    # What success looks like
 ```
 
 ### Intermediate (Bloom's 3-4)

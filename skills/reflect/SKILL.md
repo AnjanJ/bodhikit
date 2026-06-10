@@ -20,7 +20,7 @@ Can be auto-invoked by `/continue` when the learner is done for the session.
 
 Find active project via `.bodhi/state.json`. If not found, inform the learner and stop.
 
-Read `state.json` — current module, lastActivity, concepts introduced/reviewed today.
+Read `state.json` (current module, lastActivity) and the live entry of `progress.md` for what was introduced or reviewed today.
 
 Present a brief summary: "Before we close, let us look back at today's path. Today you worked on [module/concept]. You [specific activities]."
 
@@ -50,13 +50,12 @@ For each main concept from today's session (batch the three steps per concept if
 
 2. **Confidence rating.** "Now, how confident — 1 to 10?" Do NOT judge the rating. "Honesty is where growth starts."
 
-3. **Cross-check against today's observed outcomes.** Before deciding the Leitner update, read `progress.md` (the live entry just written by today's `/teach` / `/quiz` / `/practice`) and the `reviewHistory[]` entries dated today on this concept in `spaced-review.json`. The cross-check answers: did the learner demonstrate this concept at the level their confidence implies?
+3. **Same-day guard (decide this FIRST).** Read the `reviewHistory[]` entries on this concept in `spaced-review.json`. If the concept already carries a review entry dated **today** (from this session's `/quiz`, `/teach`, or `/practice`), its box already moved on real evidence — `/reflect` records NO second review for it. The retrieval rep and the rating still happen (they are the calibration lesson), but their only output is the Phase 4 `calibrationNote`. One day of evidence, one box movement — never re-rate what was already graded today.
 
-4. **Apply the canonical Leitner update (per the `spaced-repetition` KB):**
-   - **Promote one box** ONLY IF confidence ≥ 8 AND the retrieval was clean (no fluency-failure signals) AND today's observed outcomes align (no Level-3+ misses on this concept in `reviewHistory[]`). Acknowledge the alignment by name.
-   - **Hold the box (no Leitner change)** if confidence ≥ 8 but retrieval showed a fluency-failure signal OR observed outcomes disagree. Name the calibration gap aloud, gently: *"You rated yourself a 9 — but the explanation hedged a bit on `<specific gap>`. Let us hold this one for review tomorrow and come back to it with fresh eyes."* The honesty is the lesson; do not gloss it.
-   - **Demote (Box 1)** if confidence ≤ 4, OR if retrieval failed outright (could not produce an explanation), OR if the learner declines the retrieval prompt. Add to the batch demote list for Phase 3.
-   - **Mid-band (5-7) with clean retrieval and aligned outcomes:** hold the box. Note for next session's spaced review. (The KB defines no canonical box rule for mid-confidence; "hold and re-test tomorrow" is the smallest faithful action.)
+4. **For concepts NOT yet reviewed today, the retrieval outcome decides the box (per the `spaced-repetition` KB) — the confidence rating never does:**
+   - **Clean retrieval** (no fluency-failure signals) → `correct` (script promotes the box), at ANY rating. A clean retrieval at self-rated 5 is the underconfidence pattern the `metacognition` KB says to *name and support*, never to withhold credit from: *"You rated it a 5, but that explanation was solid. You know more than you trust."*
+   - **Fluency-failure signal** (hedging, undefined jargon, skipped steps) → `partial` (box held, re-test tomorrow). If the rating was high, name the calibration gap gently: *"You rated yourself a 9 — but the explanation hedged on `<specific gap>`. We will see it again tomorrow."* The honesty is the lesson; do not gloss it.
+   - **Retrieval failed outright** (no explanation produced, or prompt declined) OR confidence ≤ 4 → add to the batch demote list for Phase 3 (`/forget` writes those; do not also record a review here).
 
 The Bjork rationale: explaining before rating is itself a retrieval rep, and getting it slightly wrong is the desirable difficulty that strengthens encoding. The 30-60 seconds this adds per concept is the cheapest deliberate-practice rep in the plugin.
 
@@ -76,8 +75,8 @@ Collect concepts flagged for demotion across Q1 and Q3; auto-invoke `/forget --i
 |---|---|
 | Hard concept identified (Q1) | Add to demote list. Offer (do NOT auto-invoke): *"Want to start tomorrow with a `/practice` on `<concept>`?"* If accepted, write the concept name into `state.json.lastActivity` so the next `/continue` picks it up as the suggested entry. |
 | Low confidence 1-4 (Q3) OR retrieval failed (Q3) | Add to demote list. Same `/practice` offer as above — these are the two strongest signals for a targeted deliberate-practice rep. |
-| Confidence 8-10 with clean retrieval AND aligned outcomes (Q3) | Phase 2 already promoted the box. **Acknowledge with strategy-naming, not trait-naming.** Per the `growth-mindset` KB, say "your approach of `<specific strategy that worked>`" — not "you got it" or "you are good at this." Generic praise here is the false-effort trap. |
-| Confidence 8-10 but retrieval gap or outcome mismatch (Q3) | Phase 2 held the box. Reinforce the calibration framing: *"The 9 was honest about how it feels — the explanation showed where it is still settling. Calibration is the metacognitive skill that matters most; you just practiced it."* Reference the `metacognition` KB rationale. |
+| Clean retrieval (Q3) | **Acknowledge with strategy-naming, not trait-naming.** Per the `growth-mindset` KB, say "your approach of `<specific strategy that worked>`" — not "you got it" or "you are good at this." Generic praise here is the false-effort trap. |
+| High rating but retrieval gap (Q3) | Box held in Phase 2. Reinforce the calibration framing: *"The 9 was honest about how it feels — the explanation showed where it is still settling. Calibration is the metacognitive skill that matters most; you just practiced it."* Reference the `metacognition` KB rationale. |
 | Surprisingly easy (Q2) | Note in progress — may skip ahead or go deeper on this topic. |
 
 ---
@@ -86,24 +85,22 @@ Collect concepts flagged for demotion across Q1 and Q3; auto-invoke `/forget --i
 
 Update tracking per the `state-schema` KB write path:
 
-1. **Record each Q3 box decision** (promote / hold / demote were decided in Phase 2). Map the decision onto one `record-review` call per concept, with the confidence tag (rating ≥ 8 → `sure`, 5-7 → `mostly`, ≤ 4 → `guessing`):
+1. **Record each Q3 decision — ONLY for concepts that passed the same-day guard** (Phase 2 step 3; concepts already reviewed today get no call). One `record-review` call per qualifying concept, with the confidence tag (rating ≥ 8 → `sure`, 5-7 → `mostly`, ≤ 4 → `guessing`):
 
    ```
    "${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> record-review \
-     --concept "<concept>" --result correct|partial|incorrect \
+     --concept "<concept>" --result correct|partial \
      --tested-bloom <level the retrieval prompt demonstrated> \
      --confidence sure|mostly|guessing --source reflect
    ```
 
-   Promote = `correct`; hold = `partial` (box held, re-test soon — the canonical mid-band rule); demote-list concepts are NOT recorded here — they go through `/forget` in Phase 3, which writes their history itself.
+   Clean retrieval = `correct`; fluency-failure = `partial`; demote-list concepts are NOT recorded here — they go through `/forget` in Phase 3, which writes their history itself.
 
-2. **Record the reflection batch once** (only when Q3 reviewed tracked concepts): `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" record-session --type spaced-review --data '{"conceptsReviewed": N, "calibrationNote": "<one sentence on confidence-vs-outcome alignment>"}'`.
+2. **Record the reflection batch once** (only when Q3 reviewed tracked concepts): `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> record-session --type spaced-review --data '{"conceptsReviewed": N, "calibrationNote": "<one sentence on confidence-vs-outcome alignment, covering same-day-guarded concepts too>"}'`.
 
-3. **Session bookkeeping** (the script counts the session and maintains the streak; it never double-counts a day): `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" touch-state --activity "<one line>"`.
+3. **Session bookkeeping**: `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> touch-state --activity "<one line>"`. The script counts the session, maintains the streak, and bumps the cross-project `cumulativeStats.totalSessions` itself on the first touch of the day — no separate `bump-profile` call, no double-counting regardless of which skill in the chain touched state first.
 
-4. **Profile session counter** — only if `touch-state` reported `"newSession": true`: `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" bump-profile --counter totalSessions`.
-
-5. **Append the reflection entry to `.bodhi/progress.md` with the Write tool**: `## YYYY-MM-DD — Session N (Reflection)`, the Q1/Q2/Q3/Q4 responses, Bloom adjustments, concepts flagged for demotion. This is the canonical narrative; `lastActivity` is just the pointer. Existing content preserved verbatim below.
+4. **Append the reflection entry to `.bodhi/progress.md` with the Write tool**: `## YYYY-MM-DD — Session N (Reflection)`, the Q1/Q2/Q3/Q4 responses, Bloom adjustments, concepts flagged for demotion. This is the canonical narrative; `lastActivity` is just the pointer. Existing content preserved verbatim below.
 
 **Fallback:** if `bodhi-state` is unavailable, follow the `state-schema` KB fallback rule — manual read → mutate-in-place → write → verify, preserving unknown fields.
 

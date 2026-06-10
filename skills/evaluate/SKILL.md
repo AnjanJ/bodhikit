@@ -30,23 +30,11 @@ Hold the trajectory report in memory — it drives Phase 3 and Phase 4.
 
 ---
 
-## Phase 2: Current Assessment
-
-**For this phase, reference the `assessment-framework` KB for question design.**
-
-Run a fresh assessment covering ALL topics in the learning plan.
-
-You MUST use the Agent tool to launch the `skill-assessor` agent. Provide all plan topics, instruction to assess broadly (2-3 questions per major area, 10-15 total), and current progress data.
-
-**Fallback:** If the agent fails, conduct the assessment directly — 2-3 questions per major topic, adapting based on responses.
-
----
-
-## Phase 2.5: Predict Your Trajectory (metacognition calibration)
+## Phase 2: Predict Your Trajectory (metacognition calibration)
 
 **For this phase, reference the `metacognition` KB for the Flavell self-monitoring frame and the Dunning-Kruger calibration rationale.**
 
-Before Phase 3 reveals the trajectory-analyzer report, ask the learner three short prediction questions. This is the highest-leverage calibration moment in the plugin: the learner predicts, the data is revealed, and the gap between prediction and measurement is itself a metacognition signal. Across multiple evaluations the gap should shrink — that shrinkage is mastery of self-assessment, the meta-skill underneath every other skill.
+Before the fresh assessment (Phase 2.5) and before Phase 3 reveals the trajectory-analyzer report, ask the learner three short prediction questions. The order is load-bearing (Koriat — see the `metacognition` KB): predictions taken AFTER 15 assessment questions measure how the last 20 minutes felt, not the learner's standing self-model. This is the highest-leverage calibration moment in the plugin: the learner predicts, the data is revealed, and the gap between prediction and measurement is itself a metacognition signal. Across multiple evaluations the gap should shrink — that shrinkage is mastery of self-assessment, the meta-skill underneath every other skill.
 
 Frame as a calibration check, not a quiz:
 
@@ -64,19 +52,31 @@ Hold the answers in memory. Do NOT reveal the trajectory data yet — Phase 3's 
 
 ---
 
+## Phase 2.5: Current Assessment
+
+**For this phase, reference the `assessment-framework` KB for question design.**
+
+Run a fresh assessment covering ALL topics in the learning plan.
+
+You MUST use the Agent tool to launch the `skill-assessor` agent. Provide all plan topics, instruction to assess broadly (2-3 questions per major area, 10-15 total), and current progress data.
+
+**Fallback:** If the agent fails, conduct the assessment directly — 2-3 questions per major topic, adapting based on responses.
+
+---
+
 ## Phase 3: Comparative Analysis
 
 **For this phase, reference the `blooms-taxonomy` KB for level criteria and the `spaced-repetition` KB for Leitner box semantics. After presenting the trajectory data, surface the calibration delta from Phase 2.5 as a metacognition observation — what the learner predicted vs what the data shows.**
 
-Use the trajectory report from Phase 1 (or the manual analysis from the fallback) plus the fresh assessment from Phase 2.
+Use the trajectory report from Phase 1 (or the manual analysis from the fallback) plus the fresh assessment from Phase 2.5.
 
-Compare initial → intermediate → current per sub-topic. The trajectory report already gives you the direction (improving / stable / declining) and an evidence quote per sub-topic; Phase 2's fresh assessment confirms or shifts the current level.
+Compare initial → intermediate → current per sub-topic. The trajectory report already gives you the direction (improving / stable / declining) and an evidence quote per sub-topic; Phase 2.5's fresh assessment confirms or shifts the current level.
 
 Identify:
 - **Biggest growth areas** — sub-topics with the largest Bloom delta from initial to current. Anchor each with the trajectory report's evidence quote.
 - **Consistent strengths** — sub-topics at Bloom 4+ across multiple assessments (the report flags these as candidates in its Patterns section).
 - **Persistent challenges** — sub-topics at Bloom <3 across 3+ assessments (the report flags these too). Frame as opportunities, not failures.
-- **Recent growth** — Bloom moves in the last assessment window. Cross-check against Phase 2's fresh results.
+- **Recent growth** — Bloom moves in the last assessment window. Cross-check against Phase 2.5's fresh results.
 - **Retention concerns** — concepts in Box 1 that have demoted from a higher box (the report's "Concepts demoted" list). These are precision-gap candidates worth surfacing.
 
 The trajectory report's "Notes for the Parent Skill" section names a suggested framing focus (celebrate growth / honor effort / name the gap / milestone moment). Use it as a starting point, not a script — you know the learner's tone from the conversation so far.
@@ -105,7 +105,9 @@ Treat this as a milestone moment. Acknowledge the path walked with specific evid
 
 ### Capstone offer (project-completion only)
 
-If this evaluation moves the project from `activeProjects` to `completedProjects` (the project is complete), offer the optional capstone — but only as an offer, never as an expectation:
+**Completion criterion (canonical, per the `state-schema` KB):** a project is complete when every module in every plan phase is finished or explicitly skipped AND the learner confirms. Completion is never inferred silently — when the criterion looks met, ask: *"Every module on the plan is done or consciously set aside. Shall we mark this path complete?"* The learner's yes is what moves the project to `completedProjects`; a no leaves it active with no further ceremony.
+
+If this evaluation moves the project from `activeProjects` to `completedProjects` (the learner confirmed completion), offer the optional capstone — but only as an offer, never as an expectation:
 
 > "One last, optional path. Now that the project is complete, you may write a Socratic-style blog post on a topic you wrestled with and won — a capstone thesis that compares your understanding against the masters of the craft. It is not part of the course. It is an extracurricular for learners who want to consolidate by teaching. Run `/bodhikit:teach-back` if it calls to you. If not, this ending is already complete."
 
@@ -143,9 +145,9 @@ The closing offers above (capstone/mentor) are the receipt; these writes are wha
    Populate `predictionDelta` from Phase 2.5 (`predictedBiggestGrowth`/`measuredBiggestGrowth`, `predictedBiggestGap`/`measuredBiggestGap`, `perTopicBloomPredictions` as `{name, predicted, measured}`, one-sentence `calibrationNote`). Omit the key entirely if Phase 2.5 was skipped.
 
 2. **Session + milestone bookkeeping:**
-   - `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" record-session --type evaluate --data '{"notes": "<headline trajectory>"}'`
-   - `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" touch-state --activity "<one line noting the evaluation>"`
-   - `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" bump-profile --counter totalMilestonesReached`
+   - `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> record-session --type evaluate --data '{"notes": "<headline trajectory>"}'`
+   - `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> touch-state --activity "<one line noting the evaluation>"`
+   - `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> bump-profile --counter totalMilestonesReached`
 
 3. **Append the new assessment block to `.bodhi/assessments/latest.md` with the Write tool**: date + full evaluation results (Growth Map, Strengths, Active Growth, Areas Needing Attention, Spaced Repetition Health, Key Concepts Status, Calibration Check, Recommendations) at the top; the prior assessment block stays in place (`/housekeep` rotates it later).
 

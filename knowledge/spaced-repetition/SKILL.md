@@ -40,7 +40,7 @@ For the JSON shape of `spaced-review.json` and the write path, see the `state-sc
 
 ## Successive Relearning (Rawson & Dunlosky)
 
-A missed retrieval should not end with the demotion. Within the same session, after the remaining items, **re-ask the missed concept (reframed, not verbatim) until the learner produces one successful retrieval** — cap at 2 retries, then explain and move on. The demotion to Box 1 stands either way; the in-session relearning rep is additional, not a substitute. Combining retrieval practice with relearning-to-criterion roughly doubles long-term retention versus single-shot retrieval (Rawson & Dunlosky, *Optimizing schedules of retrieval practice for durable and efficient learning*, 2011). `/quiz` Phase 3 implements this loop; the retry outcomes are recorded as separate `reviewHistory` entries.
+A missed retrieval should not end with the demotion. Within the same session, after the remaining items, **re-ask the missed concept (reframed, not verbatim) until the learner produces one successful retrieval** — cap at 2 retries, then explain and move on. The demotion to Box 1 stands either way; the in-session relearning rep is additional, not a substitute. Combining retrieval practice with relearning-to-criterion roughly doubles long-term retention versus single-shot retrieval (Rawson & Dunlosky, *Optimizing schedules of retrieval practice for durable and efficient learning*, 2011). `/quiz` Phase 2 runs the loop; retries are recorded with `record-review --retry`, which appends the history entry WITHOUT box, counter, or bloom movement — the evidence is kept, the demotion stands.
 
 ## Retention Rollup Views (canonical — skills MUST cite this section)
 

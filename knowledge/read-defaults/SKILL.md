@@ -23,8 +23,8 @@ The learner's accumulated work is theirs. Every skill MAY read every file when t
 | `/continue` | `state.json`, `progress.md` (live + summary block), `plan/README.md`, `plan/phase-{currentPhase}.md`, `spaced-review.json.concepts` | learner has been gone >30 days (then last few `progress/archive/` entries for re-onboarding) |
 | `/teach` | `state.json`, `plan/phase-{currentPhase}.md`, `progress.md` (understanding-only sessions skip the plan file) | building explicitly on a prior session the learner names |
 | `/practice` | `state.json`, `plan/phase-{currentPhase}.md`, `spaced-review.json.concepts` | calibrating against a past struggle the learner references |
-| `/quiz` | `spaced-review.json.concepts` (filtered to due) | never |
-| `/reflect` | `state.json`, `progress.md` | rarely |
+| `/quiz` | `state.json`, due list via `bodhi-state due` | never |
+| `/reflect` | `state.json`, `progress.md`, today's `reviewHistory[]` entries (same-day guard) | rarely |
 | `/forget` | `spaced-review.json` | never |
 | `/progress` | `progress.md` (live + summary), `state.json` | learner asks for long-view trajectory |
 | `/evaluate` | `state.json` + `plan/README.md` only in the parent skill. **Delegates the full archive load to the `trajectory-analyzer` agent**, which reads every archive + assessment + plan phase + spaced-review history in its own context. Parent stays light; structured report comes back. | fallback path (agent failure) reads everything itself |
@@ -48,15 +48,9 @@ For each skill, `dev/context-audit.sh` classifies each read as:
 
 The default-read column above is what should appear **unconditionally**. Anything in the right-hand column should be **branch-conditional** — guarded by the situation that justifies it.
 
-## What the Lint Flags
+## How This Contract Is Checked
 
-`dev/check.sh` warns (soft-warn initially; hard-fail once the punch list is clean) when:
-
-- A skill reads `<surface>/archive/` unconditionally.
-- A skill reads `plan/phase-{N}.md` for a phase other than `currentPhase` without a guarding branch.
-- A skill reads a tracking file that this KB does not list for that skill, with no announcing prose nearby.
-
-The lint never blocks a deliberate read. It catches accidental waste — defaults drifting from the contract.
+`dev/context-audit.sh` measures reality against this table (unconditional vs phase-conditional vs branch-conditional reads) and reports drift in its punch list. There is no hard lint rule for read defaults — the audit is the enforcement surface, run before releases. A deliberate, announced read is always allowed.
 
 ## How to Update This KB
 

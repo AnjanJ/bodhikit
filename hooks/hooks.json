@@ -1,13 +1,13 @@
 {
-  "description": "BodhiKit safety net: verify tracking-file schemas before the session stops. Fail-open; blocks at most once per turn.",
+  "description": "BodhiKit safety net: verify tracking-file schemas before the session stops. Fail-open at every layer: a missing python3 (e.g. Windows without the launcher alias) or a mis-expanded path exits 0 instead of surfacing a blocking hook error.",
   "hooks": {
     "Stop": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-stop-hook.py\"",
-            "timeout": 15
+            "command": "command -v python3 >/dev/null 2>&1 && python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-stop-hook.py\" || exit 0",
+            "timeout": 30
           }
         ]
       }

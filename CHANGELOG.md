@@ -2,6 +2,39 @@
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [1.11.1] - 2026-06-10
+
+The audit release. A four-dimension adversarial audit (pedagogy fidelity, learner journeys, cross-artifact consistency, failure modes) ran against 1.11.0; every high-severity finding was hand-verified against source before fixing. The theme: state-integrity seams where the new 1.11.0 mechanics met older flows.
+
+### Fixed — spaced-repetition state integrity
+- **Successive-relearning retries no longer undo the demotion.** `record-review --retry` records the relearning rep as history evidence WITHOUT box/counter/bloom movement; `/quiz` uses it for the relearning loop. Previously a correct retry promoted the just-demoted concept and silently cancelled tomorrow's review — the exact opposite of Rawson & Dunlosky's design.
+- **`/reflect` same-day guard.** Concepts already reviewed today (by `/quiz`/`/teach`/`/practice`) get no second review from reflection — one day of evidence, one box movement. Previously a chained day double-promoted boxes, and reflect's "hold" mapped to `partial`, clobbering a just-earned 7/14-day interval back to tomorrow.
+- **Confidence ratings no longer gate promotion in `/reflect`.** The retrieval outcome decides the box; the rating is pure calibration signal. The old confidence-≥8 gate punished exactly the underconfidence pattern the metacognition KB says to name and support (and which `/quiz` already handled correctly).
+- **`cumulativeStats.totalSessions` actually counts.** `touch-state` bumps the cross-project counter itself on the first touch of a new day. Previously only `/reflect` bumped it, gated on its own `touch-state` reporting a new session — which `/teach`'s earlier call had already consumed, so the lifetime counter sat near zero forever.
+- **Stale-reconfirm misses at the prerequisite gate are recorded** (`incorrect`, Bloom 3) instead of silently dropped — demonstrated forgetting belongs in the schedule.
+
+### Fixed — script robustness (all live-repro'd by the audit, all now unit-tested)
+- **Concurrency:** unique temp filenames + per-project `flock` spanning the read-mutate-write run. Two terminals on one project previously produced both tracebacks and silently lost reviews.
+- **`record-session --data` can no longer smuggle `type`/`subtype`/`date`** past the vocabulary enforcement (a smuggled type then tripped the Stop hook on the script's own write).
+- **Re-migration verifies against this run's input snapshot**, not a stale on-disk backup — the old comparison produced a false mismatch whose error message advised a data-destroying restore.
+- **Corrupt/mistyped tracking files die cleanly** ("not valid JSON — run verify") instead of raw tracebacks; `gate-check` declines on an empty `currentModule` instead of gating a nonsense module.
+- **Unparseable `nextReview` dates are surfaced** by `due` (`unparseableDates`) and flagged as errors by `verify` — previously a schedule-broken concept silently left review rotation forever. `verify` also now warns on a missing `spaced-review.json` and errors on case-insensitive duplicate concept names.
+- **Comma-containing concept names** demotable via repeatable `forget --concept`; `reviewHistory` capped at 100 entries per concept (older roll into `reviewHistoryArchived`); `due --limit` caps context spill at scale; every skill snippet now carries `--project` (previously ~14 inline one-liners errored when cwd ≠ project).
+- **Stop hook fail-open hardened at the interpreter layer**: `command -v python3 || exit 0` in hooks.json, so Windows-without-python3 gets silence, not a blocking hook error. README documents the Windows story (WSL or a `python3` alias).
+
+### Fixed — pedagogy fidelity
+- **Pretest gated on first exposure** — on re-teaches it was both false to the learner ("you have not seen this yet") and outside the pretesting research; re-teaches now open with a graded retrieval instead.
+- **`/continue` delegates due-concept review to `/quiz --invoked-from=continue`** — the inline review was a second-class copy with no confidence tags, no relearning loop, no session entry. Chained `/teach`/`/practice` invocations now pass the resolved topic (and Box-1 target) their callees expect; the long-absence branch records `diagnostic-after-gap` (previously a canonical type with zero writers).
+- **`/learn` Day 1 fixed four ways:** writes `~/.bodhikit/config.json` when the chosen root is off the default search paths (previously Day 2 dead-ended with "No active learning projects"); never re-asks the project root when one exists (previously forked the profile); seeds `spaced-review.json` from the assessment (assessed knowledge enters the Leitner system on Day 1 — "the first review is the most critical"); the first exercise follows the cognitive-load fade instead of the forbidden TODO-starter shape (also fixed in the `assessment-framework` KB template). Closing now names `/bodhikit:continue` — the one onboarding handoff that keeps a new learner on the path.
+- **Project completion has a canonical criterion** (state-schema KB): all modules finished or explicitly skipped AND the learner confirms — `/evaluate` asks, never infers. The entire endgame (capstone, mentor offer, `/teach-back` eligibility) previously rested on executor improvisation.
+- **`/evaluate` predictions moved before the fresh assessment** (Koriat ordering) — predicting "biggest gap" right after feeling yourself struggle on 15 assessment questions measures the last 20 minutes, not your self-model.
+- **Quiz-only learners see why mastery is pinned:** `mastery` reports `blockedOnFeynman`, and `/progress` renders "N concepts meet every criterion except the explain-back — one `/teach` (understanding-only) completes each."
+- **The understanding-only path carries full bookkeeping** (concept-learned bump, targeted-reteach entry) and gains a time-pressed variant; `/pair` records struggled concepts (`partial`), not just wins; `/debug-together` and `/teach-back` sessions become visible (`touch-state` + session entries); the orphaned `ai-learning-safeguards` KB is wired into the hint flows with a dependency-pattern watch; quiz questions pitch at each concept's recorded Bloom level.
+
+### Added — guardrails
+- `dev/eval` grows a fourth LLM scenario (`reflect` — asserts the same-day guard, no-confidence-gate, interval preservation, and single profile bump against a live model) and 32 new deterministic tests (93 total). `dev/check.sh` rule 50 pins the new contracts (`--retry` usage, same-day guard, completion criterion, first-exposure pretest, `--project` on every snippet, safeguards KB non-orphaned); rule 2 now covers agents; rule 45 pins the full session-type vocabulary.
+- GUIDE sync pass: every stale "auto-invoked" claim corrected to the 1.10.2 offer contract, skill count fixed, mastery formula completed, `/review` and `/reflect` cards aligned with actual behavior.
+
 ## [1.11.0] - 2026-06-10
 
 The structural release. The 1.10.x dogfood arc established that the recurring failure class — specs read descriptively instead of imperatively, fields silently dropped, vocabulary invented — could not be closed with more prose. 1.11.0 closes it with architecture, then spends the freed budget on pedagogy.
@@ -12,11 +45,11 @@ The structural release. The 1.10.x dogfood arc established that the recurring fa
 - **Two-layer test harness** (`dev/eval/`): 61 deterministic tests for the script (run by `dev/check.sh` on every change) + headless LLM evals (`run-llm-evals.sh`: migrate / forget / quiz scenarios against a realistic v2 fixture with non-canonical learner annotations, asserting on resulting file state). The automated successor to the 1.10.7–1.10.13 manual dogfood passes.
 
 ### Changed — skills rewired to the script
-- All eight v3 writers (`/quiz`, `/teach`, `/explain`, `/practice`, `/forget`, `/reflect`, `/pair`, `/evaluate`) plus `/continue`, `/progress`, `/assess`, `/plan`, `/debug-together`, `/teach-back` now route JSON writes through `bodhi-state`. The CHECKPOINT-before/after-writes prose discipline (1.10.12), the `/housekeep` STOP banner + decision matrix + defensive self-check (1.10.11), and the per-skill imperative-write step lists are **retired** — the failure mode they defended against is now structurally impossible, and `dev/check.sh` fails any skill that reintroduces the prose or hand-appends `sessionHistory`.
+- All eight v3 writers (`/quiz`, `/teach`, `/explain` — since merged into `/teach`, `/practice`, `/forget`, `/reflect`, `/pair`, `/evaluate`) plus `/continue`, `/progress`, `/assess`, `/plan`, `/debug-together`, `/teach-back` now route JSON writes through `bodhi-state`. The CHECKPOINT-before/after-writes prose discipline (1.10.12), the `/housekeep` STOP banner + decision matrix + defensive self-check (1.10.11), and the per-skill imperative-write step lists are **retired** — the failure mode they defended against is now structurally impossible, and `dev/check.sh` fails any skill that reintroduces the prose or hand-appends `sessionHistory`.
 - **`/housekeep migrate` 5f-bis** is one idempotent script call run unconditionally per project (the single-marker short-circuit class is dead by construction). The 1.7.0 step bodies (5a–5f) moved into the `state-migration` KB — default-mode rotation runs no longer pay for migration-only prose. `/housekeep` shrinks 23.3 KB → 14.7 KB.
 
 ### Changed — context diet
-- **`state-schema` KB split**: lifecycle content (rotation protocol, summary collapse, retirement) moved to the new `state-lifecycle` KB, loaded by `/housekeep` only. `state-schema` (loaded by nearly everything) shrinks 521 → ~300 lines while gaining the write-path table and gate documentation.
+- **`state-schema` KB split**: lifecycle content (rotation protocol, summary collapse, retirement) moved to the new `state-lifecycle` KB, loaded by `/housekeep` only. `state-schema` (loaded by nearly everything) shrinks 521 → ~355 lines while gaining the write-path table and gate documentation.
 - **`dev/check.sh` rule 49**: hard 18 KB size budget per SKILL.md — ratchet down, never up.
 
 ### Added — pedagogy
@@ -34,7 +67,7 @@ The structural release. The 1.10.x dogfood arc established that the recurring fa
 - Lint updated in lockstep: chainable set, `/continue` chain check, v1-boundary exemptions (now `/housekeep` + `/progress`), and writer lists all reflect the new topology; the README count check enforces 18.
 
 ### Changed — docs and framing
-- README/manifests reframed from "research-backed" to **"research-informed"**, with an explicit honesty note: the design follows the literature; outcome validation is ongoing. New "Reliability Architecture" README section; Science section gains Sweller, Kornell/Hays/Bjork, Rawson & Dunlosky, and Koriat citations. Counts: 20 skills, 4 agents, 20 KBs.
+- README/manifests reframed from "research-backed" to **"research-informed"**, with an explicit honesty note: the design follows the literature; outcome validation is ongoing. New "Reliability Architecture" README section; Science section gains Sweller, Kornell/Hays/Bjork, Rawson & Dunlosky, and Koriat citations. Counts: 18 skills, 4 agents, 20 KBs.
 - `docs/example-project` migrated to spaced-review v3 (via the script itself) and now pinned by lint: `bodhi-state verify` must pass on it.
 
 ### First catch (before this release even shipped)

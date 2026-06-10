@@ -93,7 +93,7 @@ Wait for an explicit response. Do not proceed on silence.
 
 - **(a) Standalone or (d) defer:** proceed to Phase 2 with the new topic and any recorded Bloom priors. Phase 4 will scaffold a new project as usual.
 - **(b) Fold:** this is no longer a `/learn` call — it's a plan regeneration against an existing project. Acknowledge the change in scope, then run `/bodhikit:plan regenerate` against the named existing project, passing the new topic scope as additional input. Do NOT create a new project directory. End this `/learn` session after the regenerate completes.
-- **(c) Replace:** rename the existing project's `.bodhi/` directory to `.bodhi/.archived-<YYYY-MM-DD>/`, move the project entry in `.bodhi-profile.projects.json` from `activeProjects` to `completedProjects` with `status: "archived: replaced by <new project name> on <date>"`, then proceed to Phase 2 for the new topic as standalone. The archived directory stays — nothing is destroyed.
+- **(c) Replace:** move the existing project's `.bodhi/` directory to a sibling `.bodhi-archived-<YYYY-MM-DD>/` at the project root (a directory cannot be moved into its own child), move the project entry in `.bodhi-profile.projects.json` from `activeProjects` to `completedProjects` with `status: "archived: replaced by <new project name> on <date>"`, then proceed to Phase 2 for the new topic as standalone. The archived directory stays — nothing is destroyed.
 
 For (b) and (c), narrate the change in one sentence before doing it, so the learner sees what's about to happen.
 
@@ -161,11 +161,13 @@ Present the plan. Ask: "How does this path look to you?" Adjust based on feedbac
 
 **CHECKPOINT: Do not proceed to Phase 5 until the project directory is created.**
 
-Ask where they want to keep learning projects. Create a `learningWithBodhi` folder there.
+If Phase 1.5 already located an existing `learningWithBodhi/` root, use it — do NOT re-ask (a second answer forks the profile). Only for a true first project, ask where they want to keep learning projects and create a `learningWithBodhi` folder there.
+
+**If the chosen root is NOT covered by the default discovery search paths** (`$PWD` ± 3 parents, `~/learningWithBodhi` — per the `state-schema` KB), write `~/.bodhikit/config.json` with the chosen root in `searchPaths` NOW. Without this, tomorrow's `/continue` from any other directory reports "No active learning projects" and Day 2 dead-ends.
 
 ### Create project structure:
 
-1. If `learningWithBodhi/` does not exist, create it with a `README.md` listing projects.
+1. If `learningWithBodhi/` does not exist, create it.
 
 2. Create the project folder with this v2 structure (per the `state-schema` KB):
    - `.bodhi/`
@@ -178,7 +180,11 @@ Ask where they want to keep learning projects. Create a `learningWithBodhi` fold
      - `resources.md`
    - `exercises/`, `projects/`, `notes/`
 
-3. Initialize `state.json`, `spaced-review.json`, `assessment-history.json` (with the Phase 2 results as the first entry, `trigger: "learn-phase2"`), and the cross-project profile pair `learningWithBodhi/.bodhi-profile.json` + `learningWithBodhi/.bodhi-profile.projects.json` per the shapes defined in the `state-schema` KB. `initialBloomLevel` comes from Phase 2. For an existing profile, append this project to `.bodhi-profile.projects.json.activeProjects`, update overall Bloom's levels in `.bodhi-profile.json`, increment `cumulativeStats.totalProjects` in `.bodhi-profile.json`.
+3. Initialize the JSON skeletons per the shapes in the `state-schema` KB — `state.json` (`version: 2`, `initialBloomLevel` from Phase 2, counters at 0; the script fills session bookkeeping in Phase 5), an empty `spaced-review.json` (`version: 3`), and the profile pair (`.bodhi-profile.json` + `.bodhi-profile.projects.json`). For an existing profile, append this project to `activeProjects` and update overall Bloom levels (manual in-place mutation per the KB fallback discipline — project-list shape is the one mutation the script does not own).
+
+4. **Seed the spaced-review system from the assessment** (the first review is the most critical — `spaced-repetition` KB): for each sub-topic Phase 2 classified at Bloom ≥ 1, run `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> add-concept --concept "<sub-topic>" --module "<its module>"`. Assessed knowledge enters the Leitner system on Day 1 instead of waiting for a `/teach` to touch it.
+
+5. **Record the assessment + counters via the script**: `record-assessment --trigger learn-phase2 --data '<entry JSON from Phase 2>'` and `bump-profile --counter totalProjects`.
 
 6. Suggest git initialization and a remote repository.
 
@@ -191,10 +197,12 @@ Ask where they want to keep learning projects. Create a `learningWithBodhi` fold
 Give them the first micro-exercise from Module 1:
 - Achievable in 5-10 minutes with visible output
 - Directly relevant to the first module
-- Calibrated to level: beginners get starter files with TODOs and tests in `exercises/01-<topic>/`; intermediate+ get a clear description
+- Calibrated to level per the `cognitive-load` KB: beginners (Bloom 1-2) get the faded sequence in `exercises/01-<topic>/` — a short inline-annotated worked example to study, then a completion version with 1-2 steps blanked (never a bare TODO list; a brand-new learner is at their highest cognitive load); intermediate+ get a clear description.
 
-Close with encouragement about taking the first step.
-
-Update tracking (this is Session 1 of the project):
-- Update `state.json` (slim — no narrative): set `lastActivity` to ONE short sentence describing the exercise. Set `lastSessionAt`, `totalSessions: 1`, `sessionDates: [today]`, `currentStreak: 1`.
+Update tracking (this is Session 1 of the project), per the `state-schema` KB write path:
+- `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> touch-state --activity "<one line describing the exercise>"` — the script sets `lastSessionAt`, `sessionDates`, `currentStreak`, `totalSessions`, and bumps the cross-project session counter.
 - Write the first entry of `progress.md` (the v2 live document): `## YYYY-MM-DD — Session 1 (Kickoff)`, then **Activities** (assessment completed, plan generated, project scaffolded, first exercise issued), **Outcomes** (initial Bloom's levels baselined), **Next** (Module 1 exercise). End the file with an empty `## Summary of earlier sessions` block (it will populate as `/housekeep` runs after future sessions).
+
+Close with encouragement about taking the first step — and the handoff that keeps them on the path: "Tomorrow (or whenever you return), one command resumes everything: `/bodhikit:continue`."
+
+**Fallback:** if `bodhi-state` is unavailable, follow the `state-schema` KB fallback rule.

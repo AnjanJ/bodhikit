@@ -142,7 +142,7 @@ After the learner indicates they have completed (or attempted) the exercise:
    - Ask 1-2 deepening questions: "What would happen if the input were [edge case]?" or "Can you think of another way to solve this?"
    - If appropriate, suggest a stretch challenge: "Now try doing it without using [method/library]."
 
-4. **If the code does not work:**
+4. **If the code does not work** (reference the `ai-learning-safeguards` KB — questions over answers; track dependency patterns and redirect repeat hint-topics to independent practice):
    - Do NOT fix it. Do NOT show the solution.
    - Ask: "What do you think is happening? Walk me through your logic."
    - Provide graduated hints:
@@ -155,7 +155,7 @@ After the learner indicates they have completed (or attempted) the exercise:
 
    > "Hints can land the fix, but they teach the fix more than the debugging. Want to switch to `/bodhikit:debug-together --invoked-from=practice <brief description of what is failing>` and work through it as a hypothesis? Either way is fine; debug-together is the longer path that teaches the skill."
 
-   This is an **offer, not an auto-invocation**. If the learner accepts, control passes to `/debug-together` and they work through TRAFFIC + Reproduce + Hypothesize + Wolf Fence on the failing exercise (the sub-skill discovers the failing code from `exercises/<current-module>/` per the chain convention — do NOT pass a file path as positional argument). If they decline, continue with Hint 3 and the existing flow.
+   This is an **offer, not an auto-invocation**. If the learner accepts, control passes to `/debug-together` and they work through TRAFFIC + Reproduce + Hypothesize + Wolf Fence on the failing exercise (the sub-skill discovers the failing code from `exercises/<current-module>/` per the chain convention — do NOT pass a file path as positional argument). **Either way, control returns HERE for step 6 (Update tracking) when the exercise resolves** — an accepted handoff must not orphan the exercise's writes. If they decline, continue with Hint 3 and the existing flow.
 
 5. **If they are stuck before starting:**
    - Break the exercise into smaller sub-problems
@@ -167,7 +167,7 @@ After the learner indicates they have completed (or attempted) the exercise:
 
      This is an **offer, not an auto-invocation**. The decomposition path stays available; pair is named as a peer alternative for learners who would do better with collaboration than further breakdown.
 
-6. **Update tracking** — per the `state-schema` KB write path and the `spaced-repetition` KB judgment rules:
+6. **Update tracking** — per the `state-schema` KB write path and the `spaced-repetition` KB judgment rules. **No active project** (the learner asked for a one-off exercise outside a learning project): skip these writes entirely — there is nothing to write to; suggest `/learn` if they want the tracking:
 
    a. **Record the exercise outcome:**
 
@@ -180,11 +180,11 @@ After the learner indicates they have completed (or attempted) the exercise:
 
       `--tested-bloom` caps at what was demonstrated, not the exercise tier (a brute-force Advanced solve does not advance past 4; the script ratchets `bloomLevel` and never demotes). Completion = `correct`; abandoned = `incorrect`; got there with heavy hints = `partial`. Do NOT call `set-feynman` here — that gate is owned by `/teach` (including its understanding-only sessions).
 
-   b. **If the exercise introduced or reviewed tracked concepts**, record the session once: `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" record-session --type practice --data '{"notes": "<exercise name>"}'`.
+   b. **If the exercise introduced or reviewed tracked concepts**, record the session once: `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> record-session --type practice --data '{"notes": "<exercise name>"}'`.
 
-   c. **Session pointer:** `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" touch-state --activity "<one line pointing at the progress.md entry>"`.
+   c. **Session pointer:** `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> touch-state --activity "<one line pointing at the progress.md entry>"`.
 
-   d. **Profile counter** (every successful completion): `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" bump-profile --counter totalExercises`.
+   d. **Profile counter** (every successful completion): `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> bump-profile --counter totalExercises`.
 
    e. **Append the exercise entry to `.bodhi/progress.md` with the Write tool**: `## YYYY-MM-DD — Exercise: <topic>`, then **What was attempted**, **Code-review findings**, **Bloom adjustments** (numeric, matching the script call), **Next**. Existing content preserved verbatim below.
 
