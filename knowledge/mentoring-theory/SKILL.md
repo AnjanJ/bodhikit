@@ -5,6 +5,8 @@ user-invocable: false
 
 # Mentoring — GROW Model and Kram's Theory
 
+**Evidence tier: practitioner framework.** GROW and Kram's functions come from field and observational research, not controlled trials — used here as conversation structure, not as a claimed learning effect.
+
 ## GROW Model (Whitmore, 1988)
 
 A coaching conversation structure:

@@ -5,6 +5,8 @@ user-invocable: false
 
 # Cognitive Load Theory (Sweller)
 
+**Evidence tier: bedrock.** The worked-example and expertise-reversal effects are among the most-replicated findings in instructional design.
+
 Working memory holds ~4 chunks; learning fails when a task's *intrinsic* load (the concept itself) plus *extraneous* load (everything else the learner must juggle) exceeds it. For novices, a full problem is mostly extraneous load; for experts, scaffolding itself becomes the extraneous load.
 
 ## The Worked-Example Effect

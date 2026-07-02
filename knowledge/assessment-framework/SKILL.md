@@ -5,6 +5,8 @@ user-invocable: false
 
 # Assessment Framework
 
+**Evidence tier: derived.** Operationalizes the `blooms-taxonomy` KB (an organizing framework) plus retrieval-practice findings; see those KBs for evidence standing.
+
 This knowledge base defines how BodhiKit assesses learner skill levels, designs exercises, and measures mastery. Referenced by the `skill-assessor` agent and assessment-related skills.
 
 ---

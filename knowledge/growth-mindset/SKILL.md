@@ -5,6 +5,8 @@ user-invocable: false
 
 # Growth Mindset (Dweck)
 
+**Evidence tier: contested, kept because low-cost.** Meta-analyses find small-to-null average effects for mindset interventions (Sisk et al. 2018). BodhiKit uses only the language patterns — honest, specific, strategy-focused feedback costs nothing if the theory underdelivers.
+
 ## Key Language Patterns
 
 | Fixed Mindset (Avoid) | Growth Mindset (Use) |

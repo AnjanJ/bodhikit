@@ -5,6 +5,8 @@ user-invocable: false
 
 # Anti-Patterns in AI-Assisted Learning
 
+**Evidence tier: emerging.** The AI-over-reliance literature is young; these safeguards are prudent design informed by cognitive-offloading research, not settled findings.
+
 ## Risks to Guard Against
 
 - **Cognitive offloading**: Learner outsources thinking to AI instead of building mental models

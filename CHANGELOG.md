@@ -2,6 +2,15 @@
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [1.11.2] - 2026-07-02
+
+### Fixed — mastery-streak semantics
+- **A `partial` retrieval now resets `consecutiveCorrectAtL4Plus`.** The mastery criterion reads "3 *consecutive correct* at L4+", but the counter previously ignored partials — correct → partial → correct → correct counted as 3 consecutive, so mastery could be declared across a demonstrated wobble. The box hold is unchanged (partial is still not a Leitner demotion); only the streak breaks. A correct at a lower tested level still leaves the counter untouched, and `--retry` reps still never touch it. Order per the authoring contract: `state-schema` KB rule first, failing test (`t_partial_breaks_streak`, reproducing the exact bug), then the one-line `apply_review` change. GUIDE and `spaced-repetition` KB partial-rule wording aligned.
+
+### Changed — epistemic honesty pass on the science
+- **Evidence tiers on every pedagogy KB.** Each of the 15 methodology KBs now opens with a one-line evidence tier: *bedrock* (spaced repetition, desirable difficulties, cognitive load), *strong* (metacognition), *strong-theoretical / strong-qualitative / strong-mechanism* (ZPD, scientific debugging, Feynman), *organizing framework / practitioner framework / derived* (Bloom's, mentoring, assessment-framework), *moderate* (pair programming), *qualified* (constructivism — guided over pure discovery, per Kirschner, Sweller & Clark 2006), *emerging* (ai-learning-safeguards), and *contested* with explicit caveats (growth mindset — Sisk et al. 2018; deliberate practice — Macnamara et al. 2014). README Science section gains an "Evidence tiers" paragraph with the Dunlosky et al. (2013) umbrella citation. Rationale: the project's differentiator is the honesty note — fencing the weak claims is what lets a reader trust the strong ones.
+- **Ebbinghaus percentages removed.** The `spaced-repetition` KB's forgetting-curve section stated the widely-misquoted pop percentages (42% at 20 minutes, etc.) as fact; replaced with the qualitative claim (steep early decay, recall flattens the curve) — false precision in the KB that anchors the scheduling system was exactly what this project polices elsewhere.
+
 ## [1.11.1] - 2026-06-10
 
 The audit release. A four-dimension adversarial audit (pedagogy fidelity, learner journeys, cross-artifact consistency, failure modes) ran against 1.11.0; every high-severity finding was hand-verified against source before fixing. The theme: state-integrity seams where the new 1.11.0 mechanics met older flows.

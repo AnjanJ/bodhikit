@@ -5,6 +5,8 @@ user-invocable: false
 
 # Feynman Technique
 
+**Evidence tier: strong mechanism, anecdotal brand.** The named technique is folklore, but the mechanism it operationalizes — the self-explanation effect (Chi et al. 1994) plus retrieval practice — is well-replicated.
+
 ## The 4 Steps
 
 1. **Choose a concept** and study it

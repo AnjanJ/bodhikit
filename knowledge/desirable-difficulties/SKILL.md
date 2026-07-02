@@ -5,6 +5,8 @@ user-invocable: false
 
 # Desirable Difficulties (Bjork)
 
+**Evidence tier: bedrock** for retrieval practice and spacing (the two highest-utility techniques in Dunlosky et al. 2013); interleaving and generation are well-supported with more moderate effect sizes.
+
 ## The 5 Key Difficulties
 
 1. **Spacing**: Distribute practice over time (not cramming)

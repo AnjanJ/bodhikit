@@ -5,6 +5,8 @@ user-invocable: false
 
 # Bloom's Taxonomy for Programming
 
+**Evidence tier: organizing framework.** A classification scheme, not an intervention with effect sizes — its value here is making "level" observable and consistent across skills, not a claimed learning gain.
+
 ## The 6 Levels
 
 | Level | Name | Programming Indicators | Example Assessment |

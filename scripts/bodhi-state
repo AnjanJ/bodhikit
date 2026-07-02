@@ -235,7 +235,9 @@ def apply_review(concept, result, tested_bloom, confidence=None, note=None,
 
     correct   -> box up one (max 5), nextReview = today + new interval
     incorrect -> box 1, nextReview tomorrow, counter reset
-    partial   -> box held, nextReview tomorrow (re-test soon)
+    partial   -> box held, nextReview tomorrow (re-test soon), counter reset
+                 (1.11.2: not a Leitner demotion, but it breaks the
+                 consecutive-correct mastery streak)
     retry     -> successive-relearning rep (1.11.1): history entry only.
                  The Rawson & Dunlosky in-session retry is additional evidence,
                  not a substitute — the original miss's Box-1 demotion and
@@ -261,6 +263,10 @@ def apply_review(concept, result, tested_bloom, confidence=None, note=None,
             concept["consecutiveCorrectAtL4Plus"] = 0
         elif result == "partial":
             concept["nextReview"] = iso(t + datetime.timedelta(days=1))
+            # 1.11.2: a partial retrieval breaks the consecutive-correct
+            # mastery streak (state-schema KB) — the box is held, but
+            # "3 consecutive correct at L4+" means uninterrupted corrects.
+            concept["consecutiveCorrectAtL4Plus"] = 0
     concept["lastReviewed"] = iso(t)
     concept["lastResult"] = note or (f"{result} (relearning retry)" if retry else result)
     entry = {"date": iso(t), "result": result,

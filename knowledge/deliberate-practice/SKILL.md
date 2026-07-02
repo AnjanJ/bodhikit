@@ -5,6 +5,8 @@ user-invocable: false
 
 # Deliberate Practice (Ericsson)
 
+**Evidence tier: contested in scope.** That targeted practice with immediate feedback beats naive repetition is solid; Ericsson's stronger claims about how much expertise it explains are contested (Macnamara et al. 2014 meta-analysis). BodhiKit uses only the uncontested core.
+
 ## What Makes Practice "Deliberate"
 
 1. **Targeted**: Each session has a specific skill improvement goal

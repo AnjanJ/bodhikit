@@ -5,6 +5,8 @@ user-invocable: false
 
 # Constructivism and Project-Based Learning
 
+**Evidence tier: qualified.** Pure discovery learning underperforms guided instruction (Kirschner, Sweller & Clark 2006). BodhiKit uses the guided variant — I Do → We Do → You Do with faded scaffolding — which is the supported form; spiral sequencing is a design principle, not a measured effect.
+
 ## Spiral Curriculum (Bruner)
 
 Topics are revisited at increasing levels of complexity:

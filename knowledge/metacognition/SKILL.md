@@ -5,6 +5,8 @@ user-invocable: false
 
 # Metacognition
 
+**Evidence tier: strong.** Confidence-calibration and self-monitoring research (Koriat 1997; Flavell 1979) is well-replicated; metacognitive-strategy instruction shows consistent positive effects.
+
 ## Teaching Learners HOW to Learn
 
 - **Prediction**: Before attempting a problem, ask "How hard do you think this will be?"

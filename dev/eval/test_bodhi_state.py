@@ -367,6 +367,39 @@ def t_retry_and_relearning():
         check("retry: bloom not ratcheted by retry", c["bloomLevel"] == 0)
 
 
+def t_partial_breaks_streak():
+    # 1.11.2 — "3 consecutive correct at L4+" means uninterrupted corrects.
+    # A partial retrieval is not a correct one: it must reset the counter
+    # (previously correct/partial/correct/correct counted as 3 "consecutive").
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review=json.loads(json.dumps(V2_SR)))
+        run(proj, "migrate-spaced-review")
+        run(proj, "record-review", "--concept", "B-tree indexes",
+            "--result", "correct", "--tested-bloom", "4")
+        c = read_sr(proj)["concepts"][0]
+        check("streak: correct at L4 increments", c["consecutiveCorrectAtL4Plus"] == 1)
+        box_after_correct = c["box"]
+        run(proj, "record-review", "--concept", "B-tree indexes",
+            "--result", "partial", "--tested-bloom", "4")
+        c = read_sr(proj)["concepts"][0]
+        check("streak: partial resets counter", c["consecutiveCorrectAtL4Plus"] == 0, c)
+        check("streak: partial still holds box (no Leitner demotion)",
+              c["box"] == box_after_correct)
+        run(proj, "record-review", "--concept", "B-tree indexes",
+            "--result", "correct", "--tested-bloom", "4")
+        run(proj, "record-review", "--concept", "B-tree indexes",
+            "--result", "correct", "--tested-bloom", "4")
+        c = read_sr(proj)["concepts"][0]
+        check("streak: rebuilt from zero after the partial",
+              c["consecutiveCorrectAtL4Plus"] == 2, c)
+        # A partial RETRY is a relearning rep: no counter movement of any kind.
+        run(proj, "record-review", "--concept", "B-tree indexes",
+            "--result", "partial", "--tested-bloom", "4", "--retry")
+        c = read_sr(proj)["concepts"][0]
+        check("streak: partial retry does not touch the counter",
+              c["consecutiveCorrectAtL4Plus"] == 2, c)
+
+
 def t_touch_state_profile_bump():
     with tempfile.TemporaryDirectory() as root:
         proj = make_project(root)
@@ -577,7 +610,8 @@ def main():
     for t in (t_migrate, t_record_review, t_sessions_and_forget,
               t_touch_state_and_profile, t_gate_check,
               t_mastery_due_calibration, t_verify,
-              t_retry_and_relearning, t_touch_state_profile_bump,
+              t_retry_and_relearning, t_partial_breaks_streak,
+              t_touch_state_profile_bump,
               t_data_reserved_keys, t_migrate_stale_backup,
               t_forget_comma_names, t_robustness, t_concurrency,
               t_history_cap, t_mastery_blocked_on_feynman):

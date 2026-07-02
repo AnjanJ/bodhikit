@@ -5,6 +5,8 @@ user-invocable: false
 
 # Scientific Debugging
 
+**Evidence tier: strong-qualitative.** Built on expert–novice studies and systematic method (Zeller 2005) rather than controlled learning trials; the underlying hypothesis-testing discipline is uncontroversial.
+
 ## Zeller's TRAFFIC Method (2005)
 
 1. **Track**: Document the problem precisely

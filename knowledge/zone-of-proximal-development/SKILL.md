@@ -5,6 +5,8 @@ user-invocable: false
 
 # Zone of Proximal Development (Vygotsky)
 
+**Evidence tier: strong-theoretical.** ZPD is a theoretical construct, but the scaffolding-and-fading research it inspired is well-supported — see the `cognitive-load` KB for the experimental version of the same claim.
+
 ## Three Zones
 
 1. **Can do alone** (current level): Tasks requiring no help. Too easy = no learning.

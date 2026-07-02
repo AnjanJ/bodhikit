@@ -223,7 +223,7 @@ Optional fields on entries (writers MAY include via `--data`): `conceptsReviewed
 
 - `bloomLevel`: integer 0–6. `0` = uninitialized (no v3 writer has classified it). Ratchets up only — `record-review` takes `max(current, tested-bloom)` on a correct answer and never demotes; even `/forget` demotes the box, not the Bloom classification.
 - `feynmanPassed`: boolean. Set by `set-feynman` when `/teach` (a full session or its understanding-only path) observes a genuine explain-back. Set, never unset.
-- `consecutiveCorrectAtL4Plus`: incremented on correct at tested-bloom ≥ 4; reset to 0 on any incorrect and on `/forget`.
+- `consecutiveCorrectAtL4Plus`: incremented on correct at tested-bloom ≥ 4; reset to 0 on any incorrect, any partial, and on `/forget` (1.11.2 — a partial retrieval breaks the consecutive-correct streak; "3 consecutive correct" means uninterrupted corrects). A correct at a lower tested level leaves the counter untouched (a routine low-level recall between two L4 demonstrations is a different measurement, not counter-evidence). `--retry` reps never touch it.
 
 **Mastery formula (canonical, computed by `bodhi-state mastery`):**
 

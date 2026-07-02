@@ -5,18 +5,13 @@ user-invocable: false
 
 # Spaced Repetition (Ebbinghaus, Leitner)
 
+**Evidence tier: bedrock.** Distributed practice is one of the two highest-utility techniques in Dunlosky et al.'s (2013) review of ten learning techniques.
+
 See also: `state-schema` KB (`spaced-review.json` shape), `desirable-difficulties` KB (why spacing works), `metacognition` KB (calibrating self-rated confidence against actual retention).
 
 ## The Forgetting Curve
 
-Without review, memory decays exponentially:
-- 20 minutes: ~42% forgotten
-- 1 hour: ~56% forgotten
-- 24 hours: ~67% forgotten
-- 1 week: ~75% forgotten
-- 1 month: ~79% forgotten
-
-Each successful recall resets and flattens the curve. The first review is the most critical.
+Without review, memory decays steeply: most forgetting happens within the first day, and the curve keeps falling over the following weeks. (The widely-quoted percentage tables are a pop rendering of Ebbinghaus's savings-method data — the shape of the curve is the finding, not the digits.) Each successful recall resets and flattens the curve. The first review is the most critical.
 
 ## Leitner Box System (BodhiKit Implementation)
 
@@ -32,7 +27,7 @@ Each successful recall resets and flattens the curve. The first review is the mo
 - New concepts start in Box 1, `nextReview` = tomorrow
 - Correct recall: move up one box (max 5), `nextReview` = today + new box interval
 - Incorrect recall: move to Box 1, `nextReview` = tomorrow
-- Partial recall: box held, `nextReview` = tomorrow (re-test soon; partial is neither punished nor rewarded)
+- Partial recall: box held, `nextReview` = tomorrow (re-test soon; partial is not a Leitner demotion — but it does reset the `consecutiveCorrectAtL4Plus` mastery streak, per the `state-schema` KB)
 - Learner-initiated demote (`/forget` or self-rated low confidence in `/reflect`): same as incorrect recall
 - `nextReview` = `lastReviewed` + box interval
 

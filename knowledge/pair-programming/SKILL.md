@@ -5,6 +5,8 @@ user-invocable: false
 
 # Pair Programming for Learning
 
+**Evidence tier: moderate.** Williams & Kessler's studies show learning and quality gains with modest effect sizes; strong-style pairing is practitioner-derived.
+
 ## Strong-Style Pairing (Falco, 2014)
 
 "For an idea to go from your head into the computer, it must go through someone else's hands."
