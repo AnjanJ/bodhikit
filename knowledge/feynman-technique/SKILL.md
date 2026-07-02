@@ -34,6 +34,18 @@ After teaching a concept, always ask: "Now, explain this back to me in your own 
 
 If the learner uses jargon, ask them to define each technical term simply. If they skip steps, ask about the missing steps. If they use vague language ("it kind of does..."), probe for precision.
 
+## Grading the Explain-Back (canonical ladder — `/teach` cites this)
+
+Grade the final explanation at the rung it demonstrated, and record result + level together:
+
+| Rung demonstrated | `--tested-bloom` |
+|---|---|
+| Clear, jargon-free explanation in own words | 2-3 |
+| ...can also apply it in code | 3-4 |
+| ...can also explain trade-offs and when NOT to use it | 4-5 |
+
+A clean explanation at ANY rung = `correct` at that rung. Missing higher-rung depth **caps the level — it is not a failed retrieval**. Reserve `incorrect` for demonstrated failure: a misconception that survived refinement, a mechanical paraphrase (the three fluency-without-understanding signals), or no coherent explanation at any rung. `incorrect` demotes the Leitner box, and demotion means demonstrated forgetting (per the `spaced-repetition` KB) — bounded depth is not forgetting. (1.12.2: the grading-calibration evals caught executors resolving "gaps remained = incorrect" against apply-level learners who knew the mechanics cold.)
+
 ## Analogy-Escalation Protocol
 
 A single named protocol every skill reaches for when the learner is stuck. Analogy is not a default tactic — it is a *response to detected struggle*. Reaching for one too early teaches the analogy instead of the concept.

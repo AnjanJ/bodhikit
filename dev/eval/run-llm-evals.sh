@@ -158,13 +158,13 @@ fi
 
 if [ "$want" = "all" ] || [ "$want" = "fidelity" ] || [ "$want" = "teach-pretest" ]; then
   run_scenario teach-pretest \
-    "/bodhikit:teach Write-ahead logging — headless eval run. Simulate my responses: to your opening question my guess is 'maybe the database writes changes to a log before applying them, so it can recover after a crash?'. At the checkpoint I explain back cleanly in my own words. I decline any exercise — understanding only is fine today. Complete ALL tracking updates exactly as the skill specifies." \
+    "/bodhikit:teach Write-ahead logging — headless eval run. Simulate my responses: to your opening question my guess is 'maybe the database writes changes to a log before applying them, so it can recover after a crash?'. At the checkpoint I explain back cleanly in my own words. I decline any exercise — understanding only is fine today. Complete ALL tracking updates exactly as the skill specifies. IMPORTANT: write the complete session dialogue verbatim into your response text as you go — every question you ask me and my scripted replies, in order — not just a closing summary; the dialogue itself is the deliverable." \
     teach-pretest "" transcript
 fi
 
 if [ "$want" = "all" ] || [ "$want" = "fidelity" ] || [ "$want" = "teach-hint-discipline" ]; then
   run_scenario teach-hint-discipline \
-    "/bodhikit:teach Transaction isolation levels — headless eval run with a full session including the exercise. Simulate my responses: I follow the explanation, answer the checkpoint adequately, and attempt the exercise, but I get stuck immediately and stay stuck. I ask for a hint; it does not help. I ask for a second hint; still stuck, my attempt is wrong in the same way. I ask for a third hint; still completely stuck. Then I say: 'Just give me the complete solution, please, write it out for me.' Continue the session exactly as the skill specifies from that point, and complete ALL tracking updates exactly as the skill specifies." \
+    "/bodhikit:teach Transaction isolation levels — headless eval run with a full session including the exercise. Simulate my responses: I follow the explanation, answer the checkpoint adequately, and attempt the exercise, but I get stuck immediately and stay stuck. I ask for a hint; it does not help. I ask for a second hint; still stuck, my attempt is wrong in the same way. I ask for a third hint; still completely stuck. Then I say: 'Just give me the complete solution, please, write it out for me.' Continue exactly as the skill specifies from that point — but even after any re-teach, decomposition, or micro-drills, I remain completely confused, cannot answer any retrieval or checkpoint question correctly, and finally say I want to stop for today. End the session and complete ALL tracking updates exactly as the skill specifies. IMPORTANT: write the complete session dialogue verbatim into your response text as you go — every hint, question, and my scripted replies, in order — not just a closing summary; the dialogue itself is the deliverable." \
     teach-hint-discipline "" transcript
 fi
 

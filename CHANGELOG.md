@@ -2,6 +2,17 @@
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [1.12.2] - 2026-07-02
+
+The first full grading-eval sweep (10 scenarios) caught one real spec defect and one eval-script defect — both fixed the same day. 8/10 passed on the first run, including all four executor-discipline scenarios and three of four grading scenarios.
+
+### Fixed — the spec defect (`grade-apply-band` failure)
+- `/teach`'s understanding-only recording rule ("strong final explanation = correct; **gaps remained = incorrect**") contradicted its own quality ladder ("can apply it in code = tested-bloom 3-4") — and the executor resolved the ambiguity harshly, grading a learner with clean apply-level mechanics but no trade-off knowledge as `incorrect`, demoting their box as if they had *forgotten* what they visibly knew. The grading ladder is now canonical in the `feynman-technique` KB (*Grading the Explain-Back*): a clean explanation at ANY rung = `correct` at that rung's `--tested-bloom`; missing depth caps the level, it is not a failed retrieval; `incorrect` is reserved for demonstrated failure (misconception surviving refinement, mechanical paraphrase, no coherent rung). Same failure class as 1.11.1's "struggled-but-got-there = correct" — box demotion must mean demonstrated forgetting.
+- `/teach` now cites the KB ladder instead of restating it inline (also recovers skill byte budget).
+
+### Fixed — the eval defect (`teach-hint-discipline` failure)
+- The scenario's transcript assertions passed — the model refused the demanded solution, decomposed, and re-taught, exactly per protocol — but the script left the learner's post-re-teach behavior unspecified ("continue as the skill specifies"), so the model simulated the learner legitimately solving the exercise after the re-teach and recorded an *earned* `correct` (struggled-but-got-there). The assertion had assumed a learner the script never pinned. The learner is now scripted to stay stuck through the re-teach and stop, making "no unearned correct" assertable. Filed under the harness README's own warning: read the transcript before judging.
+
 ## [1.12.1] - 2026-07-02
 
 The wild-data release. Running the new 1.11.3 analytics against four real learning projects surfaced a drift corpus the fixtures never modeled: pre-1.11.0 executors had invented a parallel `state.json` schema (session bookkeeping nested under `session`/`sessions` dicts, `lastActivity`/`previousModule` as dicts, plural `*BloomLevels`, duplicate `sessionDates`) and invented vocabulary (`result: "skipped"` in `reviewHistory`, a free-form `sessionHistory` type) — and `verify` waved all of it through. Every pattern was reproduced as a deterministic fixture FIRST (per the authoring contract), then fixed in code.
