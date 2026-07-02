@@ -314,7 +314,7 @@ for f in skills/*/SKILL.md; do
     fi
     # Skip universal references that every skill loads.
     case "$kb" in
-      teaching-personality|state-schema) continue ;;
+      teaching-personality|state-ops) continue ;;
     esac
     # Count the phase sections (## Phase ...) in this skill, and the count of
     # those sections that mention this KB.

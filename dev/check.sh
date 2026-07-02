@@ -38,6 +38,15 @@ else
   ok "version consistent ($plugin_v)"
 fi
 
+# README version badge must match (1.13.0 — the badge drifted silently to 1.11.1
+# because the sync check above never covered it).
+readme_v=$(grep -oE 'badge/version-[0-9.]+-' README.md | head -1 | sed -E 's|badge/version-([0-9.]+)-|\1|')
+if [ -z "$readme_v" ]; then
+  err "README.md missing the version badge"
+elif [ -n "$plugin_v" ] && [ "$readme_v" != "$plugin_v" ]; then
+  err "README version badge ($readme_v) drifted from plugin.json ($plugin_v)"
+fi
+
 # ---------------------------------------------------------------------------
 # 2. Skill frontmatter contract
 # ---------------------------------------------------------------------------
@@ -71,15 +80,28 @@ for f in skills/*/SKILL.md; do
 done
 
 # ---------------------------------------------------------------------------
-# 4. Files that touch tracking shapes must reference state-schema
+# 4. Files that touch tracking shapes must reference state-ops (the routine
+#    operational surface) or state-schema (the field-level reference, loaded
+#    only by manual carve-outs / fallbacks / housekeep). Since 1.13.0 the two
+#    are split so routine fires stop paying for field shapes they cannot use.
 # ---------------------------------------------------------------------------
 for f in skills/*/SKILL.md agents/*.md rules/*.md; do
-  # state-schema KB itself is allowed to redeclare shapes
-  case "$f" in *state-schema*) continue;; esac
+  case "$f" in *state-schema*|*state-ops*) continue;; esac
   if grep -qE 'state\.json|spaced-review\.json|progress\.md|bodhi-profile' "$f"; then
-    if ! grep -q 'state-schema' "$f"; then
-      err "$f touches tracking files but does not reference state-schema KB"
+    if ! grep -qE 'state-(ops|schema)' "$f"; then
+      err "$f touches tracking files but references neither state-ops nor state-schema KB"
     fi
+  fi
+done
+# Skills that hand-mutate JSON (the declared manual carve-outs) must ALSO
+# reference state-schema — shapes are required where the script does not own
+# the write: /learn scaffolding, /evaluate profile writes, /assess Bloom maps,
+# /mentor career fields, /housekeep migrations.
+for s in learn evaluate assess mentor housekeep; do
+  f="skills/$s/SKILL.md"
+  if [ ! -f "$f" ]; then continue; fi
+  if ! grep -q 'state-schema' "$f"; then
+    err "$f performs a manual carve-out but does not reference state-schema KB (shapes required where bodhi-state does not own the write)"
   fi
 done
 
@@ -210,12 +232,13 @@ done
 
 # ---------------------------------------------------------------------------
 # 14. Progressive disclosure: KBs referenced top-of-file should be in
-#     teaching-personality + state-schema only. Methodology KBs belong
-#     inside the phase that uses them.
+#     teaching-personality + state-ops only (state-schema allowed where a
+#     manual carve-out is declared). Methodology KBs belong inside the
+#     phase that uses them.
 # ---------------------------------------------------------------------------
 # Reads the body lines 1-25 after frontmatter (the "load directive" zone
 # Claude Code sees before phase content). Any backticked KB name there that
-# isn't teaching-personality or state-schema → soft warn.
+# isn't teaching-personality or state-ops/state-schema → soft warn.
 #
 # Skips: /housekeep (legitimate conditional load of state-migration).
 kb_names=$(find knowledge -mindepth 1 -maxdepth 1 -type d -exec basename {} \;)
@@ -224,7 +247,7 @@ for f in skills/*/SKILL.md; do
   top=$(awk 'BEGIN{n=0} /^---$/{n++; next} n>=2 || (n==1 && NR>1) {print}' "$f" | head -8)
   for kb in $kb_names; do
     case "$kb" in
-      teaching-personality|state-schema|read-defaults|state-migration|state-lifecycle) continue;;
+      teaching-personality|state-ops|state-schema|state-migration|state-lifecycle) continue;;
     esac
     if printf '%s' "$top" | grep -qE "\`$kb\`"; then
       err "$f loads \`$kb\` top-of-file (lines 1-8) — consider moving into the phase that uses it"
@@ -308,7 +331,7 @@ if [ -f skills/teach/SKILL.md ]; then
     err "skills/teach/SKILL.md missing the prerequisite Bloom gate language (H3 fix)"
   fi
   # 1.11.0 — the gate's trigger/verdict logic lives in bodhi-state gate-check
-  # (canonical doc: state-schema KB). The skill must delegate, not re-derive.
+  # (canonical doc: state-ops KB since 1.13.0). The skill must delegate, not re-derive.
   if ! grep -q 'gate-check' skills/teach/SKILL.md; then
     err "skills/teach/SKILL.md prerequisite gate does not invoke bodhi-state gate-check (1.11.0)"
   fi
@@ -648,7 +671,7 @@ fi
 # The corrected rule keys off bloomLevel: 0 alone. Any file pairing
 # bloomLevel: 0 with lastReviewed === null in the SAME logical predicate
 # is using the pre-1.10.7 broken rule.
-for f in skills/*/SKILL.md knowledge/state-schema/SKILL.md knowledge/state-migration/SKILL.md; do
+for f in skills/*/SKILL.md knowledge/state-schema/SKILL.md knowledge/state-ops/SKILL.md knowledge/state-migration/SKILL.md; do
   # historical-note paragraphs are allowed to MENTION the old rule for
   # explanation. The check looks specifically for the broken predicate.
   if grep -qE 'bloomLevel.*0.*AND.*lastReviewed.*null|lastReviewed.*null.*AND.*bloomLevel.*0' "$f"; then
@@ -661,7 +684,7 @@ done
 
 # ---------------------------------------------------------------------------
 # 45. bodhi-state integrity: present, executable, compiles, constants pinned
-#     to the spaced-repetition KB (intervals) and state-schema KB (vocab).
+#     to the spaced-repetition KB (intervals) and state-ops KB (vocab).
 # ---------------------------------------------------------------------------
 if [ ! -x scripts/bodhi-state ]; then
   err "scripts/bodhi-state missing or not executable"
@@ -676,9 +699,31 @@ else
   fi
   for t in spaced-review quiz targeted-reteach diagnostic-after-gap learner-forget pair practice evaluate other; do
     if ! grep -q "\"$t\"" scripts/bodhi-state; then
-      err "scripts/bodhi-state SESSION_TYPES missing canonical type '$t' (state-schema KB)"
+      err "scripts/bodhi-state SESSION_TYPES missing canonical type '$t' (state-ops KB)"
+    fi
+    if ! grep -q "\`$t\`" knowledge/state-ops/SKILL.md; then
+      err "knowledge/state-ops/SKILL.md vocabulary table missing canonical type '$t'"
     fi
   done
+fi
+
+# ---------------------------------------------------------------------------
+# 51. state-ops KB integrity (1.13.0 split): the operational surface must
+#     exist and carry the write path, gate, and mastery formula — and the
+#     state-schema KB must NOT re-grow an operational duplicate (one home
+#     per fact; the split exists to keep routine fires light).
+# ---------------------------------------------------------------------------
+if [ ! -f knowledge/state-ops/SKILL.md ]; then
+  err "knowledge/state-ops/SKILL.md missing (1.13.0 operational surface)"
+else
+  for token in 'record-review' 'record-session' 'gate-check' 'consecutiveCorrectAtL4Plus >= 3' 'Discovery procedure'; do
+    if ! grep -q "$token" knowledge/state-ops/SKILL.md; then
+      err "knowledge/state-ops/SKILL.md missing '$token' (operational surface incomplete)"
+    fi
+  done
+fi
+if grep -q '| Subcommand | Owns |' knowledge/state-schema/SKILL.md; then
+  err "knowledge/state-schema/SKILL.md re-grew the subcommand table — it lives in state-ops (1.13.0 split)"
 fi
 
 # ---------------------------------------------------------------------------

@@ -10,7 +10,7 @@ Claude Code loads `skills/`, `agents/`, `knowledge/`, `rules/`, `hooks/`, and th
 
 - A skill that writes tracking state MUST invoke `bodhi-state` and carry a `**Fallback:**` paragraph for script-unavailable. Lint enforces both.
 - Do NOT reintroduce the retired 1.10.12 CHECKPOINT-before/after-writes prose — its reappearance means someone is hand-writing JSON again. Lint fails on it.
-- Schema changes go: `state-schema` KB first → `scripts/bodhi-state` + `dev/eval/test_bodhi_state.py` in the same PR → then the skills. The lint pins the Leitner table and the session-type vocabulary between KB and script.
+- Schema changes go: `state-schema` KB first → `scripts/bodhi-state` + `dev/eval/test_bodhi_state.py` in the same PR → then the skills (and `state-ops` if the operational surface changed). The lint pins the Leitner table (spaced-repetition KB) and the session-type vocabulary (state-ops KB) between KB and script.
 - New executor-discipline bug found in the wild? Reproduce it as a `dev/eval/` fixture + assertion FIRST, then fix. Do not fix it with louder markdown.
 
 ## Sub-skill chaining (context efficiency)
@@ -29,7 +29,7 @@ Chain shape note (1.10.2): `/pair`, `/debug-together`, and `/mentor` are **offer
 ## Authoring contract (must hold for every PR)
 
 - Every `skills/*/SKILL.md` and `agents/*.md` references `teaching-personality` KB for voice. Voice rules are NOT restated inline.
-- Every file that touches `.bodhi/state.json`, `spaced-review.json`, `progress.md`, or `.bodhi-profile.json` references the `state-schema` KB and does NOT redeclare shapes.
+- Every file that touches `.bodhi/state.json`, `spaced-review.json`, `progress.md`, or `.bodhi-profile.json` references the `state-ops` KB (the routine operational surface: write path, discovery, vocabulary, gate/mastery) and does NOT redeclare shapes. The field-level `state-schema` KB is loaded ONLY by the manual carve-outs (`/learn` scaffolding, `/evaluate` profile writes, `/assess`/`/mentor` field updates, `/housekeep`) and the script-unavailable fallback — the 1.13.0 split exists so routine fires stop paying ~24 KB for shapes they cannot legally hand-edit anyway.
 - Every file that touches Leitner boxes references the `spaced-repetition` KB and does NOT redeclare box→interval intervals or update rules.
 - JSON mutations route through `bodhi-state` (see above); markdown live docs are written directly (new entry on top, existing content verbatim).
 - Skills that use an agent include the literal phrase "You MUST use the Agent tool" and a `**Fallback:**` paragraph for agent failure.
@@ -39,11 +39,15 @@ Chain shape note (1.10.2): `/pair`, `/debug-together`, and `/mentor` are **offer
 
 Before committing, run `dev/check.sh` (which also runs the deterministic test suite). Before tagging, additionally run `dev/eval/run-llm-evals.sh` (costs tokens; asserts skills against fixture file state).
 
+## Feature freeze (1.13.0)
+
+The plugin's audience is currently one real learner. No new skills, KBs, taxonomies, session types, or schema fields unless (a) a second real user files an issue asking for it, or (b) the maintainer personally hits the gap during a real learning session — not while developing the plugin. Bug fixes, and refactors that reduce per-fire context cost, are exempt. When in doubt: the next feature the plugin needs is a user.
+
 ## Where things live
 
 - `skills/<name>/SKILL.md` — user-invocable commands (frontmatter `user-invocable: true`).
 - `agents/<name>.md` — sub-agents (Sonnet/Haiku, read-only: `disallowedTools: Edit, Write, Agent`).
-- `knowledge/<kb>/SKILL.md` — KBs (frontmatter `user-invocable: false`).
+- `knowledge/<kb>/SKILL.md` — KBs (frontmatter `user-invocable: false`). `state-ops` is the routine operational surface; `state-schema` is the field-level reference behind it (1.13.0 split). The per-skill read contract lives in `dev/read-defaults.md` (dev-only, moved out of knowledge/ in 1.13.0).
 - `rules/<name>.md` — path-scoped rules (`paths:` glob array).
 - `scripts/bodhi-state` — deterministic state writer (Python 3, stdlib-only). `scripts/bodhi-stop-hook.py` — Stop-hook safety net.
 - `hooks/hooks.json` — plugin hook manifest (Stop → schema verify).

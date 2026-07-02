@@ -6,7 +6,7 @@ argument-hint: "[<topic>]"
 
 # /learn — Begin Your Learning Journey
 
-You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-schema` KB for tracking-file shapes and project scaffolding. Other KBs are loaded per phase below.
+You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-ops` KB for discovery and the `bodhi-state` write path; the `state-schema` KB loads only at Phase 4 scaffolding (manual JSON creation). Other KBs are loaded per phase below.
 
 ---
 
@@ -36,13 +36,13 @@ The point of this phase: a learner with existing projects deserves to see how a 
 
 ### 1. Read
 
-Check whether the cross-project profile exists. Use the discovery procedure from the `state-schema` KB to locate `learningWithBodhi/`. If the profile files do not exist, skip this entire phase — this is a first-ever learner — and proceed to Phase 2.
+Check whether the cross-project profile exists. Use the discovery procedure from the `state-ops` KB to locate `learningWithBodhi/`. If the profile files do not exist, skip this entire phase — this is a first-ever learner — and proceed to Phase 2.
 
 If they exist, read EXACTLY these two files (no more):
 - `learningWithBodhi/.bodhi-profile.json` — for `overallBloomLevels`, `cumulativeStats`, `patterns.persistentChallenges`, `patterns.consistentStrengths`.
 - `learningWithBodhi/.bodhi-profile.projects.json` — for `activeProjects` and `completedProjects`.
 
-Do NOT read individual project `state.json`, `progress.md`, plans, or assessments. The profile is the cross-project source of truth by design (see `state-schema` KB).
+Do NOT read individual project `state.json`, `progress.md`, plans, or assessments. The profile is the cross-project source of truth by design (see `state-ops` KB).
 
 ### 2. Compute
 
@@ -163,7 +163,7 @@ Present the plan. Ask: "How does this path look to you?" Adjust based on feedbac
 
 If Phase 1.5 already located an existing `learningWithBodhi/` root, use it — do NOT re-ask (a second answer forks the profile). Only for a true first project, ask where they want to keep learning projects and create a `learningWithBodhi` folder there.
 
-**If the chosen root is NOT covered by the default discovery search paths** (`$PWD` ± 3 parents, `~/learningWithBodhi` — per the `state-schema` KB), write `~/.bodhikit/config.json` with the chosen root in `searchPaths` NOW. Without this, tomorrow's `/continue` from any other directory reports "No active learning projects" and Day 2 dead-ends.
+**If the chosen root is NOT covered by the default discovery search paths** (`$PWD` ± 3 parents, `~/learningWithBodhi` — per the `state-ops` KB), write `~/.bodhikit/config.json` with the chosen root in `searchPaths` NOW. Without this, tomorrow's `/continue` from any other directory reports "No active learning projects" and Day 2 dead-ends.
 
 ### Create project structure:
 
@@ -199,7 +199,7 @@ Give them the first micro-exercise from Module 1:
 - Directly relevant to the first module
 - Calibrated to level per the `cognitive-load` KB: beginners (Bloom 1-2) get the faded sequence in `exercises/01-<topic>/` — a short inline-annotated worked example to study, then a completion version with 1-2 steps blanked (never a bare TODO list; a brand-new learner is at their highest cognitive load); intermediate+ get a clear description.
 
-Update tracking (this is Session 1 of the project), per the `state-schema` KB write path:
+Update tracking (this is Session 1 of the project), per the `state-ops` KB write path:
 - `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> touch-state --activity "<one line describing the exercise>"` — the script sets `lastSessionAt`, `sessionDates`, `currentStreak`, `totalSessions`, and bumps the cross-project session counter.
 - Write the first entry of `progress.md` (the v2 live document): `## YYYY-MM-DD — Session 1 (Kickoff)`, then **Activities** (assessment completed, plan generated, project scaffolded, first exercise issued), **Outcomes** (initial Bloom's levels baselined), **Next** (Module 1 exercise). End the file with an empty `## Summary of earlier sessions` block (it will populate as `/housekeep` runs after future sessions).
 

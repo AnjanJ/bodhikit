@@ -6,7 +6,7 @@ argument-hint: "[<topic>|current]"
 
 # /quiz — Active Recall Check
 
-You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-schema` KB for tracking-file shapes and the `bodhi-state` write path. Methodology KBs load per-phase below.
+You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-ops` KB for the `bodhi-state` write path and tracking-state operations. Methodology KBs load per-phase below.
 
 **Chained invocation:** if `$ARGUMENTS` contains `--invoked-from=`, skip personality re-load and skip discovery — the caller has the project resolved.
 
@@ -16,7 +16,7 @@ You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference t
 
 1. If `$ARGUMENTS` is "current" or empty:
    - Look for an active learning project (search for `.bodhi/state.json`)
-   - Run `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> due --limit 10` (invocation per the `state-schema` KB) to list concepts due for review — prioritize them. If the output carries `unparseableDates`, tell the learner and fix those entries before quizzing.
+   - Run `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> due --limit 10` (invocation per the `state-ops` KB) to list concepts due for review — prioritize them. If the output carries `unparseableDates`, tell the learner and fix those entries before quizzing.
    - Read `state.json` for the current module
 
 2. If `$ARGUMENTS` is a specific topic:
@@ -94,7 +94,7 @@ After each tagged response:
 
 **For this phase, reference the `spaced-repetition` KB for the update rules — implemented in code by `bodhi-state`, so your job is judgment, the script's job is the file.**
 
-The writes are the product of the quiz; the results table is the receipt. Per the `state-schema` KB write path:
+The writes are the product of the quiz; the results table is the receipt. Per the `state-ops` KB write path:
 
 1. **Per answer, run** — one call per question asked (relearning-loop retries add `--retry`, which records the entry without box/schedule movement):
 
@@ -107,7 +107,7 @@ The writes are the product of the quiz; the results table is the receipt. Per th
 
    For a concept not yet tracked, add `--module "<current module>"` to auto-create it. **No active project** (topic quiz outside a learning project): skip steps 1-4 entirely — there is nothing to write to; just give the results and suggest `/learn` if they want the tracking. The script applies box transitions, the bloomLevel ratchet, and the counter rules; its JSON output tells you the box movement to report. Do NOT set `feynmanPassed` here — that gate belongs to `/teach` (including its understanding-only sessions).
 
-   **Due concepts the session never reached** (time ran out, learner stopped early): do NOT invent a result for them — run `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> defer --concept "<name>" [--days N]` per the `state-schema` KB. Deferral rolls the schedule without recording an outcome; a review that did not happen is not evidence of anything.
+   **Due concepts the session never reached** (time ran out, learner stopped early): do NOT invent a result for them — run `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> defer --concept "<name>" [--days N]` per the `state-ops` KB. Deferral rolls the schedule without recording an outcome; a review that did not happen is not evidence of anything.
 
 2. **Once, record the session:**
 
@@ -124,7 +124,7 @@ The writes are the product of the quiz; the results table is the receipt. Per th
    "${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> touch-state --activity "<one line, e.g. 'Quizzed indexing: 5/7, planner cost model still shaky'>"
    ```
 
-4. **Append the quiz entry to `.bodhi/progress.md` with the Write tool** (markdown surfaces are written directly, per the `state-schema` KB): new entry at top — `## YYYY-MM-DD — Quiz (<topic>)`, score, concepts with box/Bloom movements (from the script outputs), confidence-calibration observations — existing content preserved verbatim below.
+4. **Append the quiz entry to `.bodhi/progress.md` with the Write tool** (markdown surfaces are written directly, per the `state-ops` KB): new entry at top — `## YYYY-MM-DD — Quiz (<topic>)`, score, concepts with box/Bloom movements (from the script outputs), confidence-calibration observations — existing content preserved verbatim below.
 
 **Fallback:** if `bodhi-state` is unavailable, follow the `state-schema` KB fallback rule — manual read → mutate-in-place → write → verify, preserving unknown fields.
 

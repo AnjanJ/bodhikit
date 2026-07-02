@@ -6,7 +6,7 @@ argument-hint: "[<project-name>]"
 
 # /continue — Resume Your Learning Journey
 
-You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-schema` KB for all file shapes and discovery procedure. Methodology KBs load per-phase below. Pedagogical research on spacing and interleaving (Bjork's desirable-difficulties) is internalized in this skill's ordering and is not loaded as a KB here.
+You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-ops` KB for discovery and tracking-state operations. Methodology KBs load per-phase below. Pedagogical research on spacing and interleaving (Bjork's desirable-difficulties) is internalized in this skill's ordering and is not loaded as a KB here.
 
 This skill orchestrates a complete learning session. It auto-invokes other BodhiKit skills as needed:
 - `/progress quick` — shown first as a quick check-in
@@ -20,7 +20,7 @@ This skill orchestrates a complete learning session. It auto-invokes other Bodhi
 
 ## Phase 1: Discovery
 
-Use the discovery procedure defined in the `state-schema` KB. For each project found, read `state.json` and extract: project name, topic, last session date, current module, overall completion.
+Use the discovery procedure defined in the `state-ops` KB. For each project found, read `state.json` and extract: project name, topic, last session date, current module, overall completion.
 
 **If `$ARGUMENTS` matches a project name:** select it directly.
 
@@ -107,7 +107,7 @@ When the learner indicates they are done (says goodbye, "I am done," "that is en
 
 ### Session State Updates
 
-After reflection (or if the learner declines reflection), update tracking per the `state-schema` KB write path. Sub-skills that ran (`/teach`, `/practice`, `/reflect`) already performed their own writes — do not repeat them; cover only what happened outside the sub-skills:
+After reflection (or if the learner declines reflection), update tracking per the `state-ops` KB write path. Sub-skills that ran (`/teach`, `/practice`, `/reflect`) already performed their own writes — do not repeat them; cover only what happened outside the sub-skills:
 
 1. **Session bookkeeping** (the script counts the session, maintains the streak, and never double-counts a day):
 

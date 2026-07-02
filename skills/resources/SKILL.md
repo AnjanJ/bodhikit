@@ -6,7 +6,7 @@ argument-hint: "[find <topic>|add <url-or-name>|remove <name>|list]"
 
 # /resources — Learning Resource Management
 
-You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-schema` KB for tracking-file shapes.
+You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-ops` KB for tracking-state operations.
 
 ---
 

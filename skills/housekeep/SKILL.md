@@ -6,7 +6,7 @@ argument-hint: "[migrate|--dry-run]"
 
 # /housekeep — Tend the Garden of Your Learning State
 
-You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-schema` KB for tracking-file shapes and the `state-lifecycle` KB for the universal housekeeping protocol (rotation, summary growth, collapse). Reference the `state-migration` KB ONLY when `$ARGUMENTS` is `migrate`.
+You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-ops` KB for the `bodhi-state` write path, the `state-schema` KB for tracking-file shapes, and the `state-lifecycle` KB for the universal housekeeping protocol (rotation, summary growth, collapse). Reference the `state-migration` KB ONLY when `$ARGUMENTS` is `migrate`.
 
 The learner's accumulated work is sacred. Nothing is deleted, nothing is hidden. This skill simply tends the garden — moving completed entries to the archive shelf, leaving a clear summary with pointers so the work stays visible without crowding the present.
 
@@ -22,7 +22,7 @@ Both modes are **idempotent** — running twice in a row is a no-op the second t
 
 ## Phase 1: Discovery and Mode Selection
 
-Use the discovery procedure from the `state-schema` KB to locate the project root.
+Use the discovery procedure from the `state-ops` KB to locate the project root.
 
 Inspect `$ARGUMENTS`:
 - `migrate` → go to Phase 5 (one-shot v1 → v2 conversion). Load the `state-migration` KB now.
@@ -101,7 +101,7 @@ This phase runs only when `$ARGUMENTS` is `migrate`. Load the `state-migration` 
 **Two migration targets, per-target idempotency (1.10.8):**
 
 - **1.7.0 target** (steps 5a–5f, prose below): v1 monolithic files → v2 layout. Marker: `.bodhi/.migration-1.7.0.md`. Run these steps only when the marker is absent.
-- **1.10 target** (step 5f-bis): `spaced-review.json` v1/v2 → v3. Performed entirely by `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> migrate-spaced-review` (per the `state-schema` KB write path), which is **idempotent in code** — it backs up, transforms in place preserving every non-canonical learner field, verifies, and writes its own `.bodhi/.migration-1.10.md` marker. **Run it unconditionally for every project**; on an already-migrated project it reports `noop` and costs nothing. The presence of the 1.7.0 marker says NOTHING about this target — that conflation was the pre-1.10.8 bug.
+- **1.10 target** (step 5f-bis): `spaced-review.json` v1/v2 → v3. Performed entirely by `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> migrate-spaced-review` (per the `state-ops` KB write path), which is **idempotent in code** — it backs up, transforms in place preserving every non-canonical learner field, verifies, and writes its own `.bodhi/.migration-1.10.md` marker. **Run it unconditionally for every project**; on an already-migrated project it reports `noop` and costs nothing. The presence of the 1.7.0 marker says NOTHING about this target — that conflation was the pre-1.10.8 bug.
 
 **Pre-flight:**
 

@@ -8,7 +8,7 @@ paths:
 
 You are inside a BodhiKit learning project. This is an educational context, not a production codebase.
 
-Reference the `teaching-personality` KB for voice. Reference the `state-schema` KB for tracking-file shapes.
+Reference the `teaching-personality` KB for voice. Reference the `state-ops` KB for tracking-state operations.
 
 ## Core Rules
 
@@ -21,5 +21,5 @@ Reference the `teaching-personality` KB for voice. Reference the `state-schema` 
 
 - `exercises/` — for the learner to solve. Guide, do not solve.
 - `notes/` — the learner's. Do not modify unless asked.
-- `.bodhi/` — tracking data. Update per the `state-schema` KB when learning state changes.
+- `.bodhi/` — tracking data. Update per the `state-ops` KB write path when learning state changes.
 - `projects/` — the learner's project work. Review educationally, do not rewrite.

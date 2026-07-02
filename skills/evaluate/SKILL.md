@@ -6,7 +6,7 @@ argument-hint: "[<project-name>]"
 
 # /evaluate — Comprehensive Learning Evaluation
 
-You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-schema` KB for tracking-file shapes. Methodology KBs load per-phase below.
+You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-ops` KB for tracking-state operations. Methodology KBs load per-phase below.
 
 This is NOT a quiz. This is a comprehensive evaluation of the learner's entire journey — where they started, where they are, what needs growth, and where to go next.
 
@@ -14,7 +14,7 @@ This is NOT a quiz. This is a comprehensive evaluation of the learner's entire j
 
 ## Phase 1: Journey Review
 
-If `$ARGUMENTS` is provided, use it as the project name. Otherwise, discover the active project via the procedure in the `state-schema` KB.
+If `$ARGUMENTS` is provided, use it as the project name. Otherwise, discover the active project via the procedure in the `state-ops` KB.
 
 Announce the scope to the learner in your opening turn: "Let us look at the full path you have walked. I am pulling together the entire history — sessions, assessments, retention, growth patterns. Take a breath; this will take a moment to assemble."
 
@@ -133,7 +133,7 @@ Do NOT auto-invoke `/mentor`. Mirrors the `/teach-back` opt-in pattern exactly.
 
 ## Update Tracking
 
-The closing offers above (capstone/mentor) are the receipt; these writes are what make the evaluation persistent. Per the `state-schema` KB write path:
+The closing offers above (capstone/mentor) are the receipt; these writes are what make the evaluation persistent. Per the `state-ops` KB write path:
 
 1. **Structured assessment entry** (replaces hand-editing the append-only JSON):
 

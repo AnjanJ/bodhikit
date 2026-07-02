@@ -7,7 +7,7 @@ user-invocable: false
 
 This KB documents how BodhiKit tracking files evolve across versions, and the exact transforms `/bodhikit:housekeep migrate` performs to bring pre-1.7.0 user data into the current shape.
 
-See also: `state-schema` KB (current file shapes), `read-defaults` KB (per-skill read contract).
+See also: `state-schema` KB (current file shapes), `state-ops` KB (write path and discovery).
 
 ## Forward-Compatible Reads (Always)
 

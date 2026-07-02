@@ -6,7 +6,7 @@ argument-hint: ""
 
 # /reflect — End-of-Session Reflection
 
-You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-schema` KB for tracking-file shapes. Methodology KBs load per-phase below.
+You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-ops` KB for tracking-state operations. Methodology KBs load per-phase below.
 
 **Chained invocation:** if `$ARGUMENTS` contains `--invoked-from=`, skip personality re-load and skip discovery — the caller has the project resolved.
 
@@ -83,7 +83,7 @@ Collect concepts flagged for demotion across Q1 and Q3; auto-invoke `/forget --i
 
 ## Phase 4: Close the Session
 
-Update tracking per the `state-schema` KB write path:
+Update tracking per the `state-ops` KB write path:
 
 1. **Record each Q3 decision — ONLY for concepts that passed the same-day guard** (Phase 2 step 3; concepts already reviewed today get no call). One `record-review` call per qualifying concept, with the confidence tag (rating ≥ 8 → `sure`, 5-7 → `mostly`, ≤ 4 → `guessing`):
 

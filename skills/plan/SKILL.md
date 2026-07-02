@@ -6,13 +6,13 @@ argument-hint: "[view|adjust|regenerate]"
 
 # /plan — Learning Plan Management
 
-You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-schema` KB for discovery and tracking-file shapes.
+You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-ops` KB for discovery and tracking-state operations.
 
 ---
 
 ## Discovery
 
-Use the discovery procedure from the `state-schema` KB. If no project found, use the canonical "no active project" empty-state line from the `teaching-personality` KB and offer `/bodhikit:learn`.
+Use the discovery procedure from the `state-ops` KB. If no project found, use the canonical "no active project" empty-state line from the `teaching-personality` KB and offer `/bodhikit:learn`.
 
 Determine mode from `$ARGUMENTS`:
 - "view" or empty → View mode (default)
@@ -102,6 +102,6 @@ If yes:
 4. Before writing the new plan, move the existing `plan/` directory to `plan/.archive-<YYYY-MM-DD>/` so the old plan structure is preserved on disk. Then write fresh `plan/README.md` + `plan/phase-{N}.md` files for the new plan.
 5. Update `.bodhi/state.json` to reflect the new module structure (`currentPhase`, `currentModule`, `currentModuleIndex`, `initialBloomLevel` for the new plan). Slim shape — no narrative fields.
 6. Append a new assessment block at the top of `.bodhi/assessments/latest.md`: `## Plan regeneration — <YYYY-MM-DD>`, containing the fresh assessment results and a note "Plan regenerated; old plan archived at `plan/.archive-<YYYY-MM-DD>/`."
-7. Append the structured entry via `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> record-assessment --trigger plan-regenerate --data '<entry JSON>'` per the `state-schema` KB write path (fallback: manual append preserving the file's shape).
+7. Append the structured entry via `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> record-assessment --trigger plan-regenerate --data '<entry JSON>'` per the `state-ops` KB write path (fallback: manual append preserving the file's shape).
 
 Show the new plan (read back `plan/README.md` + each `plan/phase-*.md`) and highlight differences from the archived old one.

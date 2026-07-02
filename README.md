@@ -1,6 +1,6 @@
 # BodhiKit
 
-[![Version](https://img.shields.io/badge/version-1.11.1-blue)](./CHANGELOG.md) [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow?logo=buymeacoffee)](https://buymeacoffee.com/anjanj) [![Sponsor](https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ea4aaa?logo=githubsponsors)](https://github.com/sponsors/AnjanJ)
+[![Version](https://img.shields.io/badge/version-1.13.0-blue)](./CHANGELOG.md) [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow?logo=buymeacoffee)](https://buymeacoffee.com/anjanj) [![Sponsor](https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ea4aaa?logo=githubsponsors)](https://github.com/sponsors/AnjanJ)
 
 **Research-informed interactive coding tutor for Claude Code.**
 
@@ -26,7 +26,7 @@ The voice is grounded in four named teachers (Gautama Buddha, Dr. B.R. Ambedkar,
 
 4. **A deterministic state layer (1.11.0).** Every JSON mutation goes through `scripts/bodhi-state` — Leitner math, the Bloom ratchet, mastery formula, migration, and schema validation run in code, not in model prose. A Stop hook verifies tracking files before a session ends, and a two-layer test harness (free deterministic tests + pre-tag LLM evals asserting on file state) guards the contracts that manual dogfooding used to.
 
-5. **Single sources of truth + lint as contract.** `state-schema` KB owns every tracking-file shape. `spaced-repetition` KB owns every Leitner interval. `teaching-personality` owns the voice. `dev/check.sh` enforces the contracts — version sync, KB references, agent fallbacks, `--invoked-from=` chaining, the `bodhi-state` write path, skill size budgets — and runs the deterministic test suite.
+5. **Single sources of truth + lint as contract.** `state-ops` KB owns the operational surface; `state-schema` KB owns every tracking-file shape (and loads only where a skill legitimately hand-mutates JSON). `spaced-repetition` KB owns every Leitner interval. `teaching-personality` owns the voice. `dev/check.sh` enforces the contracts — version sync (badge included), KB references, agent fallbacks, `--invoked-from=` chaining, the `bodhi-state` write path, skill size budgets — and runs the deterministic test suite.
 
 6. **Sub-skill chaining for context efficiency.** `/continue` → `/progress quick` → `/teach` → `/reflect`, each passing `--invoked-from=<caller>` so callees skip redundant KB loads.
 
@@ -164,9 +164,9 @@ Each learning methodology lives in its own focused knowledge base, loaded only w
 | scientific-debugging | TRAFFIC method, debugging mindset, wolf fence, expert vs novice |
 | assessment-framework | Question templates by Bloom's level, exercise design |
 | teaching-personality | Oogway/Yoda/Buddha/Ambedkar personality guide |
-| state-schema | Canonical shape of `.bodhi/` tracking files, discovery config, and the `bodhi-state` write path |
+| state-ops | Operational surface: project discovery, the `bodhi-state` write path, session-type vocabulary, gate/mastery semantics — what every skill loads |
+| state-schema | Field-level reference for `.bodhi/` tracking files (loaded only by manual carve-outs, fallbacks, and `/housekeep`) |
 | state-lifecycle | Rotation, archiving, summary collapse, retirement (loaded by `/housekeep` only) |
-| read-defaults | Per-skill default-read contract (loaded by `/housekeep`, audit, lint) |
 | state-migration | Schema versioning + one-shot conversion procedures (loaded by `/housekeep migrate`) |
 
 ## Path-Scoped Rules (1)
@@ -308,15 +308,6 @@ The 1.10.x release line proved a structural lesson: a spec being *correct* is no
 - **`scripts/bodhi-state`** — a dependency-free Python CLI that performs every tracking-JSON mutation: Leitner box math, the Bloom ratchet, counter rules, `sessionHistory` vocabulary enforcement, the prerequisite-gate verdict, the mastery formula, migration with backup + verification. Skills decide *what happened* (the pedagogical judgment); the script decides *what the file looks like*. Unknown learner fields are preserved in code, atomically.
 - **A Stop hook** (`hooks/hooks.json`) that runs `bodhi-state verify` on touched projects before a session ends — broken tracking state blocks the stop once with a repair instruction instead of silently persisting.
 - **A three-layer test harness** (`dev/eval/`): a free deterministic suite covering every script contract (run by `dev/check.sh` on every change); headless LLM evals that run real skills against fixture projects and assert on the resulting *file state* — the automated successor to the manual dogfood passes documented in the 1.10.7–1.10.13 CHANGELOG; and (1.12.0) **grading-calibration evals** — scripted learner answers of controlled quality asserted against honest grading bands (a jargon parrot must not pass the Feynman gate; missing trade-offs must cap tested-bloom at 4) — plus transcript-fidelity checks on the teaching protocol itself (pretest fires on first exposure, no fourth hint, ever). The deterministic layer makes the file mechanics trustworthy; the grading layer measures the judgment feeding them, and doubles as the model-drift detector.
-
-## The Philosophy
-
-BodhiKit speaks with the voice of a wise, patient teacher. Think Master Oogway, Yoda, Gautama Buddha, and Dr. B.R. Ambedkar.
-
-- The learner writes code. BodhiKit asks questions.
-- Every struggle is an opportunity for growth.
-- Honest feedback, wrapped in compassion.
-- The goal is to become unnecessary.
 
 ## Learn More
 

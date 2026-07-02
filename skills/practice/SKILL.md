@@ -6,9 +6,9 @@ argument-hint: "[<topic>|next]"
 
 # /practice — Hands-On Exercise
 
-You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-schema` KB for discovery and tracking-file shapes. Methodology KBs load per-phase below.
+You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-ops` KB for discovery and tracking-state operations. Methodology KBs load per-phase below.
 
-**Chained invocation:** if `$ARGUMENTS` contains `--invoked-from=`, skip personality/state-schema re-load and skip Phase 1 discovery — the caller resolved the project. Use the remaining argument as the topic.
+**Chained invocation:** if `$ARGUMENTS` contains `--invoked-from=`, skip personality/state-ops re-load and skip Phase 1 discovery — the caller resolved the project. Use the remaining argument as the topic.
 
 ---
 
@@ -18,7 +18,7 @@ You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference t
 
 Determine the learner's current level for exercise targeting.
 
-1. Use the discovery procedure from the `state-schema` KB.
+1. Use the discovery procedure from the `state-ops` KB.
 
 2. If a project is found, read:
    - `.bodhi/state.json` — current module
@@ -167,7 +167,7 @@ After the learner indicates they have completed (or attempted) the exercise:
 
      This is an **offer, not an auto-invocation**. The decomposition path stays available; pair is named as a peer alternative for learners who would do better with collaboration than further breakdown.
 
-6. **Update tracking** — per the `state-schema` KB write path and the `spaced-repetition` KB judgment rules. **No active project** (the learner asked for a one-off exercise outside a learning project): skip these writes entirely — there is nothing to write to; suggest `/learn` if they want the tracking:
+6. **Update tracking** — per the `state-ops` KB write path and the `spaced-repetition` KB judgment rules. **No active project** (the learner asked for a one-off exercise outside a learning project): skip these writes entirely — there is nothing to write to; suggest `/learn` if they want the tracking:
 
    a. **Record the exercise outcome:**
 

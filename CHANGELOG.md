@@ -2,6 +2,30 @@
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [1.13.0] - 2026-07-02
+
+The context-cost release. Every skill fire was paying a ~39 KB floor — `teaching-personality` (7.4 KB) plus the full `state-schema` KB (23.9 KB) — even though, since the 1.11.0 deterministic state layer, no routine session ever touches field shapes: `bodhi-state` owns the writes. This release splits the operational surface from the reference so routine fires stop paying for shapes they cannot legally hand-edit anyway.
+
+### Changed — the state-ops / state-schema split
+- **New `state-ops` KB** (11.9 KB): project discovery, the `bodhi-state` write path and full subcommand table, the `sessionHistory` type vocabulary, gate verdicts, the mastery formula, markdown-surface rules. This is what every skill now references.
+- **`state-schema` KB slimmed to the field-level reference** (23.9 KB → 15.3 KB): file shapes, field semantics, the Fallback discipline, project completion. Loaded ONLY by the manual carve-outs (`/learn` scaffolding, `/evaluate` profile writes, `/assess`/`/mentor` field updates, `/housekeep`) and the script-unavailable fallback. An executor that cannot see field shapes cannot hand-edit them — the split is a discipline mechanism, not just a diet.
+- All 18 skills, the `learning-project` rule, and the chain-skip guards now reference `state-ops` for routine operations; fallback paragraphs still deliberately load `state-schema`. Per the regenerated `dev/context-audit.txt`: the cold-fire floor drops from ~39 KB of KBs + skill to ~18 KB + skill (`/resources` 23.2 KB total, was ~44 KB); `/teach` cold-fires at 36.6 KB (was ~50 KB).
+- **`teaching-personality` trimmed ~15%** (7.4 KB → 6.3 KB): the Four Roots and Core Teaching Principles compressed to their operative content; all tables (language rules, emotions, streaks, empty states, feedback ladder) kept verbatim.
+
+### Changed — surface pruning
+- **`read-defaults` demoted from `knowledge/` to `dev/read-defaults.md`.** Its own text said skills never load it at runtime; it is audit/lint contract documentation and now lives with the tooling that enforces it (dev/ is inert at install). KB count stays at 20 with `state-ops` taking its slot.
+- **`blogpost.md` moved to `dev/`** — repo root is the storefront.
+- **Feature freeze declared in CLAUDE.md**: no new skills, KBs, taxonomies, session types, or schema fields unless a second real user asks or the maintainer hits the gap in a real learning session. Bug fixes and context-cost reductions exempt.
+
+### Fixed
+- **README version badge drift** (said 1.11.1 since two release lines ago) — and the version-sync lint now covers the badge, so it cannot drift silently again.
+- README "The Philosophy" section removed (verbatim duplicate of the TL;DR purpose block).
+
+### Lint
+- Rule 4 now accepts `state-ops` for routine files and additionally requires `state-schema` in the five manual-carve-out skills.
+- New rule 51 pins the operational surface: `state-ops` must carry the subcommand table, gate, mastery formula, and full session-type vocabulary; `state-schema` must not re-grow the subcommand table (one home per fact).
+- Session-type vocabulary pin now points at `state-ops`; the broken-predicate scan (rule 40) covers `state-ops` too.
+
 ## [1.12.2] - 2026-07-02
 
 The first full grading-eval sweep (10 scenarios) caught one real spec defect and one eval-script defect — both fixed the same day. 8/10 passed on the first run, including all four executor-discipline scenarios and three of four grading scenarios.

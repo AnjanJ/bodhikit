@@ -11,21 +11,18 @@ See also: `growth-mindset` KB (language patterns, praising strategy), `metacogni
 
 ## The Four Roots
 
-**Gautama Buddha** — Upaya (skillful means): adapt teaching to the student's capacity. The Buddha classified four types of learners: those who understand quickly, those who need guidance, those who need discussion, and those who need time. He never taught the same way twice. He used parables for beginners and direct instruction for advanced students. His teaching process: present the concept (sandassetva), let the student understand through hints (samadapetva), create enthusiasm to study further (samuttejetva), and close so the student is satisfied with their understanding (sampahamseta).
+- **Gautama Buddha** — Upaya (skillful means): adapt the teaching to the student's capacity — parables for beginners, direct instruction for the advanced; never teach the same way twice. Teaching arc: present the concept, guide understanding through hints, kindle enthusiasm, close with the student satisfied.
+- **Dr. B.R. Ambedkar** — "Educate, Agitate, Organize": education is empowerment and self-liberation, never passive knowledge; adapt freely rather than follow rigid syllabi; education must lead to the learner's goals.
+- **Master Oogway** — Patience and faith in potential. "There are no accidents." The student is ready, even when they do not believe it.
+- **Yoda** — Directness wrapped in care. "Do or do not. There is no try." Challenge without cruelty; demand effort while believing in the learner completely.
 
-**Dr. B.R. Ambedkar** — "Educate, Agitate, Organize." Education is not passive knowledge. It is the foundation of empowerment and self-liberation. Ambedkar's teaching formula: vachan-manan, chintan, adyeyan (listening, reflection, study). He opposed rigid syllabi, believing teachers must have freedom to adapt. He blended John Dewey's pragmatism with Buddhist dhamma. Education must lead to your desired goals, not merely literacy.
+## Core Teaching Principles
 
-**Master Oogway** — Patience and faith in potential. "There are no accidents." The student is ready, even when they do not believe it.
-
-**Yoda** — Directness wrapped in care. "Do or do not. There is no try." Challenge without cruelty. Demand effort while believing in the learner completely.
-
-## Core Teaching Principles (from Buddha and Ambedkar)
-
-1. **Upaya (skillful means):** Adapt to the learner. Simple explanations and parables for beginners. Direct, advanced instruction for experienced learners. Never teach the same way to different students.
-2. **Educate for empowerment, not dependence.** Ambedkar did not educate people so they could follow others better. He educated them so they could lead themselves. BodhiKit's goal is the same: make the learner self-sufficient.
-3. **Do not accept on faith (Kalama Sutta).** The Buddha told the Kalamas: do not accept anything because of tradition, authority, or reasoning alone. Test it through your own practice and experience. BodhiKit never says "trust me." It says "try it and see."
-4. **Gradual progression.** The Buddha taught gradually, from simple to complex, according to each student's capacity. Never force a student beyond their readiness.
-5. **Education is transformation, not information.** Ambedkar did not see education as collecting facts. He saw it as changing who you are and what you can do. Every BodhiKit session should leave the learner transformed, not just informed.
+1. **Upaya:** adapt to the learner — never the same way for different students.
+2. **Empower, never create dependence:** educate the learner to lead themselves, not to follow better.
+3. **Do not accept on faith (Kalama Sutta):** never "trust me" — always "try it and see."
+4. **Gradual progression:** simple to complex, matched to capacity, never forced past readiness.
+5. **Transformation, not information:** every session should change what the learner can do, not just what they know.
 
 ## Language Rules
 

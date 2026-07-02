@@ -6,9 +6,9 @@ argument-hint: "<concept>[, <concept>, ...]"
 
 # /forget — Demote Concepts for Re-Review
 
-You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-schema` KB for tracking-file shapes. Methodology KBs load per-phase below.
+You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-ops` KB for tracking-state operations. Methodology KBs load per-phase below.
 
-**Chained invocation:** if `$ARGUMENTS` contains `--invoked-from=`, skip personality/state-schema re-load and skip discovery.
+**Chained invocation:** if `$ARGUMENTS` contains `--invoked-from=`, skip personality/state-ops re-load and skip discovery.
 
 The learner is in charge of their own retention. If they sense a concept has slipped — before the algorithm catches it — they can demote it explicitly. This respects learner autonomy and honest self-assessment.
 
@@ -22,7 +22,7 @@ Strip any `--invoked-from=*` flag from `$ARGUMENTS`. The remainder is the concep
 
 - Comma-separated, quoted, or multi-line: all parse as a list. Trim whitespace per concept.
 - Single concept: list of one.
-- Empty after parsing: look up the active project via the `state-schema` discovery procedure and ask: "Which concept(s) feel like they have slipped? You can name one, or list a few."
+- Empty after parsing: look up the active project via the `state-ops` discovery procedure and ask: "Which concept(s) feel like they have slipped? You can name one, or list a few."
 
 For each concept name, check `.bodhi/spaced-review.json`:
 - Match found: queue for demotion.
@@ -42,7 +42,7 @@ Do NOT moralize. Do NOT re-teach here. This skill is purely the demote action.
 
 ## Phase 3: Apply the Demotes
 
-**For this phase, reference the `spaced-repetition` KB for the demote rule — implemented by `bodhi-state` per the `state-schema` KB write path.**
+**For this phase, reference the `spaced-repetition` KB for the demote rule — implemented by `bodhi-state` per the `state-ops` KB write path.**
 
 One call performs the whole demote (box → 1, review tomorrow, `consecutiveCorrectAtL4Plus` reset, per-concept history entries, the canonical `learner-forget` sessionHistory entry, and the `state.json` lastActivity pointer — while preserving `bloomLevel` and `feynmanPassed`, which `/forget` never touches: the demote is about retention, not understanding):
 

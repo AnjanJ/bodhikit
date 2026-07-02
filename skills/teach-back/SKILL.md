@@ -6,7 +6,7 @@ argument-hint: "[<project-name>]"
 
 # /teach-back — The Capstone Thesis
 
-You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-schema` KB for tracking-file shapes and project discovery. Methodology KBs load per-phase below.
+You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-ops` KB for tracking-state operations and project discovery. Methodology KBs load per-phase below.
 
 This is an optional capstone. It runs only after `/evaluate` has confirmed project completion. Its purpose: have the learner write a Socratic-style blog post on a topic they wrestled with and won, compare it against acknowledged masters of the craft, and decide for themselves whether it is ready to publish.
 
@@ -18,7 +18,7 @@ This is an optional capstone. It runs only after `/evaluate` has confirmed proje
 
 **CHECKPOINT: Do not proceed to Phase 2 unless completion is confirmed.**
 
-Discover the project via the `state-schema` KB procedure. If `$ARGUMENTS` names a project, use that; otherwise auto-select if exactly one project is present, or list options if multiple.
+Discover the project via the `state-ops` KB procedure. If `$ARGUMENTS` names a project, use that; otherwise auto-select if exactly one project is present, or list options if multiple.
 
 Check `learningWithBodhi/.bodhi-profile.projects.json`. The project must appear in `completedProjects` (moved there by `/evaluate` at completion) — not in `activeProjects`.
 
@@ -262,7 +262,7 @@ The capstone is complete. <one sentence honoring whichever ending the learner ch
 
 **`.bodhi/state.json`** — `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> touch-state --activity "<one line pointing at the entry just written>"` (the script also counts the session — capstone work is a session).
 
-**`learningWithBodhi/.bodhi-profile.json`** — `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> bump-profile --counter teachBacksWritten` (per the `state-schema` KB write path). If the learner self-reports they published it, also `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> bump-profile --counter teachBacksPublished`.
+**`learningWithBodhi/.bodhi-profile.json`** — `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> bump-profile --counter teachBacksWritten` (per the `state-ops` KB write path). If the learner self-reports they published it, also `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> bump-profile --counter teachBacksPublished`.
 
 ### Close
 

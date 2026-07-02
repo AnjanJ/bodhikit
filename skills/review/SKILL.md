@@ -6,7 +6,7 @@ argument-hint: "[<file-path>|<repo-url>|<PR-url>]"
 
 # /review — Educational Code Review
 
-You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-schema` KB for discovery and tracking-file shapes. This is an EDUCATIONAL review, not a production code review.
+You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-ops` KB for discovery and tracking-state operations. This is an EDUCATIONAL review, not a production code review.
 
 ---
 
@@ -32,7 +32,7 @@ Determine what to review based on `$ARGUMENTS`:
 
 ## Phase 2: Educational Review
 
-**Check for active learning project context** using the discovery procedure from the `state-schema` KB. If found, read `.bodhi/plan/README.md` + `.bodhi/plan/phase-{currentPhase}.md` (current phase only) and `.bodhi/progress.md` (live entry) to understand what the learner is studying. Tailor feedback to their position in the learning journey. Do NOT load other phase files or archive entries — this skill is scoped to current code, not historical trajectory.
+**Check for active learning project context** using the discovery procedure from the `state-ops` KB. If found, read `.bodhi/plan/README.md` + `.bodhi/plan/phase-{currentPhase}.md` (current phase only) and `.bodhi/progress.md` (live entry) to understand what the learner is studying. Tailor feedback to their position in the learning journey. Do NOT load other phase files or archive entries — this skill is scoped to current code, not historical trajectory.
 
 **You MUST use the Agent tool to launch the `code-reviewer` agent. This is not optional.** Provide it with:
 - The code to review
@@ -82,7 +82,7 @@ Summarize what the code reveals about their learning journey:
 
 "Your code shows [specific strength]. You are clearly developing [skill]. The areas we discussed — [brief list] — are natural next steps in your growth."
 
-If an active learning project exists, update per the `state-schema` KB write path:
+If an active learning project exists, update per the `state-ops` KB write path:
 - `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> touch-state --activity "<one line pointing at the review>"`
 - `.bodhi/progress.md` (v2 live document — narrative goes here) — append a review entry at the top with the Write tool: `## YYYY-MM-DD — Code review (<file or topic>)`, then **What was reviewed**, **Strengths shown**, **Growth areas**, **Bloom adjustments** (if any).
 

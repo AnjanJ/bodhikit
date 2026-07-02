@@ -1,15 +1,23 @@
 ---
-description: "Canonical shape of BodhiKit tracking files, discovery config, and the bodhi-state write path every skill uses for JSON mutations"
+description: "Field-level reference for BodhiKit tracking files — the canonical file shapes and field semantics. Loaded only for manual carve-outs, the script-unavailable fallback, /housekeep, and authoring; routine operations load the state-ops KB instead"
 user-invocable: false
 ---
 
 # State Schema — Canonical Shape of BodhiKit Tracking Files
 
-All skills that read or write `.bodhi/` tracking files reference this KB. Skills MUST NOT redeclare these shapes inline.
+This KB is the field-level reference. **Routine skill fires do NOT load it** — the operational surface (discovery, the `bodhi-state` write path and subcommand table, session-type vocabulary, gate/mastery semantics) lives in the `state-ops` KB, and `bodhi-state` owns every JSON mutation, so most sessions never need field shapes at all.
+
+Load this KB only when:
+
+- performing a **manual carve-out** — `/learn` project scaffolding, `/evaluate` profile writes, the `currentBloomLevel` / `initialBloomLevel` maps;
+- running the **script-unavailable fallback** (see *Fallback discipline* below);
+- you are `/housekeep` (rotation and migration);
+- you are authoring or reviewing plugin files.
 
 If a field is not listed here, do not add it. If a new field is genuinely needed, update this KB first, then `scripts/bodhi-state`, then the skills that touch it.
 
 See also:
+- `state-ops` KB — the per-session operational surface (write path, discovery, vocabulary, gate/mastery).
 - `spaced-repetition` KB — box→interval mapping and update rules (implemented by `bodhi-state`).
 - `state-lifecycle` KB — rotation/archive/collapse protocol (loaded by `/housekeep` only).
 - `state-migration` KB — version transforms (loaded by `/housekeep migrate`).
@@ -18,80 +26,11 @@ See also:
 
 The learner's accumulated work is sacred — nothing is deleted, nothing is gatekept. But context is finite, so every tracking surface is shaped so that **the smallest useful slice is what loads by default**, and the full history remains on disk behind explicit pointers. Three mechanisms: live + archive + summary for narrative surfaces, sectional files for the plan, slim JSON for state. Rotation is `/housekeep`'s job alone (see `state-lifecycle` KB); every other skill stays oblivious to compaction.
 
-## The Write Path: `scripts/bodhi-state` (1.11.0 — canonical for ALL JSON writes)
+## Fallback Discipline (script unavailable, or a declared manual carve-out)
 
-Skills do not hand-edit tracking JSON. Every mutation of `state.json`, `spaced-review.json`, or the profile files goes through the plugin's deterministic writer:
+Only after BOTH the `${CLAUDE_PLUGIN_ROOT}` path and the `find ~/.claude/plugins` lookup come up empty (per the `state-ops` KB), say so plainly, then perform the minimal write by hand following this KB's shapes — Read the file, mutate the parsed JSON in place preserving every unknown field, fill the three v3 per-concept defaults on any concept missing them and set `version: 3` (read-tolerance — the eval harness caught a manual fallback skipping exactly this), Write it back, re-read to verify. Never re-serialize from a schema template.
 
-```
-"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project-dir> <subcommand> [options]
-```
-
-If `CLAUDE_PLUGIN_ROOT` is not set in the Bash environment, locate the script once with `find ~/.claude/plugins -type f -name bodhi-state -path "*bodhikit*" 2>/dev/null | head -1` (or the repo checkout's `scripts/bodhi-state` when running via `--plugin-dir`).
-
-| Subcommand | Owns |
-|---|---|
-| `add-concept --concept N --module M [--question Q]` | New concept with canonical Box-1 defaults |
-| `record-review --concept N --result correct\|incorrect\|partial --tested-bloom 0-6 [--confidence sure\|mostly\|guessing] [--module M] [--note S] [--source skill] [--retry]` | Leitner box math, nextReview dates, bloomLevel ratchet, `consecutiveCorrectAtL4Plus` rules, `reviewHistory[]` append. `--retry` = successive-relearning rep: history entry only, no box/counter/bloom movement (the original demotion stands) |
-| `set-feynman --concept N` | `feynmanPassed = true` (set, never unset) |
-| `record-session --type T [--subtype S] [--data '<json>']` | `sessionHistory[]` append, canonical-type enforcement (`type`/`subtype`/`date` in `--data` are ignored — flags only) |
-| `record-assessment --trigger learn-phase2\|assess\|evaluate\|plan-regenerate --data '<entry json>'` | Append-only `assessment-history.json` entry, date-stamped |
-| `forget --concepts "A, B" \| --concept N (repeatable) [--note S] [--activity S]` | Learner-initiated demote: box 1, counter reset, history + `learner-forget` session entry, `lastActivity`. Use `--concept` for names containing commas |
-| `defer --concept N (repeatable) [--days D] [--note S]` | A due concept the session did not reach (1.12.1): `nextReview` = today + D (default 1), box/bloom/counters/`lastReviewed` untouched, history entry `{date, deferred: true, days}` with NO result — deferral is scheduling, never an outcome. Do NOT invent a `result` for an unreviewed concept |
-| `normalize` | One-shot repair of pre-1.11.0 executor drift (1.12.1): lifts nested `session`/`sessions` bookkeeping to top level, stringifies dict `lastActivity`/`previousModule` (originals preserved under `*Legacy`), renames plural `*BloomLevels` to singular, dedupes `sessionDates`, converts invented `reviewHistory` results (e.g. `skipped`) to canonical deferral entries, and rewrites non-canonical `sessionHistory` types to `other` + `subtype`. Backs up both files to `.bodhi/.pre-normalize-backup/` first; idempotent. `verify` names this as the repair when it flags drift |
-| `touch-state [--activity S] [--module M] [--module-index N] [--phase P] [--completion N]` | `state.json` session bookkeeping: dates, streak, totalSessions, module advance (records `previousModule`). The first touch of a new day also bumps the profile's `cumulativeStats.totalSessions` — no skill calls `bump-profile --counter totalSessions` |
-| `bump-profile --counter <name>` | `cumulativeStats` increments in `.bodhi-profile.json` |
-| `due [--limit N]` / `mastery` / `calibration` | Read-side rollups: due concepts (plus `unparseableDates` for schedule-broken entries — never silently skipped), canonical mastery % + `blockedOnFeynman` (concepts meeting every criterion except the explain-back gate), retention tiers, confidence calibration |
-| `retention` / `export-anonymized` | Read-side outcome analytics (1.11.3): retention-at-review rates grouped by actual spacing gap and by box-at-review-time (`boxBefore`) — the empirical check on whether the Leitner intervals are calibrated — and a shareable anonymized stats export (counts and rates only; no concept names, no free text) for the README's outcome-data ask |
-| `gate-check [--module M] [--prereqs "A,B"] [--prior-module M]` | Prerequisite Bloom gate verdict (see below) |
-| `migrate-spaced-review` | One-shot v1/v2 → v3 transform: backup, in-place field fill, marker, verification |
-| `verify` | Schema sanity check (also run by the plugin's Stop hook and `dev/check.sh`) |
-
-The script preserves unknown fields by mutating parsed JSON in place, writes atomically, and rejects invalid `sessionHistory` types in code. The skill's job is the pedagogical judgment (which result, which Bloom level, which confidence tag); the script's job is the file.
-
-**Fallback (script unavailable):** only after BOTH the `${CLAUDE_PLUGIN_ROOT}` path and the `find ~/.claude/plugins` lookup come up empty, say so plainly, then perform the minimal write by hand following this KB's shapes — Read the file, mutate the parsed JSON in place preserving every unknown field, fill the three v3 per-concept defaults on any concept missing them and set `version: 3` (read-tolerance — the eval harness caught a manual fallback skipping exactly this), Write it back, re-read to verify. Never re-serialize from a schema template.
-
-**Markdown surfaces** (`progress.md`, `assessments/latest.md`, plan files, `resources.md`) are still written with the Write tool directly: compose the new entry at the top, preserve all existing content verbatim below it.
-
-## Project Discovery Config
-
-Two layers. Per-project overrides global.
-
-**Global:** `~/.bodhikit/config.json`. Optional.
-
-```json
-{ "searchPaths": ["$PWD", "~/learningWithBodhi"] }
-```
-
-**Per-project:** `<repo-root>/.bodhikit/config.json`. Optional. Highest precedence.
-
-```json
-{ "projectRoot": "study/" }
-```
-
-- `projectRoot` is a path (relative to the file's directory, or absolute) where the learner keeps `.bodhi/` for THIS repo.
-
-**Discovery procedure (all skills use this exact procedure):**
-
-1. From the current working directory, walk up to 3 parent levels looking for `.bodhikit/config.json`. If found and it declares `projectRoot`, treat that path as a project root and stop further search unless the caller explicitly wants `--all`.
-2. Otherwise, read `~/.bodhikit/config.json` if it exists; if not, use the default `searchPaths: ["$PWD", "~/learningWithBodhi"]`.
-3. For each path in `searchPaths`: resolve `$PWD` to cwd (and walk up 3 parents), expand `~`, then look for `learningWithBodhi/` directories.
-4. Within each `learningWithBodhi/`, list subdirectories containing `.bodhi/state.json`.
-
-## Tracking-Surface Layout (v2, 1.7.0)
-
-| Surface | Pattern | Live doc | Archive |
-|---|---|---|---|
-| Sessions / progress | Live + archive + summary | `progress.md` | `progress/archive/<YYYY-MM-DD>[-N].md` |
-| Assessments | Live + archive + summary | `assessments/latest.md` | `assessments/archive/<phase>-<topic>.md` |
-| Plan | Sectional | `plan/README.md` + `plan/phase-{N}.md` | none |
-| State | Slim JSON | `state.json` | none |
-| Spaced review | Whole JSON | `spaced-review.json` | none |
-| Profile | Split JSON | `.bodhi-profile.json` + `.bodhi-profile.projects.json` | none |
-| Resources | Whole MD | `resources.md` | none |
-| Assessment history | Append-only JSON | `assessment-history.json` | none |
-| Teach-backs (capstone) | Per-post MD files | `teach-backs/<YYYY-MM-DD>-<slug>.md` | none |
-
-Live-doc mechanics (summary growth, collapse, archive naming) live in the `state-lifecycle` KB. Skills load the live doc + current plan phase by default; `/plan` and `/evaluate` may load all phase files.
+The same read → mutate-in-place → write → verify discipline applies to the declared manual carve-outs even when the script is available.
 
 ## File Shapes
 
@@ -122,7 +61,7 @@ Slim. No long narrative fields — session narrative lives in `progress.md`.
 
 - `currentStreak`: consecutive days. Reset to 1 if `sessionDates` gap exceeds 1 day. Maintained by `bodhi-state touch-state`.
 - `previousModule`: set automatically by `touch-state --module` when the module advances; read by `gate-check`.
-- `initialBloomLevel` / `currentBloomLevel`: the per-topic Bloom maps are an explicit **manual carve-out** — no script subcommand owns them. `/learn` seeds both; `/assess` and `/evaluate` may update `currentBloomLevel` via the fallback discipline (read → mutate in place → write → verify).
+- `initialBloomLevel` / `currentBloomLevel`: the per-topic Bloom maps are an explicit **manual carve-out** — no script subcommand owns them. `/learn` seeds both; `/assess` and `/evaluate` may update `currentBloomLevel` via the Fallback discipline above.
 - `lastActivity`: one short sentence (≤120 chars) used by `/progress quick` and `/continue`. Anything longer belongs in `progress.md`.
 - **No `lastSessionSummary` / `bloomResetNote` in v2** — migrated to `progress.md`.
 
@@ -206,23 +145,7 @@ Whole JSON; written exclusively through `bodhi-state`. `/housekeep` does not rot
 - `reviewHistory[].source` (optional): which skill produced the review.
 - `reviewHistory[].boxBefore` (optional, 1.11.3): the box the concept occupied when this review was answered — the box whose interval scheduled it. Written by `record-review` on every new entry; absent on older entries (readers tolerate absence; `retention` reports how many legacy entries lack it). This is what makes retention-at-review analysis exact instead of reconstructed.
 - `reviewHistory[].result` is a closed vocabulary: `correct` / `incorrect` / `partial` — enforced by `record-review`, checked by `verify` (1.12.1). A due concept the session never reached gets a **deferral entry** instead: `{ "date": "YYYY-MM-DD", "deferred": true, "days": N, "note": "..." }` — no `result`, written by `defer`. Deferrals are excluded from `retention` (they are scheduling events, not retrieval evidence). Do not invent result values like `skipped`; found in the wild pre-1.12.1, repaired by `normalize`.
-- `sessionHistory` is an append-only audit trail. `/evaluate` reads it; routine skills do not.
-
-**`sessionHistory[].type` canonical vocabulary** (enforced in code by `record-session`):
-
-| `type` | Written by | Meaning |
-|---|---|---|
-| `spaced-review` | `/quiz`, `/reflect` (due-concepts batch) | Routine spaced-review session |
-| `quiz` | `/quiz` (explicit-topic invocation) | Quiz on a specific topic, not by schedule |
-| `targeted-reteach` | `/teach` (re-entering a demoted concept) | Focused re-teach after demotion or precision-gap surfacing |
-| `diagnostic-after-gap` | `/learn`, `/assess`, `/continue` (after absence) | Diagnostic after a meaningful gap |
-| `learner-forget` | `/forget` | Learner-initiated demotion |
-| `pair` | `/pair` Session End | Pair session touching tracked concepts |
-| `practice` | `/practice` | Exercise session introducing/reviewing concepts |
-| `evaluate` | `/evaluate` | Comprehensive evaluation snapshot |
-| `other` | any skill | Escape hatch; **requires `subtype`**. Prefer extending this table over reaching for `other`. |
-
-Optional fields on entries (writers MAY include via `--data`): `conceptsReviewed`, `passes`, `misses`, `partials`, `boxChanges`, `precisionGapMovement`, `habitObservations`, `notes`, `calibrationNote`, `conceptsDemoted`. Readers MUST tolerate unknown fields; the script preserves them.
+- `sessionHistory` is an append-only audit trail. `/evaluate` reads it; routine skills do not. The `type` field is a closed vocabulary enforced in code by `record-session` — the canonical table lives in the `state-ops` KB.
 
 **Per-concept Bloom + Feynman fields (v3).** These make mastery observable from state:
 
@@ -230,32 +153,9 @@ Optional fields on entries (writers MAY include via `--data`): `conceptsReviewed
 - `feynmanPassed`: boolean. Set by `set-feynman` when `/teach` (a full session or its understanding-only path) observes a genuine explain-back. Set, never unset.
 - `consecutiveCorrectAtL4Plus`: incremented on correct at tested-bloom ≥ 4; reset to 0 on any incorrect, any partial, and on `/forget` (1.11.2 — a partial retrieval breaks the consecutive-correct streak; "3 consecutive correct" means uninterrupted corrects). A correct at a lower tested level leaves the counter untouched (a routine low-level recall between two L4 demonstrations is a different measurement, not counter-evidence). `--retry` reps never touch it.
 
-**Mastery formula (canonical, computed by `bodhi-state mastery`):**
-
-```
-mastered = (bloomLevel >= 4)
-       AND (consecutiveCorrectAtL4Plus >= 3)
-       AND (box >= 4)
-       AND (feynmanPassed === true)
-```
-
-Skills MUST NOT redefine this formula inline. See `blooms-taxonomy` KB for the underlying criteria.
+These four fields feed the canonical mastery formula, computed by `bodhi-state mastery` and documented in the `state-ops` KB. Skills MUST NOT redefine it inline; see `blooms-taxonomy` KB for the underlying criteria.
 
 **Legacy fallthrough (v2 → v3).** A concept with `bloomLevel: 0` has never been classified by a v3 writer — regardless of `lastReviewed` (real v2 data routinely has populated `lastReviewed` from pre-v3 quizzes; the 1.10.0 rule that also required `lastReviewed: null` was wrong and was corrected in 1.10.7). Gates treat `bloomLevel: 0` as "no opinion yet, allow advancement"; `/progress` displays `—` (not 0%) for modules where every concept is at `bloomLevel: 0`. `bodhi-state` implements both rules.
-
-### Prerequisite gate (canonical, computed by `bodhi-state gate-check`)
-
-The `/teach` Phase 1 gate fires only on the first session of a new module (detected by: zero tracked concepts whose `module` matches `state.json.currentModule`). Per-prerequisite verdicts:
-
-| Verdict | Condition | Gate behavior |
-|---|---|---|
-| `satisfied` | `bloomLevel >= 3` AND current evidence (`box >= 3` OR reviewed within 30 days) | Pass |
-| `stale-reconfirm` | `bloomLevel >= 3` but box < 3 AND last review > 30 days ago | One quick reconfirm question — the Bloom ratchet alone is not current evidence (1.11.0 recency rule) |
-| `no-opinion` | `bloomLevel == 0` | Pass (legacy fallthrough) |
-| `apply-equivalent` | `1 <= bloomLevel < 3` but `box >= 3` AND last two reviews correct | Pass (gate-time read only; bloomLevel untouched) |
-| `gap` | otherwise | Surface as an offer — never auto-block; the learner decides |
-
-Prerequisites come from the plan's `**Prerequisites for next module:**` declaration (passed via `--prereqs`) or, as fallback, all concepts of the prior module (`previousModule` or inferred; the verdict JSON flags inference so the skill can tell the learner the mapping was inferred).
 
 ### `learningWithBodhi/<project>/.bodhi/assessment-history.json`
 
@@ -286,7 +186,7 @@ Structured assessment data for `/evaluate` and `/progress`. Append-only; never e
 }
 ```
 
-- Skills that run assessments (`/learn` Phase 2, `/assess`, `/evaluate` Phase 2, `/plan regenerate`) MUST append an entry here (prose version goes to `assessments/latest.md`).
+- Skills that run assessments (`/learn` Phase 2, `/assess`, `/evaluate` Phase 2, `/plan regenerate`) MUST append an entry here via `bodhi-state record-assessment` (prose version goes to `assessments/latest.md`).
 - `predictionDelta` is populated by `/evaluate` Phase 2.5 (predict-before-reveal); absent elsewhere. See `metacognition` KB.
 
 ### `learningWithBodhi/<project>/.bodhi/resources.md`
@@ -355,13 +255,10 @@ Per-project metadata, loaded only by cross-project skills (`/mentor`, `/evaluate
 }
 ```
 
-Writers: `/learn` (append on project start), `/evaluate` (refresh; move to `completedProjects` on completion), `/mentor` (career fields in the parent profile only).
+Writers: `/learn` (append on project start), `/evaluate` (refresh; move to `completedProjects` on completion), `/mentor` (career fields in the parent profile only). Profile-list mutations are the one JSON write the script does not own — apply the Fallback discipline above.
 
-## Update Rules
+## Schema-Evolution Rules
 
-- **JSON writes go through `bodhi-state`.** Hand-editing tracking JSON is the fallback of last resort, performed read→mutate-in-place→write→verify with unknown fields preserved.
-- Markdown live docs: compose the new entry at the top; preserve existing content verbatim; never rotate (that is `/housekeep`'s job, per the `state-lifecycle` KB).
 - Skills MUST NOT introduce new top-level fields, files, or directories under `.bodhi/` without updating this KB (and `bodhi-state`) first.
 - Skills MUST NOT stuff long narrative into JSON fields — narrative belongs in `progress.md` / `assessments/latest.md`.
-- Skills that read archive content MUST announce the read in their turn output.
 - Schemas evolve; readers tolerate older `version` values (the script read-tolerates v1/v2 and persists v3 on write). Skills MUST NOT branch behavior on version in prose. Full transforms live in the `state-migration` KB.

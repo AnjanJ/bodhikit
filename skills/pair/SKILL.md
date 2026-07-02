@@ -6,9 +6,9 @@ argument-hint: "[strong-style|ping-pong|navigate]"
 
 # /pair — Pair Programming
 
-You are BodhiKit (pairing mode). Reference the `teaching-personality` KB for voice. Reference the `state-schema` KB for tracking-file shapes. Methodology KBs load per-phase below.
+You are BodhiKit (pairing mode). Reference the `teaching-personality` KB for voice. Reference the `state-ops` KB for tracking-state operations. Methodology KBs load per-phase below.
 
-**Chained invocation:** if `$ARGUMENTS` contains `--invoked-from=`, skip personality and state-schema re-load and skip Phase 1 discovery — the caller has resolved the project. Use the remainder of `$ARGUMENTS` after the flag as the topic / concept. Mode auto-selection by Bloom level still runs unless the caller passed an explicit mode (`strong-style`, `ping-pong`, `navigate`).
+**Chained invocation:** if `$ARGUMENTS` contains `--invoked-from=`, skip personality and state-ops re-load and skip Phase 1 discovery — the caller has resolved the project. Use the remainder of `$ARGUMENTS` after the flag as the topic / concept. Mode auto-selection by Bloom level still runs unless the caller passed an explicit mode (`strong-style`, `ping-pong`, `navigate`).
 
 This skill is built on research-backed pair programming methodologies:
 - **Strong-Style Pairing** (Llewellyn Falco): "For an idea to go from your head into the computer, it must go through someone else's hands."
@@ -152,7 +152,7 @@ After any pairing mode:
 
 1. **Reflect on the session**: "What did you notice about how we worked together? What was different from coding alone?"
 
-2. **Update tracking** per the `state-schema` KB write path, applying the `spaced-repetition` KB judgment rules:
+2. **Update tracking** per the `state-ops` KB write path, applying the `spaced-repetition` KB judgment rules:
 
    a. **New concepts surfaced during pairing:** `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> add-concept --concept "<name>" --module "<current module>"` (canonical Box-1 defaults).
 

@@ -1,17 +1,13 @@
----
-description: "Per-skill read defaults for BodhiKit tracking files — guidance, not gates. Loaded by /housekeep, the context audit, and the authoring lint."
-user-invocable: false
----
 
 # Read Defaults — What Each Skill Loads, and When It Reaches for Archive
 
-This KB is the contract the context audit and authoring lint enforce. Skills themselves do not need to load this KB at runtime — they each know what they read. This KB exists so that one place defines the expected default-read shape across the plugin, and the audit can compare reality against the contract.
+This document (dev-only since 1.13.0 — it was a KB until then, but no skill ever loaded it at runtime) is the contract the context audit and authoring lint enforce. It exists so that one place defines the expected default-read shape across the plugin, and the audit can compare reality against the contract.
 
-See also: `state-schema` KB (file shapes and discovery), `state-migration` KB (one-shot conversion of pre-1.7.0 files).
+See also: `state-ops` KB (write path and discovery), `state-schema` KB (file shapes), `state-migration` KB (one-shot conversion of pre-1.7.0 files).
 
 ## Guiding Principle: Nothing Gatekept
 
-The learner's accumulated work is theirs. Every skill MAY read every file when the learner's situation justifies it. This KB documents only the **default** read for each skill — what loads on routine invocations. The audit and lint flag *unconditional* archive reads as accidental waste, but a deliberate, situational read is always allowed and never penalized.
+The learner's accumulated work is theirs. Every skill MAY read every file when the learner's situation justifies it. This document records only the **default** read for each skill — what loads on routine invocations. The audit and lint flag *unconditional* archive reads as accidental waste, but a deliberate, situational read is always allowed and never penalized.
 
 **Transparency rule.** When a skill pulls archive content beyond its default, it MUST announce in its turn output what was loaded and why. The learner never has hidden context pulled on their behalf.
 
@@ -52,7 +48,7 @@ The default-read column above is what should appear **unconditionally**. Anythin
 
 `dev/context-audit.sh` measures reality against this table (unconditional vs phase-conditional vs branch-conditional reads) and reports drift in its punch list. There is no hard lint rule for read defaults — the audit is the enforcement surface, run before releases. A deliberate, announced read is always allowed.
 
-## How to Update This KB
+## How to Update This Document
 
 When a new skill is added, append a row. When an existing skill's default reads change, update the row in the same PR that changes the skill, and update the audit run output to reflect the new baseline.
 
