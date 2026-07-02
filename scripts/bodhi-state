@@ -270,7 +270,8 @@ def apply_review(concept, result, tested_bloom, confidence=None, note=None,
     concept["lastReviewed"] = iso(t)
     concept["lastResult"] = note or (f"{result} (relearning retry)" if retry else result)
     entry = {"date": iso(t), "result": result,
-             "bloomLevel": tested_bloom if tested_bloom is not None else 0}
+             "bloomLevel": tested_bloom if tested_bloom is not None else 0,
+             "boxBefore": old_box}
     if retry:
         entry["retry"] = True
     if confidence:
@@ -585,9 +586,12 @@ def cmd_mastery(args):
           "blockedOnFeynman": blocked_on_feynman})
 
 
-def cmd_calibration(args):
-    """Confidence-vs-outcome calibration from reviewHistory[].confidence."""
-    _, data = load_spaced_review(args.project)
+def calibration_summary(data):
+    """Confidence-vs-outcome calibration from reviewHistory[].confidence.
+
+    Shared by `calibration` and `export-anonymized` — the export strips the
+    per-concept event lists (they carry concept names).
+    """
     buckets = {c: {"correct": 0, "incorrect": 0, "partial": 0}
                for c in CONFIDENCE_VALUES}
     overconfident_events = []
@@ -611,14 +615,156 @@ def cmd_calibration(args):
         return round(n / d, 2) if d else None
     sure = buckets["sure"]
     guess = buckets["guessing"]
-    emit({
+    return {
         "taggedAnswers": total,
         "buckets": buckets,
         "overconfidenceRate": rate(sure["incorrect"], sum(sure.values())),
         "underconfidenceRate": rate(guess["correct"], sum(guess.values())),
         "overconfidentEvents": overconfident_events[-5:],
         "underconfidentEvents": underconfident_events[-5:],
-    })
+    }
+
+
+def cmd_calibration(args):
+    _, data = load_spaced_review(args.project)
+    emit(calibration_summary(data))
+
+
+# Spacing-gap buckets for retention analysis (name, min days, max days).
+GAP_BUCKETS = (
+    ("same-day", 0, 0),
+    ("1d", 1, 1),
+    ("2-3d", 2, 3),
+    ("4-7d", 4, 7),
+    ("8-14d", 8, 14),
+    ("15-30d", 15, 30),
+    ("31d+", 31, None),
+)
+
+
+def bucket_for_gap(days):
+    for name, lo, hi in GAP_BUCKETS:
+        if days >= lo and (hi is None or days <= hi):
+            return name
+    return None  # negative gap: clock skew or hand-edited dates
+
+
+def retention_summary(data):
+    """Retention-at-review: % correct grouped by actual spacing gap and by
+    box-at-review-time (boxBefore, 1.11.3).
+
+    reviewHistory is a longitudinal retention dataset — every due-review
+    outcome is a natural experiment on whether the Leitner intervals are
+    calibrated. Relearning retries are excluded (same-session reps, not
+    spacing evidence); the gap for a concept's first review runs from its
+    `introduced` date.
+    """
+    def new_bucket():
+        return {"correct": 0, "incorrect": 0, "partial": 0}
+    by_gap = {name: new_bucket() for name, _, _ in GAP_BUCKETS}
+    by_box = {str(b): new_bucket() for b in range(1, MAX_BOX + 1)}
+    totals = new_bucket()
+    relearning = 0
+    skipped = 0
+    legacy_no_box = 0
+    for c in data.get("concepts", []):
+        prev = parse_date(c.get("introduced"))
+        for h in c.get("reviewHistory", []):
+            d = parse_date(h.get("date"))
+            res = h.get("result")
+            if d is None or res not in ("correct", "incorrect", "partial"):
+                skipped += 1
+                continue
+            if h.get("retry"):
+                relearning += 1
+                continue
+            if prev is not None:
+                bucket = bucket_for_gap((d - prev).days)
+                if bucket:
+                    by_gap[bucket][res] += 1
+            prev = d
+            totals[res] += 1
+            bb = h.get("boxBefore")
+            if isinstance(bb, int) and 1 <= bb <= MAX_BOX:
+                by_box[str(bb)][res] += 1
+            else:
+                legacy_no_box += 1
+    def with_rate(bucket):
+        n = sum(bucket.values())
+        out = dict(bucket)
+        out["reviews"] = n
+        out["successRate"] = round(bucket["correct"] / n, 2) if n else None
+        return out
+    total_n = sum(totals.values())
+    return {
+        "reviews": total_n,
+        "overallSuccessRate": round(totals["correct"] / total_n, 2) if total_n else None,
+        "byGap": {k: with_rate(v) for k, v in by_gap.items()},
+        "byBoxAtReview": {k: with_rate(v) for k, v in by_box.items()},
+        "relearningRetriesExcluded": relearning,
+        "entriesWithoutBoxBefore": legacy_no_box,
+        "entriesSkipped": skipped,
+    }
+
+
+def cmd_retention(args):
+    _, data = load_spaced_review(args.project)
+    out = retention_summary(data)
+    out["note"] = ("Leitner targets roughly 80-90% success at review time: "
+                   "persistently above suggests intervals too conservative; "
+                   "persistently below, too aggressive")
+    emit(out)
+
+
+def cmd_export_anonymized(args):
+    """Shareable stats block: counts and rates only — no concept names,
+    no questions, no notes, no free text of any kind (1.11.3)."""
+    _, data = load_spaced_review(args.project)
+    boxes = {str(b): 0 for b in range(1, MAX_BOX + 1)}
+    blooms = {str(b): 0 for b in range(0, 7)}
+    feynman = 0
+    mastered = 0
+    for c in data.get("concepts", []):
+        b = c.get("box", 1)
+        if isinstance(b, int) and 1 <= b <= MAX_BOX:
+            boxes[str(b)] += 1
+        bl = c.get("bloomLevel", 0)
+        if isinstance(bl, int) and 0 <= bl <= 6:
+            blooms[str(bl)] += 1
+        if c.get("feynmanPassed") is True:
+            feynman += 1
+        if is_mastered(c):
+            mastered += 1
+    session_types = {}
+    for s in data.get("sessionHistory", []):
+        t = s.get("type") if isinstance(s.get("type"), str) else "(untyped)"
+        session_types[t] = session_types.get(t, 0) + 1
+    calibration = calibration_summary(data)
+    calibration.pop("overconfidentEvents", None)   # carry concept names
+    calibration.pop("underconfidentEvents", None)
+    out = {
+        "exportVersion": 1,
+        "generated": iso(today()),
+        "concepts": len(data.get("concepts", [])),
+        "boxDistribution": boxes,
+        "bloomDistribution": blooms,
+        "feynmanPassed": feynman,
+        "mastered": mastered,
+        "sessionTypeCounts": session_types,
+        "retention": retention_summary(data),
+        "calibration": calibration,
+    }
+    sp = state_path(args.project)
+    if os.path.exists(sp):
+        state = load_json(sp)
+        created = parse_date(state.get("createdAt"))
+        out["project"] = {
+            "totalSessions": state.get("totalSessions", 0),
+            "currentStreak": state.get("currentStreak", 0),
+            "overallCompletion": state.get("overallCompletion", 0),
+            "daysSinceStart": (today() - created).days if created else None,
+        }
+    emit(out)
 
 
 def gate_status(c, t):
@@ -953,6 +1099,14 @@ def main():
 
     s = sub.add_parser("calibration", help="confidence-vs-outcome calibration summary")
     s.set_defaults(fn=cmd_calibration)
+
+    s = sub.add_parser("retention",
+                       help="retention-at-review rates by spacing gap and box (outcome data)")
+    s.set_defaults(fn=cmd_retention)
+
+    s = sub.add_parser("export-anonymized",
+                       help="shareable anonymized stats: counts and rates only, no concept names or free text")
+    s.set_defaults(fn=cmd_export_anonymized)
 
     s = sub.add_parser("gate-check", help="prerequisite Bloom gate verdict for /teach Phase 1")
     s.add_argument("--module", default=None, help="module to gate (default: state.json currentModule)")

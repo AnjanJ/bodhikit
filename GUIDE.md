@@ -97,7 +97,7 @@ The migration is chained — it runs whichever transforms are missing for your p
 - `concepts[].bloomLevel` (0–6, integer) — current Bloom's level for the concept. Set by `/quiz`, `/teach`, `/practice` as they observe the learner's level. Ratchet-up only.
 - `concepts[].feynmanPassed` (boolean) — set to `true` when the learner produces a clear, jargon-free explain-back. Owned by `/teach` (Phase 2 checkpoint / understanding-only path / Phase 5). Set, never unset.
 - `concepts[].consecutiveCorrectAtL4Plus` (integer) — running counter for the mastery criterion. Incremented by `/quiz` on correct answers at Bloom 4+; reset to 0 on any incorrect, any partial, or on `/forget` ("consecutive correct" means uninterrupted corrects — a partial breaks the streak).
-- New entries in `reviewHistory[]` also include `bloomLevel` to record which level a given quiz question tested at.
+- New entries in `reviewHistory[]` also include `bloomLevel` to record which level a given quiz question tested at, and (1.11.3) `boxBefore` — the box the concept occupied when the review was answered, which makes `bodhi-state retention` (retention-at-review rates by spacing gap and box) exact rather than reconstructed.
 
 Together these fields make the canonical mastery formula computable: `mastered = bloomLevel ≥ 4 AND consecutiveCorrectAtL4Plus ≥ 3 AND box ≥ 4 AND feynmanPassed`.
 

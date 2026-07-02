@@ -39,6 +39,7 @@ If `CLAUDE_PLUGIN_ROOT` is not set in the Bash environment, locate the script on
 | `touch-state [--activity S] [--module M] [--module-index N] [--phase P] [--completion N]` | `state.json` session bookkeeping: dates, streak, totalSessions, module advance (records `previousModule`). The first touch of a new day also bumps the profile's `cumulativeStats.totalSessions` — no skill calls `bump-profile --counter totalSessions` |
 | `bump-profile --counter <name>` | `cumulativeStats` increments in `.bodhi-profile.json` |
 | `due [--limit N]` / `mastery` / `calibration` | Read-side rollups: due concepts (plus `unparseableDates` for schedule-broken entries — never silently skipped), canonical mastery % + `blockedOnFeynman` (concepts meeting every criterion except the explain-back gate), retention tiers, confidence calibration |
+| `retention` / `export-anonymized` | Read-side outcome analytics (1.11.3): retention-at-review rates grouped by actual spacing gap and by box-at-review-time (`boxBefore`) — the empirical check on whether the Leitner intervals are calibrated — and a shareable anonymized stats export (counts and rates only; no concept names, no free text) for the README's outcome-data ask |
 | `gate-check [--module M] [--prereqs "A,B"] [--prior-module M]` | Prerequisite Bloom gate verdict (see below) |
 | `migrate-spaced-review` | One-shot v1/v2 → v3 transform: backup, in-place field fill, marker, verification |
 | `verify` | Schema sanity check (also run by the plugin's Stop hook and `dev/check.sh`) |
@@ -187,7 +188,7 @@ Whole JSON; written exclusively through `bodhi-state`. `/housekeep` does not rot
       "feynmanPassed": false,
       "consecutiveCorrectAtL4Plus": 0,
       "reviewHistory": [
-        { "date": "YYYY-MM-DD", "result": "correct|incorrect|partial", "bloomLevel": 0, "confidence": "sure|mostly|guessing", "source": "string" }
+        { "date": "YYYY-MM-DD", "result": "correct|incorrect|partial", "bloomLevel": 0, "boxBefore": 1, "confidence": "sure|mostly|guessing", "source": "string" }
       ]
     }
   ],
@@ -201,6 +202,7 @@ Whole JSON; written exclusively through `bodhi-state`. `/housekeep` does not rot
 - `reviewHistory[].retry` (optional, 1.11.1): `true` marks a successive-relearning rep — recorded evidence that did NOT move the box. `reviewHistory[].note` (optional): short free-text annotation (e.g. "learner-initiated demote"). The script caps `reviewHistory` at the most recent 100 entries per concept; older entries roll into a `reviewHistoryArchived` integer counter.
 - `reviewHistory[].confidence` (optional, 1.11.0): the learner's pre-reveal confidence tag — `sure` / `mostly` / `guessing`, collected by `/quiz` and `/reflect` BEFORE the answer is judged. `bodhi-state calibration` aggregates these into overconfidence/underconfidence rates (see `metacognition` KB for why predict-before-reveal is the load-bearing order).
 - `reviewHistory[].source` (optional): which skill produced the review.
+- `reviewHistory[].boxBefore` (optional, 1.11.3): the box the concept occupied when this review was answered — the box whose interval scheduled it. Written by `record-review` on every new entry; absent on older entries (readers tolerate absence; `retention` reports how many legacy entries lack it). This is what makes retention-at-review analysis exact instead of reconstructed.
 - `sessionHistory` is an append-only audit trail. `/evaluate` reads it; routine skills do not.
 
 **`sessionHistory[].type` canonical vocabulary** (enforced in code by `record-session`):

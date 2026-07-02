@@ -2,6 +2,20 @@
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [1.11.3] - 2026-07-02
+
+The outcome-data release. `reviewHistory` has been a longitudinal retention dataset all along — every due-review outcome is a natural experiment on whether the Leitner intervals are calibrated. This release makes that data readable, and makes contributing it a one-command act.
+
+### Added
+- **`bodhi-state retention`** — retention-at-review analysis: %-correct grouped by *actual* spacing gap (same-day / 1d / 2-3d / 4-7d / 8-14d / 15-30d / 31d+) and by box-at-review-time. Relearning retries are excluded (same-session reps are not spacing evidence); a concept's first-review gap runs from its `introduced` date. The Leitner literature targets roughly 80-90% success at review time — persistently above suggests the intervals are too conservative, persistently below too aggressive. This is the empirical check the intervals have never had.
+- **`reviewHistory[].boxBefore`** (state-schema KB first, per the authoring contract): `record-review` now stamps each entry with the box the concept was answered *from* — the box whose interval scheduled the review — making by-box retention exact for all future data. Older entries lack it; `retention` reports the legacy count honestly instead of guessing.
+- **`bodhi-state export-anonymized`** — a shareable stats block: box/Bloom distributions, mastery and Feynman counts, session-type counts, the full retention summary, and calibration rates with the per-concept event lists stripped. **No concept names, no questions, no notes, no free text** — the test suite asserts this on a fixture salted with private strings.
+- **"Share your learning data" issue template** (`.github/ISSUE_TEMPLATE/learning-data-report.md`): run one command, paste the JSON. The README honesty note now points at it — the lowest-friction path from N=1 to real outcome data.
+- 12 new deterministic tests (117 total): boxBefore stamping (including on retries), gap bucketing, retry exclusion, legacy-entry accounting, and the export's no-private-strings guarantee.
+
+### Changed
+- `calibration` internals refactored into a shared summary helper (identical output) so the export reuses it.
+
 ## [1.11.2] - 2026-07-02
 
 ### Fixed — mastery-streak semantics

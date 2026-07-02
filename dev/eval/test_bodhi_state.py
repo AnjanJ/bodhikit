@@ -588,6 +588,104 @@ def t_mastery_blocked_on_feynman():
         check("blocked: cleared after the gate", out["blockedOnFeynman"] == [])
 
 
+RETENTION_SR = {
+    "version": 3, "lastReviewCheck": None,
+    "concepts": [
+        {"name": "Secret concept name", "module": "Module A",
+         "introduced": "2026-01-01", "box": 2, "nextReview": "2026-03-01",
+         "lastReviewed": "2026-02-13", "question": "a private question",
+         "lastResult": "correct", "bloomLevel": 4, "feynmanPassed": True,
+         "consecutiveCorrectAtL4Plus": 3,
+         "reviewHistory": [
+             # gaps: introduced->+1d, +3d, (retry excluded), +8d, +31d(no boxBefore)
+             {"date": "2026-01-02", "result": "correct", "bloomLevel": 3,
+              "boxBefore": 1, "confidence": "sure"},
+             {"date": "2026-01-05", "result": "incorrect", "bloomLevel": 3,
+              "boxBefore": 2},
+             {"date": "2026-01-05", "result": "correct", "bloomLevel": 3,
+              "boxBefore": 1, "retry": True},
+             {"date": "2026-01-13", "result": "correct", "bloomLevel": 3,
+              "boxBefore": 1},
+             {"date": "2026-02-13", "result": "correct", "bloomLevel": 4},
+         ]},
+    ],
+    "sessionHistory": [{"date": "2026-01-05", "type": "quiz",
+                        "notes": "private session note"}],
+}
+
+
+def t_box_before():
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review=json.loads(json.dumps(V2_SR)))
+        run(proj, "migrate-spaced-review")
+        # B-tree indexes sits in box 3; the entry must record the box the
+        # review was answered FROM, not the box it moved to.
+        run(proj, "record-review", "--concept", "B-tree indexes",
+            "--result", "correct", "--tested-bloom", "4")
+        c = read_sr(proj)["concepts"][0]
+        check("boxBefore: records pre-movement box",
+              c["reviewHistory"][-1].get("boxBefore") == 3
+              and c["box"] == 4, c["reviewHistory"][-1])
+        run(proj, "record-review", "--concept", "B-tree indexes",
+            "--result", "correct", "--tested-bloom", "3", "--retry")
+        c = read_sr(proj)["concepts"][0]
+        check("boxBefore: present on retry entries too",
+              c["reviewHistory"][-1].get("boxBefore") == 4)
+
+
+def t_retention():
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root,
+                            spaced_review=json.loads(json.dumps(RETENTION_SR)))
+        out = run(proj, "retention")
+        check("retention: retries excluded from review count",
+              out["reviews"] == 4 and out["relearningRetriesExcluded"] == 1, out)
+        check("retention: overall success rate", out["overallSuccessRate"] == 0.75)
+        gaps = out["byGap"]
+        check("retention: 1d gap bucket (introduced -> first review)",
+              gaps["1d"]["correct"] == 1 and gaps["1d"]["reviews"] == 1, gaps)
+        check("retention: 2-3d gap bucket", gaps["2-3d"]["incorrect"] == 1)
+        check("retention: 8-14d gap bucket (retry did not shift the gap)",
+              gaps["8-14d"]["correct"] == 1)
+        check("retention: 31d+ gap bucket", gaps["31d+"]["correct"] == 1)
+        boxes = out["byBoxAtReview"]
+        check("retention: by-box rates from boxBefore",
+              boxes["1"]["correct"] == 2 and boxes["2"]["incorrect"] == 1, boxes)
+        check("retention: legacy entries without boxBefore counted honestly",
+              out["entriesWithoutBoxBefore"] == 1)
+
+
+def t_export_anonymized():
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root,
+                            spaced_review=json.loads(json.dumps(RETENTION_SR)))
+        out = run(proj, "export-anonymized")
+        blob = json.dumps(out)
+        check("export: no concept names anywhere",
+              "Secret" not in blob and "B-tree" not in blob)
+        check("export: no questions or notes",
+              "private" not in blob)
+        check("export: no project name or topic",
+              "proj" not in json.dumps({k: v for k, v in out.items() if k != "project"})
+              and "testing" not in blob)
+        check("export: counts correct",
+              out["concepts"] == 1 and out["boxDistribution"]["2"] == 1
+              and out["bloomDistribution"]["4"] == 1
+              and out["feynmanPassed"] == 1, out)
+        check("export: mastered computed via canonical formula",
+              out["mastered"] == 0)  # box 2 < 4 blocks it
+        check("export: session types counted, content dropped",
+              out["sessionTypeCounts"] == {"quiz": 1})
+        check("export: calibration events stripped",
+              "overconfidentEvents" not in out["calibration"]
+              and out["calibration"]["taggedAnswers"] == 1)
+        check("export: retention embedded", out["retention"]["reviews"] == 4)
+        check("export: project block has no free text",
+              set(out["project"].keys()) == {"totalSessions", "currentStreak",
+                                             "overallCompletion", "daysSinceStart"}
+              and out["project"]["daysSinceStart"] is not None, out.get("project"))
+
+
 def t_verify():
     with tempfile.TemporaryDirectory() as root:
         proj = make_project(root, spaced_review=json.loads(json.dumps(V2_SR)))
@@ -614,7 +712,8 @@ def main():
               t_touch_state_profile_bump,
               t_data_reserved_keys, t_migrate_stale_backup,
               t_forget_comma_names, t_robustness, t_concurrency,
-              t_history_cap, t_mastery_blocked_on_feynman):
+              t_history_cap, t_mastery_blocked_on_feynman,
+              t_box_before, t_retention, t_export_anonymized):
         print(f"-- {t.__name__}")
         t()
     print(f"\n{PASS} passed, {FAIL} failed")
