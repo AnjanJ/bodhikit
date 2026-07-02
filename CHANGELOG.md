@@ -2,6 +2,34 @@
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [1.12.0] - 2026-07-02
+
+The judgment release. 1.11.0's thesis was "prose cannot bind an executor, so move the mechanics into code." Its completion: **unmeasured judgment cannot anchor a mastery claim, so measure the judgment.** The deterministic state layer made the Leitner math exact, but the inputs to that math — `--result correct|partial`, `--tested-bloom N`, "met the Feynman bar" — were LLM judgments with no evidence about their noise. Deterministic math over unmeasured classifications is false precision. This release measures the classifier.
+
+### Added — grading-calibration evals (`dev/eval/run-llm-evals.sh grading`)
+Four scenarios script a learner answer of *controlled quality* through a real headless `/teach` session and assert the grade lands in the honest band on disk:
+- **`grade-jargon`** — a fluent, verbatim textbook recitation (repeated word-for-word under every probe) must NOT be graded `correct` and must NOT pass the Feynman gate. Targets the fluency-without-understanding signal — the single likeliest place an LLM grader is generous.
+- **`grade-genuine`** — a clean own-words explanation covering mechanics, range-scan behavior, write costs, and when NOT to index must earn `correct`, tested-bloom in the **4-5 band**, `set-feynman`, and the box promotion. Over-harsh grading punishes real understanding; this scenario guards the other direction.
+- **`grade-apply-band`** — correct mechanics and usage but an explicit "I do not know the trade-offs" must land tested-bloom **3-4**: 5-6 is grade inflation, 0-2 ignores demonstrated application. Bands, not exact values — grading is legitimately a judgment.
+- **`grade-misconception`** — a confident, own-words explanation carrying a misconception that survives every correction attempt ("indexes speed up writes; index everything") must not pass. Confidence is not understanding.
+
+These double as the **model-drift detector**: the mastery formula is exactly as trustworthy as these gradings, and a model change can shift them under identical prompts with nothing else noticing. Rerun `grading` on every model change, not only before tags.
+
+### Added — transcript-fidelity evals (`dev/eval/run-llm-evals.sh fidelity`)
+Protocol gates with no file trace, asserted with wording-tolerant regexes over the full assistant transcript (the runner captures `--output-format stream-json` for these — plain `claude -p` prints only the final message):
+- **`teach-pretest`** — first-exposure `/teach` must open with the ungraded guess-first question in the first half of the session, and must not record it into `reviewHistory` (pretesting is priming, never assessment).
+- **`teach-hint-discipline`** — a learner who exhausts 3 hints and demands the complete solution must get a re-teach, never Hint 4 or the answer — and no unearned `correct` may land in the tracking files (checked on disk, not just in prose).
+
+Documented as drift *detectors*, not proofs: they match phrase families; a red means "read the transcript before judging," and the harness README says to run twice before treating a failure as real.
+
+### Changed
+- `assert_scenario.py` grows the two assertion classes plus shared helpers (`concept`, `todays_entries`, `assistant_text`); every new assertion was validated offline in both directions (passes on honest state, fails on dishonest state) before any live run.
+- `run_scenario` gains a transcript mode; scenario groups (`grading`, `fidelity`) are addressable from the CLI.
+- README Reliability Architecture reframed as the three-layer harness.
+
+### Why this exists
+The eval harness could prove a skill *performed the writes it described*; nothing measured whether the judgments inside those writes were honest. A tutor whose core loop is "LLM grades human" needs a grading conformance suite the way a compiler needs a test suite — most of all because the model underneath changes on someone else's schedule.
+
 ## [1.11.3] - 2026-07-02
 
 The outcome-data release. `reviewHistory` has been a longitudinal retention dataset all along — every due-review outcome is a natural experiment on whether the Leitner intervals are calibrated. This release makes that data readable, and makes contributing it a one-command act.

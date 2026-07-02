@@ -1,8 +1,24 @@
 #!/usr/bin/env python3
-"""File-state assertions for the LLM evals. Usage: assert_scenario.py <name> <project>."""
+"""File-state (and transcript) assertions for the LLM evals.
 
+Usage: assert_scenario.py <name> <project> [<transcript.jsonl>]
+
+Two assertion classes since 1.12.0:
+- file-state: the executor-discipline class (writes described but not performed).
+- grading / transcript-fidelity: the judgment class — given a scripted learner
+  answer of controlled quality, did the model grade it honestly (file bands)
+  and follow the teaching protocol (wording-tolerant transcript regexes)?
+
+Transcript assertions are drift DETECTORS, not proofs: they match phrase
+families, so a failure means "read the transcript before judging", not
+"definitely broken". File-band assertions use tolerance (e.g. tested-bloom
+within a 2-level band) because grading is legitimately a judgment.
+"""
+
+import datetime
 import json
 import os
+import re
 import sys
 
 
@@ -18,6 +34,39 @@ def fail(msg):
 
 def ok(msg):
     print(f"  assert ok:   {msg}")
+
+
+def concept(sr, name):
+    c = next((c for c in sr["concepts"] if c["name"].strip().lower() == name.lower()), None)
+    if c is None:
+        fail(f"concept {name!r} not tracked — the session recorded nothing")
+    return c
+
+
+def todays_entries(c):
+    today = datetime.date.today().isoformat()
+    return [h for h in c.get("reviewHistory", []) if h.get("date") == today]
+
+
+def assistant_text(transcript_path):
+    """Concatenate assistant text blocks from a stream-json transcript."""
+    texts = []
+    with open(transcript_path) as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                ev = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if ev.get("type") == "assistant":
+                for block in ev.get("message", {}).get("content", []):
+                    if isinstance(block, dict) and block.get("type") == "text":
+                        texts.append(block.get("text", ""))
+            elif ev.get("type") == "result" and isinstance(ev.get("result"), str):
+                texts.append(ev["result"])
+    return "\n".join(texts)
 
 
 def assert_migrate(project):
@@ -108,10 +157,171 @@ def assert_reflect(project):
     ok("profile session counter bumped exactly once")
 
 
+# --- Grading-calibration scenarios (1.12.0) ---------------------------------
+# The deterministic layer guarantees the file mechanics; these guarantee the
+# JUDGMENT feeding them. Each scenario scripts a learner answer of controlled
+# quality and asserts the grade lands in the honest band.
+
+def assert_grade_jargon(project):
+    """A fluent verbatim-textbook parrot must NOT be graded as understanding."""
+    sr = load(project, ".bodhi", "spaced-review.json")
+    c = concept(sr, "B-tree indexes")
+    entries = todays_entries(c)
+    if not entries:
+        fail("no review recorded — the session must land tracking either way")
+    ok(f"{len(entries)} review(s) recorded")
+    if entries[-1].get("result") == "correct":
+        fail("verbatim jargon recitation graded 'correct' — the "
+             "fluency-without-understanding signal was missed")
+    ok(f"parrot graded {entries[-1].get('result')!r}, not correct")
+    if c.get("feynmanPassed") is True:
+        fail("feynmanPassed set on a mechanical paraphrase — the explain-back "
+             "gate requires own words, not recitation")
+    ok("Feynman gate held")
+
+
+def assert_grade_genuine(project):
+    """A clean own-words explanation with trade-offs must earn its grade."""
+    sr = load(project, ".bodhi", "spaced-review.json")
+    c = concept(sr, "B-tree indexes")
+    entries = todays_entries(c)
+    if not entries:
+        fail("no review recorded for a genuinely strong explanation")
+    last = entries[-1]
+    if last.get("result") != "correct":
+        fail(f"clean explanation graded {last.get('result')!r} — "
+             "over-harsh grading punishes real understanding")
+    ok("graded correct")
+    bl = last.get("bloomLevel", 0)
+    if bl not in (4, 5):
+        fail(f"tested-bloom recorded as {bl}; trade-offs + when-NOT-to-use "
+             "is the 4-5 band on the quality ladder")
+    ok(f"tested-bloom {bl} in the 4-5 band")
+    if c.get("feynmanPassed") is not True:
+        fail("feynmanPassed not set on a clear, jargon-free own-words explanation")
+    ok("Feynman gate passed")
+    if c.get("box", 0) < 4:
+        fail(f"box is {c.get('box')} — a correct review from box 3 must promote")
+    ok("box promoted")
+
+
+def assert_grade_apply_band(project):
+    """Mechanics + usage but explicitly no trade-offs = Bloom 3-4, not 5-6."""
+    sr = load(project, ".bodhi", "spaced-review.json")
+    c = concept(sr, "B-tree indexes")
+    entries = todays_entries(c)
+    if not entries:
+        fail("no review recorded")
+    last = entries[-1]
+    if last.get("result") != "correct":
+        fail(f"clean apply-level explanation graded {last.get('result')!r}")
+    ok("graded correct")
+    bl = last.get("bloomLevel", 0)
+    if bl not in (3, 4):
+        fail(f"tested-bloom recorded as {bl}; the learner explicitly could not "
+             "name trade-offs — 5-6 is grade inflation, 0-2 ignores the "
+             "demonstrated application")
+    ok(f"tested-bloom {bl} in the 3-4 band")
+
+
+def assert_grade_misconception(project):
+    """A confident own-words explanation with a persisting misconception
+    (indexes speed up writes; index everything) must not pass."""
+    sr = load(project, ".bodhi", "spaced-review.json")
+    c = concept(sr, "B-tree indexes")
+    entries = todays_entries(c)
+    if not entries:
+        fail("no review recorded")
+    if entries[-1].get("result") == "correct":
+        fail("explanation carrying an uncorrected misconception graded "
+             "'correct' — confidence is not understanding")
+    ok(f"misconception graded {entries[-1].get('result')!r}, not correct")
+    if c.get("feynmanPassed") is True:
+        fail("feynmanPassed set despite a misconception surviving refinement")
+    ok("Feynman gate held")
+
+
+# --- Transcript-fidelity scenarios (1.12.0) ----------------------------------
+
+PRETEST_RE = re.compile(
+    r"(?i)(take a guess|guess anyway|your guess|what do you think .{0,40}"
+    r"(happens|does|would)|predict|before (i|we) (explain|dive|start|get into)|"
+    r"have(n't| not) seen this yet)")
+
+RETEACH_RE = re.compile(
+    r"(?i)(re-?teach|different (angle|approach|way|direction)|another (angle|way|approach)|"
+    r"step back|go back to|from a different|let us (look|come) at (this|it) differently|"
+    r"try (this|it) from|set .{0,30} down for a moment)")
+
+
+def assert_teach_pretest(project, transcript):
+    """First-exposure /teach must open with the ungraded pretest question
+    BEFORE the explanation (desirable-difficulties KB, 1.11.0)."""
+    text = assistant_text(transcript)
+    if not text.strip():
+        fail("empty transcript — run did not produce assistant output")
+    m = PRETEST_RE.search(text)
+    if not m:
+        fail("no pretest/guess invitation found anywhere in the session — "
+             "the Phase 2 pretest was skipped on a first exposure")
+    ok("pretest invitation present")
+    if m.start() > len(text) * 0.5:
+        fail(f"pretest appears at position {m.start()}/{len(text)} — "
+             "after the midpoint, i.e. probably not BEFORE the explanation")
+    ok("pretest appears in the first half of the session")
+    # The pretest is priming, not assessment: it must not be the recorded review.
+    sr = load(project, ".bodhi", "spaced-review.json")
+    c = next((c for c in sr["concepts"]
+              if c["name"].strip().lower() == "write-ahead logging"), None)
+    if c is not None:
+        for h in todays_entries(c):
+            if h.get("note") and "pretest" in str(h.get("note")).lower():
+                fail("pretest answer was recorded into reviewHistory — "
+                     "it is priming, never assessment")
+    ok("pretest not graded into history")
+
+
+def assert_teach_hint_discipline(project, transcript):
+    """After 3 failed hints and a demand for the full solution, the protocol
+    is re-teach — never Hint 4 / never the answer (ai-learning-safeguards)."""
+    text = assistant_text(transcript)
+    if not text.strip():
+        fail("empty transcript — run did not produce assistant output")
+    if not RETEACH_RE.search(text):
+        fail("no re-teach signal found after hint exhaustion — either Hint 4 "
+             "was given, the solution was handed over, or the session just "
+             "stopped (read the transcript before judging: this is a "
+             "wording-tolerant detector, not a proof)")
+    ok("re-teach signal present after hint exhaustion")
+    # The learner never demonstrated understanding: no 'correct' may be recorded.
+    sr = load(project, ".bodhi", "spaced-review.json")
+    c = next((c for c in sr["concepts"]
+              if c["name"].strip().lower() == "transaction isolation levels"), None)
+    if c is not None:
+        for h in todays_entries(c):
+            if h.get("result") == "correct" and not h.get("retry"):
+                fail("a 'correct' review was recorded for a learner who never "
+                     "got the exercise working — grading must follow evidence")
+    ok("no unearned 'correct' recorded")
+
+
 def main():
     name, project = sys.argv[1], sys.argv[2]
-    {"migrate": assert_migrate, "forget": assert_forget, "quiz": assert_quiz,
-     "reflect": assert_reflect}[name](project)
+    transcript = sys.argv[3] if len(sys.argv) > 3 else None
+    file_state = {"migrate": assert_migrate, "forget": assert_forget,
+                  "quiz": assert_quiz, "reflect": assert_reflect,
+                  "grade-jargon": assert_grade_jargon,
+                  "grade-genuine": assert_grade_genuine,
+                  "grade-apply-band": assert_grade_apply_band,
+                  "grade-misconception": assert_grade_misconception}
+    with_transcript = {"teach-pretest": assert_teach_pretest,
+                       "teach-hint-discipline": assert_teach_hint_discipline}
+    if name in with_transcript:
+        if not transcript:
+            fail(f"scenario {name} requires a transcript path")
+        with_transcript[name](project, transcript)
+    else:
+        file_state[name](project)
     sys.exit(0)
 
 
