@@ -2,6 +2,24 @@
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [1.14.0] - 2026-07-02
+
+The judgment-tree release — the deferred half of 1.13.0's context-cost work. 1.11.0's thesis was "prose cannot bind an executor, so move the mechanics into code"; that covered the writes. But `/teach` still asked the executor to *re-derive state predicates* from prose — is this a first exposure? a re-teach? did this write cross Bloom 3? — and the drift corpus showed the ~10% residue of those derivations accumulates. This release moves the mechanical branches into `bodhi-state` and phase-loads the rare sub-flows.
+
+### Added — read-side branch detection in code
+- **`bodhi-state session-brief --concept N`** — settles `/teach`'s opening branches deterministically: `firstExposure`/`pretestApplies` (bloomLevel 0 AND no non-deferred history; deferrals are scheduling, not exposure evidence), `isReteach` (real history AND Box 1 or latest-incorrect), plus box/bloom/Feynman/`daysSinceLastReview`/`dueForReview` for depth calibration. `/teach` Phase 1 runs it once; Phase 2 opens per the brief instead of per the executor's reading of the tracking files.
+- **`record-review` output now reports `crossedBloom3`** — true exactly when this write moved `bloomLevel` from <3 to ≥3. `/teach`'s bump-profile duty drops its "if unsure, scan progress.md" residue and keys off the flag.
+- **`bodhi-state snapshot`** — the whole `/progress` number surface in one read-only call: position + Bloom maps, session cadence (streak, sessions in last 7/30 days, days since last session), due lists + box distribution + 3-tier retention rollup, per-module mastery + `blockedOnFeynman`, confidence calibration. `/progress quick` is now one script call and zero tracking-file reads; the dashboard is one call plus the live `progress.md`. Context cost stays O(1) in session count.
+- 20 new deterministic tests (164 total).
+
+### Changed — progressive disclosure inside /teach
+- The understanding-only session (explain-back loop, grading ladder, recording duties, time-pressed variant) moved to `skills/teach/references/understanding-only.md`, loaded only when that branch fires. SKILL.md keeps a pointer. The duplicated recording steps (Phase 2 understanding-only vs Phase 5) now exist once.
+- `/housekeep` no longer names the `state-migration` KB in its header — the Phase 1/Phase 5 conditional loads were already the real contract (the audit's long-standing demotion candidate).
+
+### Lint
+- `/teach` must invoke `session-brief` and point at `references/understanding-only.md`; `/progress` must invoke `snapshot` (new rule 52).
+- The `--project`-on-every-invocation check now covers `skills/*/references/*.md`.
+
 ## [1.13.0] - 2026-07-02
 
 The context-cost release. Every skill fire was paying a ~39 KB floor — `teaching-personality` (7.4 KB) plus the full `state-schema` KB (23.9 KB) — even though, since the 1.11.0 deterministic state layer, no routine session ever touches field shapes: `bodhi-state` owns the writes. This release splits the operational surface from the reference so routine fires stop paying for shapes they cannot legally hand-edit anyway.

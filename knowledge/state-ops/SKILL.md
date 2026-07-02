@@ -28,7 +28,7 @@ If `CLAUDE_PLUGIN_ROOT` is not set in the Bash environment, locate the script on
 | Subcommand | Owns |
 |---|---|
 | `add-concept --concept N --module M [--question Q]` | New concept with canonical Box-1 defaults |
-| `record-review --concept N --result correct\|incorrect\|partial --tested-bloom 0-6 [--confidence sure\|mostly\|guessing] [--module M] [--note S] [--source skill] [--retry]` | Leitner box math, nextReview dates, bloomLevel ratchet, `consecutiveCorrectAtL4Plus` rules, `reviewHistory[]` append. `--retry` = successive-relearning rep: history entry only, no box/counter/bloom movement (the original demotion stands) |
+| `record-review --concept N --result correct\|incorrect\|partial --tested-bloom 0-6 [--confidence sure\|mostly\|guessing] [--module M] [--note S] [--source skill] [--retry]` | Leitner box math, nextReview dates, bloomLevel ratchet, `consecutiveCorrectAtL4Plus` rules, `reviewHistory[]` append. `--retry` = successive-relearning rep: history entry only, no box/counter/bloom movement (the original demotion stands). Output reports `crossedBloom3: true` when THIS write crossed Bloom <3 → ≥3 — the exact trigger for `bump-profile --counter totalConceptsLearned`; do not re-derive the crossing |
 | `set-feynman --concept N` | `feynmanPassed = true` (set, never unset) |
 | `record-session --type T [--subtype S] [--data '<json>']` | `sessionHistory[]` append, canonical-type enforcement (`type`/`subtype`/`date` in `--data` are ignored — flags only) |
 | `record-assessment --trigger learn-phase2\|assess\|evaluate\|plan-regenerate --data '<entry json>'` | Append-only `assessment-history.json` entry, date-stamped |
@@ -39,6 +39,8 @@ If `CLAUDE_PLUGIN_ROOT` is not set in the Bash environment, locate the script on
 | `bump-profile --counter <name>` | `cumulativeStats` increments in `.bodhi-profile.json` |
 | `due [--limit N]` / `mastery` / `calibration` | Read-side rollups: due concepts (plus `unparseableDates` for schedule-broken entries — never silently skipped), canonical mastery % + `blockedOnFeynman`, retention tiers, confidence calibration |
 | `retention` / `export-anonymized` | Read-side outcome analytics: retention-at-review rates by spacing gap and by `boxBefore`, and a shareable anonymized stats export (counts and rates only) |
+| `session-brief --concept N` | Read-side branch detection for `/teach` (1.14.0): `firstExposure`/`pretestApplies` (pretest vs graded retrieval open), `isReteach` (targeted-reteach duty), box/bloom/Feynman position, `dueForReview`. Trust the brief over hand-reading tracking files |
+| `snapshot` | Read-side single-call dashboard for `/progress` (1.14.0): position + Bloom maps (`project`), session cadence (`cadence`), due lists + box distribution + 3-tier retention rollup (`review`), per-module mastery + `blockedOnFeynman` (`mastery`), confidence calibration (`calibration`) |
 | `gate-check [--module M] [--prereqs "A,B"] [--prior-module M]` | Prerequisite Bloom gate verdict (see below) |
 | `migrate-spaced-review` | One-shot v1/v2 → v3 transform: backup, in-place field fill, marker, verification |
 | `verify` | Schema sanity check (also run by the plugin's Stop hook and `dev/check.sh`) |

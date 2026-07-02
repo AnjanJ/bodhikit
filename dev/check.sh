@@ -343,6 +343,28 @@ if [ -f skills/teach/SKILL.md ]; then
   if ! grep -qiE 'pretest' skills/teach/SKILL.md; then
     err "skills/teach/SKILL.md Phase 2 missing the pretest step (1.11.0 — desirable-difficulties KB Pretesting)"
   fi
+  # 1.14.0 — pretest-vs-retrieval and the reteach duty come from
+  # bodhi-state session-brief, not re-derived from tracking-file prose.
+  if ! grep -q 'session-brief' skills/teach/SKILL.md; then
+    err "skills/teach/SKILL.md does not invoke bodhi-state session-brief (1.14.0 — branch detection lives in code)"
+  fi
+  # 1.14.0 — the understanding-only sub-flow is phase-loaded from
+  # references/, not inlined (progressive disclosure inside the skill).
+  if [ ! -f skills/teach/references/understanding-only.md ]; then
+    err "skills/teach/references/understanding-only.md missing (1.14.0 — understanding-only sub-flow)"
+  elif ! grep -q 'references/understanding-only.md' skills/teach/SKILL.md; then
+    err "skills/teach/SKILL.md does not point at references/understanding-only.md"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
+# 52. /progress renders from bodhi-state snapshot (1.14.0) — one script call,
+#     not hand-computed rollups over tracking files.
+# ---------------------------------------------------------------------------
+if [ -f skills/progress/SKILL.md ]; then
+  if ! grep -q 'snapshot' skills/progress/SKILL.md; then
+    err "skills/progress/SKILL.md does not invoke bodhi-state snapshot (1.14.0)"
+  fi
 fi
 
 # ---------------------------------------------------------------------------
@@ -805,8 +827,10 @@ fi
 if ! grep -qi 'first exposure' skills/teach/SKILL.md; then
   err "skills/teach/SKILL.md pretest not gated on first exposure (1.11.1 — pretesting research covers untaught material only)"
 fi
-# Every bodhi-state invocation in a skill carries --project.
-for f in skills/*/SKILL.md; do
+# Every bodhi-state invocation in a skill (or a skill's references/ file)
+# carries --project.
+for f in skills/*/SKILL.md skills/*/references/*.md; do
+  [ -f "$f" ] || continue
   if grep 'scripts/bodhi-state" ' "$f" | grep -vq -- '--project'; then
     err "$f has a bodhi-state invocation without --project (defaults to cwd and errors outside the project dir)"
   fi

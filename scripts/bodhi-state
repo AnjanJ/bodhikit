@@ -247,6 +247,7 @@ def apply_review(concept, result, tested_bloom, confidence=None, note=None,
     """
     t = today()
     old_box = concept.get("box", 1)
+    old_bloom = concept.get("bloomLevel", 0)
     if result not in ("correct", "incorrect", "partial"):
         die(f"result must be correct|incorrect|partial, got {result!r}")
     if not retry:
@@ -284,9 +285,14 @@ def apply_review(concept, result, tested_bloom, confidence=None, note=None,
         overflow = len(history) - HISTORY_CAP
         concept["reviewHistoryArchived"] = concept.get("reviewHistoryArchived", 0) + overflow
         del history[:overflow]
+    new_bloom = concept.get("bloomLevel", 0)
     return {"concept": concept["name"], "box": f"{old_box} -> {concept['box']}",
             "retry": retry,
-            "bloomLevel": concept.get("bloomLevel", 0),
+            "bloomLevel": new_bloom,
+            # 1.14.0: THIS write crossed the Bloom-3 line — the exact condition
+            # for /teach's bump-profile totalConceptsLearned duty. Executors
+            # previously re-derived it ("if unsure, scan progress.md").
+            "crossedBloom3": old_bloom < 3 <= new_bloom,
             "consecutiveCorrectAtL4Plus": concept.get("consecutiveCorrectAtL4Plus", 0),
             "nextReview": concept["nextReview"]}
 
@@ -802,6 +808,173 @@ def cmd_export_anonymized(args):
     emit(out)
 
 
+def cmd_session_brief(args):
+    """Mechanical branch detection for /teach (1.14.0).
+
+    Pretest-vs-retrieval-open and the targeted-reteach duty are pure state
+    predicates; executors were re-deriving them from prose — the same
+    judgment-tree residue class 1.11.0 closed for writes. Read-only.
+    """
+    sp = state_path(args.project)
+    state = load_json(sp) if os.path.exists(sp) else {}
+    _, data = load_spaced_review(args.project, create=True)
+    t = today()
+    c = find_concept(data, args.concept)
+    if c is None:
+        emit({"concept": args.concept, "tracked": False,
+              "firstExposure": True, "pretestApplies": True,
+              "isReteach": False, "dueForReview": False, "reviews": 0,
+              "currentModule": state.get("currentModule")})
+        return
+    history = [h for h in c.get("reviewHistory", []) if not h.get("deferred")]
+    # First exposure: never classified by a v3 writer AND no real review has
+    # ever happened (deferrals are scheduling, not exposure evidence).
+    first_exposure = c.get("bloomLevel", 0) == 0 and not history
+    last = parse_date(c.get("lastReviewed"))
+    last_result = history[-1].get("result") if history else None
+    nr = parse_date(c.get("nextReview"))
+    emit({
+        "concept": c["name"],
+        "tracked": True,
+        "firstExposure": first_exposure,
+        "pretestApplies": first_exposure,  # pretesting research covers untaught material only
+        # Targeted re-teach: the concept has real history and sits demoted
+        # (Box 1) or its latest real outcome was a demonstrated forgetting.
+        "isReteach": bool(history) and (c.get("box", 1) == 1
+                                        or last_result == "incorrect"),
+        "box": c.get("box", 1),
+        "bloomLevel": c.get("bloomLevel", 0),
+        "feynmanPassed": c.get("feynmanPassed", False),
+        "lastReviewed": c.get("lastReviewed"),
+        "daysSinceLastReview": (t - last).days if last else None,
+        "lastResult": last_result,
+        "dueForReview": nr is not None and nr <= t,
+        "reviews": len(history),
+        "currentModule": state.get("currentModule"),
+    })
+
+
+def cmd_snapshot(args):
+    """Single-call dashboard rollup for /progress (1.14.0). Read-only.
+
+    Merges the state.json position, session cadence, due/box/mastery counts,
+    and the calibration rates into one JSON so /progress reads this plus the
+    live progress.md — its context cost stays O(1) in session count instead
+    of growing with the tracking files.
+    """
+    sp = state_path(args.project)
+    if not os.path.exists(sp):
+        die(f"{sp} does not exist")
+    state = load_json(sp)
+    _, data = load_spaced_review(args.project, create=True)
+    t = today()
+
+    dates = sorted({d for d in state.get("sessionDates", [])
+                    if isinstance(d, str) and parse_date(d)})
+    def sessions_since(days):
+        cutoff = t - datetime.timedelta(days=days)
+        return sum(1 for d in dates if parse_date(d) >= cutoff)
+    last_date = parse_date(dates[-1]) if dates else None
+
+    concepts = data.get("concepts", [])
+    boxes = {str(b): 0 for b in range(1, MAX_BOX + 1)}
+    rollup = {"strong": [], "building": [], "needs_review": []}
+    due_today, due_week, overdue10 = [], [], 0
+    unparseable = 0
+    mastered = feynman = classified = 0
+    modules = {}
+    for c in concepts:
+        b = c.get("box", 1)
+        if isinstance(b, int) and 1 <= b <= MAX_BOX:
+            boxes[str(b)] += 1
+        tier = ("strong" if isinstance(b, int) and b >= 4
+                else ("building" if isinstance(b, int) and b >= 2 else "needs_review"))
+        rollup[tier].append(c.get("name", "(unnamed)"))
+        if is_mastered(c):
+            mastered += 1
+        if c.get("feynmanPassed") is True:
+            feynman += 1
+        if c.get("bloomLevel", 0) > 0:
+            classified += 1
+        m = modules.setdefault(c.get("module", "(none)"),
+                               {"concepts": 0, "mastered": 0, "classified": 0})
+        m["concepts"] += 1
+        if c.get("bloomLevel", 0) > 0:
+            m["classified"] += 1
+        if is_mastered(c):
+            m["mastered"] += 1
+        nr = parse_date(c.get("nextReview"))
+        if nr is None:
+            if c.get("nextReview") is not None:
+                unparseable += 1
+            continue
+        if nr <= t:
+            due_today.append(c["name"])
+            if (t - nr).days >= 10:
+                overdue10 += 1
+        elif nr <= t + datetime.timedelta(days=7):
+            due_week.append(c["name"])
+    for m in modules.values():
+        # Legacy display rule (1.10.7): all-bloomLevel:0 module -> not computable.
+        m["masteryPct"] = (None if m["classified"] == 0
+                           else round(100 * m["mastered"] / m["concepts"]))
+
+    # Quiz-only learners hit every criterion except the /teach-owned
+    # explain-back gate; name the blockage (same rule as cmd_mastery).
+    blocked_on_feynman = [
+        c["name"] for c in concepts
+        if not c.get("feynmanPassed", False)
+        and c.get("bloomLevel", 0) >= 4
+        and c.get("consecutiveCorrectAtL4Plus", 0) >= 3
+        and c.get("box", 1) >= 4
+    ]
+
+    calibration = calibration_summary(data)
+    calibration.pop("overconfidentEvents", None)
+    calibration.pop("underconfidentEvents", None)
+
+    emit({
+        "project": {
+            "name": state.get("projectName"),
+            "topic": state.get("topic"),
+            "createdAt": state.get("createdAt"),
+            "currentPhase": state.get("currentPhase"),
+            "currentModule": state.get("currentModule"),
+            "currentModuleIndex": state.get("currentModuleIndex"),
+            "lastActivity": state.get("lastActivity"),
+            "overallCompletion": state.get("overallCompletion", 0),
+            "initialBloomLevel": state.get("initialBloomLevel", {}),
+            "currentBloomLevel": state.get("currentBloomLevel", {}),
+        },
+        "cadence": {
+            "totalSessions": state.get("totalSessions", 0),
+            "currentStreak": state.get("currentStreak", 0),
+            "lastSessionAt": state.get("lastSessionAt"),
+            "daysSinceLastSession": (t - last_date).days if last_date else None,
+            "sessionsLast7d": sessions_since(7),
+            "sessionsLast30d": sessions_since(30),
+        },
+        "review": {
+            "concepts": len(concepts),
+            "dueToday": len(due_today), "dueTodayConcepts": due_today,
+            "dueThisWeek": len(due_week), "dueThisWeekConcepts": due_week,
+            "overdue10dPlus": overdue10,
+            "boxDistribution": boxes,
+            "retentionRollup": {k: len(v) for k, v in rollup.items()},
+            "retentionConcepts": rollup,
+            "unparseableDates": unparseable,
+        },
+        "mastery": {
+            "mastered": mastered,
+            "feynmanPassed": feynman,
+            "classified": classified,
+            "modules": modules,
+            "blockedOnFeynman": blocked_on_feynman,
+        },
+        "calibration": calibration,
+    })
+
+
 def gate_status(c, t):
     """Per-prerequisite verdict for the /teach gate (canonical, 1.11.0)."""
     bloom = c.get("bloomLevel", 0)
@@ -1305,6 +1478,15 @@ def main():
     s = sub.add_parser("export-anonymized",
                        help="shareable anonymized stats: counts and rates only, no concept names or free text")
     s.set_defaults(fn=cmd_export_anonymized)
+
+    s = sub.add_parser("session-brief",
+                       help="mechanical branch detection for /teach: firstExposure, pretestApplies, isReteach (read-only)")
+    s.add_argument("--concept", required=True)
+    s.set_defaults(fn=cmd_session_brief)
+
+    s = sub.add_parser("snapshot",
+                       help="single-call dashboard rollup for /progress: position, cadence, due, mastery, calibration (read-only)")
+    s.set_defaults(fn=cmd_snapshot)
 
     s = sub.add_parser("gate-check", help="prerequisite Bloom gate verdict for /teach Phase 1")
     s.add_argument("--module", default=None, help="module to gate (default: state.json currentModule)")

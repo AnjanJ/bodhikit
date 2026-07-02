@@ -31,7 +31,7 @@ Parse `$ARGUMENTS` after stripping any `--invoked-from=<caller>` flag. The first
 
 ## Mode: Quick (3-line check-in)
 
-Read ONLY `.bodhi/state.json`, then run `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> due` for the due count. Two reads total. No agents, no progress.md, no plans, no archives.
+Run ONE command — `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> snapshot` — and render from its `project`, `cadence`, and `review` sections. Zero tracking-file reads. No agents, no progress.md, no plans, no archives.
 
 ```
 📍 [project-name] | [current-module-name] | [overallCompletion]% complete
@@ -70,15 +70,14 @@ If multiple projects exist (and not chained), add one line: "(You have [N] other
 
 ## Mode: Dashboard (default / named project)
 
-Read these files:
-- `.bodhi/state.json` — overview data
-- `.bodhi/progress.md` — the live entry plus the "Summary of earlier sessions" block (do NOT follow archive pointers into `progress/archive/` by default — the summary block is the per-session digest)
+Run ONE command for all numbers (per the `state-ops` KB write path) instead of hand-computing from tracking files:
 
-Then run the read-side rollups (per the `state-ops` KB write path) instead of hand-computing from `spaced-review.json`:
-- `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> mastery` — per-module mastery %, canonical 3-tier retention rollup, due today / due this week
-- `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> calibration` — confidence-vs-outcome calibration (populated once `/quiz` has collected confidence tags)
+- `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> snapshot` — position + Bloom maps (`project`), session cadence (`cadence`), due lists + box distribution + 3-tier retention rollup (`review`), per-module mastery % + `blockedOnFeynman` (`mastery`), and confidence calibration (`calibration`), in one JSON.
 
-**Fallback:** if `bodhi-state` is unavailable, read `.bodhi/spaced-review.json` directly and compute per the `state-ops` KB mastery formula and legacy display rule.
+Then read ONE file:
+- `.bodhi/progress.md` — the live entry plus the "Summary of earlier sessions" block (do NOT follow archive pointers into `progress/archive/` by default — the summary block is the per-session digest). This is the narrative; the snapshot is the numbers.
+
+**Fallback:** if `bodhi-state` is unavailable, read `.bodhi/state.json` and `.bodhi/spaced-review.json` directly and compute per the `state-ops` KB mastery formula and legacy display rule.
 
 **Reach into the archive only when justified.** If the learner asks for a long-view trajectory ("how have I progressed this year?", "what was happening in Module 1?"), follow the relevant pointers in the summary block and read those specific archive files. Announce which archive files you load.
 
@@ -136,8 +135,8 @@ Present the dashboard in this format:
 
 Notes on the sections:
 
-- **If `mastery` reports a non-empty `blockedOnFeynman` list**, render one line under the Module Breakdown: *"[N] concept(s) meet every mastery criterion except the explain-back gate: [names]. One `/teach <concept>` session (understanding-only is enough) completes each."* A quiz-only learner otherwise watches mastery sit at 0% with no visible reason.
-- **Mastery %** comes from `bodhi-state mastery`, which implements the canonical Mastery % formula from the `state-ops` KB (`mastered === true` requires `bloomLevel >= 4` AND `consecutiveCorrectAtL4Plus >= 3` AND `box >= 4` AND `feynmanPassed`; see `blooms-taxonomy` KB for the underlying criteria). When the script reports `masteryPct: null` for a module, display `—` instead of `0%` — the legacy display rule: no v3 writer has classified the module's concepts yet, and a zero would falsely imply the learner tried and failed.
+- **If the snapshot's `mastery` section reports a non-empty `blockedOnFeynman` list**, render one line under the Module Breakdown: *"[N] concept(s) meet every mastery criterion except the explain-back gate: [names]. One `/teach <concept>` session (understanding-only is enough) completes each."* A quiz-only learner otherwise watches mastery sit at 0% with no visible reason.
+- **Mastery %** comes from the snapshot's `mastery` section (computed by the script), which implements the canonical Mastery % formula from the `state-ops` KB (`mastered === true` requires `bloomLevel >= 4` AND `consecutiveCorrectAtL4Plus >= 3` AND `box >= 4` AND `feynmanPassed`; see `blooms-taxonomy` KB for the underlying criteria). When the script reports `masteryPct: null` for a module, display `—` instead of `0%` — the legacy display rule: no v3 writer has classified the module's concepts yet, and a zero would falsely imply the learner tried and failed.
 - **Spaced Repetition Health** uses the canonical 3-tier rollup from the `spaced-repetition` KB ("Retention Rollup Views"). Do not invent bucket boundaries.
 - **Calibration** shows only when the script reports `taggedAnswers > 0`; reference the `metacognition` KB for framing — where confidence and outcomes disagree is the signal, never a scolding (e.g. "Your 'sure' answers on indexing held up; on the planner they did not. That gap, not the misses themselves, is the thing to watch.").
 - **Progress bar:** `[####........................]` at 0-25%, `[############................]` at 26-50%, `[####################........]` at 51-75%, `[############################]` at 76-100%.

@@ -24,6 +24,16 @@ Can be auto-invoked by `/continue` when the learner proceeds with the next modul
 
 Read `.bodhi/progress.md` for the learner's current Bloom's level on related concepts.
 
+### Session brief (mechanical branch detection)
+
+Once the concept is identified, run:
+
+```
+"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> session-brief --concept "<concept>"
+```
+
+The brief settles in code the branches this skill previously asked you to re-derive from tracking files: `firstExposure`/`pretestApplies` decides how Phase 2 opens; `isReteach` decides Phase 5's targeted-reteach entry; `box`/`bloomLevel`/`feynmanPassed`/`daysSinceLastReview` calibrate depth. Trust the brief over your own reading of the tracking files.
+
 ### Prerequisite Bloom Gate (module-start boundaries only)
 
 The gate's trigger detection and per-prerequisite verdicts are computed by `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> gate-check` — the canonical logic (trigger model, recency rule, legacy fallthrough, apply-equivalent fallthrough) is documented in the `state-ops` KB's *Prerequisite gate* section. Do not re-derive it in prose.
@@ -57,11 +67,11 @@ Act on the verdict JSON:
 
 **Reference the `zone-of-proximal-development`, `feynman-technique`, and `desirable-difficulties` knowledge bases.**
 
-### Pretest (first exposure only)
+### Opening: pretest or retrieval (per the session brief)
 
-Per the `desirable-difficulties` KB *Pretesting* section — and ONLY when this is the concept's first exposure (untracked in `spaced-review.json`, or `bloomLevel: 0` with no review history): open with ONE question the learner cannot yet answer — "You have not seen this yet — take a guess anyway. Being wrong here is the point." Do not grade it, do not record it; hold their guess. The explanation below must circle back to it ("Remember your guess? Here is where it was close and where it breaks.").
-
-**On a re-teach** (re-entry after 3 failed hints, or a targeted re-teach of a demoted concept), the pretest does not apply — the research covers untaught material only, and "you have not seen this yet" would be false. Open instead with a genuine retrieval attempt, graded and recorded per Phase 5 step 1 (`--source teach`); its outcome calibrates how much of the re-explanation is needed.
+- **`pretestApplies: true`** — this is the concept's first exposure. Per the `desirable-difficulties` KB *Pretesting* section: open with ONE question the learner cannot yet answer — "You have not seen this yet — take a guess anyway. Being wrong here is the point." Do not grade it, do not record it; hold their guess. The explanation below must circle back to it ("Remember your guess? Here is where it was close and where it breaks.").
+- **`isReteach: true`** (a demoted concept, or re-entry after 3 failed hints) — the pretest does not apply; the research covers untaught material only, and "you have not seen this yet" would be false. Open instead with a genuine retrieval attempt, graded and recorded per Phase 5 step 1 (`--source teach`); its outcome calibrates how much of the re-explanation is needed.
+- **Neither** — a routine continuation on a known concept; open by bridging from the last outcome (the brief's `lastResult` and `daysSinceLastReview`).
 
 Follow Gradual Release of Responsibility: **I Do → We Do → You Do.**
 
@@ -86,16 +96,7 @@ If they struggle, apply the **Analogy-Escalation Protocol** from the `feynman-te
 
 ### Understanding-only sessions (stop after this phase)
 
-When the learner only wants to *understand* a concept — they asked "explain X," they are mid-task elsewhere, or they decline the Phase 3 offer with "I just wanted to get it" — Phase 2 IS the session. Run it at full Feynman depth, then record and stop:
-
-1. **Explain-back, uninterrupted.** "Now explain it back to me in your own words, as if I have never heard of it." Let them finish completely.
-2. **Gap analysis** per the `feynman-technique` KB: name what they nailed specifically ("good job" teaches nothing), then partial understandings, missing pieces, misconceptions, and the three fluency-without-understanding signals.
-3. **Refine each gap** (2-3 sentences, next analogy rung), have them re-explain just that gap, then the final test: "Put it all together — the full explanation, one more time."
-4. **Record** per the `state-ops` KB write path: `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> record-review --concept "<concept>" --result correct|incorrect --tested-bloom <N> --module "<module>" --source teach` — grade per the `feynman-technique` KB *Grading the Explain-Back* ladder: clean at ANY rung = `correct` at that rung's `--tested-bloom` (missing depth caps the level, it is not a failed retrieval); `incorrect` only per the ladder's demonstrated-failure rule. Apply the Feynman gate above if the bar was met, then `touch-state --activity "<one line>"` and append a `## YYYY-MM-DD — Explain (<concept>)` entry to `progress.md` with the Write tool.
-5. **Same bookkeeping duties as a full session:** if the concept just crossed Bloom 3+ for the first time (check the `record-review` output), `bump-profile --counter totalConceptsLearned`; if this was a targeted re-teach of a demoted concept, `record-session --type targeted-reteach --data '{"notes": "<which gap>"}'`.
-6. Close: "Understanding [concept] is like planting a tree. Today we gave it roots. When you want to make it load-bearing, `/teach <concept>` again and we will build with it." Do not guilt them toward the exercise.
-
-**Time-pressed variant.** Mid-task learner who just needs the answer ("I need to ship this"), per the `feynman-technique` KB's time-pressure carve-out: explain directly, ask a one-sentence echo ("say it back in one line"), record nothing or one `record-review --result partial`, and offer the full pass for later — "When the deadline lifts, `/teach <concept>` and we will root it properly." Never run the full gap-analysis loop on someone watching the clock.
+When the learner only wants to *understand* a concept — they asked "explain X," they are mid-task elsewhere, or they decline the Phase 3 offer with "I just wanted to get it" — Phase 2 IS the session. Read `references/understanding-only.md` in this skill's directory (`${CLAUDE_PLUGIN_ROOT}/skills/teach/references/understanding-only.md`) and follow it in full: the uninterrupted explain-back, the gap-analysis loop, the *Grading the Explain-Back* ladder, the recording duties, and the time-pressed variant. Then stop — never guilt the learner toward the exercise.
 
 ---
 
@@ -195,7 +196,7 @@ The session is invisible to every future skill until these land. Per the `state-
 
    (`--module` auto-creates the concept if this was its first session.) If the retention-check explanation also met the Feynman bar: `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> set-feynman --concept "<concept>"`.
 
-2. **If this was a targeted re-teach of a demoted concept**, also: `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> record-session --type targeted-reteach --data '{"notes": "<which gap>"}'`.
+2. **If the session brief said `isReteach: true`**, also: `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> record-session --type targeted-reteach --data '{"notes": "<which gap>"}'`.
 
 3. **Session bookkeeping:**
 
@@ -204,7 +205,7 @@ The session is invisible to every future skill until these land. Per the `state-
      --activity "<one line>" [--module "<next module>" --module-index N] [--completion N]
    ```
 
-4. **Profile counter** — only if the concept just reached Bloom 3+ for the first time (check the script's `record-review` output: did `bloomLevel` cross from <3 to ≥3 this session? If unsure, scan `progress.md` for a prior mention of this concept at 3+): `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> bump-profile --counter totalConceptsLearned`.
+4. **Profile counter** — only if the `record-review` output reports `crossedBloom3: true` (the script computes the first-crossing in code; do not re-derive it from `progress.md`): `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> bump-profile --counter totalConceptsLearned`.
 
 5. **Append the session entry to `.bodhi/progress.md` with the Write tool**: `## YYYY-MM-DD — Session N — <concept>`, then **Phases covered** (I-Do / We-Do / You-Do), **Outcomes**, **Bloom adjustments** (numeric, matching the script output so prose and state agree), **Next**. Existing content preserved verbatim below.
 

@@ -848,6 +848,99 @@ def t_verify():
         check("verify: invalid session type fails", r.returncode == 1)
 
 
+def t_session_brief():
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review=json.loads(json.dumps(V2_SR)))
+        # Untracked concept -> first exposure, pretest applies.
+        out = run(proj, "session-brief", "--concept", "CTEs")
+        check("brief: untracked is first exposure",
+              out["tracked"] is False and out["firstExposure"] is True
+              and out["pretestApplies"] is True and out["isReteach"] is False, out)
+        # Tracked, bloomLevel 0 (v2 legacy) but WITH real history -> not first
+        # exposure (the pretest research covers untaught material only).
+        out = run(proj, "session-brief", "--concept", "B-tree indexes")
+        check("brief: legacy history blocks first exposure",
+              out["tracked"] is True and out["firstExposure"] is False, out)
+        check("brief: healthy box-3 concept is not a reteach",
+              out["isReteach"] is False, out)
+        # Box-1 concept with an incorrect latest result -> targeted re-teach.
+        out = run(proj, "session-brief", "--concept", "Query planning")
+        check("brief: demoted concept is a reteach",
+              out["isReteach"] is True and out["box"] == 1, out)
+        # Tracked via add-concept but never reviewed -> still first exposure,
+        # and a deferral does not change that (scheduling, not exposure).
+        run(proj, "add-concept", "--concept", "Window functions", "--module", "Module B")
+        run(proj, "defer", "--concept", "Window functions")
+        out = run(proj, "session-brief", "--concept", "Window functions")
+        check("brief: deferral-only history stays first exposure",
+              out["firstExposure"] is True and out["pretestApplies"] is True, out)
+        # currentModule surfaces from state.json.
+        check("brief: carries currentModule", out["currentModule"] == "Module B", out)
+
+
+def t_crossed_bloom3():
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review=json.loads(json.dumps(V2_SR)))
+        out = run(proj, "record-review", "--concept", "B-tree indexes",
+                  "--result", "correct", "--tested-bloom", "4")
+        check("crossedBloom3: reported on the crossing write",
+              out.get("crossedBloom3") is True, out)
+        out = run(proj, "record-review", "--concept", "B-tree indexes",
+                  "--result", "correct", "--tested-bloom", "5")
+        check("crossedBloom3: false once already past 3",
+              out.get("crossedBloom3") is False, out)
+        out = run(proj, "record-review", "--concept", "Query planning",
+                  "--result", "correct", "--tested-bloom", "2")
+        check("crossedBloom3: false below the line",
+              out.get("crossedBloom3") is False, out)
+        out = run(proj, "record-review", "--concept", "Query planning",
+                  "--result", "incorrect", "--tested-bloom", "3")
+        check("crossedBloom3: false on incorrect (no ratchet movement)",
+              out.get("crossedBloom3") is False, out)
+
+
+def t_snapshot():
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review=json.loads(json.dumps(V2_SR)))
+        out = run(proj, "snapshot")
+        check("snapshot: project position from state.json",
+              out["project"]["currentModule"] == "Module B"
+              and out["project"]["overallCompletion"] == 10, out)
+        check("snapshot: cadence totals",
+              out["cadence"]["totalSessions"] == 1
+              and out["cadence"]["daysSinceLastSession"] == (TODAY - datetime.date(2026, 1, 1)).days,
+              out["cadence"])
+        check("snapshot: both seeded concepts counted and due",
+              out["review"]["concepts"] == 2 and out["review"]["dueToday"] == 2,
+              out["review"])
+        check("snapshot: box distribution",
+              out["review"]["boxDistribution"]["3"] == 1
+              and out["review"]["boxDistribution"]["1"] == 1, out["review"])
+        check("snapshot: legacy module masteryPct is null (display rule)",
+              out["mastery"]["modules"]["Module A"]["masteryPct"] is None,
+              out["mastery"])
+        check("snapshot: retention rollup tiers",
+              out["review"]["retentionRollup"] == {"strong": 0, "building": 1,
+                                                   "needs_review": 1}
+              and out["review"]["retentionConcepts"]["building"] == ["B-tree indexes"],
+              out["review"])
+        check("snapshot: bloom maps carried for growth trajectory",
+              "initialBloomLevel" in out["project"]
+              and "currentBloomLevel" in out["project"], out["project"])
+        check("snapshot: blockedOnFeynman present",
+              out["mastery"]["blockedOnFeynman"] == [], out["mastery"])
+        check("snapshot: calibration carries no per-concept event lists",
+              "overconfidentEvents" not in out["calibration"], out["calibration"])
+        # Unparseable schedule is surfaced, never silently skipped.
+        srdata = read_sr(proj)
+        srdata["concepts"][0]["nextReview"] = "soonish"
+        with open(os.path.join(proj, ".bodhi", "spaced-review.json"), "w") as f:
+            json.dump(srdata, f)
+        out = run(proj, "snapshot")
+        check("snapshot: unparseable nextReview surfaced",
+              out["review"]["unparseableDates"] == 1, out["review"])
+
+
 def main():
     for t in (t_migrate, t_record_review, t_sessions_and_forget,
               t_touch_state_and_profile, t_gate_check,
@@ -858,7 +951,8 @@ def main():
               t_forget_comma_names, t_robustness, t_concurrency,
               t_history_cap, t_mastery_blocked_on_feynman,
               t_box_before, t_retention, t_export_anonymized,
-              t_defer, t_verify_flags_drift, t_normalize):
+              t_defer, t_verify_flags_drift, t_normalize,
+              t_session_brief, t_crossed_bloom3, t_snapshot):
         print(f"-- {t.__name__}")
         t()
     print(f"\n{PASS} passed, {FAIL} failed")

@@ -1,0 +1,14 @@
+# /teach — Understanding-Only Sessions
+
+Loaded on demand by `/teach` Phase 2 when the learner wants to *understand* a concept without the exercise. Phase 2 IS the session: run it at full Feynman depth, then record and stop.
+
+1. **Explain-back, uninterrupted.** "Now explain it back to me in your own words, as if I have never heard of it." Let them finish completely.
+2. **Gap analysis** per the `feynman-technique` KB: name what they nailed specifically ("good job" teaches nothing), then partial understandings, missing pieces, misconceptions, and the three fluency-without-understanding signals.
+3. **Refine each gap** (2-3 sentences, next analogy rung), have them re-explain just that gap, then the final test: "Put it all together — the full explanation, one more time."
+4. **Record** per the `state-ops` KB write path: `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> record-review --concept "<concept>" --result correct|incorrect --tested-bloom <N> --module "<module>" --source teach` — grade per the `feynman-technique` KB *Grading the Explain-Back* ladder: clean at ANY rung = `correct` at that rung's `--tested-bloom` (missing depth caps the level, it is not a failed retrieval); `incorrect` only per the ladder's demonstrated-failure rule. If the final explanation met the Feynman bar, also run `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> set-feynman --concept "<concept>"`. Then `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> touch-state --activity "<one line>"` and append a `## YYYY-MM-DD — Explain (<concept>)` entry to `progress.md` with the Write tool.
+5. **Same bookkeeping duties as a full session:** if the `record-review` output reports `crossedBloom3: true`, run `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> bump-profile --counter totalConceptsLearned`; if the session brief said `isReteach: true`, run `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> record-session --type targeted-reteach --data '{"notes": "<which gap>"}'`.
+6. Close: "Understanding [concept] is like planting a tree. Today we gave it roots. When you want to make it load-bearing, `/teach <concept>` again and we will build with it." Do not guilt them toward the exercise.
+
+## Time-pressed variant
+
+Mid-task learner who just needs the answer ("I need to ship this"), per the `feynman-technique` KB's time-pressure carve-out: explain directly, ask a one-sentence echo ("say it back in one line"), record nothing or one `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> record-review --concept "<concept>" --result partial --tested-bloom 1 --module "<module>" --source teach`, and offer the full pass for later — "When the deadline lifts, `/teach <concept>` and we will root it properly." Never run the full gap-analysis loop on someone watching the clock.

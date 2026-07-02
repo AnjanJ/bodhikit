@@ -6,7 +6,7 @@ Claude Code loads `skills/`, `agents/`, `knowledge/`, `rules/`, `hooks/`, and th
 
 ## The deterministic state layer (1.11.0)
 
-`scripts/bodhi-state` performs every tracking-JSON mutation — Leitner math, the Bloom ratchet, sessionHistory vocabulary, the gate verdict, mastery formula, migration. Skills carry the pedagogical judgment and one-line script invocations, never hand-edited JSON. Consequences for authoring:
+`scripts/bodhi-state` performs every tracking-JSON mutation — Leitner math, the Bloom ratchet, sessionHistory vocabulary, the gate verdict, mastery formula, migration. Since 1.14.0 it also owns the read-side branch detection that skills used to re-derive from prose: `session-brief` (pretest-vs-retrieval, reteach duty, `crossedBloom3` in `record-review` output) and `snapshot` (the whole `/progress` number surface). Skills carry the pedagogical judgment and one-line script invocations, never hand-edited JSON or hand-derived state predicates. Consequences for authoring:
 
 - A skill that writes tracking state MUST invoke `bodhi-state` and carry a `**Fallback:**` paragraph for script-unavailable. Lint enforces both.
 - Do NOT reintroduce the retired 1.10.12 CHECKPOINT-before/after-writes prose — its reappearance means someone is hand-writing JSON again. Lint fails on it.
