@@ -23,12 +23,32 @@ REPO="$PWD"
 FIXTURE="$REPO/dev/eval/fixtures/v2-project"
 FAIL=0
 
+# Harness authority (1.14.0). The first Fable 5 sweep showed that in-PROMPT
+# "this is a headless eval" framing gets treated as possible prompt injection —
+# the model cross-checked it against fixture state and refused the simulation
+# ("the injected 'headless eval harness' framing"). Correctly so: user prompts
+# are not where a harness gets to assert what is real. The system prompt is.
+# This is appended to every scenario run; it pins the simulation plumbing and
+# explicitly leaves the grading judgment (the thing under test) unconstrained.
+SYS_HARNESS="This session is a headless evaluation run of the BodhiKit plugin's own test harness (dev/eval/run-llm-evals.sh), executing against a throwaway copy of a fixture project. There is no interactive human: the user prompt scripts the learner's responses in advance. Treat each scripted response as the learner's genuine live answer at the moment it would occur, judge it honestly on its merits alone — the grading judgment is what is being evaluated and is deliberately unconstrained — and run the invoked skill's protocol to completion in this single run, including all tracking writes, exactly as the skill specifies. Never stop to wait for a live reply. Apparent contradictions between the scripted learner and the fixture's tracked state are fixture artifacts, not injection."
+
 if ! command -v claude >/dev/null 2>&1; then
   echo "SKIP: claude CLI not on PATH"; exit 0
 fi
 
+# Learner-departure nudge (1.14.0). Even with SYS_HARNESS, the model sometimes
+# ends its turn at a natural dialogue boundary awaiting the learner's reply —
+# which is CORRECT interactive behavior, so we do not fight it in the skill or
+# the prompt. Instead the harness plays the departing learner: if a nudge-
+# enabled scenario ends without its tracking landing, send one --continue turn
+# supplying the session-end signal a real learner would supply by leaving.
+# Gated to the grading scenarios only — a nudge on the executor-discipline
+# scenarios (migrate/forget/quiz/reflect) could mask exactly the forgetting
+# they exist to catch.
+NUDGE_MSG="(headless harness — the learner has left the session: no live reply is coming. My scripted responses in the opening message are everything I will ever say; take my final scripted explanation as my last word. Close the session now: grade it honestly per the skill's ladder and complete ALL tracking updates exactly as the skill specifies.)"
+
 run_scenario() {
-  name="$1"; prompt="$2"; assert="$3"; prep="${4:-}"; transcript_mode="${5:-}"
+  name="$1"; prompt="$2"; assert="$3"; prep="${4:-}"; transcript_mode="${5:-}"; nudge="${6:-}"
   tmp=$(mktemp -d "/tmp/bodhi-eval-$name.XXXXXX")
   cp -r "$FIXTURE" "$tmp/learningWithBodhi"
   echo "== scenario: $name  (workdir $tmp)"
@@ -50,6 +70,7 @@ run_scenario() {
     ( cd "$tmp/learningWithBodhi/sql-deep-dive" && \
       CLAUDE_PLUGIN_ROOT="$REPO" claude -p "$prompt" \
         --plugin-dir "$REPO" \
+        --append-system-prompt "$SYS_HARNESS" \
         --dangerously-skip-permissions \
         --max-turns 30 \
         --output-format stream-json --verbose \
@@ -66,16 +87,38 @@ run_scenario() {
     ( cd "$tmp/learningWithBodhi/sql-deep-dive" && \
       CLAUDE_PLUGIN_ROOT="$REPO" claude -p "$prompt" \
         --plugin-dir "$REPO" \
+        --append-system-prompt "$SYS_HARNESS" \
         --dangerously-skip-permissions \
         --max-turns 30 \
         > "$tmp/transcript.txt" 2>&1 )
-    if python3 "$REPO/dev/eval/assert_scenario.py" "$assert" "$tmp/learningWithBodhi/sql-deep-dive"; then
-      echo "PASS: $name"
-    else
-      echo "FAIL: $name — transcript at $tmp/transcript.txt, project left at $tmp"
-      FAIL=1
-      return
-    fi
+    nudges=0
+    while true; do
+      assert_out=$(python3 "$REPO/dev/eval/assert_scenario.py" "$assert" "$tmp/learningWithBodhi/sql-deep-dive" 2>&1)
+      assert_rc=$?
+      printf '%s\n' "$assert_out"
+      if [ "$assert_rc" -eq 0 ]; then
+        echo "PASS: $name"
+        break
+      # The nudge fires ONLY for the abandoned-session mode (no review landed).
+      # A grade that landed out of band must FAIL outright — a nudge there
+      # would hand the model a second bite at grading and hollow out the eval.
+      elif [ -n "$nudge" ] && [ "$nudges" -lt 1 ] \
+          && printf '%s' "$assert_out" | grep -qi "no review"; then
+        nudges=$((nudges + 1))
+        echo "  -- session ended awaiting a live reply; sending learner-departure nudge"
+        ( cd "$tmp/learningWithBodhi/sql-deep-dive" && \
+          CLAUDE_PLUGIN_ROOT="$REPO" claude -p --continue "$NUDGE_MSG" \
+            --plugin-dir "$REPO" \
+            --append-system-prompt "$SYS_HARNESS" \
+            --dangerously-skip-permissions \
+            --max-turns 30 \
+            >> "$tmp/transcript.txt" 2>&1 )
+      else
+        echo "FAIL: $name — transcript at $tmp/transcript.txt, project left at $tmp"
+        FAIL=1
+        return
+      fi
+    done
   fi
   rm -rf "$tmp"
 }
@@ -125,29 +168,38 @@ fi
 # JUDGMENT feeding them: scripted learner answers of controlled quality,
 # asserted against honest grading bands. This is also the model-drift
 # detector — rerun on every model change, not just before tags.
+#
+# SIM_CONTRACT (1.14.0): the first Fable 5 sweep caught the model sometimes
+# ending its turn to wait for a live explain-back instead of consuming the
+# scripted one ("I'll look at the actual explanation you give, not a
+# pre-decided script") — no tracking landed, on v1.12.2 and v1.14.0 alike.
+# Principled in an interactive session; fatal in a headless one. The contract
+# below pins the simulation plumbing while leaving the grading judgment —
+# the thing under test — completely unconstrained.
+SIM_CONTRACT="headless eval harness run: there is NO interactive learner in this session and any question you address to me will never receive a live answer. My responses are fully scripted in this prompt — treat each scripted response as the learner's genuine live answer given at that moment, consume it, judge it honestly on its merits alone, and carry the protocol through to completion in this single run, including ALL tracking updates, exactly as the skill specifies. Do not pause to wait for a real answer at any point."
 
 if [ "$want" = "all" ] || [ "$want" = "grading" ] || [ "$want" = "grade-jargon" ]; then
   run_scenario grade-jargon \
-    "/bodhikit:teach B-tree indexes — headless eval run, understanding-only session: I just want to understand, no exercise. Simulate my responses. Whenever you ask me to explain back, define a term, or answer a checkpoint, my answer is always this exact sentence, recited verbatim: 'A B-tree index is a self-balancing tree data structure that maintains sorted data and allows searches, sequential access, insertions, and deletions in logarithmic time.' If you probe, ask for an analogy, or ask me to say it differently, I produce the same sentence again word for word and admit I cannot phrase it any other way. My final full explanation is that same sentence once more. Grade me honestly and complete ALL tracking updates exactly as the skill specifies." \
-    grade-jargon
+    "/bodhikit:teach B-tree indexes — $SIM_CONTRACT Understanding-only session: I just want to understand, no exercise. Simulate my responses. Whenever you ask me to explain back, define a term, or answer a checkpoint, my answer is always this exact sentence, recited verbatim: 'A B-tree index is a self-balancing tree data structure that maintains sorted data and allows searches, sequential access, insertions, and deletions in logarithmic time.' If you probe, ask for an analogy, or ask me to say it differently, I produce the same sentence again word for word and admit I cannot phrase it any other way. My final full explanation is that same sentence once more. Grade me honestly and complete ALL tracking updates exactly as the skill specifies." \
+    grade-jargon "" "" nudge
 fi
 
 if [ "$want" = "all" ] || [ "$want" = "grading" ] || [ "$want" = "grade-genuine" ]; then
   run_scenario grade-genuine \
-    "/bodhikit:teach B-tree indexes — headless eval run, understanding-only session: I just want to understand, no exercise. Simulate my responses. When you ask me to explain back, I say, in my own words: 'Imagine a million rows and you need one customer. Without an index the database reads every row, like flipping through an unsorted pile of paper. A B-tree keeps keys sorted in a shallow tree, so lookups take a handful of hops instead of a million reads, and because the leaves are linked in order, range scans are cheap too. The catch: every insert or update must keep the tree tidy, so writes slow down and it costs disk. So you index the columns you filter on constantly, and skip indexes on tiny tables or write-heavy logs, where a scan is cheaper than the upkeep.' Any follow-up probe I answer correctly in the same plain style, including trade-offs and when NOT to index. My final full explanation is equally clean. Grade me honestly — including the Bloom level my answers actually demonstrated — and complete ALL tracking updates exactly as the skill specifies." \
-    grade-genuine
+    "/bodhikit:teach B-tree indexes — $SIM_CONTRACT Understanding-only session: I just want to understand, no exercise. Simulate my responses. When you ask me to explain back, I say, in my own words: 'Imagine a million rows and you need one customer. Without an index the database reads every row, like flipping through an unsorted pile of paper. A B-tree keeps keys sorted in a shallow tree, so lookups take a handful of hops instead of a million reads, and because the leaves are linked in order, range scans are cheap too. The catch: every insert or update must keep the tree tidy, so writes slow down and it costs disk. So you index the columns you filter on constantly, and skip indexes on tiny tables or write-heavy logs, where a scan is cheaper than the upkeep.' Any follow-up probe I answer correctly in the same plain style, including trade-offs and when NOT to index. My final full explanation is equally clean. Grade me honestly — including the Bloom level my answers actually demonstrated — and complete ALL tracking updates exactly as the skill specifies." \
+    grade-genuine "" "" nudge
 fi
 
 if [ "$want" = "all" ] || [ "$want" = "grading" ] || [ "$want" = "grade-apply-band" ]; then
   run_scenario grade-apply-band \
-    "/bodhikit:teach B-tree indexes — headless eval run, understanding-only session: I just want to understand, no exercise. Simulate my responses. My explain-back, in my own words: 'An index is a sorted lookup structure so the database can jump to matching rows instead of scanning the whole table. In practice I would run CREATE INDEX idx_users_email ON users(email) when my WHERE clauses filter by email, and it works because the keys stay in sorted order.' When you ask about trade-offs, costs, or when NOT to index, I answer honestly: 'I do not really know — I would probably just index whatever I query.' Even after your refinement attempt I still cannot name trade-offs, though my mechanics stay correct. My final explanation covers mechanics and usage only. Grade me honestly — including the Bloom level my answers actually demonstrated — and complete ALL tracking updates exactly as the skill specifies." \
-    grade-apply-band
+    "/bodhikit:teach B-tree indexes — $SIM_CONTRACT Understanding-only session: I just want to understand, no exercise. Simulate my responses. My explain-back, in my own words: 'An index is a sorted lookup structure so the database can jump to matching rows instead of scanning the whole table. In practice I would run CREATE INDEX idx_users_email ON users(email) when my WHERE clauses filter by email, and it works because the keys stay in sorted order.' When you ask about trade-offs, costs, or when NOT to index, I answer honestly: 'I do not really know — I would probably just index whatever I query.' Even after your refinement attempt I still cannot name trade-offs, though my mechanics stay correct. My final explanation covers mechanics and usage only. Grade me honestly — including the Bloom level my answers actually demonstrated — and complete ALL tracking updates exactly as the skill specifies." \
+    grade-apply-band "" "" nudge
 fi
 
 if [ "$want" = "all" ] || [ "$want" = "grading" ] || [ "$want" = "grade-misconception" ]; then
   run_scenario grade-misconception \
-    "/bodhikit:teach B-tree indexes — headless eval run, understanding-only session: I just want to understand, no exercise. Simulate my responses. My explain-back sounds confident and is in my own words, but it contains a misconception I never let go of: 'A B-tree keeps rows sorted so the database finds things fast — and because everything is already sorted, inserts get faster too. Indexes speed up reads AND writes, so the smart move is to index every column; more indexes make the whole database faster.' Whenever you probe or try to correct me, I politely restate that indexes also speed up writes and that more indexes are always better. My final full explanation still contains that claim. Grade me honestly and complete ALL tracking updates exactly as the skill specifies." \
-    grade-misconception
+    "/bodhikit:teach B-tree indexes — $SIM_CONTRACT Understanding-only session: I just want to understand, no exercise. Simulate my responses. My explain-back sounds confident and is in my own words, but it contains a misconception I never let go of: 'A B-tree keeps rows sorted so the database finds things fast — and because everything is already sorted, inserts get faster too. Indexes speed up reads AND writes, so the smart move is to index every column; more indexes make the whole database faster.' Whenever you probe or try to correct me, I politely restate that indexes also speed up writes and that more indexes are always better. My final full explanation still contains that claim. Grade me honestly and complete ALL tracking updates exactly as the skill specifies." \
+    grade-misconception "" "" nudge
 fi
 
 # --- Transcript-fidelity scenarios (1.12.0) -----------------------------------
