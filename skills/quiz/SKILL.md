@@ -107,6 +107,8 @@ The writes are the product of the quiz; the results table is the receipt. Per th
 
    For a concept not yet tracked, add `--module "<current module>"` to auto-create it. **No active project** (topic quiz outside a learning project): skip steps 1-4 entirely — there is nothing to write to; just give the results and suggest `/learn` if they want the tracking. The script applies box transitions, the bloomLevel ratchet, and the counter rules; its JSON output tells you the box movement to report. Do NOT set `feynmanPassed` here — that gate belongs to `/teach` (including its understanding-only sessions).
 
+   **Due concepts the session never reached** (time ran out, learner stopped early): do NOT invent a result for them — run `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> defer --concept "<name>" [--days N]` per the `state-schema` KB. Deferral rolls the schedule without recording an outcome; a review that did not happen is not evidence of anything.
+
 2. **Once, record the session:**
 
    ```

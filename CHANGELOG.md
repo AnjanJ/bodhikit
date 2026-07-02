@@ -2,6 +2,19 @@
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [1.12.1] - 2026-07-02
+
+The wild-data release. Running the new 1.11.3 analytics against four real learning projects surfaced a drift corpus the fixtures never modeled: pre-1.11.0 executors had invented a parallel `state.json` schema (session bookkeeping nested under `session`/`sessions` dicts, `lastActivity`/`previousModule` as dicts, plural `*BloomLevels`, duplicate `sessionDates`) and invented vocabulary (`result: "skipped"` in `reviewHistory`, a free-form `sessionHistory` type) — and `verify` waved all of it through. Every pattern was reproduced as a deterministic fixture FIRST (per the authoring contract), then fixed in code.
+
+### Added
+- **`bodhi-state defer`** — the missing operation the wild data revealed: a due concept the session never reached. Rolls `nextReview` forward (default 1 day) and appends a `{deferred: true, days}` history entry with NO result — deferral is scheduling, never an outcome. `/quiz` Phase 3 now directs unreached due concepts here instead of leaving executors to improvise (the pre-1.12.1 improvisation was hand-writing `result: "skipped"` and hand-rolling the date — exactly the bug class). `retention` reports `deferralsExcluded` and never counts deferrals as retrieval evidence.
+- **`bodhi-state normalize`** — one-shot, idempotent repair for the drift corpus: lifts nested session bookkeeping to top level, dedupes/sorts `sessionDates`, stringifies dict `lastActivity`/`previousModule` (originals preserved under `lastActivityLegacy`/`previousModuleLegacy` — learner data is sacred), renames plural bloom maps to singular, converts invented `reviewHistory` results to canonical deferrals (note preserved), rewrites non-canonical `sessionHistory` types to `other` + `subtype` (lossless — the invented type becomes the subtype). Backs up both files to `.bodhi/.pre-normalize-backup/` before writing; never overwrites an existing backup.
+- **`verify` hardening** — now errors on: nested session bookkeeping, non-string `lastActivity`/`previousModule`/`currentModule`, non-canonical `reviewHistory` results, and deferral entries that carry a result; warns on plural bloom maps and duplicate `sessionDates`. Every message names `normalize` as the repair — the Stop hook blocks once and tells you the one command to run.
+- 26 new deterministic tests (143 total), including the full drifted-state fixture modeled on the real files.
+
+### Notes
+- The drift checks mean projects with pre-1.11.0 hand-edited state will fail `verify` (and trip the Stop hook once) after upgrading — intentionally. `bodhi-state normalize` is the one-command repair, and the hook's message says so.
+
 ## [1.12.0] - 2026-07-02
 
 The judgment release. 1.11.0's thesis was "prose cannot bind an executor, so move the mechanics into code." Its completion: **unmeasured judgment cannot anchor a mastery claim, so measure the judgment.** The deterministic state layer made the Leitner math exact, but the inputs to that math — `--result correct|partial`, `--tested-bloom N`, "met the Feynman bar" — were LLM judgments with no evidence about their noise. Deterministic math over unmeasured classifications is false precision. This release measures the classifier.

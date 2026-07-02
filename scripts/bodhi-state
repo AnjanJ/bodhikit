@@ -442,6 +442,36 @@ def cmd_forget(args):
     emit({"action": "demoted", "concepts": names, "boxChanges": box_changes})
 
 
+def cmd_defer(args):
+    """Roll a due-but-unreviewed concept forward WITHOUT inventing an outcome.
+
+    1.12.1 — found in the wild: sessions that ran out of time hand-wrote
+    result: "skipped" and rolled nextReview by hand. Deferral is scheduling,
+    never an outcome: box, bloom, counters, and lastReviewed stay untouched.
+    """
+    names = [n for n in (args.concept or []) if n]
+    if not names:
+        die("no concepts given (use --concept, repeatable)")
+    days = args.days if args.days and args.days > 0 else 1
+    path, data = load_spaced_review(args.project)
+    missing = [n for n in names if find_concept(data, n) is None]
+    if missing:
+        die(f"not tracked: {', '.join(missing)}")
+    t = today()
+    rolled = {}
+    for n in names:
+        c = find_concept(data, n)
+        c["nextReview"] = iso(t + datetime.timedelta(days=days))
+        entry = {"date": iso(t), "deferred": True, "days": days}
+        if args.note:
+            entry["note"] = args.note
+        c.setdefault("reviewHistory", []).append(entry)
+        rolled[c["name"]] = c["nextReview"]
+    data["version"] = 3
+    write_json(path, data)
+    emit({"action": "deferred", "days": days, "concepts": rolled})
+
+
 def cmd_touch_state(args):
     sp = state_path(args.project)
     if not os.path.exists(sp):
@@ -666,10 +696,14 @@ def retention_summary(data):
     totals = new_bucket()
     relearning = 0
     skipped = 0
+    deferrals = 0
     legacy_no_box = 0
     for c in data.get("concepts", []):
         prev = parse_date(c.get("introduced"))
         for h in c.get("reviewHistory", []):
+            if h.get("deferred"):
+                deferrals += 1  # scheduling event, not retrieval evidence
+                continue
             d = parse_date(h.get("date"))
             res = h.get("result")
             if d is None or res not in ("correct", "incorrect", "partial"):
@@ -702,6 +736,7 @@ def retention_summary(data):
         "byGap": {k: with_rate(v) for k, v in by_gap.items()},
         "byBoxAtReview": {k: with_rate(v) for k, v in by_box.items()},
         "relearningRetriesExcluded": relearning,
+        "deferralsExcluded": deferrals,
         "entriesWithoutBoxBefore": legacy_no_box,
         "entriesSkipped": skipped,
     }
@@ -925,6 +960,121 @@ def cmd_migrate(args):
           "backup": backup, "marker": marker})
 
 
+def cmd_normalize(args):
+    """One-shot repair of pre-1.11.0 executor drift (1.12.1). Idempotent.
+
+    Patterns come from real learning projects: nested session bookkeeping,
+    dict lastActivity/previousModule, plural *BloomLevels, duplicate
+    sessionDates, invented reviewHistory results, invented sessionHistory
+    types. Canonical fields are repaired; everything the drift invented is
+    preserved (moved under *Legacy or kept in place) — learner data is sacred.
+    """
+    bdir = bodhi_dir(args.project)
+    backup_dir = os.path.join(bdir, ".pre-normalize-backup")
+    changes = []
+
+    def backup(path):
+        os.makedirs(backup_dir, exist_ok=True)
+        dest = os.path.join(backup_dir, os.path.basename(path))
+        if not os.path.exists(dest):  # first normalize wins; never overwrite
+            shutil.copyfile(path, dest)
+
+    sp = state_path(args.project)
+    state = load_json(sp) if os.path.exists(sp) else None
+    state_changes = 0
+    if state is not None:
+        for nested_key in ("session", "sessions"):
+            nested = state.get(nested_key)
+            if isinstance(nested, dict) and ("sessionDates" in nested
+                                             or "totalSessions" in nested):
+                for k in ("totalSessions", "currentStreak"):
+                    if k in nested and k not in state:
+                        state[k] = nested.pop(k)
+                if "sessionDates" in nested:
+                    lifted = nested.pop("sessionDates")
+                    dates = list(state.get("sessionDates", []))
+                    if isinstance(lifted, list):
+                        dates += [d for d in lifted if isinstance(d, str)]
+                    state["sessionDates"] = dates
+                if not nested:
+                    state.pop(nested_key)
+                changes.append(f"lifted {nested_key!r} bookkeeping to top level")
+                state_changes += 1
+        dates = state.get("sessionDates")
+        if isinstance(dates, list) and (len(dates) != len(set(dates))
+                                        or dates != sorted(dates)):
+            state["sessionDates"] = sorted(set(dates))
+            changes.append("deduped and sorted sessionDates")
+            state_changes += 1
+        for key in ("lastActivity", "previousModule"):
+            v = state.get(key)
+            if v is not None and not isinstance(v, str):
+                legacy_key = key + "Legacy"
+                if legacy_key not in state:
+                    state[legacy_key] = v
+                if isinstance(v, dict):
+                    s = v.get("name") or v.get("id") or v.get("result") or json.dumps(v)
+                else:
+                    s = str(v)
+                state[key] = str(s)[:120]
+                changes.append(f"stringified {key} (original kept in {legacy_key})")
+                state_changes += 1
+        # Scalar-but-wrong-type currentModule (int module numbers in the wild):
+        # str() is lossless, no legacy copy needed.
+        cm = state.get("currentModule")
+        if cm is not None and not isinstance(cm, str):
+            if isinstance(cm, (int, float)):
+                state["currentModule"] = str(cm)
+            else:
+                if "currentModuleLegacy" not in state:
+                    state["currentModuleLegacy"] = cm
+                state["currentModule"] = (cm.get("name") or cm.get("id") or
+                                          json.dumps(cm))[:120] if isinstance(cm, dict) else str(cm)[:120]
+            changes.append("stringified currentModule")
+            state_changes += 1
+        for plural, singular in (("initialBloomLevels", "initialBloomLevel"),
+                                 ("currentBloomLevels", "currentBloomLevel")):
+            if plural in state and singular not in state:
+                state[singular] = state.pop(plural)
+                changes.append(f"renamed {plural} -> {singular}")
+                state_changes += 1
+
+    srp = sr_path(args.project)
+    sr = load_json(srp) if os.path.exists(srp) else None
+    sr_changes = 0
+    if sr is not None:
+        for c in sr.get("concepts", []):
+            for h in c.get("reviewHistory", []):
+                if h.get("deferred"):
+                    continue
+                res = h.get("result")
+                if res is not None and res not in ("correct", "incorrect", "partial"):
+                    h.pop("result")
+                    h["deferred"] = True
+                    h.setdefault("note", f"normalized from invented result {res!r}")
+                    changes.append(f"reviewHistory result {res!r} -> deferral "
+                                   f"({c.get('name')})")
+                    sr_changes += 1
+        for s in sr.get("sessionHistory", []):
+            st = s.get("type")
+            if isinstance(st, str) and st not in SESSION_TYPES:
+                s["type"] = "other"
+                s["subtype"] = st
+                changes.append(f"sessionHistory type {st!r} -> other+subtype")
+                sr_changes += 1
+
+    if not changes:
+        emit({"action": "noop", "reason": "nothing to normalize"})
+        return
+    if state_changes and state is not None:
+        backup(sp)
+        write_json(sp, state)
+    if sr_changes and sr is not None:
+        backup(srp)
+        write_json(srp, sr)
+    emit({"action": "normalized", "changes": changes, "backup": backup_dir})
+
+
 def cmd_verify(args):
     """Schema sanity check. Used by dev/check.sh and the Stop hook."""
     errors, warnings = [], []
@@ -947,6 +1097,28 @@ def cmd_verify(args):
             la = state.get("lastActivity", "")
             if isinstance(la, str) and len(la) > 160:
                 warnings.append("state.json lastActivity exceeds 120-char guidance")
+            # 1.12.1 drift checks — patterns found in real pre-1.11.0 data,
+            # where executors invented a parallel schema that shadows the
+            # canonical fields. All repairable by `bodhi-state normalize`.
+            for nested in ("session", "sessions"):
+                v = state.get(nested)
+                if isinstance(v, dict) and ("sessionDates" in v or "totalSessions" in v):
+                    errors.append(f"state.json nests session bookkeeping under "
+                                  f"{nested!r} — canonical fields are top-level; "
+                                  f"run `bodhi-state normalize`")
+            for key in ("lastActivity", "previousModule", "currentModule"):
+                v = state.get(key)
+                if v is not None and not isinstance(v, str):
+                    errors.append(f"state.json {key} is {type(v).__name__}, "
+                                  f"expected string — run `bodhi-state normalize`")
+            for plural in ("initialBloomLevels", "currentBloomLevels"):
+                if plural in state:
+                    warnings.append(f"state.json {plural!r} should be the singular "
+                                    f"map — run `bodhi-state normalize`")
+            dates = state.get("sessionDates")
+            if isinstance(dates, list) and len(dates) != len(set(dates)):
+                warnings.append("state.json sessionDates has duplicates — "
+                                "run `bodhi-state normalize`")
         except (json.JSONDecodeError, OSError) as e:
             errors.append(f"state.json unreadable: {e}")
     else:
@@ -990,6 +1162,19 @@ def cmd_verify(args):
                 bl = c.get("bloomLevel", 0)
                 if not isinstance(bl, int) or not 0 <= bl <= 6:
                     errors.append(f"concept {name!r} bloomLevel {bl!r} not int 0-6")
+                for h in c.get("reviewHistory", []):
+                    if h.get("deferred"):
+                        if "result" in h:
+                            errors.append(f"concept {name!r} deferral entry carries "
+                                          f"a result — deferral is scheduling, not "
+                                          f"an outcome")
+                        continue
+                    hres = h.get("result")
+                    if hres not in ("correct", "incorrect", "partial"):
+                        errors.append(f"concept {name!r} reviewHistory result "
+                                      f"{hres!r} not in canonical vocabulary "
+                                      f"(correct|incorrect|partial) — run "
+                                      f"`bodhi-state normalize`")
             for s in sr.get("sessionHistory", []):
                 st = s.get("type")
                 if st not in SESSION_TYPES:
@@ -1076,6 +1261,19 @@ def main():
     s.add_argument("--note", default=None)
     s.add_argument("--activity", default=None, help="override the state.json lastActivity line")
     s.set_defaults(fn=cmd_forget)
+
+    s = sub.add_parser("defer",
+                       help="roll a due-but-unreviewed concept forward (no outcome invented)")
+    s.add_argument("--concept", action="append", default=None,
+                   help="exact concept name (repeatable)")
+    s.add_argument("--days", type=int, default=1,
+                   help="days to roll nextReview forward (default 1)")
+    s.add_argument("--note", default=None)
+    s.set_defaults(fn=cmd_defer)
+
+    s = sub.add_parser("normalize",
+                       help="repair pre-1.11.0 executor drift (backed up, idempotent)")
+    s.set_defaults(fn=cmd_normalize)
 
     s = sub.add_parser("touch-state", help="update state.json session bookkeeping")
     s.add_argument("--activity", default=None, help="lastActivity one-liner (<=120 chars)")

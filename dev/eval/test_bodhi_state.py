@@ -686,6 +686,150 @@ def t_export_anonymized():
               and out["project"]["daysSinceStart"] is not None, out.get("project"))
 
 
+# Modeled on drift found in real learning projects (2026-07-02 dogfood):
+# pre-1.11.0 executors invented a parallel state.json schema — nested session
+# bookkeeping, dict lastActivity/previousModule, plural *BloomLevels,
+# duplicate sessionDates — and invented reviewHistory result vocabulary.
+DRIFTED_STATE = {
+    "version": 2, "projectName": "proj", "topic": "testing",
+    "createdAt": "2026-06-01", "lastSessionAt": "2026-06-05",
+    "session": {"totalSessions": 4,
+                "sessionDates": ["2026-06-05", "2026-06-05", "2026-06-05", "2026-06-04"],
+                "currentStreak": 1},
+    "currentPhase": "1", "currentModule": 2, "currentModuleIndex": 0,
+    "previousModule": {"id": "0.3", "name": "Module 0.3", "completedAt": "2026-06-05",
+                       "outcomes": "rich narrative that must survive"},
+    "lastActivity": {"type": "phase-complete", "name": "Phase 0 assessments",
+                     "completed": True, "result": "long narrative " * 30},
+    "nextActivity": {"type": "module-start", "name": "Module 1.1"},
+    "initialBloomLevels": {"ruby": 0, "elixir": 0},
+    "currentBloomLevels": {"ruby": 3, "elixir": 1},
+    "pace": {"intent": "open-ended depth"},
+    "weightDistribution": {"ai": 0.4, "elixir": 0.6},
+    "overallCompletion": 5,
+}
+
+DRIFTED_SR = {
+    "version": 3, "lastReviewCheck": None,
+    "concepts": [
+        {"name": "CSRF tokens", "module": "Module 0", "introduced": "2026-05-01",
+         "box": 2, "nextReview": "2026-06-11", "lastReviewed": "2026-06-09",
+         "question": "", "lastResult": "skipped", "bloomLevel": 0,
+         "feynmanPassed": False, "consecutiveCorrectAtL4Plus": 0,
+         "reviewHistory": [
+             {"date": "2026-06-01", "result": "correct", "bloomLevel": 2},
+             {"date": "2026-06-09", "result": "skipped",
+              "note": "session consumed; rolled +2 days"},
+         ]},
+    ],
+    "sessionHistory": [
+        {"date": "2026-06-09", "type": "phase-0-reteach-partial",
+         "notes": "invented type from the wild"},
+    ],
+}
+
+
+def t_defer():
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review=json.loads(json.dumps(V2_SR)))
+        run(proj, "migrate-spaced-review")
+        before = read_sr(proj)["concepts"][0]
+        out = run(proj, "defer", "--concept", "B-tree indexes", "--days", "2",
+                  "--note", "session ran out")
+        c = read_sr(proj)["concepts"][0]
+        check("defer: nextReview rolled by --days",
+              c["nextReview"] == (TODAY + datetime.timedelta(days=2)).isoformat(), out)
+        check("defer: box untouched", c["box"] == before["box"])
+        check("defer: lastReviewed untouched (no retrieval happened)",
+              c["lastReviewed"] == before["lastReviewed"])
+        entry = c["reviewHistory"][-1]
+        check("defer: history entry is a deferral, not an outcome",
+              entry.get("deferred") is True and "result" not in entry
+              and entry.get("days") == 2, entry)
+        out = run(proj, "retention")
+        check("defer: retention excludes deferrals explicitly",
+              out.get("deferralsExcluded") == 1 and out["entriesSkipped"] == 0, out)
+        run(proj, "defer", "--concept", "Ghost", expect_fail=True)
+
+
+def t_verify_flags_drift():
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review=json.loads(json.dumps(DRIFTED_SR)),
+                            state=json.loads(json.dumps(DRIFTED_STATE)))
+        r = subprocess.run([sys.executable, SCRIPT, "--project", proj, "verify"],
+                           capture_output=True, text=True)
+        out = json.loads(r.stdout)
+        check("drift: verify fails on drifted files", r.returncode == 1)
+        errs = " | ".join(out["errors"])
+        check("drift: nested session bookkeeping flagged", "session" in errs.lower(), errs)
+        check("drift: dict lastActivity flagged", "lastActivity" in errs, errs)
+        check("drift: dict previousModule flagged", "previousModule" in errs, errs)
+        check("drift: invented result vocabulary flagged",
+              "skipped" in errs or "result" in errs, errs)
+        check("drift: repair pointer names normalize", "normalize" in errs, errs)
+        # A canonical deferral entry must NOT be flagged.
+        sr = json.loads(json.dumps(V2_SR))
+        sr["concepts"][0]["reviewHistory"].append(
+            {"date": "2026-06-09", "deferred": True, "days": 2})
+        proj2 = make_project(os.path.join(root, "p2"), spaced_review=sr)
+        r = subprocess.run([sys.executable, SCRIPT, "--project", proj2, "verify"],
+                           capture_output=True, text=True)
+        check("drift: deferral entries pass verify", r.returncode == 0,
+              r.stdout[:200])
+
+
+def t_normalize():
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review=json.loads(json.dumps(DRIFTED_SR)),
+                            state=json.loads(json.dumps(DRIFTED_STATE)))
+        out = run(proj, "normalize")
+        check("normalize: reports transforms", out.get("action") == "normalized", out)
+        st = read_state(proj)
+        check("normalize: session bookkeeping lifted to top level",
+              st.get("totalSessions") == 4 and st.get("currentStreak") == 1
+              and "session" not in st, st.get("totalSessions"))
+        check("normalize: sessionDates deduped and sorted",
+              st.get("sessionDates") == ["2026-06-04", "2026-06-05"])
+        check("normalize: lastActivity stringified <=120 chars",
+              isinstance(st.get("lastActivity"), str) and len(st["lastActivity"]) <= 120)
+        check("normalize: original lastActivity preserved as legacy",
+              isinstance(st.get("lastActivityLegacy"), dict))
+        check("normalize: previousModule stringified, narrative preserved",
+              st.get("previousModule") == "Module 0.3"
+              and st.get("previousModuleLegacy", {}).get("outcomes"))
+        check("normalize: numeric currentModule stringified",
+              st.get("currentModule") == "2", st.get("currentModule"))
+        check("normalize: plural bloom maps renamed to singular",
+              st.get("currentBloomLevel", {}).get("ruby") == 3
+              and "currentBloomLevels" not in st)
+        check("normalize: unknown learner fields untouched",
+              st.get("pace", {}).get("intent") == "open-ended depth"
+              and st.get("weightDistribution", {}).get("ai") == 0.4
+              and isinstance(st.get("nextActivity"), dict))
+        sr = read_sr(proj)
+        entry = sr["concepts"][0]["reviewHistory"][-1]
+        check("normalize: invented 'skipped' result becomes a deferral",
+              entry.get("deferred") is True and "result" not in entry
+              and entry.get("note"), entry)
+        sess = sr["sessionHistory"][-1]
+        check("normalize: invented session type becomes other+subtype",
+              sess["type"] == "other"
+              and sess["subtype"] == "phase-0-reteach-partial", sess)
+        backup_dir = os.path.join(proj, ".bodhi", ".pre-normalize-backup")
+        check("normalize: backups written",
+              os.path.exists(os.path.join(backup_dir, "state.json"))
+              and os.path.exists(os.path.join(backup_dir, "spaced-review.json")))
+        with open(os.path.join(backup_dir, "state.json")) as f:
+            check("normalize: backup is the pre-normalize shape",
+                  isinstance(json.load(f).get("session"), dict))
+        r = subprocess.run([sys.executable, SCRIPT, "--project", proj, "verify"],
+                           capture_output=True, text=True)
+        check("normalize: verify clean afterwards", r.returncode == 0,
+              r.stdout[:300])
+        out2 = run(proj, "normalize")
+        check("normalize: idempotent second run", out2.get("action") == "noop", out2)
+
+
 def t_verify():
     with tempfile.TemporaryDirectory() as root:
         proj = make_project(root, spaced_review=json.loads(json.dumps(V2_SR)))
@@ -713,7 +857,8 @@ def main():
               t_data_reserved_keys, t_migrate_stale_backup,
               t_forget_comma_names, t_robustness, t_concurrency,
               t_history_cap, t_mastery_blocked_on_feynman,
-              t_box_before, t_retention, t_export_anonymized):
+              t_box_before, t_retention, t_export_anonymized,
+              t_defer, t_verify_flags_drift, t_normalize):
         print(f"-- {t.__name__}")
         t()
     print(f"\n{PASS} passed, {FAIL} failed")
