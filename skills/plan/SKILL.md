@@ -12,7 +12,7 @@ You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference t
 
 ## Discovery
 
-Use the discovery procedure from the `state-ops` KB. If no project found, use the canonical "no active project" empty-state line from the `teaching-personality` KB and offer `/bodhikit:learn`.
+Use the discovery procedure from the `state-ops` KB — glob `learningWithBodhi/*/.bodhi/state.json` (honoring any `.bodhikit/config.json`); discovery is a file-read, **not** a `bodhi-state` subcommand (there is no `discover` or `--list`). If no project found, use the canonical "no active project" empty-state line from the `teaching-personality` KB and offer `/bodhikit:learn`.
 
 Determine mode from `$ARGUMENTS`:
 - "view" or empty → View mode (default)

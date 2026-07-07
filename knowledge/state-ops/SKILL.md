@@ -69,12 +69,14 @@ Two layers. Per-project overrides global.
 
 - `projectRoot` is a path (relative to the file's directory, or absolute) where the learner keeps `.bodhi/` for THIS repo.
 
+**Discovery is a file-read, NOT a `bodhi-state` subcommand.** There is no `discover`, `--list`, or `list-projects` — do not call the script to find projects. The `bodhi-state` subcommand table above is the *complete* set; discovery is plain filesystem inspection (glob / `ls`), performed as follows:
+
 **Discovery procedure (all skills use this exact procedure):**
 
 1. From the current working directory, walk up to 3 parent levels looking for `.bodhikit/config.json`. If found and it declares `projectRoot`, treat that path as a project root and stop further search unless the caller explicitly wants `--all`.
 2. Otherwise, read `~/.bodhikit/config.json` if it exists; if not, use the default `searchPaths: ["$PWD", "~/learningWithBodhi"]`.
 3. For each path in `searchPaths`: resolve `$PWD` to cwd (and walk up 3 parents), expand `~`, then look for `learningWithBodhi/` directories.
-4. Within each `learningWithBodhi/`, list subdirectories containing `.bodhi/state.json`.
+4. Within each `learningWithBodhi/`, list subdirectories containing `.bodhi/state.json` — e.g. `ls -d <path>/learningWithBodhi/*/.bodhi/state.json 2>/dev/null`. Each match is one project (its dir is the parent of `.bodhi/`).
 
 ## Tracking-Surface Map (v2, 1.7.0)
 

@@ -22,7 +22,7 @@ Both modes are **idempotent** — running twice in a row is a no-op the second t
 
 ## Phase 1: Discovery and Mode Selection
 
-Use the discovery procedure from the `state-ops` KB to locate the project root.
+Use the discovery procedure from the `state-ops` KB to locate the project root — glob `learningWithBodhi/*/.bodhi/state.json` (honoring any `.bodhikit/config.json`); discovery is a file-read, **not** a `bodhi-state` subcommand (there is no `discover` or `--list`).
 
 Inspect `$ARGUMENTS`:
 - `migrate` → go to Phase 5 (one-shot v1 → v2 conversion). Load the `state-migration` KB now.

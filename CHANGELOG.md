@@ -2,6 +2,20 @@
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [1.14.1] - 2026-07-07
+
+A discovery-hallucination fix, caught in a live `/continue` on Fable 5. The `bodhi-state` script owns *writes and rollups*; project discovery is a file-read (glob `learningWithBodhi/*/.bodhi/state.json`) and was never a subcommand. But eight skills pointed at it only abstractly — *"use the discovery procedure from the `state-ops` KB"* — with no inline command and no negative guard. Against the plugin's own strong "everything goes through `bodhi-state`" prior, the executor guessed `bodhi-state discover` / `--list` (neither exists), burned three Bash calls confirming they don't, then fabricated a project list from truncated `ls` output. Exactly the executor-improvisation class the 1.11.0 architecture exists to close — surfaced by the model change the last commit's drift sweep flagged. The five skills that already inlined *"search for `.bodhi/state.json`"* never hallucinated; the abstraction was the defect.
+
+### Fixed — discovery made concrete
+- **`state-ops` KB carries the negative guard** at the discovery procedure (one home per fact): discovery is a file-read, **not** a `bodhi-state` subcommand — there is no `discover`/`--list`/`list-projects` — plus the concrete `ls -d …/learningWithBodhi/*/.bodhi/state.json` glob. Every skill's pointer inherits it.
+- **Seven skills** (`/continue`, `/housekeep`, `/forget`, `/plan`, `/learn`, `/review`, `/practice`) now append the concrete glob + guard inline, matching the already-well-behaved skills. `/continue` Phase 1 — the one that broke — leads with it.
+
+### Evals — reproduced first, per the executor-discipline contract
+- New `continue-discovery` LLM scenario (`run-llm-evals.sh discovery`): the only scenario that runs from the `learningWithBodhi` parent with a second project seeded, so `/continue` Phase 1 must actually enumerate. Asserts the executor discovered projects by globbing the filesystem, never by calling a phantom subcommand. `assistant_text` now folds `tool_use` inputs into the matched text, so the phantom Bash call is caught even when the model does not narrate it.
+
+### Lint
+- New rule 53: `state-ops` must retain the negative guard, and no skill or KB may emit a `bodhi-state … discover/--list/list-projects` call in prose.
+
 ## [1.14.0] - 2026-07-02
 
 The judgment-tree release — the deferred half of 1.13.0's context-cost work. 1.11.0's thesis was "prose cannot bind an executor, so move the mechanics into code"; that covered the writes. But `/teach` still asked the executor to *re-derive state predicates* from prose — is this a first exposure? a re-teach? did this write cross Bloom 3? — and the drift corpus showed the ~10% residue of those derivations accumulates. This release moves the mechanical branches into `bodhi-state` and phase-loads the rare sub-flows.

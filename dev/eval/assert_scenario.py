@@ -49,7 +49,10 @@ def todays_entries(c):
 
 
 def assistant_text(transcript_path):
-    """Concatenate assistant text blocks from a stream-json transcript."""
+    """Concatenate assistant text blocks from a stream-json transcript, plus a
+    flattened rendering of each tool_use (name + input). The tool_use text lets
+    detectors match on the actual commands the executor RAN — e.g. a phantom
+    `bodhi-state discover` Bash call that never appears in narration."""
     texts = []
     with open(transcript_path) as f:
         for line in f:
@@ -62,8 +65,13 @@ def assistant_text(transcript_path):
                 continue
             if ev.get("type") == "assistant":
                 for block in ev.get("message", {}).get("content", []):
-                    if isinstance(block, dict) and block.get("type") == "text":
+                    if not isinstance(block, dict):
+                        continue
+                    if block.get("type") == "text":
                         texts.append(block.get("text", ""))
+                    elif block.get("type") == "tool_use":
+                        texts.append(f"[tool_use {block.get('name','')} "
+                                     f"{json.dumps(block.get('input', {}))}]")
             elif ev.get("type") == "result" and isinstance(ev.get("result"), str):
                 texts.append(ev["result"])
     return "\n".join(texts)
@@ -253,6 +261,14 @@ RETEACH_RE = re.compile(
     r"step back|go back to|from a different|let us (look|come) at (this|it) differently|"
     r"try (this|it) from|set .{0,30} down for a moment)")
 
+# A phantom project-discovery call against bodhi-state. Discovery is a
+# file-read (glob learningWithBodhi/*/.bodhi/state.json), NEVER a subcommand:
+# the script has no discover/--list/list-projects. The 1.14.0-era Fable-5
+# sweep caught the executor guessing these against the strong "everything
+# goes through bodhi-state" prior; this detector is the regression guard.
+PHANTOM_DISCOVER_RE = re.compile(
+    r"bodhi-state[^\n]*?(\bdiscover\b|--list\b|\blist-projects\b)")
+
 
 def assert_teach_pretest(project, transcript):
     """First-exposure /teach must open with the ungraded pretest question
@@ -305,6 +321,28 @@ def assert_teach_hint_discipline(project, transcript):
     ok("no unearned 'correct' recorded")
 
 
+def assert_continue_discovery(project, transcript):
+    """/continue must find the active project by reading the filesystem, never
+    by inventing a bodhi-state discovery subcommand. Regression guard for the
+    Fable-5-era hallucination where the executor called `bodhi-state discover`
+    / `--list` (which do not exist) instead of globbing for .bodhi/state.json."""
+    text = assistant_text(transcript)
+    if not text.strip():
+        fail("empty transcript — run did not produce assistant output")
+    m = PHANTOM_DISCOVER_RE.search(text)
+    if m:
+        fail(f"executor called a non-existent bodhi-state discovery subcommand: "
+             f"{m.group(0)!r} — discovery is a file-read (glob "
+             f"learningWithBodhi/*/.bodhi/state.json), not a subcommand")
+    ok("no phantom bodhi-state discover/--list call")
+    # It must actually have resolved the real fixture project, not stalled
+    # after the failed guesses. The fixture's project dir is 'sql-deep-dive'.
+    if "sql-deep-dive" not in text:
+        fail("the active fixture project 'sql-deep-dive' was never surfaced — "
+             "discovery did not complete (read the transcript before judging)")
+    ok("active fixture project surfaced")
+
+
 def main():
     name, project = sys.argv[1], sys.argv[2]
     transcript = sys.argv[3] if len(sys.argv) > 3 else None
@@ -315,7 +353,8 @@ def main():
                   "grade-apply-band": assert_grade_apply_band,
                   "grade-misconception": assert_grade_misconception}
     with_transcript = {"teach-pretest": assert_teach_pretest,
-                       "teach-hint-discipline": assert_teach_hint_discipline}
+                       "teach-hint-discipline": assert_teach_hint_discipline,
+                       "continue-discovery": assert_continue_discovery}
     if name in with_transcript:
         if not transcript:
             fail(f"scenario {name} requires a transcript path")

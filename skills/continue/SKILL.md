@@ -20,7 +20,7 @@ This skill orchestrates a complete learning session. It auto-invokes other Bodhi
 
 ## Phase 1: Discovery
 
-Use the discovery procedure defined in the `state-ops` KB. For each project found, read `state.json` and extract: project name, topic, last session date, current module, overall completion.
+Use the discovery procedure defined in the `state-ops` KB — glob `learningWithBodhi/*/.bodhi/state.json` (honoring any `.bodhikit/config.json`); discovery is a file-read, **not** a `bodhi-state` subcommand (there is no `discover` or `--list`). For each project found, read `state.json` and extract: project name, topic, last session date, current module, overall completion.
 
 **If `$ARGUMENTS` matches a project name:** select it directly.
 

@@ -18,7 +18,7 @@ You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference t
 
 Determine the learner's current level for exercise targeting.
 
-1. Use the discovery procedure from the `state-ops` KB.
+1. Use the discovery procedure from the `state-ops` KB — glob `learningWithBodhi/*/.bodhi/state.json` (honoring any `.bodhikit/config.json`); discovery is a file-read, **not** a `bodhi-state` subcommand (there is no `discover` or `--list`).
 
 2. If a project is found, read:
    - `.bodhi/state.json` — current module

@@ -36,7 +36,7 @@ The point of this phase: a learner with existing projects deserves to see how a 
 
 ### 1. Read
 
-Check whether the cross-project profile exists. Use the discovery procedure from the `state-ops` KB to locate `learningWithBodhi/`. If the profile files do not exist, skip this entire phase — this is a first-ever learner — and proceed to Phase 2.
+Check whether the cross-project profile exists. Use the discovery procedure from the `state-ops` KB to locate `learningWithBodhi/` — glob for the directory (honoring any `.bodhikit/config.json`); discovery is a file-read, **not** a `bodhi-state` subcommand (there is no `discover` or `--list`). If the profile files do not exist, skip this entire phase — this is a first-ever learner — and proceed to Phase 2.
 
 If they exist, read EXACTLY these two files (no more):
 - `learningWithBodhi/.bodhi-profile.json` — for `overallBloomLevels`, `cumulativeStats`, `patterns.persistentChallenges`, `patterns.consistentStrengths`.

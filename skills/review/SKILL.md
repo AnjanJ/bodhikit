@@ -32,7 +32,7 @@ Determine what to review based on `$ARGUMENTS`:
 
 ## Phase 2: Educational Review
 
-**Check for active learning project context** using the discovery procedure from the `state-ops` KB. If found, read `.bodhi/plan/README.md` + `.bodhi/plan/phase-{currentPhase}.md` (current phase only) and `.bodhi/progress.md` (live entry) to understand what the learner is studying. Tailor feedback to their position in the learning journey. Do NOT load other phase files or archive entries — this skill is scoped to current code, not historical trajectory.
+**Check for active learning project context** using the discovery procedure from the `state-ops` KB — glob `learningWithBodhi/*/.bodhi/state.json` (a file-read, **not** a `bodhi-state` subcommand). If found, read `.bodhi/plan/README.md` + `.bodhi/plan/phase-{currentPhase}.md` (current phase only) and `.bodhi/progress.md` (live entry) to understand what the learner is studying. Tailor feedback to their position in the learning journey. Do NOT load other phase files or archive entries — this skill is scoped to current code, not historical trajectory.
 
 **You MUST use the Agent tool to launch the `code-reviewer` agent. This is not optional.** Provide it with:
 - The code to review

@@ -69,6 +69,15 @@ assistant transcript:
 - `teach-hint-discipline` — after 3 failed hints and a demand for the full
   solution: re-teach signal present, no Hint 4, and no unearned `correct` in
   the tracking files.
+- `continue-discovery` (`run-llm-evals.sh discovery`) — the only scenario that
+  runs from the `learningWithBodhi` PARENT with a second project seeded, so
+  `/continue` Phase 1 must actually enumerate projects. Asserts the executor
+  discovered them by globbing `.bodhi/state.json`, never by calling a
+  non-existent `bodhi-state discover`/`--list` subcommand. Regression guard for
+  the Fable-5-era hallucination where the strong "everything goes through
+  bodhi-state" prior led the model to invent a discovery subcommand.
+  (`assistant_text` folds tool_use inputs into the matched text, so the phantom
+  Bash call is caught even when the model does not narrate it.)
 
 **Honesty note on flakiness:** transcript assertions match phrase families,
 so they are drift detectors, not proofs. A failure means "read the transcript

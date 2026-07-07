@@ -749,6 +749,23 @@ if grep -q '| Subcommand | Owns |' knowledge/state-schema/SKILL.md; then
 fi
 
 # ---------------------------------------------------------------------------
+# 53. Discovery is a file-read, never a bodhi-state subcommand. The Fable-5
+#     sweep caught /continue inventing `bodhi-state discover`/`--list` against
+#     the strong "everything goes through bodhi-state" prior. (a) state-ops
+#     must carry the negative guard so every skill's pointer inherits it;
+#     (b) no skill or KB may emit a phantom discovery subcommand call.
+# ---------------------------------------------------------------------------
+if [ -f knowledge/state-ops/SKILL.md ]; then
+  if ! grep -qi 'not a .*bodhi-state.* subcommand\|Discovery is a file-read' knowledge/state-ops/SKILL.md; then
+    err "knowledge/state-ops/SKILL.md missing the negative guard: discovery is a file-read, not a bodhi-state subcommand (rule 53)"
+  fi
+fi
+if grep -rnE 'bodhi-state[^`]*(discover|--list|list-projects)' skills/ knowledge/ 2>/dev/null | grep -v 'not a.*subcommand\|no .discover\|there is no' >/dev/null; then
+  grep -rnE 'bodhi-state[^`]*(discover|--list|list-projects)' skills/ knowledge/ 2>/dev/null | grep -v 'not a.*subcommand\|no .discover\|there is no'
+  err "a skill/KB emits a non-existent bodhi-state discovery subcommand (discover/--list/list-projects) — discovery is a file-read (rule 53)"
+fi
+
+# ---------------------------------------------------------------------------
 # 46. Deterministic test suite must pass (free, every run).
 # ---------------------------------------------------------------------------
 if [ -f dev/eval/test_bodhi_state.py ]; then

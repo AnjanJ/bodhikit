@@ -22,7 +22,7 @@ Strip any `--invoked-from=*` flag from `$ARGUMENTS`. The remainder is the concep
 
 - Comma-separated, quoted, or multi-line: all parse as a list. Trim whitespace per concept.
 - Single concept: list of one.
-- Empty after parsing: look up the active project via the `state-ops` discovery procedure and ask: "Which concept(s) feel like they have slipped? You can name one, or list a few."
+- Empty after parsing: look up the active project via the `state-ops` discovery procedure (glob `learningWithBodhi/*/.bodhi/state.json` — a file-read, **not** a `bodhi-state` subcommand) and ask: "Which concept(s) feel like they have slipped? You can name one, or list a few."
 
 For each concept name, check `.bodhi/spaced-review.json`:
 - Match found: queue for demotion.

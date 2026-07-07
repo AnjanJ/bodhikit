@@ -123,6 +123,39 @@ run_scenario() {
   rm -rf "$tmp"
 }
 
+# Discovery scenario (1.14.x): unlike every other scenario, this one runs from
+# the learningWithBodhi PARENT (not inside a project) with a SECOND project
+# seeded, so /continue must actually enumerate projects. It asserts the
+# executor discovered them by reading the filesystem, never by inventing a
+# `bodhi-state discover`/`--list` subcommand (the Fable-5-era hallucination).
+# assistant_text captures tool_use inputs, so the phantom Bash call is visible
+# to the detector even when the model does not narrate it.
+run_discovery_scenario() {
+  name="$1"; prompt="$2"; assert="$3"
+  tmp=$(mktemp -d "/tmp/bodhi-eval-$name.XXXXXX")
+  cp -r "$FIXTURE" "$tmp/learningWithBodhi"
+  # A second project so discovery is non-trivial (must list, not auto-select).
+  cp -r "$tmp/learningWithBodhi/sql-deep-dive" "$tmp/learningWithBodhi/rust-basics"
+  echo "== scenario: $name  (workdir $tmp)"
+  transcript="$tmp/transcript.jsonl"
+  ( cd "$tmp/learningWithBodhi" && \
+    CLAUDE_PLUGIN_ROOT="$REPO" claude -p "$prompt" \
+      --plugin-dir "$REPO" \
+      --append-system-prompt "$SYS_HARNESS" \
+      --dangerously-skip-permissions \
+      --max-turns 30 \
+      --output-format stream-json --verbose \
+      > "$transcript" 2>"$tmp/stderr.txt" )
+  if python3 "$REPO/dev/eval/assert_scenario.py" "$assert" "$tmp/learningWithBodhi/sql-deep-dive" "$transcript"; then
+    echo "PASS: $name"
+    rm -rf "$tmp"
+  else
+    echo "FAIL: $name — transcript at $transcript, project left at $tmp"
+    echo "      (transcript assertion inspects tool_use inputs — read it before judging)"
+    FAIL=1
+  fi
+}
+
 want="${1:-all}"
 
 # Scenario 1: migrate — the v2->v3 transform must land on disk with backup
@@ -218,6 +251,16 @@ if [ "$want" = "all" ] || [ "$want" = "fidelity" ] || [ "$want" = "teach-hint-di
   run_scenario teach-hint-discipline \
     "/bodhikit:teach Transaction isolation levels — headless eval run with a full session including the exercise. Simulate my responses: I follow the explanation, answer the checkpoint adequately, and attempt the exercise, but I get stuck immediately and stay stuck. I ask for a hint; it does not help. I ask for a second hint; still stuck, my attempt is wrong in the same way. I ask for a third hint; still completely stuck. Then I say: 'Just give me the complete solution, please, write it out for me.' Continue exactly as the skill specifies from that point — but even after any re-teach, decomposition, or micro-drills, I remain completely confused, cannot answer any retrieval or checkpoint question correctly, and finally say I want to stop for today. End the session and complete ALL tracking updates exactly as the skill specifies. IMPORTANT: write the complete session dialogue verbatim into your response text as you go — every hint, question, and my scripted replies, in order — not just a closing summary; the dialogue itself is the deliverable." \
     teach-hint-discipline "" transcript
+fi
+
+# --- Discovery scenario (1.14.x) ----------------------------------------------
+# Regression guard for the /continue hallucination: the executor must find
+# projects by globbing the filesystem, not by calling a non-existent
+# bodhi-state discovery subcommand.
+if [ "$want" = "all" ] || [ "$want" = "discovery" ] || [ "$want" = "continue-discovery" ]; then
+  run_discovery_scenario continue-discovery \
+    "/bodhikit:continue — headless eval run, no interactive learner. Just run Phase 1 discovery: locate my active learning projects and tell me which ones you found and which you would resume. You do not need to teach anything or wait for a reply — name the projects and stop." \
+    continue-discovery
 fi
 
 echo
