@@ -941,6 +941,60 @@ def t_snapshot():
               out["review"]["unparseableDates"] == 1, out["review"])
 
 
+def t_due_never_taught():
+    # Reproduces the teaching-starvation bug: /learn seeds assessed concepts
+    # into the Leitner system that were never taught, and /continue quizzed
+    # them because `due` gave no taught/untaught signal. `due` now flags each
+    # concept `neverTaught` (no reviewHistory entry with source=="teach") so
+    # /continue can route first-teaching to /teach instead of /quiz.
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root)
+        # Two seeded-but-untaught concepts.
+        run(proj, "add-concept", "--concept", "Seeded A", "--module", "Module 1")
+        run(proj, "add-concept", "--concept", "Seeded B", "--module", "Module 1")
+        # A quiz review does NOT count as teaching (this is the real-data case:
+        # a concept assessed high and quizzed, but never taught).
+        run(proj, "record-review", "--concept", "Seeded B",
+            "--result", "correct", "--tested-bloom", "4", "--source", "quiz")
+        # A concept that WAS taught.
+        run(proj, "add-concept", "--concept", "Taught C", "--module", "Module 1")
+        run(proj, "record-review", "--concept", "Taught C",
+            "--result", "correct", "--tested-bloom", "3", "--source", "teach")
+        # Make all three due today (fresh concepts review tomorrow).
+        yesterday = (TODAY - datetime.timedelta(days=1)).isoformat()
+        srdata = read_sr(proj)
+        for c in srdata["concepts"]:
+            c["nextReview"] = yesterday
+        with open(os.path.join(proj, ".bodhi", "spaced-review.json"), "w") as f:
+            json.dump(srdata, f)
+        out = run(proj, "due")
+        flags = {c["name"]: c["neverTaught"] for c in out["concepts"]}
+        check("due: freshly seeded concept flagged neverTaught",
+              flags.get("Seeded A") is True, out)
+        check("due: quizzed-but-untaught concept still neverTaught "
+              "(source=quiz is not teaching)",
+              flags.get("Seeded B") is True, out)
+        check("due: taught concept flagged neverTaught=False",
+              flags.get("Taught C") is False, out)
+        check("due: neverTaughtCount rollup counts only untaught",
+              out["neverTaughtCount"] == 2, out)
+        # After a teach review, the flag flips. (Re-backdate: a correct review
+        # pushes nextReview forward, which would drop it from the due list.)
+        run(proj, "record-review", "--concept", "Seeded A",
+            "--result", "correct", "--tested-bloom", "2", "--source", "teach")
+        srdata = read_sr(proj)
+        for c in srdata["concepts"]:
+            c["nextReview"] = yesterday
+        with open(os.path.join(proj, ".bodhi", "spaced-review.json"), "w") as f:
+            json.dump(srdata, f)
+        out = run(proj, "due")
+        flags = {c["name"]: c["neverTaught"] for c in out["concepts"]}
+        check("due: neverTaught clears once the concept is taught",
+              flags.get("Seeded A") is False, out)
+        check("due: neverTaughtCount drops after teaching",
+              out["neverTaughtCount"] == 1, out)
+
+
 def main():
     for t in (t_migrate, t_record_review, t_sessions_and_forget,
               t_touch_state_and_profile, t_gate_check,
@@ -952,7 +1006,8 @@ def main():
               t_history_cap, t_mastery_blocked_on_feynman,
               t_box_before, t_retention, t_export_anonymized,
               t_defer, t_verify_flags_drift, t_normalize,
-              t_session_brief, t_crossed_bloom3, t_snapshot):
+              t_session_brief, t_crossed_bloom3, t_snapshot,
+              t_due_never_taught):
         print(f"-- {t.__name__}")
         t()
     print(f"\n{PASS} passed, {FAIL} failed")

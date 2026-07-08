@@ -559,12 +559,25 @@ def cmd_due(args):
                                 "nextReview": raw})
             continue
         if nr <= t:
+            # neverTaught: no review has ever come from a /teach session. A
+            # concept /learn seeds from the assessment (or one only ever
+            # quizzed) has retention evidence but was never taught — quizzing
+            # it tests nothing. /continue routes these to /teach first. The
+            # source=="teach" absence is the precise test: a seeded concept can
+            # sit at bloomLevel > 0 from assessment, so bloomLevel==0 would miss
+            # it (session-brief's firstExposure keys on bloom for a different,
+            # pretest-vs-retrieval purpose).
+            never_taught = not any(h.get("source") == "teach"
+                                   for h in c.get("reviewHistory", []))
             due.append({"name": c["name"], "module": c.get("module", ""),
                         "box": c.get("box", 1), "nextReview": raw,
                         "bloomLevel": c.get("bloomLevel", 0),
+                        "neverTaught": never_taught,
                         "question": c.get("question", "")})
     due.sort(key=lambda d: (d["box"], d["nextReview"]))
-    out = {"dueToday": len(due), "concepts": due}
+    out = {"dueToday": len(due),
+           "neverTaughtCount": sum(1 for d in due if d["neverTaught"]),
+           "concepts": due}
     if args.limit is not None and len(due) > args.limit:
         out["concepts"] = due[:args.limit]
         out["truncated"] = len(due) - args.limit
