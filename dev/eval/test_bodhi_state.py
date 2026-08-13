@@ -848,6 +848,34 @@ def t_verify():
         check("verify: invalid session type fails", r.returncode == 1)
 
 
+def t_last_activity_threshold():
+    """Fidelity D1: one value for lastActivity length, not three.
+
+    Before 1.14.x the guidance was spelled three different ways — touch-state
+    truncated at 120, verify warned above 160, and the warning text claimed
+    120. So a 140-char lastActivity passed silently while a 165-char one was
+    told the limit was 120. The state-ops KB says 120; that value now wins in
+    all three places.
+    """
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review=json.loads(json.dumps(V2_SR)))
+        # touch-state truncates at exactly the guidance value.
+        run(proj, "touch-state", "--activity", "x" * 200)
+        check("lastActivity: touch-state truncates to 120",
+              len(read_state(proj)["lastActivity"]) == 120)
+        # A hand-written 140-char value used to slip past verify (120 < 140 < 160).
+        st = read_state(proj)
+        st["lastActivity"] = "y" * 140
+        with open(os.path.join(proj, ".bodhi", "state.json"), "w") as f:
+            json.dump(st, f)
+        out = run(proj, "verify")
+        check("lastActivity: 140 chars now warns (was silent under the 160 check)",
+              any("lastActivity" in w for w in out["warnings"]), out)
+        # And the message quotes the value it actually enforces.
+        check("lastActivity: warning states 120, not 160",
+              any("120-char" in w for w in out["warnings"]), out)
+
+
 def t_session_brief():
     with tempfile.TemporaryDirectory() as root:
         proj = make_project(root, spaced_review=json.loads(json.dumps(V2_SR)))
@@ -1005,7 +1033,7 @@ def main():
               t_forget_comma_names, t_robustness, t_concurrency,
               t_history_cap, t_mastery_blocked_on_feynman,
               t_box_before, t_retention, t_export_anonymized,
-              t_defer, t_verify_flags_drift, t_normalize,
+              t_defer, t_verify_flags_drift, t_normalize, t_last_activity_threshold,
               t_session_brief, t_crossed_bloom3, t_snapshot,
               t_due_never_taught):
         print(f"-- {t.__name__}")

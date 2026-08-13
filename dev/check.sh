@@ -727,6 +727,56 @@ else
       err "knowledge/state-ops/SKILL.md vocabulary table missing canonical type '$t'"
     fi
   done
+
+  # 1.14.x (fidelity finding D3): rule 45 pinned the two canonical values the
+  # 44-finding audit actually broke on (Leitner intervals, session vocabulary)
+  # and left the rest of the canonical surface unpinned — reactive pinning, not
+  # comprehensive. The three below are equally load-bearing and equally
+  # documented in a KB, so a divergence between KB and script would have been
+  # silent. Pin them the same way: bidirectional, fails in the same PR.
+
+  # (a) Prerequisite-gate recency window. Decides the stale-reconfirm verdict —
+  # change one side only and the gate silently starts asking reconfirm
+  # questions at the wrong cadence.
+  if ! grep -q '^GATE_RECENCY_DAYS = 30$' scripts/bodhi-state; then
+    err "scripts/bodhi-state GATE_RECENCY_DAYS drifted from the state-ops KB gate table (30 days)"
+  fi
+  if ! grep -q 'reviewed within 30 days' knowledge/state-ops/SKILL.md; then
+    err "knowledge/state-ops/SKILL.md gate table no longer states the 30-day recency window (pins GATE_RECENCY_DAYS)"
+  fi
+
+  # (b) Retention rollup tiers. The spaced-repetition KB explicitly warns that
+  # /progress and /evaluate previously diverged on these boundaries — so the
+  # thresholds were canonicalized in the KB and implemented in cmd_snapshot,
+  # with nothing pinning the two together until now.
+  if ! grep -q 'b >= 4' scripts/bodhi-state || ! grep -q 'b >= 2' scripts/bodhi-state; then
+    err "scripts/bodhi-state cmd_snapshot rollup thresholds drifted from the spaced-repetition KB 3-tier table (Box 4-5 / 2-3 / 1)"
+  fi
+  if ! grep -q 'Box 4-5' knowledge/spaced-repetition/SKILL.md; then
+    err "knowledge/spaced-repetition/SKILL.md rollup table no longer states Box 4-5 (pins cmd_snapshot tiers)"
+  fi
+
+  # (c) Confidence vocabulary. cmd_record_review validates against the script's
+  # set, so a KB listing a fourth value would let a skill pass something the
+  # script rejects — a runtime error with no lint warning.
+  for cv in sure mostly guessing; do
+    if ! grep -q "CONFIDENCE_VALUES = {\"sure\", \"mostly\", \"guessing\"}" scripts/bodhi-state; then
+      err "scripts/bodhi-state CONFIDENCE_VALUES drifted from the state-ops KB (sure|mostly|guessing)"
+      break
+    fi
+    if ! grep -q "$cv" knowledge/state-ops/SKILL.md; then
+      err "knowledge/state-ops/SKILL.md subcommand table missing confidence value '$cv'"
+    fi
+  done
+
+  # (d) lastActivity length guidance — one value, three former spellings
+  # (truncate/warn/message). Pins the script constant to the state-ops KB.
+  if ! grep -q '^LAST_ACTIVITY_MAX = 120$' scripts/bodhi-state; then
+    err "scripts/bodhi-state LAST_ACTIVITY_MAX drifted from the state-ops KB guidance (120 chars)"
+  fi
+  if ! grep -q '120 chars' knowledge/state-ops/SKILL.md; then
+    err "knowledge/state-ops/SKILL.md no longer states the 120-char lastActivity guidance (pins LAST_ACTIVITY_MAX)"
+  fi
 fi
 
 # ---------------------------------------------------------------------------

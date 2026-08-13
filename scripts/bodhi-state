@@ -51,6 +51,13 @@ CONFIDENCE_VALUES = {"sure", "mostly", "guessing"}
 # a quick reconfirm instead of a free pass.
 GATE_RECENCY_DAYS = 30
 
+# lastActivity length guidance (state-ops KB: "one short sentence (<=120
+# chars)"). One home for the value: touch-state truncates to it, verify warns
+# above it, and the message quotes it. Before 1.14.x these were three different
+# numbers — truncate at 120, warn above 160, message said 120 — so a 140-char
+# lastActivity passed silently and a 165-char one was told the limit was 120.
+LAST_ACTIVITY_MAX = 120
+
 PROFILE_COUNTERS = {
     "totalSessions", "totalExercises", "totalConceptsLearned",
     "totalMilestonesReached", "totalProjects", "teachBacksWritten",
@@ -509,7 +516,7 @@ def cmd_touch_state(args):
             profile_bumped = True
     state["lastSessionAt"] = now_iso()
     if args.activity:
-        state["lastActivity"] = args.activity[:120]
+        state["lastActivity"] = args.activity[:LAST_ACTIVITY_MAX]
     if args.module:
         if state.get("currentModule") and state["currentModule"] != args.module:
             state["previousModule"] = state["currentModule"]
@@ -587,7 +594,10 @@ def cmd_due(args):
 
 
 def is_mastered(c):
-    """Canonical mastery formula (state-schema KB). Do not redefine inline."""
+    """Canonical mastery formula (state-ops KB; field semantics in state-schema).
+
+    Do not redefine inline.
+    """
     return (c.get("bloomLevel", 0) >= 4
             and c.get("consecutiveCorrectAtL4Plus", 0) >= 3
             and c.get("box", 1) >= 4
@@ -1281,8 +1291,10 @@ def cmd_verify(args):
             if not isinstance(state.get("sessionDates", []), list):
                 errors.append("state.json sessionDates is not a list")
             la = state.get("lastActivity", "")
-            if isinstance(la, str) and len(la) > 160:
-                warnings.append("state.json lastActivity exceeds 120-char guidance")
+            if isinstance(la, str) and len(la) > LAST_ACTIVITY_MAX:
+                warnings.append(
+                    f"state.json lastActivity exceeds {LAST_ACTIVITY_MAX}-char "
+                    f"guidance (state-ops KB)")
             # 1.12.1 drift checks — patterns found in real pre-1.11.0 data,
             # where executors invented a parallel schema that shadows the
             # canonical fields. All repairable by `bodhi-state normalize`.
