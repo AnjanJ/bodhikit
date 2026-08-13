@@ -101,9 +101,9 @@ Present the dashboard in this format:
 
 ### Module Breakdown
 
-| Module | Status | Bloom's Level | Mastery |
+| Module | Status | Where you are | Mastered |
 |--------|--------|--------------|---------|
-| [name] | [Completed/In Progress/Upcoming] | [1-6] [name] | [N]% |
+| [name] | [Completed/In Progress/Upcoming] | [tier — outcome] | [N]/[M] |
 
 ---
 
@@ -128,15 +128,30 @@ Present the dashboard in this format:
 
 ### Growth Trajectory
 
-**Where you started:** [initial Bloom's levels summary]
-**Where you are now:** [current Bloom's levels summary]
-**Key growth:** [specific concepts that improved the most]
+**Where you started:** [what the learner could do at the outset, in outcome terms]
+**Where you are now:** [what they can do today, in outcome terms]
+**Key growth:** [specific concepts that improved the most, named as a change in capability — "could recite the syntax → can now debug it when it breaks", not "Bloom 2 → Bloom 4"]
 ```
 
 Notes on the sections:
 
 - **If the snapshot's `mastery` section reports a non-empty `blockedOnFeynman` list**, render one line under the Module Breakdown: *"[N] concept(s) meet every mastery criterion except the explain-back gate: [names]. One `/teach <concept>` session (understanding-only is enough) completes each."* A quiz-only learner otherwise watches mastery sit at 0% with no visible reason.
-- **Mastery %** comes from the snapshot's `mastery` section (computed by the script), which implements the canonical Mastery % formula from the `state-ops` KB (`mastered === true` requires `bloomLevel >= 4` AND `consecutiveCorrectAtL4Plus >= 3` AND `box >= 4` AND `feynmanPassed`; see `blooms-taxonomy` KB for the underlying criteria). When the script reports `masteryPct: null` for a module, display `—` instead of `0%` — the legacy display rule: no v3 writer has classified the module's concepts yet, and a zero would falsely imply the learner tried and failed.
+- **Mastered `N/M`** comes from the snapshot's `mastery` section (computed by the script): `N` = that module's `mastered`, `M` = its `concepts`. The underlying predicate is the canonical formula from the `state-ops` KB (`mastered === true` requires `bloomLevel >= 4` AND `consecutiveCorrectAtL4Plus >= 3` AND `box >= 4` AND `feynmanPassed`; see `blooms-taxonomy` KB for the criteria). Render the count, not the percentage — `0/3` states a position, where `0%` reads as a score on a test the learner did not know they were taking. When the script reports `masteryPct: null`, display `—` in BOTH this column and *Where you are* — the legacy display rule: no v3 writer has classified the module's concepts yet, and any value would falsely imply the learner tried and fell short.
+
+- **Where you are** names the learner's position in outcome terms. The plugin's internal scales (Bloom levels, Leitner boxes) are instructor-facing instruments — they belong in the KBs and the tracking files, not in a dashboard the learner reads. A number tells a learner they were graded; an outcome tells them what they can now do. Derive the tier per module from the snapshot's `mastery` section and render it with its definition attached:
+
+  | Condition (snapshot `mastery` per module) | Render |
+  |---|---|
+  | `masteryPct: null` (nothing classified yet) | `—` |
+  | `mastered == concepts` (all mastered) | `**Solid** — can debug it and explain the trade-offs` |
+  | `classified > 0` (some work recorded) | `**Working** — can use it with guidance` |
+  | otherwise | `**Introduced** — can explain what it does` |
+
+  Always render the tier WITH its outcome clause. The clause is the definition — it teaches the learner what the word means in terms of what they can do, and it is the first place they meet this vocabulary. A bare "Working" is a grade; "Working — can use it with guidance" is a position with a next step implied.
+
+  These display tiers are deliberately coarser than the underlying per-concept state: this rendering asks only whether concepts are classified and whether they are mastered, so a module of nearly-mastered concepts and a module of freshly-introduced ones can both read *Working*. That is an accepted limit of a summary column, not a defect. The *Growth Trajectory* section below carries the finer per-concept movement.
+
+  Do NOT surface raw Bloom numbers or box numbers anywhere in learner-facing output. The one exception is `/evaluate`'s self-prediction question, which needs a shared numeric scale to compute `predictionDelta` — and it anchors the scale in the same breath.
 - **Spaced Repetition Health** uses the canonical 3-tier rollup from the `spaced-repetition` KB ("Retention Rollup Views"). Do not invent bucket boundaries.
 - **Calibration** shows only when the script reports `taggedAnswers > 0`; reference the `metacognition` KB for framing — where confidence and outcomes disagree is the signal, never a scolding (e.g. "Your 'sure' answers on indexing held up; on the planner they did not. That gap, not the misses themselves, is the thing to watch.").
 - **Progress bar:** `[####........................]` at 0-25%, `[############................]` at 26-50%, `[####################........]` at 51-75%, `[############################]` at 76-100%.

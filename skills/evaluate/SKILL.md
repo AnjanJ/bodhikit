@@ -46,7 +46,11 @@ Ask one at a time. Cap the phase at 60 seconds — quick predictions, not delibe
 
 **Q2 — Biggest gap.** "Which topic do you think still has the biggest gap from where you want to be?"
 
-**Q3 — Per-topic Bloom snapshot.** "For each of the project's major topics, what Bloom level do you think you are at now? Just the number, 1-6, for each — no need to justify." (List the 3-6 major topics from the plan; capture one number per topic.)
+**Q3 — Per-topic self-prediction.** This is the one place a raw scale is shown to the learner: the delta between prediction and measurement is the whole point (per the `metacognition` KB), and that comparison needs both sides on the same scale. Anchor the scale in outcomes as you ask, so they are placing themselves on something they can read rather than guessing at a number:
+
+> "For each topic, where would you put yourself — **1** recall it, **2** explain it, **3** use it, **4** debug it, **5** judge between approaches, **6** design with it? Just the number, no need to justify."
+
+(List the 3-6 major topics from the plan; capture one number per topic.) Ask for the number, not the label — the number is what `predictionDelta` compares.
 
 Hold the answers in memory. Do NOT reveal the trajectory data yet — Phase 3's comparison is what makes this work.
 
