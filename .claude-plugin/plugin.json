@@ -4,9 +4,9 @@
   "description": "Research-informed interactive coding tutor. Learn anything in tech with a wise, patient guide.",
   "author": {
     "name": "Anjan",
-    "url": "https://codeberg.org/AnjanJ"
+    "url": "https://github.com/AnjanJ"
   },
-  "repository": "https://codeberg.org/AnjanJ/bodhikit",
+  "repository": "https://github.com/AnjanJ/bodhikit",
   "license": "MIT",
   "keywords": [
     "claude-code",

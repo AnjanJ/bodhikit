@@ -120,7 +120,7 @@ Test your skill by:
 
 ## Submitting
 
-1. Fork the repository on Codeberg
+1. Fork the repository on GitHub
 2. Create a branch for your changes
 3. Update README.md and GUIDE.md with your additions
 4. Update CHANGELOG.md

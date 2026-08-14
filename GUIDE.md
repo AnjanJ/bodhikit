@@ -34,7 +34,7 @@
 Install BodhiKit:
 
 ```
-/plugin marketplace add https://codeberg.org/AnjanJ/bodhikit.git
+/plugin marketplace add https://github.com/AnjanJ/bodhikit.git
 /plugin install bodhikit@bodhikit
 ```
 

@@ -44,7 +44,7 @@ The voice is grounded in four named teachers (Gautama Buddha, Dr. B.R. Ambedkar,
 ## Install
 
 ```
-/plugin marketplace add https://codeberg.org/AnjanJ/bodhikit.git
+/plugin marketplace add https://github.com/AnjanJ/bodhikit.git
 /plugin install bodhikit@bodhikit
 ```
 

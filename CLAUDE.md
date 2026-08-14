@@ -1,6 +1,6 @@
 # CLAUDE.md — Dev notes for working on bodhikit
 
-This is a Claude Code plugin. Edits are markdown + JSON + one Python script. End users install via `/plugin marketplace add <codeberg-url>` then `/plugin install`.
+This is a Claude Code plugin. Edits are markdown + JSON + one Python script. End users install via `/plugin marketplace add <github-url>` then `/plugin install`.
 
 Claude Code loads `skills/`, `agents/`, `knowledge/`, `rules/`, `hooks/`, and the `.claude-plugin/` manifests from an installed plugin; `scripts/` ships with the install and is executed via Bash (it never enters context). Root-level files (this CLAUDE.md, README, CHANGELOG, `dev/`) are inert at install time. Safe to commit anything here; nothing pollutes end-user context unless it sits in one of the loaded directories.
 
@@ -71,7 +71,7 @@ Schemas are pinned in `knowledge/state-schema/SKILL.md`. If a new field is neede
 3. Update skill/agent/KB counts in README and `marketplace.json` if they changed.
 4. Run `dev/check.sh` — should pass clean (includes the bodhi-state deterministic test suite).
 5. Run `dev/eval/run-llm-evals.sh` — file-state assertions against a live model (costs tokens; this is the automated dogfood). Schema-touching releases additionally warrant a manual dogfood pass on real learning data for the interactive skills.
-6. Tag and push to Codeberg (source of truth). GitHub mirror auto-updates via Codeberg push mirror.
+6. Tag and push to GitHub (`origin`) — the source of truth. The Codeberg repo is archived (the push-mirror flow that made Codeberg canonical no longer applies).
 
 ## Don't do
 
