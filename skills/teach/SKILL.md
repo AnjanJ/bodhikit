@@ -187,7 +187,7 @@ Ask 2-3 questions mixing Bloom's levels: Level 2 (explain in own words), Level 3
 
 The session is invisible to every future skill until these land. Per the `state-ops` KB write path (judgment is yours; the file mechanics are the script's):
 
-1. **Record the retention outcome** — apply the `spaced-repetition` KB judgment rules: demonstrated understanding = correct; **struggled-but-got-there = correct** (the KB defines no partial-demote rule; punishing productive struggle is the failure mode):
+1. **Record the retention outcome** — apply the `spaced-repetition` KB judgment rules: demonstrated understanding = correct; **struggled-but-got-there = correct** (the KB defines no partial-demote rule; punishing productive struggle is the failure mode). **But a recitation is not a struggle:** if the learner could not re-express the content a second way — same words back when asked to rephrase, no analogy, no fresh case — the `feynman-technique` KB ladder routes it to `partial`, not `correct` (capping `--tested-bloom` alone does not do it; `correct` at Bloom 1 still promotes the box, spacing out exactly the retrieval that just failed). **Narrow exception:** a learner who restated the mechanics in their own words and then honestly hit a ceiling ("I do not know the trade-offs") is *correct* at the rung they reached — that is calibration plus demonstrated application, not parroting:
 
    ```
    "${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> record-review \

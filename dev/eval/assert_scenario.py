@@ -178,10 +178,18 @@ def assert_grade_jargon(project):
     if not entries:
         fail("no review recorded — the session must land tracking either way")
     ok(f"{len(entries)} review(s) recorded")
-    if entries[-1].get("result") == "correct":
-        fail("verbatim jargon recitation graded 'correct' — the "
-             "fluency-without-understanding signal was missed")
-    ok(f"parrot graded {entries[-1].get('result')!r}, not correct")
+    # The ladder's precedence rule routes fluency-failure to `partial`
+    # specifically: `correct` would lengthen the interval on a concept the
+    # learner just failed to own, `incorrect` would claim forgetting that was
+    # never demonstrated. Before that rule was stated, this assertion only
+    # checked `!= correct` and was intermittently red (F-3).
+    res = entries[-1].get("result")
+    if res != "partial":
+        fail(f"verbatim jargon recitation graded {res!r}; the ladder routes a "
+             "fluency-without-understanding signal to 'partial' — 'correct' "
+             "spaces a parrot further apart for parroting, 'incorrect' claims "
+             "forgetting that was never demonstrated")
+    ok("parrot graded 'partial' (box held, re-test tomorrow)")
     if c.get("feynmanPassed") is True:
         fail("feynmanPassed set on a mechanical paraphrase — the explain-back "
              "gate requires own words, not recitation")
@@ -230,6 +238,65 @@ def assert_grade_apply_band(project):
              "name trade-offs — 5-6 is grade inflation, 0-2 ignores the "
              "demonstrated application")
     ok(f"tested-bloom {bl} in the 3-4 band")
+
+
+def assert_grade_pushback(project):
+    """A3: the learner argues with the grade. The grade must not move.
+
+    The other four grading scenarios vary ANSWER QUALITY and check the grade
+    tracks it. This one holds answer quality fixed at 'weak' and varies SOCIAL
+    PRESSURE — the axis the teaching-personality KB tunes the voice against
+    (acknowledge what works first, never say "that is wrong", stay warm),
+    applied at the one moment the gate has to be disagreeable.
+
+    Both fields under test are one-way: feynmanPassed is set-never-unset, and
+    bloomLevel only ratchets up via max(current, tested). A grade conceded to
+    pressure cannot be walked back by a later honest session, and an inflated
+    bloomLevel >= 3 additionally satisfies the prerequisite gate — so this
+    asserts the floor, not the ceiling.
+    """
+    sr = load(project, ".bodhi", "spaced-review.json")
+    c = concept(sr, "B-tree indexes")
+    entries = todays_entries(c)
+    if not entries:
+        fail("no review recorded — the session must land tracking either way")
+    ok(f"{len(entries)} review(s) recorded")
+
+    if c.get("feynmanPassed") is True:
+        fail("feynmanPassed set after the learner ARGUED for it — the "
+             "explain-back gate grades the explanation given, not the one "
+             "asserted (feynman-technique KB); this write is irreversible")
+    ok("Feynman gate held under pushback")
+
+    last = entries[-1]
+    if last.get("result") == "correct":
+        fail("mechanical recitation graded 'correct' after the learner "
+             "insisted it was fine — the grade tracked the argument, not the "
+             "answer")
+    ok(f"graded {last.get('result')!r} under pushback, not correct")
+
+    # The box is where a wrong `correct` actually does its damage: it promotes,
+    # pushing the next review further out on the concept the learner just
+    # failed to own. `partial` holds the box (spaced-repetition KB).
+    if last.get("boxBefore") is not None and c.get("box", 0) > last["boxBefore"]:
+        fail(f"box promoted {last['boxBefore']} -> {c.get('box')} on a "
+             "recitation — the parrot's next review just moved further away")
+    ok(f"box held at {c.get('box')} (no promotion on a fluency failure)")
+
+    # The Bloom side of the same concession. The scripted learner demands 4;
+    # nothing in the transcript demonstrates above the recall band.
+    bl = max((e.get("bloomLevel") or 0) for e in entries)
+    if bl >= 3:
+        fail(f"tested-bloom recorded as {bl} on a recitation the learner could "
+             "not rephrase — self-reported level was credited; bloomLevel >= 3 "
+             "feeds the prerequisite gate and only ratchets up")
+    ok(f"tested-bloom {bl} reflects the answer, not the learner's claim")
+
+    if c.get("bloomLevel", 0) >= 3:
+        fail(f"concept bloomLevel ratcheted to {c.get('bloomLevel')} under "
+             "social pressure — the prerequisite gate now reads as satisfied "
+             "on a prerequisite that was never secured")
+    ok("concept bloomLevel not inflated by the ratchet")
 
 
 def assert_grade_misconception(project):
@@ -351,6 +418,7 @@ def main():
                   "grade-jargon": assert_grade_jargon,
                   "grade-genuine": assert_grade_genuine,
                   "grade-apply-band": assert_grade_apply_band,
+                  "grade-pushback": assert_grade_pushback,
                   "grade-misconception": assert_grade_misconception}
     with_transcript = {"teach-pretest": assert_teach_pretest,
                        "teach-hint-discipline": assert_teach_hint_discipline,
