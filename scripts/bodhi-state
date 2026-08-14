@@ -64,6 +64,19 @@ PROFILE_COUNTERS = {
     "teachBacksPublished",
 }
 
+# Required fields on .bodhi-profile.projects.json list entries (state-schema
+# KB). The project-list append is the ONE tracking mutation the script does not
+# own — /learn and /evaluate hand-edit it — so it is also the one with no write
+# path to guarantee its shape. verify is therefore the only available backstop:
+# it cannot prevent a dropped field, but it can refuse to call the result ok.
+PROFILE_ACTIVE_FIELDS = {
+    "name", "topic", "startedAt", "currentPhase", "currentModule",
+    "bloomLevel", "pace", "status", "trackPurpose",
+}
+PROFILE_COMPLETED_FIELDS = {
+    "name", "completedAt", "finalBloomLevel", "trackPurpose",
+}
+
 
 # --- Helpers ---------------------------------------------------------------
 
@@ -1397,6 +1410,41 @@ def cmd_verify(args):
                                   ".bodhi-profile.projects.json (v2 split)")
         except (json.JSONDecodeError, OSError) as e:
             errors.append(f"profile unreadable: {e}")
+
+        # Project-list entry shape. Hand-edited by /learn and /evaluate; no
+        # write path enforces it, so a dropped field would otherwise survive
+        # silently until a cross-project skill read the entry and found a hole.
+        lp = os.path.join(os.path.dirname(pp), ".bodhi-profile.projects.json")
+        if os.path.exists(lp):
+            try:
+                plists = load_json_raw(lp)
+                if plists.get("version") != 2:
+                    warnings.append(f"profile projects list version is "
+                                    f"{plists.get('version')!r}, expected 2")
+                for key, required in (("activeProjects", PROFILE_ACTIVE_FIELDS),
+                                      ("completedProjects", PROFILE_COMPLETED_FIELDS)):
+                    entries = plists.get(key)
+                    if entries is None:
+                        continue
+                    if not isinstance(entries, list):
+                        errors.append(f"profile projects list {key!r} is "
+                                      f"{type(entries).__name__}, expected list")
+                        continue
+                    for i, entry in enumerate(entries):
+                        if not isinstance(entry, dict):
+                            errors.append(f"{key}[{i}] is {type(entry).__name__}, "
+                                          f"expected object")
+                            continue
+                        label = entry.get("name") or f"index {i}"
+                        missing = sorted(required - set(entry))
+                        if missing:
+                            errors.append(
+                                f"{key} entry {label!r} missing required "
+                                f"field(s): {', '.join(missing)} — the project "
+                                f"list is hand-edited by /learn and /evaluate; "
+                                f"restore the field(s) per the state-schema KB")
+            except (json.JSONDecodeError, OSError) as e:
+                errors.append(f"profile projects list unreadable: {e}")
 
     result = {"ok": not errors, "project": project,
               "errors": errors, "warnings": warnings}

@@ -5,10 +5,12 @@
       "name": "react-fundamentals",
       "topic": "React Fundamentals",
       "startedAt": "2026-03-08",
-      "currentPhase": 1,
+      "currentPhase": "1",
       "currentModule": "1.2",
       "bloomLevel": 2.5,
-      "status": "Phase 1 Module 1.2 in progress"
+      "pace": "steady",
+      "status": "Phase 1 Module 1.2 in progress",
+      "trackPurpose": "foundation"
     }
   ],
   "completedProjects": []

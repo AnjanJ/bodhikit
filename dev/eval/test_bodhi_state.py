@@ -876,6 +876,85 @@ def t_last_activity_threshold():
               any("120-char" in w for w in out["warnings"]), out)
 
 
+def t_profile_project_list_shape():
+    """P1: verify is the only backstop on the one write the script does not own.
+
+    /learn appends to .bodhi-profile.projects.json by hand (read-modify-write
+    in skill prose, no script path). The empirical probe passed that append on
+    one model on one run — reassurance, not a guarantee. verify cannot prevent
+    a dropped field, but it can refuse to call the result ok, which is what
+    turns a silent hole into a caught one.
+    """
+    ACTIVE = {"name": "sql-deep-dive", "topic": "SQL", "startedAt": "2026-01-01",
+              "currentPhase": "1", "currentModule": "Joins", "bloomLevel": 2,
+              "pace": "open-ended", "status": "active", "trackPurpose": "depth"}
+    COMPLETED = {"name": "react-basics", "completedAt": "2026-02-01",
+                 "finalBloomLevel": 4, "trackPurpose": "foundation"}
+
+    def write_lists(root, **over):
+        payload = {"version": 2, "activeProjects": [dict(ACTIVE)],
+                   "completedProjects": [dict(COMPLETED)]}
+        payload.update(over)
+        with open(os.path.join(root, ".bodhi-profile.json"), "w") as f:
+            json.dump({"version": 2}, f)
+        with open(os.path.join(root, ".bodhi-profile.projects.json"), "w") as f:
+            json.dump(payload, f)
+
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review=json.loads(json.dumps(V2_SR)))
+        write_lists(root)
+        out = run(proj, "verify")
+        check("profile list: well-formed entries verify clean", out["ok"] is True, out)
+
+        # trackPurpose is the field the probe singled out as most likely to be
+        # dropped by a careless rewrite — it carries no meaning to a model
+        # skimming the entry, and nothing else in the file references it.
+        thin = dict(ACTIVE)
+        del thin["trackPurpose"]
+        write_lists(root, activeProjects=[thin])
+        out = run(proj, "verify", expect_fail=True)
+        check("profile list: dropped trackPurpose now fails verify",
+              out["ok"] is False, out)
+        check("profile list: error names the entry and the missing field",
+              any("sql-deep-dive" in e and "trackPurpose" in e
+                  for e in out["errors"]), out)
+
+        # completedProjects has its own (different, shorter) required set.
+        thin_done = dict(COMPLETED)
+        del thin_done["finalBloomLevel"]
+        write_lists(root, completedProjects=[thin_done])
+        out = run(proj, "verify", expect_fail=True)
+        check("profile list: completedProjects shape checked too",
+              any("finalBloomLevel" in e for e in out["errors"]), out)
+
+        # An unnamed entry still has to be reportable — fall back to the index.
+        write_lists(root, activeProjects=[{"topic": "SQL"}])
+        out = run(proj, "verify", expect_fail=True)
+        check("profile list: nameless entry reported by index",
+              any("index 0" in e for e in out["errors"]), out)
+
+        # Extra fields are the learner's/future schema's business, not an error.
+        fat = dict(ACTIVE)
+        fat["someFutureField"] = "keep"
+        write_lists(root, activeProjects=[fat])
+        check("profile list: unknown extra fields are not errors",
+              run(proj, "verify")["ok"] is True)
+
+        # Absent lists are legal (a profile before the first /learn append).
+        write_lists(root, activeProjects=None)
+        payload = {"version": 2, "completedProjects": [dict(COMPLETED)]}
+        with open(os.path.join(root, ".bodhi-profile.projects.json"), "w") as f:
+            json.dump(payload, f)
+        check("profile list: missing activeProjects key is not an error",
+              run(proj, "verify")["ok"] is True)
+
+        # And the whole file being absent stays legal — verify is scoped to a
+        # project; a solo project may never have had a cross-project profile.
+        os.remove(os.path.join(root, ".bodhi-profile.projects.json"))
+        check("profile list: absent list file is not an error",
+              run(proj, "verify")["ok"] is True)
+
+
 def t_session_brief():
     with tempfile.TemporaryDirectory() as root:
         proj = make_project(root, spaced_review=json.loads(json.dumps(V2_SR)))
@@ -1034,6 +1113,7 @@ def main():
               t_history_cap, t_mastery_blocked_on_feynman,
               t_box_before, t_retention, t_export_anonymized,
               t_defer, t_verify_flags_drift, t_normalize, t_last_activity_threshold,
+              t_profile_project_list_shape,
               t_session_brief, t_crossed_bloom3, t_snapshot,
               t_due_never_taught):
         print(f"-- {t.__name__}")
