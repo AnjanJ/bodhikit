@@ -777,6 +777,30 @@ else
   if ! grep -q '120 chars' knowledge/state-ops/SKILL.md; then
     err "knowledge/state-ops/SKILL.md no longer states the 120-char lastActivity guidance (pins LAST_ACTIVITY_MAX)"
   fi
+
+  # (e) Concept tier ladder (1.14.x, follow-up F-1). `familiar` and `introduced`
+  # were prose-only tiers for four minor versions — declared in the KB, computed
+  # nowhere, so /progress inferred a coarser tier from two module rollups. Now
+  # that concept_tier() implements them, pin the boundary that separates
+  # familiar from introduced: it is the one threshold in the ladder that is a
+  # judgment call (apply rung reached AND one retrieval survived spacing) rather
+  # than a restatement of the mastery formula.
+  if ! grep -q 'bloomLevel", 0) >= 3 and c.get("box", 1) >= 2' scripts/bodhi-state; then
+    err "scripts/bodhi-state concept_tier familiar threshold drifted from the blooms-taxonomy KB ladder (Bloom 3+ AND Box 2+)"
+  fi
+  if ! grep -q 'Bloom 3+ AND Box 2+' knowledge/blooms-taxonomy/SKILL.md; then
+    err "knowledge/blooms-taxonomy/SKILL.md tier ladder no longer states the familiar criteria (pins concept_tier)"
+  fi
+  # The four tier keys are a vocabulary the same way SESSION_TYPES is: /progress
+  # indexes into them by name, so a rename on either side breaks the render.
+  for tier in unclassified introduced familiar mastered; do
+    if ! grep -q "\"$tier\": 0" scripts/bodhi-state; then
+      err "scripts/bodhi-state new_module_row missing tier key '$tier'"
+    fi
+    if ! grep -qi "\*\*$tier\*\*\|\`$tier\`" knowledge/blooms-taxonomy/SKILL.md; then
+      err "knowledge/blooms-taxonomy/SKILL.md tier ladder missing tier '$tier'"
+    fi
+  done
 fi
 
 # ---------------------------------------------------------------------------

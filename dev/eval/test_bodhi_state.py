@@ -1102,6 +1102,77 @@ def t_due_never_taught():
               out["neverTaughtCount"] == 1, out)
 
 
+def t_concept_tiers():
+    # Follow-up F-1: the blooms-taxonomy KB declared `familiar` and `introduced`
+    # tiers that no code computed, so /progress inferred one tier per module
+    # from two booleans (any classified? all mastered?) and rendered a module of
+    # near-mastered concepts identically to one of freshly-introduced ones.
+    # `mastery` and `snapshot` now return the real per-module distribution.
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root)
+        # One concept per tier, placed on the boundaries that separate them.
+        concepts = [
+            # mastered: all four conjuncts.
+            ("mastered", 4, 4, 3, True),
+            # familiar: apply rung reached AND one retrieval survived a delay.
+            ("familiar-min", 3, 2, 0, False),
+            # familiar, NOT mastered: every conjunct but the box. The box is
+            # load-bearing on its own — high bloom + streak + Feynman is still
+            # only `familiar` until retrieval survives spacing.
+            ("familiar-box-short", 5, 2, 9, True),
+            # introduced: classified, but below the apply rung. A high box does
+            # not promote it — Bloom 2 means the apply rung was never reached.
+            ("introduced-low-bloom", 2, 5, 0, False),
+            # introduced: apply rung reached but box 1 — no delay survived yet.
+            ("introduced-box-1", 3, 1, 0, False),
+            # unclassified: no v3 writer has classified it. Not `introduced`:
+            # nothing has been observed, which is why masteryPct stays null.
+            ("unclassified", 0, 1, 0, False),
+        ]
+        for name, bloom, box, streak, feyn in concepts:
+            run(proj, "add-concept", "--concept", name, "--module", "M")
+        srdata = read_sr(proj)
+        by_name = {c["name"]: c for c in srdata["concepts"]}
+        for name, bloom, box, streak, feyn in concepts:
+            c = by_name[name]
+            c["bloomLevel"], c["box"] = bloom, box
+            c["consecutiveCorrectAtL4Plus"], c["feynmanPassed"] = streak, feyn
+        with open(os.path.join(proj, ".bodhi", "spaced-review.json"), "w") as f:
+            json.dump(srdata, f, indent=2)
+
+        expected = {"unclassified": 1, "introduced": 2, "familiar": 2, "mastered": 1}
+        out = run(proj, "mastery")
+        tiers = out["modules"]["M"]["tiers"]
+        check("mastery: per-module tier distribution matches the KB ladder",
+              tiers == expected, tiers)
+        check("mastery: tiers sum to the module's concept count",
+              sum(tiers.values()) == out["modules"]["M"]["concepts"], out["modules"]["M"])
+        check("mastery: tiers.mastered agrees with the mastered count "
+              "(one home for the four-conjunct formula)",
+              tiers["mastered"] == out["modules"]["M"]["mastered"], out["modules"]["M"])
+        check("mastery: unclassified is excluded from classified",
+              out["modules"]["M"]["classified"] == 5, out["modules"]["M"])
+
+        # snapshot must not fork the computation — /progress reads snapshot,
+        # and a second implementation is how the rollup tiers drifted before.
+        snap = run(proj, "snapshot")
+        check("snapshot: reports the same tier distribution as mastery",
+              snap["mastery"]["modules"]["M"]["tiers"] == expected,
+              snap["mastery"]["modules"]["M"])
+
+    # A module nobody has reached yet stays null, and every concept in it is
+    # `unclassified` — never `introduced`, which would imply it was attempted.
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review=json.loads(json.dumps(V2_SR)))
+        run(proj, "migrate-spaced-review")
+        out = run(proj, "mastery")
+        for mod, row in out["modules"].items():
+            check(f"mastery: untouched module {mod!r} is all-unclassified",
+                  row["tiers"]["unclassified"] == row["concepts"], row)
+            check(f"mastery: untouched module {mod!r} keeps masteryPct null",
+                  row["masteryPct"] is None, row)
+
+
 def main():
     for t in (t_migrate, t_record_review, t_sessions_and_forget,
               t_touch_state_and_profile, t_gate_check,
@@ -1115,7 +1186,7 @@ def main():
               t_defer, t_verify_flags_drift, t_normalize, t_last_activity_threshold,
               t_profile_project_list_shape,
               t_session_brief, t_crossed_bloom3, t_snapshot,
-              t_due_never_taught):
+              t_due_never_taught, t_concept_tiers):
         print(f"-- {t.__name__}")
         t()
     print(f"\n{PASS} passed, {FAIL} failed")

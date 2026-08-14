@@ -121,6 +121,8 @@ mastered = (bloomLevel >= 4)
 
 Skills MUST NOT redefine this formula inline. Field semantics (the Bloom ratchet, the counter rules, the Feynman flag) live in the `state-schema` KB; the underlying criteria in the `blooms-taxonomy` KB.
 
+**Per-module tiers.** `mastery` and `snapshot` also return, per module, `tiers: {unclassified, introduced, familiar, mastered}` — each concept classified against the `blooms-taxonomy` KB's ordered tier ladder (that KB is the canonical definition; `mastered` reuses the formula above, so there is still one home for it). The counts always sum to the module's `concepts`. Skills render these counts and MUST NOT infer a tier from `mastered`/`classified`/`masteryPct` — those are module rollups, the ladder is per concept, and deriving one from the other loses the distribution.
+
 **Legacy display rule:** a concept with `bloomLevel: 0` has never been classified by a v3 writer — gates treat it as "no opinion yet, allow advancement"; `/progress` displays `—` (not 0%) for modules where every concept is at `bloomLevel: 0`. `bodhi-state` implements both rules (the script reports `masteryPct: null` for such modules).
 
 ## Prerequisite Gate (canonical, computed by `bodhi-state gate-check`)

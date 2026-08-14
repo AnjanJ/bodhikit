@@ -617,6 +617,45 @@ def is_mastered(c):
             and c.get("feynmanPassed", False) is True)
 
 
+def concept_tier(c):
+    """Canonical concept tier (blooms-taxonomy KB ladder). Do not re-derive.
+
+    Ordered top-down; first match wins. `mastered` is the predicate name and
+    reuses is_mastered so the four-conjunct formula has exactly one home; the
+    learner-facing words (Solid/Working/Introduced) are /progress's rendering
+    of these keys, not separate logic.
+
+    Implements the KB's `familiar` and `introduced` tiers, which were prose-only
+    until 1.14.x: /progress previously inferred a single tier per module from
+    two booleans, so a module of near-mastered concepts and one of freshly
+    introduced concepts rendered identically (follow-up F-1).
+    """
+    if c.get("bloomLevel", 0) <= 0:
+        return "unclassified"
+    if is_mastered(c):
+        return "mastered"
+    if c.get("bloomLevel", 0) >= 3 and c.get("box", 1) >= 2:
+        return "familiar"
+    return "introduced"
+
+
+def new_module_row():
+    """Per-module tally shape shared by `mastery` and `snapshot`."""
+    return {"concepts": 0, "mastered": 0, "classified": 0,
+            "tiers": {"unclassified": 0, "introduced": 0,
+                      "familiar": 0, "mastered": 0}}
+
+
+def tally_module(m, c):
+    """Fold one concept into a module row (counts + tier distribution)."""
+    m["concepts"] += 1
+    if c.get("bloomLevel", 0) > 0:
+        m["classified"] += 1
+    if is_mastered(c):
+        m["mastered"] += 1
+    m["tiers"][concept_tier(c)] += 1
+
+
 def cmd_mastery(args):
     _, data = load_spaced_review(args.project)
     t = today()
@@ -624,13 +663,8 @@ def cmd_mastery(args):
     rollup = {"strong": [], "building": [], "needs_review": []}
     due_today, due_week = [], []
     for c in data.get("concepts", []):
-        m = modules.setdefault(c.get("module", "(none)"),
-                               {"concepts": 0, "mastered": 0, "classified": 0})
-        m["concepts"] += 1
-        if c.get("bloomLevel", 0) > 0:
-            m["classified"] += 1
-        if is_mastered(c):
-            m["mastered"] += 1
+        tally_module(modules.setdefault(c.get("module", "(none)"),
+                                        new_module_row()), c)
         box = c.get("box", 1)
         tier = "strong" if box >= 4 else ("building" if box >= 2 else "needs_review")
         rollup[tier].append(c["name"])
@@ -932,13 +966,8 @@ def cmd_snapshot(args):
             feynman += 1
         if c.get("bloomLevel", 0) > 0:
             classified += 1
-        m = modules.setdefault(c.get("module", "(none)"),
-                               {"concepts": 0, "mastered": 0, "classified": 0})
-        m["concepts"] += 1
-        if c.get("bloomLevel", 0) > 0:
-            m["classified"] += 1
-        if is_mastered(c):
-            m["mastered"] += 1
+        tally_module(modules.setdefault(c.get("module", "(none)"),
+                                        new_module_row()), c)
         nr = parse_date(c.get("nextReview"))
         if nr is None:
             if c.get("nextReview") is not None:
