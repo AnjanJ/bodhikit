@@ -94,7 +94,7 @@ Update tracking per the `state-ops` KB write path:
      --confidence sure|mostly|guessing --source reflect
    ```
 
-   Clean retrieval = `correct`; fluency-failure = `partial`; demote-list concepts are NOT recorded here — they go through `/forget` in Phase 3, which writes their history itself.
+   Clean retrieval = `correct`; fluency-failure = `partial`; demote-list concepts are NOT recorded here — they go through `/forget` in Phase 3, which writes their history itself. `--tested-bloom` is the level the retrieval reached, not the level the learner rates themselves at (`blooms-taxonomy` KB) — the confidence rating is a separate axis and never sets it.
 
 2. **Record the reflection batch once** (only when Q3 reviewed tracked concepts): `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> record-session --type spaced-review --data '{"conceptsReviewed": N, "calibrationNote": "<one sentence on confidence-vs-outcome alignment, covering same-day-guarded concepts too>"}'`.
 

@@ -178,7 +178,7 @@ After the learner indicates they have completed (or attempted) the exercise:
         --module "<current module>" --source practice
       ```
 
-      `--tested-bloom` caps at what was demonstrated, not the exercise tier (a brute-force Advanced solve does not advance past 4; the script ratchets `bloomLevel` and never demotes). Completion = `correct`; abandoned = `incorrect`; got there with heavy hints = `partial`. Do NOT call `set-feynman` here — that gate is owned by `/teach` (including its understanding-only sessions).
+      `--tested-bloom` caps at what was demonstrated, not the exercise tier (a brute-force Advanced solve does not advance past 4; the script ratchets `bloomLevel` and never demotes) — and not at what the learner says they demonstrated, per the `blooms-taxonomy` KB; the ratcheted level feeds the prerequisite gate. Completion = `correct`; abandoned = `incorrect`; got there with heavy hints = `partial`. Do NOT call `set-feynman` here — that gate is owned by `/teach` (including its understanding-only sessions).
 
    b. **If the exercise introduced or reviewed tracked concepts**, record the session once: `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> record-session --type practice --data '{"notes": "<exercise name>"}'`.
 

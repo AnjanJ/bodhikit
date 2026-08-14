@@ -907,6 +907,33 @@ if ! grep -rq 'ai-learning-safeguards' skills/; then
   err "ai-learning-safeguards KB is orphaned again — no skill references it"
 fi
 
+# 54. A judgment rule must be reachable from the site that applies it (1.14.x).
+# F-3 cost a day to diagnose because the precedence rule governing the parrot
+# boundary lived in feynman-technique while the write that applied it (/teach
+# Phase 5) cited only spaced-repetition. The rule was correct and out of scope.
+# A KB reference is not decoration at a write site — it is the load path.
+#
+#   --tested-bloom  ratchets (never demotes) and feeds the prerequisite gate;
+#                   the "what the answer reached, not what the learner claims"
+#                   rule lives in blooms-taxonomy.
+#   set-feynman     sets feynmanPassed, which is never unset; the grading
+#                   ladder and its precedence rule live in feynman-technique.
+#
+# Both are one-way writes, which is exactly why the governing rule has to be
+# in context at the moment of the call.
+for f in skills/*/SKILL.md skills/*/references/*.md; do
+  [ -f "$f" ] || continue
+  if grep -q -- '--tested-bloom' "$f" && ! grep -q 'blooms-taxonomy' "$f"; then
+    err "$f writes --tested-bloom (one-way ratchet, feeds the prerequisite gate) but never references the blooms-taxonomy KB — the anti-inflation rule is out of scope at the write site"
+  fi
+  # Match an actual invocation (bodhi-state ... set-feynman), not a prohibition
+  # — /practice and /pair both say "Do NOT call set-feynman here", which is the
+  # opposite of a write and must not trip this rule.
+  if grep -q 'bodhi-state" --project <project> set-feynman' "$f" && ! grep -q 'feynman-technique' "$f"; then
+    err "$f calls set-feynman (feynmanPassed is set-never-unset) but never references the feynman-technique KB — the grading ladder is out of scope at the write site"
+  fi
+done
+
 # ---------------------------------------------------------------------------
 echo
 if [ "$warn_count" -gt 0 ]; then

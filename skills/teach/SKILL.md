@@ -196,7 +196,7 @@ The session is invisible to every future skill until these land. Per the `state-
      --module "<current module>" --source teach
    ```
 
-   (`--module` auto-creates the concept if this was its first session.) If the retention-check explanation also met the Feynman bar: `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> set-feynman --concept "<concept>"`.
+   (`--module` auto-creates the concept if this was its first session.) `--tested-bloom` is what the answer reached, not what the learner claims it reached — `blooms-taxonomy` KB; the level ratchets and feeds the prerequisite gate. If the retention-check explanation also met the Feynman bar: `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> set-feynman --concept "<concept>"`.
 
 2. **If the session brief said `isReteach: true`**, also: `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> record-session --type targeted-reteach --data '{"notes": "<which gap>"}'`.
 

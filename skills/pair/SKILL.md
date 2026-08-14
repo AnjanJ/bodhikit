@@ -163,7 +163,7 @@ After any pairing mode:
         --tested-bloom <level demonstrated> --source pair
       ```
 
-      Do NOT call `set-feynman` here — pairing's step-6 check is necessary-but-not-sufficient for that gate (owned by `/teach`, including its understanding-only sessions).
+      `--tested-bloom` is the level the work demonstrated, not the level the learner claims for it (`blooms-taxonomy` KB) — it ratchets and feeds the prerequisite gate. Do NOT call `set-feynman` here — pairing's step-6 check is necessary-but-not-sufficient for that gate (owned by `/teach`, including its understanding-only sessions).
 
    b-bis. **Concepts the learner visibly struggled with** (mechanical explain-backs that never improved, repeated syntax stalls on the same construct, a step-6 walk-through they could not produce): record the evidence too — `record-review --concept "<name>" --result partial --tested-bloom <level attempted> --source pair` (auto-create via `--module` if untracked). Pairing that only ever records wins leaves the Leitner system blind to where the session actually strained.
 
