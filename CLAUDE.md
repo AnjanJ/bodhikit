@@ -71,6 +71,8 @@ Schemas are pinned in `knowledge/state-schema/SKILL.md`. If a new field is neede
 3. Update skill/agent/KB counts in README and `marketplace.json` if they changed.
 4. Run `dev/check.sh` — should pass clean (includes the bodhi-state deterministic test suite).
 5. Run `dev/eval/run-llm-evals.sh` — file-state assertions against a live model (costs tokens; this is the automated dogfood). Schema-touching releases additionally warrant a manual dogfood pass on real learning data for the interactive skills.
+   - **If the release touched a grading ladder** (`feynman-technique`, `blooms-taxonomy`, or a `record-review` write site), a single pass is not sufficient — sweep the grading group with `BODHI_EVAL_RUNS=N` and read the recorded *levels*, not just the rate. These boundaries have measured 3/3 and 1/3 on the same tree hours apart.
+   - **A grading rule that bounds a value needs a scenario on each side of the bound, read together.** A perfect score on the scenario a fix targets cannot distinguish "now correct" from "now constant" — a rule that pins the level passes it identically. `grade-apply-band` (capped at the apply rung) and `grade-genuine` (reaches the top rung) are that pair; in 1.14.x a floor rule scored 8/8 on the first while silently pulling the second from Bloom 5 down to 3.
 6. Tag and push to GitHub (`origin`) — the source of truth. The Codeberg repo is archived (the push-mirror flow that made Codeberg canonical no longer applies).
 
 ## Don't do
