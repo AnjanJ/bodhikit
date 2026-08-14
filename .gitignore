@@ -18,6 +18,9 @@ learningWithBodhi/
 # Dev audit outputs (regenerable, do not version)
 dev/context-audit.txt
 
+# Personal analysis notes (not part of the plugin)
+analysis/
+
 # Environment
 .env
 .env.*
