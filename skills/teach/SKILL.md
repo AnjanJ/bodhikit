@@ -46,7 +46,7 @@ Otherwise, run:
 "${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> gate-check --prereqs "<declared list>"
 ```
 
-passing `--prereqs` from the prior module's `**Prerequisites for next module:**` line in `plan/phase-{N}.md` when it exists (omit the flag when it does not; the script falls back to the prior module's concepts and flags the inference).
+passing `--prereqs` from the prior module's `**Prerequisites for next module:**` line in `plan/phase-{N}.md` when it exists (omit the flag when it does not; the script falls back to the tracked `previousModule`, or declines to gate when neither exists — it never guesses).
 
 Act on the verdict JSON:
 
@@ -59,7 +59,7 @@ Act on the verdict JSON:
 
   Name the gap in outcome terms, not as a level. The learner is deciding whether to press on; "you can explain what it does, but the next module asks you to debug it" is a decision they can act on, where "(Bloom 2)" is a grade delivered at a moment of friction.
 
-  If the verdict JSON says the prerequisite list was inferred (`prerequisiteSource: "inferred-prior-module"`), add: "I am reading the prior module's concept list because the plan does not declare specific prerequisites — say if any of these do not apply and I will skip them."
+  If the verdict JSON reports `prerequisiteSource: "prior-module"` (no declared list), add: "I am reading the prior module's concept list because the plan does not declare specific prerequisites — say if any of these do not apply and I will skip them."
 
   Learner choices: **revisit** (re-enter Phase 2 on that prerequisite first), **carry on** (record `**Prerequisite gate carry-on:** <concepts>` in this session's `progress.md` entry so the next evaluation sees the conscious choice), **skip an irrelevant item** (per-session dismissal — no state change), or **end the session**.
 

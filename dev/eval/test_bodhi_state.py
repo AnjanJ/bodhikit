@@ -252,8 +252,16 @@ def t_gate_check():
         # Module A concepts; current module is Module B with no work yet -> fires
         proj = make_project(root, spaced_review=sr)
         run(proj, "migrate-spaced-review")
+        # 1.15.x: with nothing declared and no previousModule tracked, the gate
+        # declines to fire instead of inferring a prior module from concept
+        # dates (honest-review #11 — a guessed gate is worse than no gate).
         out = run(proj, "gate-check")
+        check("gate: no declaration + no previousModule = declines to fire",
+              out["fires"] is False and "--prereqs" in out.get("reason", ""), out)
+        out = run(proj, "gate-check", "--prior-module", "Module A")
         check("gate: fires on first session of new module", out["fires"] is True, out)
+        check("gate: prior-module source reported",
+              out["prerequisiteSource"] == "prior-module", out)
         # bloomLevel 0 everywhere -> no-opinion, verdict clear
         check("gate: legacy fallthrough (bloom 0 = no opinion)",
               out["verdict"] == "clear"
@@ -261,7 +269,7 @@ def t_gate_check():
         # Classify: B-tree to bloom 3 with recent review -> satisfied
         run(proj, "record-review", "--concept", "B-tree indexes",
             "--result", "correct", "--tested-bloom", "3")
-        out = run(proj, "gate-check")
+        out = run(proj, "gate-check", "--prior-module", "Module A")
         btree = [p for p in out["prerequisites"] if p["name"] == "B-tree indexes"][0]
         check("gate: bloom>=3 recent = satisfied", btree["status"] == "satisfied")
         # Query planning at bloom 2, box 1, no strong evidence -> gap
@@ -269,7 +277,7 @@ def t_gate_check():
             "--result", "incorrect", "--tested-bloom", "2")
         run(proj, "record-review", "--concept", "Query planning",
             "--result", "correct", "--tested-bloom", "2")
-        out = run(proj, "gate-check")
+        out = run(proj, "gate-check", "--prior-module", "Module A")
         qp = [p for p in out["prerequisites"] if p["name"] == "Query planning"][0]
         check("gate: low bloom without evidence = gap", qp["status"] == "gap", out)
         check("gate: verdict offer when gaps exist", out["verdict"] == "offer")
@@ -280,7 +288,7 @@ def t_gate_check():
         c["lastReviewed"] = (TODAY - datetime.timedelta(days=90)).isoformat()
         with open(os.path.join(proj, ".bodhi", "spaced-review.json"), "w") as f:
             json.dump(srdata, f)
-        out = run(proj, "gate-check")
+        out = run(proj, "gate-check", "--prior-module", "Module A")
         btree = [p for p in out["prerequisites"] if p["name"] == "B-tree indexes"][0]
         check("gate: bloom>=3 but stale evidence = stale-reconfirm (1.11.0 recency rule)",
               btree["status"] == "stale-reconfirm", out)
@@ -293,7 +301,7 @@ def t_gate_check():
                               {"date": "2026-05-20", "result": "correct"}]
         with open(os.path.join(proj, ".bodhi", "spaced-review.json"), "w") as f:
             json.dump(srdata, f)
-        out = run(proj, "gate-check")
+        out = run(proj, "gate-check", "--prior-module", "Module A")
         qp = [p for p in out["prerequisites"] if p["name"] == "Query planning"][0]
         check("gate: strong v2 evidence = apply-equivalent", qp["status"] == "apply-equivalent")
         # Continuation session: concept exists for current module -> does not fire

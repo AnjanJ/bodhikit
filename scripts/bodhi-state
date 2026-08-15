@@ -1089,25 +1089,31 @@ def cmd_gate_check(args):
         return
 
     # First session on a new module: identify prerequisites.
-    inferred = False
     if args.prereqs:
         names = [n.strip().lower() for n in args.prereqs.split(",") if n.strip()]
         prereqs = [c for c in concepts
                    if c.get("name", "").strip().lower() in names]
+        source = "declared"
     else:
         prior = args.prior_module or state.get("previousModule")
         if not prior:
-            # Infer: the non-current module introduced most recently.
-            others = [c for c in concepts
-                      if c.get("module", "").strip().lower() != current.strip().lower()]
-            if not others:
-                emit({"fires": False, "reason": "no prior-module concepts found",
-                      "currentModule": current})
-                return
-            prior = max(others, key=lambda c: c.get("introduced") or "").get("module")
-            inferred = True
+            # 1.15.x: the old fallback here INFERRED a prior module by
+            # string-sorting `introduced` dates — a weak heuristic that was
+            # honestly flagged as inferred but still did real gating work in
+            # real sessions. A noisy gate is worse than no gate (false
+            # reconfirm questions erode trust in the real ones), so with
+            # nothing declared and no tracked previousModule the gate now
+            # declines to fire instead of guessing.
+            emit({"fires": False,
+                  "reason": "no prerequisites declared and no previousModule "
+                            "tracked — pass --prereqs (the plan's "
+                            "'Prerequisites for next module' line) or "
+                            "--prior-module to gate this module",
+                  "currentModule": current})
+            return
         prereqs = [c for c in concepts
                    if c.get("module", "").strip().lower() == str(prior).strip().lower()]
+        source = "prior-module"
 
     report = [{"name": c["name"], "bloomLevel": c.get("bloomLevel", 0),
                "box": c.get("box", 1), "lastReviewed": c.get("lastReviewed"),
@@ -1115,8 +1121,7 @@ def cmd_gate_check(args):
     gaps = [r for r in report if r["status"] == "gap"]
     stale = [r for r in report if r["status"] == "stale-reconfirm"]
     emit({"fires": True, "currentModule": current,
-          "prerequisiteSource": "declared" if args.prereqs else "inferred-prior-module",
-          "inferred": inferred,
+          "prerequisiteSource": source,
           "prerequisites": report,
           "gaps": [r["name"] for r in gaps],
           "staleReconfirm": [r["name"] for r in stale],

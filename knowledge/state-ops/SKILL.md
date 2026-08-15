@@ -137,7 +137,7 @@ The `/teach` Phase 1 gate fires only on the first session of a new module (detec
 | `apply-equivalent` | `1 <= bloomLevel < 3` but `box >= 3` AND last two reviews correct | Pass (gate-time read only; bloomLevel untouched) |
 | `gap` | otherwise | Surface as an offer — never auto-block; the learner decides |
 
-Prerequisites come from the plan's `**Prerequisites for next module:**` declaration (passed via `--prereqs`) or, as fallback, all concepts of the prior module (`previousModule` or inferred; the verdict JSON flags inference so the skill can tell the learner the mapping was inferred).
+Prerequisites come from the plan's `**Prerequisites for next module:**` declaration (passed via `--prereqs`) or, as fallback, all concepts of the tracked `previousModule` (the verdict JSON reports `prerequisiteSource: "declared" | "prior-module"` so the skill can tell the learner which mapping it used). When neither is available the gate declines to fire (`fires: false` with the reason) — it never infers a prerequisite module from concept dates; a guessed gate generates false reconfirm questions, which cost more trust than no gate.
 
 ## Update Rules
 
