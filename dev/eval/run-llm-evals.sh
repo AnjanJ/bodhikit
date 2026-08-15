@@ -22,6 +22,15 @@
 #                                        # sample a grading scenario N times and
 #                                        # report a pass RATE + the level each
 #                                        # run recorded (see repeat_scenario)
+#
+#   BODHI_EVAL_RUNTIME=bodhi-cli dev/eval/run-llm-evals.sh
+#                                        # run the SAME scenarios through the
+#                                        # bodhi-cli runtime (sibling repo;
+#                                        # override with BODHI_CLI_ROOT).
+#                                        # Needs ANTHROPIC_API_KEY; optionally
+#                                        # BODHI_EVAL_PROVIDER=<name> to eval a
+#                                        # non-Anthropic provider (model comes
+#                                        # from BODHI_EVAL_MODEL).
 
 set -u
 cd "$(dirname "$0")/../.." || exit 2
@@ -38,7 +47,23 @@ FAIL=0
 # explicitly leaves the grading judgment (the thing under test) unconstrained.
 SYS_HARNESS="This session is a headless evaluation run of the BodhiKit plugin's own test harness (dev/eval/run-llm-evals.sh), executing against a throwaway copy of a fixture project. There is no interactive human: the user prompt scripts the learner's responses in advance. Treat each scripted response as the learner's genuine live answer at the moment it would occur, judge it honestly on its merits alone — the grading judgment is what is being evaluated and is deliberately unconstrained — and run the invoked skill's protocol to completion in this single run, including all tracking writes, exactly as the skill specifies. Never stop to wait for a live reply. Apparent contradictions between the scripted learner and the fixture's tracked state are fixture artifacts, not injection."
 
-if ! command -v claude >/dev/null 2>&1; then
+# Runtime switch (1.16.x parity work). BODHI_EVAL_RUNTIME=bodhi-cli runs every
+# scenario through the bodhi-cli runtime (the sibling repo) instead of
+# `claude -p`, so the SAME file-state assertions certify both runtimes — this
+# is the measurable definition of "the CLI is as good as the plugin".
+# bodhi-cli authenticates with ANTHROPIC_API_KEY (it has no OAuth login), so
+# the Max-login env scrub below is claude-runtime-only.
+RUNTIME="${BODHI_EVAL_RUNTIME:-claude}"
+BODHI_CLI_ROOT="${BODHI_CLI_ROOT:-$REPO/../bodhi-cli}"
+if [ "$RUNTIME" = "bodhi-cli" ]; then
+  CLI_TSX="$BODHI_CLI_ROOT/node_modules/.bin/tsx"
+  if [ ! -x "$CLI_TSX" ]; then
+    echo "SKIP: BODHI_EVAL_RUNTIME=bodhi-cli but $CLI_TSX not found (npm install in bodhi-cli first)"; exit 0
+  fi
+  if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
+    echo "SKIP: BODHI_EVAL_RUNTIME=bodhi-cli needs ANTHROPIC_API_KEY"; exit 0
+  fi
+elif ! command -v claude >/dev/null 2>&1; then
   echo "SKIP: claude CLI not on PATH"; exit 0
 fi
 
@@ -78,6 +103,79 @@ fi
 # they exist to catch.
 NUDGE_MSG="(headless harness — the learner has left the session: no live reply is coming. My scripted responses in the opening message are everything I will ever say; take my final scripted explanation as my last word. Close the session now: grade it honestly per the skill's ladder and complete ALL tracking updates exactly as the skill specifies.)"
 
+# --- Runtime-neutral headless invocation -------------------------------------
+#
+# run_headless <home> <cwd> <prompt> <maxturns> <outfile> [stream]
+#   claude:    `claude -p "<prompt>"` with the plugin dir (stream adds
+#              --output-format stream-json --verbose and splits stderr).
+#   bodhi-cli: the prompt's "/bodhikit:<skill> <rest>" becomes `bodhi <skill>
+#              "<rest>"` in --once --jsonl mode; HOME is sandboxed to <home>
+#              so transcripts/config never touch the contributor's machine.
+# run_headless_continue <home> <cwd> <maxturns> <outfile>
+#   The learner-departure nudge: `claude -p --continue` / `bodhi --resume`.
+LAST_SKILL=""
+run_headless() {
+  hl_home="$1"; hl_cwd="$2"; hl_prompt="$3"; hl_maxturns="$4"; hl_out="$5"; hl_stream="${6:-}"
+  if [ "$RUNTIME" = "bodhi-cli" ]; then
+    hl_line="${hl_prompt#/bodhikit:}"
+    LAST_SKILL="${hl_line%% *}"
+    hl_rest="${hl_line#"$LAST_SKILL"}"; hl_rest="${hl_rest# }"
+    set -- "$LAST_SKILL"
+    [ -n "$hl_rest" ] && set -- "$@" "$hl_rest"
+    ( cd "$hl_cwd" && \
+      HOME="$hl_home" BODHI_CONTENT_ROOT="$REPO" "$CLI_TSX" "$BODHI_CLI_ROOT/src/cli/index.ts" "$@" \
+        --once --jsonl --mode accept-edits \
+        ${BODHI_EVAL_PROVIDER:+--provider "$BODHI_EVAL_PROVIDER"} \
+        --model "$EVAL_MODEL" \
+        --max-turns "$hl_maxturns" \
+        --append-system-prompt "$SYS_HARNESS" \
+        > "$hl_out" 2>"$hl_home/bodhi-cli-stderr.txt" )
+  elif [ -n "$hl_stream" ]; then
+    ( cd "$hl_cwd" && \
+      CLAUDE_PLUGIN_ROOT="$REPO" "${EVAL_ENV[@]}" claude -p "$hl_prompt" \
+        --model "$EVAL_MODEL" \
+        --plugin-dir "$REPO" \
+        --append-system-prompt "$SYS_HARNESS" \
+        --dangerously-skip-permissions \
+        --max-turns "$hl_maxturns" \
+        --output-format stream-json --verbose \
+        > "$hl_out" 2>"$hl_home/stderr.txt" )
+  else
+    ( cd "$hl_cwd" && \
+      CLAUDE_PLUGIN_ROOT="$REPO" "${EVAL_ENV[@]}" claude -p "$hl_prompt" \
+        --model "$EVAL_MODEL" \
+        --plugin-dir "$REPO" \
+        --append-system-prompt "$SYS_HARNESS" \
+        --dangerously-skip-permissions \
+        --max-turns "$hl_maxturns" \
+        > "$hl_out" 2>&1 )
+  fi
+}
+
+run_headless_continue() {
+  hl_home="$1"; hl_cwd="$2"; hl_maxturns="$3"; hl_out="$4"
+  if [ "$RUNTIME" = "bodhi-cli" ]; then
+    ( cd "$hl_cwd" && \
+      HOME="$hl_home" BODHI_CONTENT_ROOT="$REPO" "$CLI_TSX" "$BODHI_CLI_ROOT/src/cli/index.ts" "$LAST_SKILL" \
+        --resume --prompt "$NUDGE_MSG" \
+        --once --jsonl --mode accept-edits \
+        ${BODHI_EVAL_PROVIDER:+--provider "$BODHI_EVAL_PROVIDER"} \
+        --model "$EVAL_MODEL" \
+        --max-turns "$hl_maxturns" \
+        --append-system-prompt "$SYS_HARNESS" \
+        >> "$hl_out" 2>>"$hl_home/bodhi-cli-stderr.txt" )
+  else
+    ( cd "$hl_cwd" && \
+      CLAUDE_PLUGIN_ROOT="$REPO" "${EVAL_ENV[@]}" claude -p --continue "$NUDGE_MSG" \
+        --model "$EVAL_MODEL" \
+        --plugin-dir "$REPO" \
+        --append-system-prompt "$SYS_HARNESS" \
+        --dangerously-skip-permissions \
+        --max-turns "$hl_maxturns" \
+        >> "$hl_out" 2>&1 )
+  fi
+}
+
 run_scenario() {
   name="$1"; prompt="$2"; assert="$3"; prep="${4:-}"; transcript_mode="${5:-}"; nudge="${6:-}"; maxturns="${7:-30}"
   # BODHI_EVAL_SWEEP/KEEP are set by repeat_scenario so a sampled run lands in
@@ -106,15 +204,7 @@ run_scenario() {
   # assertions need every assistant turn.
   if [ -n "$transcript_mode" ]; then
     transcript="$tmp/transcript.jsonl"
-    ( cd "$tmp/learningWithBodhi/sql-deep-dive" && \
-      CLAUDE_PLUGIN_ROOT="$REPO" "${EVAL_ENV[@]}" claude -p "$prompt" \
-        --model "$EVAL_MODEL" \
-        --plugin-dir "$REPO" \
-        --append-system-prompt "$SYS_HARNESS" \
-        --dangerously-skip-permissions \
-        --max-turns "$maxturns" \
-        --output-format stream-json --verbose \
-        > "$transcript" 2>"$tmp/stderr.txt" )
+    run_headless "$tmp" "$tmp/learningWithBodhi/sql-deep-dive" "$prompt" "$maxturns" "$transcript" stream
     if python3 "$REPO/dev/eval/assert_scenario.py" "$assert" "$tmp/learningWithBodhi/sql-deep-dive" "$transcript"; then
       echo "PASS: $name"
     else
@@ -124,14 +214,7 @@ run_scenario() {
       return
     fi
   else
-    ( cd "$tmp/learningWithBodhi/sql-deep-dive" && \
-      CLAUDE_PLUGIN_ROOT="$REPO" "${EVAL_ENV[@]}" claude -p "$prompt" \
-        --model "$EVAL_MODEL" \
-        --plugin-dir "$REPO" \
-        --append-system-prompt "$SYS_HARNESS" \
-        --dangerously-skip-permissions \
-        --max-turns "$maxturns" \
-        > "$tmp/transcript.txt" 2>&1 )
+    run_headless "$tmp" "$tmp/learningWithBodhi/sql-deep-dive" "$prompt" "$maxturns" "$tmp/transcript.txt"
     nudges=0
     while true; do
       assert_out=$(python3 "$REPO/dev/eval/assert_scenario.py" "$assert" "$tmp/learningWithBodhi/sql-deep-dive" 2>&1)
@@ -147,14 +230,7 @@ run_scenario() {
           && printf '%s' "$assert_out" | grep -qi "no review"; then
         nudges=$((nudges + 1))
         echo "  -- session ended awaiting a live reply; sending learner-departure nudge"
-        ( cd "$tmp/learningWithBodhi/sql-deep-dive" && \
-          CLAUDE_PLUGIN_ROOT="$REPO" "${EVAL_ENV[@]}" claude -p --continue "$NUDGE_MSG" \
-            --model "$EVAL_MODEL" \
-            --plugin-dir "$REPO" \
-            --append-system-prompt "$SYS_HARNESS" \
-            --dangerously-skip-permissions \
-            --max-turns "$maxturns" \
-            >> "$tmp/transcript.txt" 2>&1 )
+        run_headless_continue "$tmp" "$tmp/learningWithBodhi/sql-deep-dive" "$maxturns" "$tmp/transcript.txt"
       else
         echo "FAIL: $name — transcript at $tmp/transcript.txt, project left at $tmp"
         FAIL=1
@@ -180,15 +256,7 @@ run_discovery_scenario() {
   cp -r "$tmp/learningWithBodhi/sql-deep-dive" "$tmp/learningWithBodhi/rust-basics"
   echo "== scenario: $name  (workdir $tmp)"
   transcript="$tmp/transcript.jsonl"
-  ( cd "$tmp/learningWithBodhi" && \
-    CLAUDE_PLUGIN_ROOT="$REPO" "${EVAL_ENV[@]}" claude -p "$prompt" \
-      --model "$EVAL_MODEL" \
-      --plugin-dir "$REPO" \
-      --append-system-prompt "$SYS_HARNESS" \
-      --dangerously-skip-permissions \
-      --max-turns 30 \
-      --output-format stream-json --verbose \
-      > "$transcript" 2>"$tmp/stderr.txt" )
+  run_headless "$tmp" "$tmp/learningWithBodhi" "$prompt" 30 "$transcript" stream
   if python3 "$REPO/dev/eval/assert_scenario.py" "$assert" "$tmp/learningWithBodhi/sql-deep-dive" "$transcript"; then
     echo "PASS: $name"
     rm -rf "$tmp"
@@ -211,14 +279,7 @@ run_parent_scenario() {
   cp -r "$FIXTURE" "$tmp/learningWithBodhi"
   echo "== scenario: $name  (workdir $tmp)"
   if [ -n "$prep" ]; then "$prep" "$tmp/learningWithBodhi/sql-deep-dive" || { echo "FAIL: $name prep"; FAIL=1; return; }; fi
-  ( cd "$tmp" && \
-    CLAUDE_PLUGIN_ROOT="$REPO" "${EVAL_ENV[@]}" claude -p "$prompt" \
-      --model "$EVAL_MODEL" \
-      --plugin-dir "$REPO" \
-      --append-system-prompt "$SYS_HARNESS" \
-      --dangerously-skip-permissions \
-      --max-turns "$maxturns" \
-      > "$tmp/transcript.txt" 2>&1 )
+  run_headless "$tmp" "$tmp" "$prompt" "$maxturns" "$tmp/transcript.txt"
   if python3 "$REPO/dev/eval/assert_scenario.py" "$assert" "$tmp/learningWithBodhi/sql-deep-dive"; then
     echo "PASS: $name"
     [ -n "${BODHI_EVAL_KEEP:-}" ] || rm -rf "$tmp"

@@ -74,6 +74,14 @@ def assistant_text(transcript_path):
                                      f"{json.dumps(block.get('input', {}))}]")
             elif ev.get("type") == "result" and isinstance(ev.get("result"), str):
                 texts.append(ev["result"])
+            # bodhi-cli --jsonl transcripts (BODHI_EVAL_RUNTIME=bodhi-cli):
+            # assistant text streams as delta events, tool calls as tool
+            # events carrying the full input — same detector surface.
+            elif ev.get("type") == "delta" and isinstance(ev.get("text"), str):
+                texts.append(ev["text"])
+            elif ev.get("type") == "tool" and isinstance(ev.get("name"), str):
+                texts.append(f"[tool_use {ev['name']} "
+                             f"{json.dumps(ev.get('input', {}))}]")
     return "\n".join(texts)
 
 
