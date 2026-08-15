@@ -885,13 +885,13 @@ def t_last_activity_threshold():
 
 
 def t_profile_project_list_shape():
-    """P1: verify is the only backstop on the one write the script does not own.
+    """P1: verify backstops the profile-list entry shape.
 
-    /learn appends to .bodhi-profile.projects.json by hand (read-modify-write
-    in skill prose, no script path). The empirical probe passed that append on
-    one model on one run — reassurance, not a guarantee. verify cannot prevent
-    a dropped field, but it can refuse to call the result ok, which is what
-    turns a silent hole into a caught one.
+    Originally the projects list was the one write the script did not own;
+    since 1.16.0 the profile-* subcommands own it, but the script-unavailable
+    fallback can still hand-edit these files. verify cannot prevent a dropped
+    field on that path, but it can refuse to call the result ok, which is
+    what turns a silent hole into a caught one.
     """
     ACTIVE = {"name": "sql-deep-dive", "topic": "SQL", "startedAt": "2026-01-01",
               "currentPhase": "1", "currentModule": "Joins", "bloomLevel": 2,
@@ -1181,6 +1181,142 @@ def t_concept_tiers():
                   row["masteryPct"] is None, row)
 
 
+def t_profile_project_lifecycle():
+    """1.16.0: the profile-* subcommands close the last hand-edit hole.
+
+    The script constructs schema-complete entries (every PROFILE_ACTIVE_FIELDS
+    key present), refreshes in place preserving unknown fields, and owns the
+    active -> completed transition — the exact mutations /learn and /evaluate
+    used to hand-edit.
+    """
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review=json.loads(json.dumps(V2_SR)))
+        run(proj, "migrate-spaced-review")
+        # No parent profile at all -> clean error, not a stack trace.
+        run(proj, "profile-add-project", "--name", "proj", "--topic", "t",
+            expect_fail=True)
+        with open(os.path.join(root, ".bodhi-profile.json"), "w") as f:
+            json.dump({"version": 2}, f)
+
+        # Add: creates the projects file, entry is schema-complete.
+        out = run(proj, "profile-add-project", "--name", "proj",
+                  "--topic", "testing", "--track-purpose", "depth")
+        entry = out["entry"]
+        required = {"name", "topic", "startedAt", "currentPhase",
+                    "currentModule", "bloomLevel", "pace", "status",
+                    "trackPurpose"}
+        check("profile-add: entry schema-complete",
+              required <= set(entry), out)
+        check("profile-add: startedAt is today",
+              entry["startedAt"] == TODAY.isoformat(), out)
+        check("profile-add: defaults filled",
+              entry["status"] == "active" and entry["pace"] == "steady"
+              and entry["bloomLevel"] == 0, out)
+        lp = os.path.join(root, ".bodhi-profile.projects.json")
+        with open(lp) as f:
+            data = json.load(f)
+        check("profile-add: file created at version 2", data["version"] == 2)
+        run(proj, "profile-add-project", "--name", "proj", "--topic", "dup",
+            expect_fail=True)
+
+        # Update: only passed fields change; unknown fields survive.
+        data["activeProjects"][0]["futureField"] = "keep"
+        data["customTop"] = "keep"
+        with open(lp, "w") as f:
+            json.dump(data, f)
+        out = run(proj, "profile-update-project", "--name", "proj",
+                  "--phase", "2", "--module", "Module B", "--bloom", "3")
+        check("profile-update: fields refreshed",
+              out["entry"]["currentPhase"] == "2"
+              and out["entry"]["currentModule"] == "Module B"
+              and out["entry"]["bloomLevel"] == 3, out)
+        check("profile-update: unknown entry field preserved",
+              out["entry"]["futureField"] == "keep", out)
+        with open(lp) as f:
+            check("profile-update: unknown top-level field preserved",
+                  json.load(f)["customTop"] == "keep")
+        run(proj, "profile-update-project", "--name", "proj", expect_fail=True)
+        run(proj, "profile-update-project", "--name", "ghost", "--phase", "2",
+            expect_fail=True)
+
+        # verify accepts the script-built shape.
+        out = run(proj, "verify")
+        check("profile lifecycle: verify clean on script-built entries",
+              out["ok"] is True, out)
+
+        # Complete: moves the entry, finalBloomLevel defaults to bloomLevel.
+        out = run(proj, "profile-complete-project", "--name", "proj")
+        done = out["entry"]
+        check("profile-complete: moved with today's date",
+              done["completedAt"] == TODAY.isoformat()
+              and out["activeProjects"] == 0
+              and out["completedProjects"] == 1, out)
+        check("profile-complete: finalBloomLevel from the entry",
+              done["finalBloomLevel"] == 3, out)
+        check("profile-complete: trackPurpose carried",
+              done["trackPurpose"] == "depth", out)
+        run(proj, "profile-complete-project", "--name", "proj",
+            expect_fail=True)
+        # A completed name cannot be re-added silently.
+        run(proj, "profile-add-project", "--name", "proj", "--topic", "again",
+            expect_fail=True)
+
+        # Replace-archive variant (/learn Phase 1.5c): --status + --final-bloom.
+        run(proj, "profile-add-project", "--name", "proj2", "--topic", "t2")
+        out = run(proj, "profile-complete-project", "--name", "proj2",
+                  "--final-bloom", "2", "--status", "archived: replaced by x")
+        check("profile-complete: archive status + explicit final bloom",
+              out["entry"]["finalBloomLevel"] == 2
+              and out["entry"]["status"].startswith("archived"), out)
+        out = run(proj, "verify")
+        check("profile lifecycle: verify clean after completion",
+              out["ok"] is True, out)
+
+
+def t_profile_patterns():
+    """profile-update-patterns: the 3+-assessments tally is pure counting —
+    the script owns it (state-schema KB), the model never counts in prose."""
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review=json.loads(json.dumps(V2_SR)))
+        run(proj, "migrate-spaced-review")
+        with open(os.path.join(root, ".bodhi-profile.json"), "w") as f:
+            json.dump({"version": 2, "custom": "keep"}, f)
+
+        out = run(proj, "profile-update-patterns")
+        check("patterns: no history is a clean no-op",
+              out["addedChallenges"] == [] and out["addedStrengths"] == []
+              and "note" in out, out)
+
+        entry = json.dumps({"topic": "SQL", "subTopics": [
+            {"name": "Query planning", "bloomLevel": 2},
+            {"name": "Indexes", "bloomLevel": 4}]})
+        for _ in range(2):
+            run(proj, "record-assessment", "--trigger", "assess",
+                "--data", entry)
+        out = run(proj, "profile-update-patterns")
+        check("patterns: below threshold adds nothing",
+              out["addedChallenges"] == [] and out["addedStrengths"] == [], out)
+
+        run(proj, "record-assessment", "--trigger", "evaluate",
+            "--data", entry)
+        out = run(proj, "profile-update-patterns")
+        check("patterns: 3+ low entries -> persistent challenge",
+              out["addedChallenges"] == ["Query planning"], out)
+        check("patterns: 3+ high entries -> consistent strength",
+              out["addedStrengths"] == ["Indexes"], out)
+        with open(os.path.join(root, ".bodhi-profile.json")) as f:
+            profile = json.load(f)
+        check("patterns: written to the profile with fields preserved",
+              profile["patterns"]["persistentChallenges"] == ["Query planning"]
+              and profile["custom"] == "keep"
+              and "lastUpdated" in profile, profile)
+
+        # Re-run is append-only + deduplicated: nothing doubles.
+        out = run(proj, "profile-update-patterns")
+        check("patterns: re-run adds nothing (dedup)",
+              out["addedChallenges"] == [] and out["addedStrengths"] == [], out)
+
+
 def main():
     for t in (t_migrate, t_record_review, t_sessions_and_forget,
               t_touch_state_and_profile, t_gate_check,
@@ -1194,7 +1330,8 @@ def main():
               t_defer, t_verify_flags_drift, t_normalize, t_last_activity_threshold,
               t_profile_project_list_shape,
               t_session_brief, t_crossed_bloom3, t_snapshot,
-              t_due_never_taught, t_concept_tiers):
+              t_due_never_taught, t_concept_tiers,
+              t_profile_project_lifecycle, t_profile_patterns):
         print(f"-- {t.__name__}")
         t()
     print(f"\n{PASS} passed, {FAIL} failed")

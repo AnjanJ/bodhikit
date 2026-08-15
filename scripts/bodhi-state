@@ -65,10 +65,9 @@ PROFILE_COUNTERS = {
 }
 
 # Required fields on .bodhi-profile.projects.json list entries (state-schema
-# KB). The project-list append is the ONE tracking mutation the script does not
-# own — /learn and /evaluate hand-edit it — so it is also the one with no write
-# path to guarantee its shape. verify is therefore the only available backstop:
-# it cannot prevent a dropped field, but it can refuse to call the result ok.
+# KB). Since 1.16.0 the profile-* subcommands own these mutations and construct
+# schema-complete entries; verify additionally backstops the shape so a
+# fallback-path hand-edit that drops a field cannot pass silently.
 PROFILE_ACTIVE_FIELDS = {
     "name", "topic", "startedAt", "currentPhase", "currentModule",
     "bloomLevel", "pace", "status", "trackPurpose",
@@ -76,6 +75,12 @@ PROFILE_ACTIVE_FIELDS = {
 PROFILE_COMPLETED_FIELDS = {
     "name", "completedAt", "finalBloomLevel", "trackPurpose",
 }
+
+# profile-update-patterns threshold (state-schema KB): a sub-topic with this
+# many assessment-history entries at Bloom <3 is a persistent challenge; at
+# Bloom 4+ a consistent strength. One home for the value — skills cite the
+# subcommand, never re-tally assessments in prose.
+PATTERNS_MIN_ASSESSMENTS = 3
 
 
 # --- Helpers ---------------------------------------------------------------
@@ -563,6 +568,162 @@ def cmd_bump_profile(args):
     write_json(p, profile)
     emit({"action": "profile-bumped", "counter": args.counter,
           "value": stats[args.counter], "file": p})
+
+
+# --- Cross-project profile-list ownership (1.16.0) --------------------------
+# Until 1.15.x the .bodhi-profile.projects.json list was "the one mutation the
+# script does not own" — /learn and /evaluate hand-edited it, guarded only by
+# verify's entry-shape backstop (P1). These subcommands close that last
+# hand-edit hole: the script constructs schema-complete entries, the skills
+# supply only the pedagogical values.
+
+def load_profile_projects(project):
+    """Locate .bodhi-profile.projects.json beside .bodhi-profile.json."""
+    pp = find_profile(project)
+    if not pp:
+        die("no .bodhi-profile.json found walking up from the project "
+            "(it is scaffolded by /learn) — the projects list lives beside it")
+    lp = os.path.join(os.path.dirname(pp), ".bodhi-profile.projects.json")
+    if os.path.exists(lp):
+        data = load_json(lp)
+    else:
+        data = {"version": 2, "activeProjects": [], "completedProjects": []}
+    for key in ("activeProjects", "completedProjects"):
+        if not isinstance(data.get(key), list):
+            data[key] = []
+    return pp, lp, data
+
+
+def find_project_entry(entries, name):
+    want = name.strip().lower()
+    return next((e for e in entries if isinstance(e, dict)
+                 and str(e.get("name", "")).strip().lower() == want), None)
+
+
+def cmd_profile_add_project(args):
+    pp, lp, data = load_profile_projects(args.project)
+    if find_project_entry(data["activeProjects"], args.name):
+        die(f"{args.name!r} is already in activeProjects — "
+            f"use profile-update-project to refresh it")
+    if find_project_entry(data["completedProjects"], args.name):
+        die(f"{args.name!r} is already in completedProjects — "
+            f"pick a distinct project name")
+    entry = {
+        "name": args.name,
+        "topic": args.topic,
+        "startedAt": iso(today()),
+        "currentPhase": args.phase or "1",
+        "currentModule": args.module or "",
+        "bloomLevel": args.bloom if args.bloom is not None else 0,
+        "pace": args.pace or "steady",
+        "status": args.status or "active",
+        "trackPurpose": args.track_purpose or "",
+    }
+    data["activeProjects"].append(entry)
+    data["version"] = 2
+    write_json(lp, data)
+    emit({"action": "profile-project-added", "entry": entry,
+          "activeProjects": len(data["activeProjects"]), "file": lp})
+
+
+def cmd_profile_update_project(args):
+    _, lp, data = load_profile_projects(args.project)
+    entry = find_project_entry(data["activeProjects"], args.name)
+    if entry is None:
+        names = [str(e.get("name")) for e in data["activeProjects"]]
+        die(f"{args.name!r} is not in activeProjects {names} — "
+            f"add it with profile-add-project first")
+    updated = []
+    for flag, field in (("topic", "topic"), ("phase", "currentPhase"),
+                        ("module", "currentModule"), ("bloom", "bloomLevel"),
+                        ("pace", "pace"), ("status", "status"),
+                        ("track_purpose", "trackPurpose")):
+        value = getattr(args, flag)
+        if value is not None:
+            entry[field] = value
+            updated.append(field)
+    if not updated:
+        die("nothing to update — pass at least one field flag")
+    write_json(lp, data)
+    emit({"action": "profile-project-updated", "entry": entry,
+          "updatedFields": updated, "file": lp})
+
+
+def cmd_profile_complete_project(args):
+    _, lp, data = load_profile_projects(args.project)
+    entry = find_project_entry(data["activeProjects"], args.name)
+    if entry is None:
+        names = [str(e.get("name")) for e in data["activeProjects"]]
+        die(f"{args.name!r} is not in activeProjects {names} — "
+            f"nothing to complete")
+    data["activeProjects"].remove(entry)
+    completed = {
+        "name": entry.get("name", args.name),
+        "completedAt": iso(today()),
+        "finalBloomLevel": (args.final_bloom if args.final_bloom is not None
+                            else entry.get("bloomLevel", 0)),
+        "trackPurpose": entry.get("trackPurpose", ""),
+    }
+    if args.status:
+        # /learn Phase 1.5(c) replace-archive: "archived: replaced by <new>".
+        completed["status"] = args.status
+    data["completedProjects"].append(completed)
+    write_json(lp, data)
+    emit({"action": "profile-project-completed", "entry": completed,
+          "activeProjects": len(data["activeProjects"]),
+          "completedProjects": len(data["completedProjects"]), "file": lp})
+
+
+def cmd_profile_update_patterns(args):
+    """Append persistent challenges / consistent strengths from assessment
+    counts. Pure counting (state-schema KB) — the model never tallies."""
+    pp = find_profile(args.project)
+    if not pp:
+        die("no .bodhi-profile.json found walking up from the project "
+            "(it is scaffolded by /learn)")
+    hist_path = os.path.join(bodhi_dir(args.project), "assessment-history.json")
+    if not os.path.exists(hist_path):
+        emit({"action": "profile-patterns-updated", "addedChallenges": [],
+              "addedStrengths": [],
+              "note": "no assessment-history.json yet — nothing to count"})
+        return
+    hist = load_json(hist_path)
+    low, high = {}, {}
+    for e in hist.get("entries", []):
+        if not isinstance(e, dict):
+            continue
+        for st in e.get("subTopics", []):
+            if not isinstance(st, dict):
+                continue
+            name = str(st.get("name", "")).strip()
+            bloom = st.get("bloomLevel")
+            if not name or not isinstance(bloom, int):
+                continue
+            if bloom < 3:
+                low[name] = low.get(name, 0) + 1
+            if bloom >= 4:
+                high[name] = high.get(name, 0) + 1
+    profile = load_json(pp)
+    patterns = profile.setdefault("patterns", {})
+    added = {}
+    for key, counts in (("persistentChallenges", low),
+                        ("consistentStrengths", high)):
+        arr = patterns.setdefault(key, [])
+        if not isinstance(arr, list):
+            arr = patterns[key] = []
+        have = {str(x).strip().lower() for x in arr}
+        added[key] = sorted(n for n, c in counts.items()
+                            if c >= PATTERNS_MIN_ASSESSMENTS
+                            and n.strip().lower() not in have)
+        arr.extend(added[key])
+    if added["persistentChallenges"] or added["consistentStrengths"]:
+        profile["lastUpdated"] = now_iso()
+        write_json(pp, profile)
+    emit({"action": "profile-patterns-updated",
+          "addedChallenges": added["persistentChallenges"],
+          "addedStrengths": added["consistentStrengths"],
+          "counts": {"belowBloom3": low, "bloom4Plus": high},
+          "threshold": PATTERNS_MIN_ASSESSMENTS, "file": pp})
 
 
 def cmd_due(args):
@@ -1562,6 +1723,47 @@ def main():
     s.add_argument("--phase", default=None)
     s.add_argument("--completion", type=int, default=None)
     s.set_defaults(fn=cmd_touch_state)
+
+    s = sub.add_parser("profile-add-project",
+                       help="append a schema-complete activeProjects entry "
+                            "(creates .bodhi-profile.projects.json if missing)")
+    s.add_argument("--name", required=True)
+    s.add_argument("--topic", required=True)
+    s.add_argument("--phase", default=None, help="currentPhase (default 1)")
+    s.add_argument("--module", default=None, help="currentModule (default empty)")
+    s.add_argument("--bloom", type=int, choices=range(0, 7), default=None,
+                   help="starting bloomLevel (default 0)")
+    s.add_argument("--pace", default=None, help="default steady")
+    s.add_argument("--status", default=None, help="default active")
+    s.add_argument("--track-purpose", default=None)
+    s.set_defaults(fn=cmd_profile_add_project)
+
+    s = sub.add_parser("profile-update-project",
+                       help="refresh fields on an activeProjects entry in place")
+    s.add_argument("--name", required=True)
+    s.add_argument("--topic", default=None)
+    s.add_argument("--phase", default=None, help="currentPhase")
+    s.add_argument("--module", default=None, help="currentModule")
+    s.add_argument("--bloom", type=int, choices=range(0, 7), default=None)
+    s.add_argument("--pace", default=None)
+    s.add_argument("--status", default=None)
+    s.add_argument("--track-purpose", default=None)
+    s.set_defaults(fn=cmd_profile_update_project)
+
+    s = sub.add_parser("profile-complete-project",
+                       help="move an entry activeProjects -> completedProjects "
+                            "(learner-confirmed completion, or /learn replace-archive)")
+    s.add_argument("--name", required=True)
+    s.add_argument("--final-bloom", type=int, choices=range(0, 7), default=None,
+                   help="finalBloomLevel (defaults to the entry's bloomLevel)")
+    s.add_argument("--status", default=None,
+                   help="optional note, e.g. 'archived: replaced by <new> on <date>'")
+    s.set_defaults(fn=cmd_profile_complete_project)
+
+    s = sub.add_parser("profile-update-patterns",
+                       help="append persistent challenges / consistent strengths "
+                            "from assessment-history counts (append-only, deduped)")
+    s.set_defaults(fn=cmd_profile_update_patterns)
 
     s = sub.add_parser("bump-profile", help="increment a cumulativeStats counter")
     s.add_argument("--counter", required=True)

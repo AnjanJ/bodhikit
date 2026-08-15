@@ -157,6 +157,10 @@ The closing offers above (capstone/mentor) are the receipt; these writes are wha
 
 4. **Append the evaluation entry to `.bodhi/progress.md` with the Write tool**: `## YYYY-MM-DD — Evaluation (milestone)`, **Headline trajectory**, **Bloom adjustments**, **Next chapter**. Full detail stays in `assessments/latest.md`; this is the pointer + headline. Existing content preserved verbatim below.
 
-5. **Patterns + project status (manual JSON, the one mutation the script does not own).** Read `learningWithBodhi/.bodhi-profile.json`: if a topic now has 3+ assessment-history entries at Bloom <3, append it to `patterns.persistentChallenges`; 3+ at Bloom 4+ appends to `patterns.consistentStrengths`; update `lastUpdated`. Read `.bodhi-profile.projects.json`: refresh this project's `activeProjects` entry; if complete, move it to `completedProjects` with `completedAt` and `finalBloomLevel`. For both files: mutate the parsed JSON in place preserving every unknown field, Write, then re-read to verify (the `state-schema` KB fallback discipline).
+5. **Patterns + project status (via the script — do not hand-tally or hand-edit):**
+   - `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> profile-update-patterns` — the script counts `assessment-history.json` (3+ entries at Bloom <3 → `persistentChallenges`; 3+ at Bloom 4+ → `consistentStrengths`, append-only, deduplicated). Run it AFTER step 1's `record-assessment` so today's entry counts.
+   - `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> profile-update-project --name <project> --phase <phase> --module <module> --bloom <overall level>` — refresh the `activeProjects` entry with this evaluation's position.
+   - If the learner confirmed completion (Closing): `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> profile-complete-project --name <project> --final-bloom <level>` instead of the update.
+   - `overallBloomLevels` in `.bodhi-profile.json` remains the manual carve-out: update it in place per the `state-schema` KB fallback discipline.
 
 **Fallback:** if `bodhi-state` is unavailable, apply the same manual discipline to steps 1-2's files as well.

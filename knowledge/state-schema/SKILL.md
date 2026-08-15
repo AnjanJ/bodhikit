@@ -9,7 +9,7 @@ This KB is the field-level reference. **Routine skill fires do NOT load it** —
 
 Load this KB only when:
 
-- performing a **manual carve-out** — `/learn` project scaffolding, `/evaluate` profile writes, the `currentBloomLevel` / `initialBloomLevel` maps;
+- performing a **manual carve-out** — `/learn` project scaffolding (the `.bodhi/` skeletons and the parent `.bodhi-profile.json`), the `currentBloomLevel` / `initialBloomLevel` maps;
 - running the **script-unavailable fallback** (see *Fallback discipline* below);
 - you are `/housekeep` (rotation and migration);
 - you are authoring or reviewing plugin files.
@@ -233,6 +233,7 @@ Cross-project learner profile (v2 split layout: this file holds top-level fields
 ```
 
 - `cumulativeStats` counters are incremented via `bodhi-state bump-profile` (the skill decides WHEN — e.g. `/teach` bumps `totalConceptsLearned` only when a concept first reaches Bloom 3+ and `progress.md` shows no prior count for it). Exception: `totalSessions` is bumped automatically by `touch-state` on the first touch of a new day — no skill calls it directly.
+- `patterns.persistentChallenges` / `patterns.consistentStrengths` are appended by `bodhi-state profile-update-patterns`, which counts the project's `assessment-history.json`: a sub-topic with 3+ entries at Bloom <3 appends to `persistentChallenges`; 3+ at Bloom 4+ appends to `consistentStrengths`. Append-only and deduplicated — the script does the counting; skills never tally assessments in prose.
 - `learnerBackground.domains[]` / `analogyHistory[]`: populated by the analogy-escalation protocol (see `feynman-technique` KB). Read-then-append; never overwrite.
 
 ### Project completion (canonical, 1.11.1)
@@ -255,7 +256,7 @@ Per-project metadata, loaded only by cross-project skills (`/mentor`, `/evaluate
 }
 ```
 
-Writers: `/learn` (append on project start), `/evaluate` (refresh; move to `completedProjects` on completion), `/mentor` (career fields in the parent profile only). Profile-list mutations are the one JSON write the script does not own — apply the Fallback discipline above.
+Writers: since 1.16.0 the project-list mutations go through `bodhi-state` — `profile-add-project` (`/learn` append on project start; creates this file if missing), `profile-update-project` (`/evaluate` refresh of the active entry), `profile-complete-project` (`/evaluate` on confirmed completion; `/learn` Phase 1.5(c) replace-archive via `--status`). `/mentor` writes career fields in the parent profile only. The entry shapes above are constructed by those subcommands and checked by `verify`; hand-editing these files is fallback-only (script unavailable — apply the Fallback discipline above).
 
 ## Schema-Evolution Rules
 
