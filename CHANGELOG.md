@@ -2,6 +2,39 @@
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [1.16.0] - 2026-08-15
+
+The ownership release — the remaining structural items from the August analysis campaign. The through-line: every gap where the model was still doing work the script should own (a hand-edited JSON list, an assessment tally, a guessed prerequisite module) moves into `bodhi-state`, and the three skills most able to regress silently get harness coverage.
+
+### Added — the script owns the cross-project project list (the last hand-edit hole)
+`.bodhi-profile.projects.json` mutations were "the one mutation the script does not own" — `/learn` appended by hand, `/evaluate` refreshed and moved entries by hand, guarded only by `verify`'s entry-shape backstop (1.15.0's P1 fix). Four new subcommands take ownership:
+- **`profile-add-project`** — appends a schema-complete `activeProjects` entry (every required field present, `startedAt` stamped), creating the file if missing. `/learn` Phase 4.
+- **`profile-update-project`** — in-place refresh of an active entry; only passed fields change, unknown fields preserved. `/evaluate`'s refresh.
+- **`profile-complete-project`** — the `activeProjects` → `completedProjects` move (`completedAt`, `finalBloomLevel`, `trackPurpose` carried; `--status` carries `/learn` Phase 1.5(c)'s replace-archive note). Completion remains learner-confirmed, never inferred.
+- **`profile-update-patterns`** — the `persistentChallenges`/`consistentStrengths` tally: 3+ assessment-history entries at Bloom <3 / at Bloom 4+, append-only, deduplicated. Pure counting that the model was previously asked to do in prose.
+
+Hand-editing the profile pair is now fallback-only (script unavailable). 19 new deterministic tests.
+
+### Added — `park`: a consciously-deprioritized concept can leave rotation
+`/forget`'s only verb was demote — Box 1, back tomorrow, *harder* — so a working learner who decided a concept was not worth maintaining accumulated review rot until the due pile stopped being trusted (honest-review #6). **`bodhi-state park`** sets `parked: true` + `nextReview: null` with a `learner-park` session entry; box, Bloom, Feynman, counters, and history all stand — parking is scheduling, never an outcome. `--resume` re-enters rotation (review tomorrow, box preserved). The read surfaces (`due`, `mastery`, `snapshot`) exclude parked concepts from due/retention but report them as counts, never silently; mastery and module standing keep them. Surfaced as **`/forget --park`** / **`--unpark`**. 11 new deterministic tests.
+
+### Changed — the prerequisite gate never guesses
+`gate-check`'s last fallback inferred a "prior module" by string-sorting concept `introduced` dates — honestly flagged as inferred, but still doing real gating work (honest-review #11, fidelity D4). A guessed gate generates false reconfirm questions, which cost more learner trust than no gate: with no `--prereqs` declared and no tracked `previousModule`, the gate now declines to fire with an actionable reason. `prerequisiteSource` simplifies to `"declared" | "prior-module"`.
+
+### Evals — lifecycle coverage for the three highest-write skills (honest-review #1)
+`/learn`, `/plan regenerate`, and `/evaluate` — the skills doing the most state orchestration — had zero LLM-eval coverage; the coverage was inverted to the risk. Three new executor-discipline scenarios (group: `lifecycle`, file-state assertions only):
+- **`learn-scaffold`** — runs from the *parent* directory via a new `run_parent_scenario` runner (`/learn` discovers the root and scaffolds a sibling project). Asserts the full `.bodhi/` skeleton, the `learn-phase2` assessment, the **existing profile entry preserved exactly** (all 9 fields — the analysis-1 empirical probe, now a permanent regression guard), the new entry schema-complete, and `verify` ok on both projects.
+- **`plan-regenerate`** — old plan archived at `plan/.archive-<date>/`, fresh plan written, progress history preserved verbatim, assessment entry dated today.
+- **`evaluate`** — prep seeds three low-Bloom assessments so `profile-update-patterns` has a deterministic, assertable effect; asserts assessment + session entry + `touch-state` + `assessments/latest.md` + the patterns append + the active entry intact after refresh.
+
+All three assertions were validated offline on both sides before any tokens were spent: FAIL on the raw fixture, PASS on a hand-built correct end state.
+
+### Lint
+- **Rule 55** — both sides of the `--invoked-from` chain convention (honest-review #7): every chainable skill must carry the check, and every imperative auto-invoke of a chainable skill must pass the flag. Descriptive mentions and Do-NOT-invoke prohibitions are exempt by pattern. Both branches verified to FAIL on deliberate drift.
+- `learner-park` added to the pinned session-type vocabulary.
+
+220 deterministic tests (was 190).
+
 ## [1.15.0] - 2026-08-15
 
 The hardening release — the fixes from the August analysis campaign (fidelity audit, empirical run, adversarial pass; the analyses themselves live outside the plugin). Three themes: the runtime learns what untrusted input is, the grading ladder's two contested boundaries get adjudicated and verified across both sides, and the display vocabulary stops inferring what the script can compute.
