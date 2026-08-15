@@ -958,6 +958,35 @@ for f in skills/*/SKILL.md skills/*/references/*.md; do
   fi
 done
 
+# 55. The --invoked-from chain convention has two enforceable sides (1.16.0,
+# honest-review #7). The context economy depends on (a) every chainable skill
+# checking $ARGUMENTS for --invoked-from= and skipping re-loads, and (b) every
+# model-directed invocation of a chainable skill passing the flag. Neither was
+# lint-visible: a skill that silently dropped its check would re-load every KB
+# it was told to skip, and the LLM evals do not cover the chaining skills.
+CHAINABLE_SKILLS="teach practice reflect progress quiz forget pair debug-together mentor"
+for s in $CHAINABLE_SKILLS; do
+  f="skills/$s/SKILL.md"
+  [ -f "$f" ] || continue
+  if ! grep -q -- '--invoked-from' "$f"; then
+    err "$f is chainable (CLAUDE.md) but never checks --invoked-from= — a chained call would re-load personality/state-ops and re-run discovery (rule 55)"
+  fi
+done
+# (b) an imperative auto-invoke of a chainable skill must carry the flag. The
+# enforceable shape is "auto-invoke `/<skill> ...`" (the command adjacent in
+# backticks) — descriptive mentions ("Can be auto-invoked by /continue"),
+# prohibitions ("Do NOT auto-invoke `/mentor`"), and offers quoting a command
+# for the LEARNER to type are not invocation sites and are exempt.
+CHAINABLE_ALT="teach|practice|reflect|progress|quiz|forget|pair|debug-together|mentor"
+bad_chain=$(grep -rniE 'auto-invoke \`/' skills/ --include='*.md' \
+    | grep -viE 'not auto-invoke' \
+    | grep -E "\`/(bodhikit:)?($CHAINABLE_ALT)\b" \
+    | grep -v -- '--invoked-from=')
+if [ -n "$bad_chain" ]; then
+  printf '%s\n' "$bad_chain" | sed 's/^/  /'
+  err "an auto-invoke of a chainable skill does not pass --invoked-from=<caller> — the callee will re-load everything the chain exists to skip (rule 55)"
+fi
+
 # ---------------------------------------------------------------------------
 echo
 if [ "$warn_count" -gt 0 ]; then
