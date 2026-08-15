@@ -410,6 +410,176 @@ def assert_continue_discovery(project, transcript):
     ok("active fixture project surfaced")
 
 
+# --- Lifecycle scenarios (1.16.0, honest-review #1) --------------------------
+# /learn, /plan regenerate, /evaluate are the three highest-write-count skills
+# and had zero harness coverage — the exact class where "narrated the write,
+# never performed it" slips through. File-state assertions only.
+
+REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+
+
+def run_bodhi_state(project, *args):
+    import subprocess
+    out = subprocess.run(
+        [sys.executable, os.path.join(REPO, "scripts", "bodhi-state"),
+         "--project", project, *args],
+        capture_output=True, text=True)
+    try:
+        return json.loads(out.stdout)
+    except json.JSONDecodeError:
+        return {"ok": False, "error": out.stdout or out.stderr}
+
+
+def assert_learn_scaffold(project):
+    parent = os.path.dirname(os.path.abspath(project))
+    react = os.path.join(parent, "react-fundamentals")
+    if not os.path.isdir(react):
+        siblings = sorted(d for d in os.listdir(parent)
+                          if os.path.isdir(os.path.join(parent, d)))
+        fail(f"react-fundamentals project dir not created (parent holds "
+             f"{siblings}) — Phase 4 scaffolding did not land")
+    state = load(react, ".bodhi", "state.json")
+    if state.get("version") != 2:
+        fail(f"new state.json version is {state.get('version')}, expected 2")
+    ok("state.json scaffolded at version 2")
+    sr = load(react, ".bodhi", "spaced-review.json")
+    if sr.get("version") != 3:
+        fail(f"new spaced-review.json version is {sr.get('version')}, expected 3")
+    ok("spaced-review.json scaffolded at version 3")
+    if not os.path.exists(os.path.join(react, ".bodhi", "plan", "README.md")):
+        fail("plan/README.md missing — the plan was narrated, not written")
+    ok("plan files written")
+    hist = load(react, ".bodhi", "assessment-history.json")
+    if not any(e.get("trigger") == "learn-phase2" for e in hist.get("entries", [])):
+        fail("no learn-phase2 assessment-history entry — record-assessment never ran")
+    ok("learn-phase2 assessment recorded")
+
+    lists = load(parent, ".bodhi-profile.projects.json")
+    active = lists.get("activeProjects", [])
+    if len(active) != 2:
+        fail(f"activeProjects has {len(active)} entries, expected 2 "
+             f"(existing sql-deep-dive + new react-fundamentals)")
+    sql = next((e for e in active if e.get("name") == "sql-deep-dive"), None)
+    if sql is None:
+        fail("existing sql-deep-dive entry disappeared from activeProjects")
+    expected_sql = {"name": "sql-deep-dive", "topic": "SQL and database internals",
+                    "startedAt": "2026-04-01", "currentPhase": "1",
+                    "currentModule": "Query Optimization", "bloomLevel": 2,
+                    "pace": "steady", "status": "active", "trackPurpose": "depth"}
+    if sql != expected_sql:
+        fail(f"existing sql-deep-dive entry was altered: {sql}")
+    ok("existing activeProjects entry preserved exactly (all 9 fields)")
+    new = next((e for e in active if e.get("name") != "sql-deep-dive"), None)
+    required = {"name", "topic", "startedAt", "currentPhase", "currentModule",
+                "bloomLevel", "pace", "status", "trackPurpose"}
+    missing = required - set(new or {})
+    if missing:
+        fail(f"new activeProjects entry missing fields {sorted(missing)} — "
+             f"the profile-add-project path was not used or was hand-mangled")
+    ok("new activeProjects entry schema-complete")
+    for proj_dir in (project, react):
+        v = run_bodhi_state(proj_dir, "verify")
+        if v.get("ok") is not True:
+            fail(f"bodhi-state verify failed for {os.path.basename(proj_dir)}: "
+                 f"{v.get('errors') or v.get('error')}")
+    ok("verify ok on both projects")
+
+
+def assert_plan_regenerate(project):
+    today = datetime.date.today().isoformat()
+    archive = os.path.join(project, ".bodhi", "plan", f".archive-{today}")
+    if not os.path.isdir(archive) or not os.listdir(archive):
+        fail(f"plan/.archive-{today}/ missing or empty — the old plan was "
+             f"overwritten instead of archived")
+    ok("old plan archived on disk")
+    plan_dir = os.path.join(project, ".bodhi", "plan")
+    if not os.path.exists(os.path.join(plan_dir, "README.md")):
+        fail("fresh plan/README.md missing")
+    phases = [f for f in os.listdir(plan_dir) if f.startswith("phase-")]
+    if not phases:
+        fail("no fresh plan/phase-*.md files written")
+    ok("fresh plan written")
+    with open(os.path.join(project, ".bodhi", "progress.md")) as f:
+        progress = f.read()
+    if "Plan regenerated" not in progress:
+        fail("progress.md has no 'Plan regenerated' entry")
+    if "Session 6 (Spaced review + planner intro)" not in progress:
+        fail("progress.md lost prior session history — regeneration must "
+             "preserve it verbatim")
+    ok("progress.md notes the regeneration and keeps history")
+    hist = load(project, ".bodhi", "assessment-history.json")
+    if not any(e.get("trigger") == "plan-regenerate"
+               and e.get("date") == today for e in hist.get("entries", [])):
+        fail("no plan-regenerate assessment-history entry dated today — "
+             "record-assessment never ran")
+    ok("plan-regenerate assessment recorded")
+    v = run_bodhi_state(project, "verify")
+    if v.get("ok") is not True:
+        fail(f"bodhi-state verify failed: {v.get('errors') or v.get('error')}")
+    ok("verify ok")
+
+
+def assert_evaluate(project):
+    today = datetime.date.today().isoformat()
+    hist = load(project, ".bodhi", "assessment-history.json")
+    entry = next((e for e in hist.get("entries", [])
+                  if e.get("trigger") == "evaluate" and e.get("date") == today),
+                 None)
+    if entry is None:
+        fail("no evaluate assessment-history entry dated today — "
+             "record-assessment never ran")
+    if not entry.get("subTopics"):
+        fail("evaluate assessment entry has no subTopics — the fresh "
+             "assessment was not recorded per the schema")
+    ok("evaluate assessment recorded with subTopics")
+    sr = load(project, ".bodhi", "spaced-review.json")
+    if not any(s.get("type") == "evaluate" and s.get("date") == today
+               for s in sr.get("sessionHistory", [])):
+        fail("no evaluate sessionHistory entry dated today — record-session "
+             "never ran")
+    ok("evaluate session entry written")
+    state = load(project, ".bodhi", "state.json")
+    if today not in state.get("sessionDates", []):
+        fail("touch-state never ran — today is missing from sessionDates")
+    ok("session bookkeeping touched")
+    latest = os.path.join(project, ".bodhi", "assessments", "latest.md")
+    if not os.path.exists(latest):
+        fail("assessments/latest.md missing — the report was narrated, "
+             "not written")
+    ok("assessments/latest.md written")
+    with open(os.path.join(project, ".bodhi", "progress.md")) as f:
+        progress = f.read()
+    if "Session 6 (Spaced review + planner intro)" not in progress:
+        fail("progress.md lost prior session history")
+    ok("progress.md history preserved")
+    parent = os.path.dirname(os.path.abspath(project))
+    profile = load(parent, ".bodhi-profile.json")
+    challenges = profile.get("patterns", {}).get("persistentChallenges", [])
+    # Prep seeds 3 assessment entries with 'Query planning' at Bloom 2; the
+    # skill's profile-update-patterns call must therefore add it.
+    if "Query planning" not in challenges:
+        fail(f"patterns.persistentChallenges is {challenges!r} — "
+             f"profile-update-patterns never ran (3 seeded low-Bloom "
+             f"assessments cross the threshold)")
+    ok("persistent challenge appended by the script")
+    lists = load(parent, ".bodhi-profile.projects.json")
+    sql = next((e for e in lists.get("activeProjects", [])
+                if e.get("name") == "sql-deep-dive"), None)
+    if sql is None:
+        fail("sql-deep-dive left activeProjects — the project was not "
+             "complete and must stay active")
+    required = {"name", "topic", "startedAt", "currentPhase", "currentModule",
+                "bloomLevel", "pace", "status", "trackPurpose"}
+    missing = required - set(sql)
+    if missing:
+        fail(f"activeProjects entry lost fields {sorted(missing)} after refresh")
+    ok("activeProjects entry intact after refresh")
+    v = run_bodhi_state(project, "verify")
+    if v.get("ok") is not True:
+        fail(f"bodhi-state verify failed: {v.get('errors') or v.get('error')}")
+    ok("verify ok")
+
+
 def main():
     name, project = sys.argv[1], sys.argv[2]
     transcript = sys.argv[3] if len(sys.argv) > 3 else None
@@ -419,7 +589,10 @@ def main():
                   "grade-genuine": assert_grade_genuine,
                   "grade-apply-band": assert_grade_apply_band,
                   "grade-pushback": assert_grade_pushback,
-                  "grade-misconception": assert_grade_misconception}
+                  "grade-misconception": assert_grade_misconception,
+                  "learn-scaffold": assert_learn_scaffold,
+                  "plan-regenerate": assert_plan_regenerate,
+                  "evaluate": assert_evaluate}
     with_transcript = {"teach-pretest": assert_teach_pretest,
                        "teach-hint-discipline": assert_teach_hint_discipline,
                        "continue-discovery": assert_continue_discovery}

@@ -16,6 +16,7 @@
 #   dev/eval/run-llm-evals.sh forget     # run one scenario
 #   dev/eval/run-llm-evals.sh grading    # the grading-calibration scenarios
 #   dev/eval/run-llm-evals.sh fidelity   # the 2 transcript-fidelity scenarios
+#   dev/eval/run-llm-evals.sh lifecycle  # /learn, /plan regenerate, /evaluate
 #
 #   BODHI_EVAL_RUNS=8 dev/eval/run-llm-evals.sh grade-apply-band
 #                                        # sample a grading scenario N times and
@@ -78,7 +79,7 @@ fi
 NUDGE_MSG="(headless harness — the learner has left the session: no live reply is coming. My scripted responses in the opening message are everything I will ever say; take my final scripted explanation as my last word. Close the session now: grade it honestly per the skill's ladder and complete ALL tracking updates exactly as the skill specifies.)"
 
 run_scenario() {
-  name="$1"; prompt="$2"; assert="$3"; prep="${4:-}"; transcript_mode="${5:-}"; nudge="${6:-}"
+  name="$1"; prompt="$2"; assert="$3"; prep="${4:-}"; transcript_mode="${5:-}"; nudge="${6:-}"; maxturns="${7:-30}"
   # BODHI_EVAL_SWEEP/KEEP are set by repeat_scenario so a sampled run lands in
   # a known directory and survives a PASS — the pass side is exactly the side
   # F-4 needs to inspect (every failure had the same shape; the question is
@@ -111,7 +112,7 @@ run_scenario() {
         --plugin-dir "$REPO" \
         --append-system-prompt "$SYS_HARNESS" \
         --dangerously-skip-permissions \
-        --max-turns 30 \
+        --max-turns "$maxturns" \
         --output-format stream-json --verbose \
         > "$transcript" 2>"$tmp/stderr.txt" )
     if python3 "$REPO/dev/eval/assert_scenario.py" "$assert" "$tmp/learningWithBodhi/sql-deep-dive" "$transcript"; then
@@ -129,7 +130,7 @@ run_scenario() {
         --plugin-dir "$REPO" \
         --append-system-prompt "$SYS_HARNESS" \
         --dangerously-skip-permissions \
-        --max-turns 30 \
+        --max-turns "$maxturns" \
         > "$tmp/transcript.txt" 2>&1 )
     nudges=0
     while true; do
@@ -152,7 +153,7 @@ run_scenario() {
             --plugin-dir "$REPO" \
             --append-system-prompt "$SYS_HARNESS" \
             --dangerously-skip-permissions \
-            --max-turns 30 \
+            --max-turns "$maxturns" \
             >> "$tmp/transcript.txt" 2>&1 )
       else
         echo "FAIL: $name — transcript at $tmp/transcript.txt, project left at $tmp"
@@ -194,6 +195,35 @@ run_discovery_scenario() {
   else
     echo "FAIL: $name — transcript at $transcript, project left at $tmp"
     echo "      (transcript assertion inspects tool_use inputs — read it before judging)"
+    FAIL=1
+  fi
+}
+
+# Parent-cwd scenario (1.16.0 — lifecycle coverage). /learn must run from the
+# directory CONTAINING learningWithBodhi (it discovers the root and scaffolds a
+# NEW project inside it), so the standard inside-the-project runner cannot host
+# it. Assertions still receive the fixture project path — they derive the
+# parent and the new sibling project from it. Lifecycle flows are long
+# (multi-phase + agents), hence the raised turn cap.
+run_parent_scenario() {
+  name="$1"; prompt="$2"; assert="$3"; prep="${4:-}"; maxturns="${5:-60}"
+  tmp=$(mktemp -d "/tmp/bodhi-eval-$name.XXXXXX")
+  cp -r "$FIXTURE" "$tmp/learningWithBodhi"
+  echo "== scenario: $name  (workdir $tmp)"
+  if [ -n "$prep" ]; then "$prep" "$tmp/learningWithBodhi/sql-deep-dive" || { echo "FAIL: $name prep"; FAIL=1; return; }; fi
+  ( cd "$tmp" && \
+    CLAUDE_PLUGIN_ROOT="$REPO" "${EVAL_ENV[@]}" claude -p "$prompt" \
+      --model "$EVAL_MODEL" \
+      --plugin-dir "$REPO" \
+      --append-system-prompt "$SYS_HARNESS" \
+      --dangerously-skip-permissions \
+      --max-turns "$maxturns" \
+      > "$tmp/transcript.txt" 2>&1 )
+  if python3 "$REPO/dev/eval/assert_scenario.py" "$assert" "$tmp/learningWithBodhi/sql-deep-dive"; then
+    echo "PASS: $name"
+    [ -n "${BODHI_EVAL_KEEP:-}" ] || rm -rf "$tmp"
+  else
+    echo "FAIL: $name — transcript at $tmp/transcript.txt, project left at $tmp"
     FAIL=1
   fi
 }
@@ -371,6 +401,40 @@ if [ "$want" = "all" ] || [ "$want" = "discovery" ] || [ "$want" = "continue-dis
   run_discovery_scenario continue-discovery \
     "/bodhikit:continue — headless eval run, no interactive learner. Just run Phase 1 discovery: locate my active learning projects and tell me which ones you found and which you would resume. You do not need to teach anything or wait for a reply — name the projects and stop." \
     continue-discovery
+fi
+
+# --- Lifecycle scenarios (1.16.0 — honest-review #1) --------------------------
+# /learn, /plan regenerate, /evaluate are the three highest-write-count skills
+# and had zero harness coverage. These are executor-discipline evals (did every
+# narrated write land, did existing data survive), not grading evals — no
+# nudge, file-state assertions only.
+
+if [ "$want" = "all" ] || [ "$want" = "lifecycle" ] || [ "$want" = "learn-scaffold" ]; then
+  run_parent_scenario learn-scaffold \
+    "/bodhikit:learn React fundamentals — $SIM_CONTRACT My scripted answers for the whole flow: Scoping: I want to learn React fundamentals to build small web apps; about 30 minutes a day, steady pace; purpose: breadth. When you surface my existing SQL project: this new topic is unrelated — start React as a NEW standalone project and leave sql-deep-dive exactly as it is. Assessment: I am a complete beginner; to every assessment question I answer honestly 'I do not know yet' — classify me accordingly. The proposed plan looks good — no adjustments. Name the new project directory exactly react-fundamentals inside the existing learningWithBodhi folder. I accept the first exercise. Complete ALL scaffolding and tracking writes exactly as the skill specifies." \
+    learn-scaffold
+fi
+
+if [ "$want" = "all" ] || [ "$want" = "lifecycle" ] || [ "$want" = "plan-regenerate" ]; then
+  run_scenario plan-regenerate \
+    "/bodhikit:plan regenerate — $SIM_CONTRACT Yes, I confirm regeneration; my progress history must be preserved. For the fresh assessment my scripted answers: I now write CREATE INDEX comfortably for real queries and can say when an index helps, but I cannot name trade-offs; I can read EXPLAIN output with help; everything beyond that I honestly do not know yet. Keep the new plan brief — two phases is fine. Complete ALL tracking updates exactly as the skill specifies." \
+    plan-regenerate "" "" "" 60
+fi
+
+# Prep: three low-Bloom assessments on 'Query planning' put it over the
+# persistentChallenges threshold, so /evaluate's profile-update-patterns call
+# has a deterministic, assertable effect.
+prep_evaluate() {
+  entry='{"topic": "SQL", "subTopics": [{"name": "Query planning", "bloomLevel": 2, "confidence": "medium", "evidence": "seeded"}]}'
+  for trig in assess assess evaluate; do
+    python3 "$REPO/scripts/bodhi-state" --project "$1" record-assessment \
+      --trigger "$trig" --data "$entry" > /dev/null || return 1
+  done
+}
+if [ "$want" = "all" ] || [ "$want" = "lifecycle" ] || [ "$want" = "evaluate" ]; then
+  run_scenario evaluate \
+    "/bodhikit:evaluate — $SIM_CONTRACT My scripted answers: Predictions — biggest growth: 'B-tree indexes'; biggest gap: 'Query planning'; per-topic self-ratings: B-tree indexes 3, Query planning 2, Normalization 2. For the fresh assessment questions I answer at a basic level: definitions fine, no trade-offs, honestly admitting what I do not know. The project is NOT complete — if asked, keep it active; do not mark completion. Complete ALL tracking updates exactly as the skill specifies." \
+    evaluate prep_evaluate "" "" 60
 fi
 
 echo

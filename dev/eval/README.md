@@ -32,9 +32,14 @@ see by design — the automated successor to the manual dogfood passes
 documented in the 1.10.7–1.10.13 CHANGELOG entries.
 
 Executor-discipline scenarios: `migrate`, `forget`, `quiz`, `reflect`
-(simulated learner). Interactive teaching skills (`/teach`, `/pair`,
-`/continue`) still warrant a manual dogfood pass on real learning data when
-their write paths change.
+(simulated learner), plus the **lifecycle group** (1.16.0): `learn-scaffold`
+(/learn from the parent dir — scaffolds a second project, must preserve the
+existing profile entry exactly), `plan-regenerate` (old plan archived, history
+preserved), and `evaluate` (assessment + session + patterns + project-entry
+refresh all land; run as `dev/eval/run-llm-evals.sh lifecycle`). These three
+are the highest-write-count skills and ran on the honor system before 1.16.0.
+Interactive teaching skills (`/teach`, `/pair`, `/continue`) still warrant a
+manual dogfood pass on real learning data when their write paths change.
 
 ## Layer 3: grading-calibration + transcript-fidelity evals (1.12.0)
 
