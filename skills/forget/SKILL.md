@@ -1,7 +1,7 @@
 ---
 description: "Demote one or more concepts back to Box 1 for review tomorrow. Use when you feel a concept has slipped."
 user-invocable: true
-argument-hint: "<concept>[, <concept>, ...]"
+argument-hint: "[--park|--unpark] <concept>[, <concept>, ...]"
 ---
 
 # /forget — Demote Concepts for Re-Review
@@ -18,7 +18,7 @@ Can be auto-invoked by `/reflect` with multiple concepts when the learner self-r
 
 ## Phase 1: Parse the Concept List
 
-Strip any `--invoked-from=*` flag from `$ARGUMENTS`. The remainder is the concept list.
+Strip any `--invoked-from=*` flag from `$ARGUMENTS`. If `--park` or `--unpark` is present, strip it too and switch Phase 3 to the park path (below) — parking is "stop scheduling this", a different act than demoting. The remainder is the concept list.
 
 - Comma-separated, quoted, or multi-line: all parse as a list. Trim whitespace per concept.
 - Single concept: list of one.
@@ -58,11 +58,26 @@ The script errors on unrecognized concept names rather than guessing — resolve
 
 **Fallback:** if `bodhi-state` is unavailable, follow the `state-schema` KB fallback rule — manual read → mutate-in-place → write → verify, preserving unknown fields and using the `learner-forget` sessionHistory type.
 
+### Park path (`/forget --park`, `/forget --unpark`)
+
+For a concept the learner has *consciously decided not to maintain* — not slipped, deprioritized — demoting it would bring it back tomorrow, harder. Instead take it out of rotation:
+
+```
+"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> park \
+  --concept "<concept>" --note "<why, if they said>"
+```
+
+The script sets `parked: true` and `nextReview: null`; box, Bloom, and Feynman all stand, and the concept leaves the due pile (reported as a count, never silently — per the `state-ops` KB). `--unpark` runs `park --resume --concept "<concept>"`: back into rotation, review tomorrow, box preserved. Confirm intent before parking — one sentence, not a ceremony: parking is reversible, but it means the review system stops protecting this concept.
+
+**Fallback:** same discipline as above, using the `learner-park` sessionHistory type and the `parked` field per the `state-schema` KB.
+
 ---
 
 ## Phase 4: Close
 
 Single concept: "It will surface tomorrow. We will look at it then with fresh eyes."
 Multiple concepts: "All [N] will surface tomorrow — fresh eyes, one at a time."
+
+Parked: "Set aside, on purpose. It keeps everything it earned; say `/forget --unpark <concept>` whenever it matters again."
 
 If the learner wants to revisit immediately rather than wait, suggest `/teach <concept>` (its understanding-only path is enough if they just want it explained again) — but do not force it.

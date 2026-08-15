@@ -40,7 +40,7 @@ MAX_BOX = 5
 # Canonical sessionHistory[].type vocabulary (state-schema KB, 1.10.13).
 SESSION_TYPES = {
     "spaced-review", "quiz", "targeted-reteach", "diagnostic-after-gap",
-    "learner-forget", "pair", "practice", "evaluate", "other",
+    "learner-forget", "learner-park", "pair", "practice", "evaluate", "other",
 }
 
 CONFIDENCE_VALUES = {"sure", "mostly", "guessing"}
@@ -473,6 +473,58 @@ def cmd_forget(args):
     emit({"action": "demoted", "concepts": names, "boxChanges": box_changes})
 
 
+def cmd_park(args):
+    """Take a concept out of review rotation, or return it (--resume).
+
+    /forget --park (1.16.0, honest-review #6): a working learner who has
+    consciously deprioritized a concept needs "stop scheduling it", not
+    "review it tomorrow, harder" — otherwise review rot accumulates on
+    concepts they no longer maintain and the due pile stops being trusted.
+    Parking is scheduling, never an outcome: box, bloom, counters,
+    feynmanPassed, and history all stand. --resume re-enters rotation with a
+    review tomorrow and the box preserved.
+    """
+    names = [n for n in (args.concept or []) if n]
+    if not names:
+        die("no concepts given (use --concept, repeatable)")
+    path, data = load_spaced_review(args.project)
+    missing = [n for n in names if find_concept(data, n) is None]
+    if missing:
+        die(f"not tracked: {', '.join(missing)}")
+    t = today()
+    changed = {}
+    for n in names:
+        c = find_concept(data, n)
+        if args.resume:
+            if not c.get("parked"):
+                die(f"{c['name']!r} is not parked — nothing to resume")
+            c["parked"] = False
+            c["nextReview"] = iso(t + datetime.timedelta(days=1))
+        else:
+            if c.get("parked"):
+                die(f"{c['name']!r} is already parked")
+            c["parked"] = True
+            c["nextReview"] = None
+        changed[c["name"]] = c["nextReview"]
+    key = "conceptsResumed" if args.resume else "conceptsParked"
+    entry = {"date": iso(t), "type": "learner-park",
+             key: [find_concept(data, n)["name"] for n in names]}
+    if args.note:
+        entry["notes"] = args.note
+    data.setdefault("sessionHistory", []).append(entry)
+    data["version"] = 3
+    write_json(path, data)
+    sp = state_path(args.project)
+    if os.path.exists(sp):
+        state = load_json(sp)
+        verb = "Resumed" if args.resume else "Parked"
+        state["lastActivity"] = (f"{verb} {len(names)} concept(s): "
+                                 f"{', '.join(names)}")[:LAST_ACTIVITY_MAX]
+        write_json(sp, state)
+    emit({"action": "resumed" if args.resume else "parked",
+          "concepts": changed})
+
+
 def cmd_defer(args):
     """Roll a due-but-unreviewed concept forward WITHOUT inventing an outcome.
 
@@ -730,7 +782,13 @@ def cmd_due(args):
     _, data = load_spaced_review(args.project)
     t = today()
     due, unparseable = [], []
+    parked_count = 0
     for c in data.get("concepts", []):
+        if c.get("parked") is True:
+            # Consciously out of rotation (park) — excluded from the due
+            # pile, surfaced as a count so it is never a silent hole.
+            parked_count += 1
+            continue
         raw = c.get("nextReview")
         nr = parse_date(raw)
         if nr is None:
@@ -759,6 +817,8 @@ def cmd_due(args):
     out = {"dueToday": len(due),
            "neverTaughtCount": sum(1 for d in due if d["neverTaught"]),
            "concepts": due}
+    if parked_count:
+        out["parkedCount"] = parked_count
     if args.limit is not None and len(due) > args.limit:
         out["concepts"] = due[:args.limit]
         out["truncated"] = len(due) - args.limit
@@ -823,9 +883,16 @@ def cmd_mastery(args):
     modules = {}
     rollup = {"strong": [], "building": [], "needs_review": []}
     due_today, due_week = [], []
+    parked = []
     for c in data.get("concepts", []):
         tally_module(modules.setdefault(c.get("module", "(none)"),
                                         new_module_row()), c)
+        if c.get("parked") is True:
+            # Out of rotation by learner choice: keeps its module/mastery
+            # standing but is excluded from the retention/due surfaces —
+            # a parked concept must not nag as "needs review".
+            parked.append(c["name"])
+            continue
         box = c.get("box", 1)
         tier = "strong" if box >= 4 else ("building" if box >= 2 else "needs_review")
         rollup[tier].append(c["name"])
@@ -848,9 +915,12 @@ def cmd_mastery(args):
         and c.get("consecutiveCorrectAtL4Plus", 0) >= 3
         and c.get("box", 1) >= 4
     ]
-    emit({"modules": modules, "retentionRollup": {k: len(v) for k, v in rollup.items()},
-          "retentionConcepts": rollup, "dueToday": due_today, "dueThisWeek": due_week,
-          "blockedOnFeynman": blocked_on_feynman})
+    out = {"modules": modules, "retentionRollup": {k: len(v) for k, v in rollup.items()},
+           "retentionConcepts": rollup, "dueToday": due_today, "dueThisWeek": due_week,
+           "blockedOnFeynman": blocked_on_feynman}
+    if parked:
+        out["parked"] = parked
+    emit(out)
 
 
 def calibration_summary(data):
@@ -1111,16 +1181,10 @@ def cmd_snapshot(args):
     boxes = {str(b): 0 for b in range(1, MAX_BOX + 1)}
     rollup = {"strong": [], "building": [], "needs_review": []}
     due_today, due_week, overdue10 = [], [], 0
-    unparseable = 0
+    unparseable = parked = 0
     mastered = feynman = classified = 0
     modules = {}
     for c in concepts:
-        b = c.get("box", 1)
-        if isinstance(b, int) and 1 <= b <= MAX_BOX:
-            boxes[str(b)] += 1
-        tier = ("strong" if isinstance(b, int) and b >= 4
-                else ("building" if isinstance(b, int) and b >= 2 else "needs_review"))
-        rollup[tier].append(c.get("name", "(unnamed)"))
         if is_mastered(c):
             mastered += 1
         if c.get("feynmanPassed") is True:
@@ -1129,6 +1193,17 @@ def cmd_snapshot(args):
             classified += 1
         tally_module(modules.setdefault(c.get("module", "(none)"),
                                         new_module_row()), c)
+        if c.get("parked") is True:
+            # Same rule as cmd_mastery: parked keeps its mastery/module
+            # standing but leaves the retention and due surfaces.
+            parked += 1
+            continue
+        b = c.get("box", 1)
+        if isinstance(b, int) and 1 <= b <= MAX_BOX:
+            boxes[str(b)] += 1
+        tier = ("strong" if isinstance(b, int) and b >= 4
+                else ("building" if isinstance(b, int) and b >= 2 else "needs_review"))
+        rollup[tier].append(c.get("name", "(unnamed)"))
         nr = parse_date(c.get("nextReview"))
         if nr is None:
             if c.get("nextReview") is not None:
@@ -1189,6 +1264,7 @@ def cmd_snapshot(args):
             "retentionRollup": {k: len(v) for k, v in rollup.items()},
             "retentionConcepts": rollup,
             "unparseableDates": unparseable,
+            "parked": parked,
         },
         "mastery": {
             "mastered": mastered,
@@ -1702,6 +1778,16 @@ def main():
     s.add_argument("--note", default=None)
     s.add_argument("--activity", default=None, help="override the state.json lastActivity line")
     s.set_defaults(fn=cmd_forget)
+
+    s = sub.add_parser("park",
+                       help="take a concept out of review rotation "
+                            "(learner-deprioritized; --resume returns it)")
+    s.add_argument("--concept", action="append", default=None,
+                   help="exact concept name (repeatable)")
+    s.add_argument("--resume", action="store_true",
+                   help="return a parked concept to rotation (review tomorrow, box preserved)")
+    s.add_argument("--note", default=None)
+    s.set_defaults(fn=cmd_park)
 
     s = sub.add_parser("defer",
                        help="roll a due-but-unreviewed concept forward (no outcome invented)")

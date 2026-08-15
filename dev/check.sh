@@ -719,7 +719,7 @@ else
   if ! grep -q 'BOX_INTERVALS = {1: 1, 2: 3, 3: 7, 4: 14, 5: 30}' scripts/bodhi-state; then
     err "scripts/bodhi-state BOX_INTERVALS drifted from the spaced-repetition KB table (1d/3d/7d/14d/30d)"
   fi
-  for t in spaced-review quiz targeted-reteach diagnostic-after-gap learner-forget pair practice evaluate other; do
+  for t in spaced-review quiz targeted-reteach diagnostic-after-gap learner-forget learner-park pair practice evaluate other; do
     if ! grep -q "\"$t\"" scripts/bodhi-state; then
       err "scripts/bodhi-state SESSION_TYPES missing canonical type '$t' (state-ops KB)"
     fi

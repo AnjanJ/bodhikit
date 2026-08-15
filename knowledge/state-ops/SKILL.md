@@ -34,6 +34,7 @@ If `CLAUDE_PLUGIN_ROOT` is not set in the Bash environment, locate the script on
 | `record-assessment --trigger learn-phase2\|assess\|evaluate\|plan-regenerate --data '<entry json>'` | Append-only `assessment-history.json` entry, date-stamped |
 | `forget --concepts "A, B" \| --concept N (repeatable) [--note S] [--activity S]` | Learner-initiated demote: box 1, counter reset, history + `learner-forget` session entry, `lastActivity`. Use `--concept` for names containing commas |
 | `defer --concept N (repeatable) [--days D] [--note S]` | A due concept the session did not reach: `nextReview` = today + D (default 1), box/bloom/counters/`lastReviewed` untouched, history entry `{date, deferred: true, days}` with NO result — deferral is scheduling, never an outcome. Do NOT invent a `result` for an unreviewed concept |
+| `park --concept N (repeatable) [--resume] [--note S]` | Learner-deprioritized concept out of review rotation: `parked: true`, `nextReview: null`, `learner-park` session entry; box/bloom/Feynman/counters all stand. Excluded from due/retention surfaces but reported as a count, never silently. `--resume` returns it (review tomorrow, box preserved). Parking is scheduling, never an outcome |
 | `normalize` | One-shot, idempotent repair of pre-1.11.0 executor drift. Backs up both files to `.bodhi/.pre-normalize-backup/` first; `verify` names this as the repair when it flags drift |
 | `touch-state [--activity S] [--module M] [--module-index N] [--phase P] [--completion N]` | `state.json` session bookkeeping: dates, streak, totalSessions, module advance (records `previousModule`). The first touch of a new day also bumps the profile's `cumulativeStats.totalSessions` — no skill calls `bump-profile --counter totalSessions` |
 | `bump-profile --counter <name>` | `cumulativeStats` increments in `.bodhi-profile.json` |
@@ -107,6 +108,7 @@ Live-doc mechanics (summary growth, collapse, archive naming) live in the `state
 | `targeted-reteach` | `/teach` (re-entering a demoted concept) | Focused re-teach after demotion or precision-gap surfacing |
 | `diagnostic-after-gap` | `/learn`, `/assess`, `/continue` (after absence) | Diagnostic after a meaningful gap |
 | `learner-forget` | `/forget` | Learner-initiated demotion |
+| `learner-park` | `/forget --park` (and `--unpark`) | Learner-initiated exit from / return to review rotation |
 | `pair` | `/pair` Session End | Pair session touching tracked concepts |
 | `practice` | `/practice` | Exercise session introducing/reviewing concepts |
 | `evaluate` | `/evaluate` | Comprehensive evaluation snapshot |

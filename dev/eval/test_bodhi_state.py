@@ -1181,6 +1181,60 @@ def t_concept_tiers():
                   row["masteryPct"] is None, row)
 
 
+def t_park():
+    """park (1.16.0, honest-review #6): learner-deprioritized concepts leave
+    rotation without inventing an outcome, and come back with their box."""
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review=json.loads(json.dumps(V2_SR)))
+        run(proj, "migrate-spaced-review")
+        out = run(proj, "park", "--concept", "B-tree indexes", "--note", "shipping season")
+        check("park: nextReview nulled", out["concepts"]["B-tree indexes"] is None, out)
+        sr = read_sr(proj)
+        c = [x for x in sr["concepts"] if x["name"] == "B-tree indexes"][0]
+        check("park: flag set, box/bloom/history stand",
+              c["parked"] is True and c["box"] == 3
+              and len(c["reviewHistory"]) == 2, c)
+        last = sr["sessionHistory"][-1]
+        check("park: learner-park session entry",
+              last["type"] == "learner-park"
+              and last["conceptsParked"] == ["B-tree indexes"]
+              and last["notes"] == "shipping season", last)
+
+        # Out of every scheduling surface, but never silently.
+        out = run(proj, "due")
+        check("park: excluded from due with a count",
+              all(d["name"] != "B-tree indexes" for d in out["concepts"])
+              and out["parkedCount"] == 1, out)
+        out = run(proj, "mastery")
+        check("park: out of the retention rollup, named in parked",
+              "B-tree indexes" not in sum(out["retentionConcepts"].values(), [])
+              and out["parked"] == ["B-tree indexes"], out)
+        check("park: module tally still counts it",
+              out["modules"]["Module A"]["concepts"] == 2, out)
+        out = run(proj, "snapshot")
+        check("park: snapshot review surface agrees",
+              out["review"]["parked"] == 1
+              and out["review"]["unparseableDates"] == 0
+              and "B-tree indexes" not in out["review"]["dueTodayConcepts"], out)
+        out = run(proj, "verify")
+        check("park: verify clean on a parked concept", out["ok"] is True, out)
+
+        # Double-park and resume-of-unparked are errors, not silent no-ops.
+        run(proj, "park", "--concept", "B-tree indexes", expect_fail=True)
+        run(proj, "park", "--resume", "--concept", "Query planning", expect_fail=True)
+
+        out = run(proj, "park", "--resume", "--concept", "B-tree indexes")
+        check("park: resume schedules tomorrow",
+              out["concepts"]["B-tree indexes"]
+              == (TODAY + datetime.timedelta(days=1)).isoformat(), out)
+        sr = read_sr(proj)
+        c = [x for x in sr["concepts"] if x["name"] == "B-tree indexes"][0]
+        check("park: resume preserves the box", c["box"] == 3 and c["parked"] is False, c)
+        check("park: resume session entry",
+              sr["sessionHistory"][-1]["conceptsResumed"] == ["B-tree indexes"],
+              sr["sessionHistory"][-1])
+
+
 def t_profile_project_lifecycle():
     """1.16.0: the profile-* subcommands close the last hand-edit hole.
 
@@ -1331,7 +1385,7 @@ def main():
               t_profile_project_list_shape,
               t_session_brief, t_crossed_bloom3, t_snapshot,
               t_due_never_taught, t_concept_tiers,
-              t_profile_project_lifecycle, t_profile_patterns):
+              t_profile_project_lifecycle, t_profile_patterns, t_park):
         print(f"-- {t.__name__}")
         t()
     print(f"\n{PASS} passed, {FAIL} failed")

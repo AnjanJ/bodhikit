@@ -140,6 +140,7 @@ Whole JSON; written exclusively through `bodhi-state`. `/housekeep` does not rot
 ```
 
 - `box`: integer 1–5; intervals and update rules in the `spaced-repetition` KB, implemented by `record-review`.
+- `parked` (optional, 1.16.0): `true` = the learner has consciously taken the concept out of review rotation (`bodhi-state park`, surfaced as `/forget --park`); `nextReview` is `null` while parked. Parked concepts leave the due/retention surfaces (reported as counts — `parkedCount` in `due`, `parked` in `mastery`/`snapshot` — never silently) but keep box, Bloom, Feynman, and mastery standing. `park --resume` re-enters rotation (review tomorrow, box preserved). Parking is scheduling, never an outcome — no result is invented and nothing else moves.
 - `reviewHistory[].retry` (optional, 1.11.1): `true` marks a successive-relearning rep — recorded evidence that did NOT move the box. `reviewHistory[].note` (optional): short free-text annotation (e.g. "learner-initiated demote"). The script caps `reviewHistory` at the most recent 100 entries per concept; older entries roll into a `reviewHistoryArchived` integer counter.
 - `reviewHistory[].confidence` (optional, 1.11.0): the learner's pre-reveal confidence tag — `sure` / `mostly` / `guessing`, collected by `/quiz` and `/reflect` BEFORE the answer is judged. `bodhi-state calibration` aggregates these into overconfidence/underconfidence rates (see `metacognition` KB for why predict-before-reveal is the load-bearing order).
 - `reviewHistory[].source` (optional): which skill produced the review.
