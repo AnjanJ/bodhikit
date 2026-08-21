@@ -1,131 +1,45 @@
 # Contributing to BodhiKit
 
-Thank you for your interest in contributing to BodhiKit. This document explains how to add skills, agents, knowledge bases, and rules to the plugin.
+Thank you for your interest. Please read the first section before opening a pull request — it will save us both time.
 
-## Before You Start
+## Feature freeze
 
-BodhiKit is a research-backed educational tool. Every feature should:
-1. Be grounded in learning science research (cite your sources)
-2. Integrate the teaching personality (Oogway/Yoda/Gautama Buddha/Dr. B.R. Ambedkar)
-3. Follow the core principle: the learner writes code, BodhiKit asks questions
-4. Never give direct answers — use Socratic questioning and graduated hints
+BodhiKit's audience is currently a very small number of real learners. Until that changes, the plugin accepts **no new skills, knowledge bases, taxonomies, session types, or schema fields** unless one of two things is true:
 
-## File Formats
+1. A second real user files an issue asking for it, or
+2. The maintainer personally hits the gap during a real learning session — not while developing the plugin.
 
-### Adding a Skill
+Bug fixes, and refactors that reduce per-fire context cost, are always welcome. When in doubt: the next feature the plugin needs is a user.
 
-Create `skills/<skill-name>/SKILL.md` with this frontmatter:
+## The most valuable contribution right now
 
-```yaml
----
-description: "One-line description of what the skill does"
-user-invocable: true
-argument-hint: "[optional|arg|syntax]"
----
-```
+**Use it, then tell us how it went.** One honest account of one real session is worth more than any pull request. The [session feedback template](.github/ISSUE_TEMPLATE/feedback.md) takes five minutes; the [bug report template](.github/ISSUE_TEMPLATE/bug-report.md) is for when something broke or graded you wrong; the [learning data template](.github/ISSUE_TEMPLATE/learning-data-report.md) takes one command (`bodhi-state export-anonymized`) and shares numbers only — no concept names, no free text.
 
-Requirements:
-- Reference `teaching-personality` knowledge base for tone
-- Reference the specific knowledge base for your methodology (e.g., `spaced-repetition`, `blooms-taxonomy`, `feynman-technique`)
-- Include phase-based workflow with checkpoints
-- If the skill uses an agent, use "You MUST use the Agent tool to launch the `<agent-name>` agent" and include a fallback instruction
-- If the skill should be auto-invocable by other skills, note this in the description
+## If you are changing code or prose
 
-### Adding an Agent
+`CLAUDE.md` at the repo root is the authoring contract. Read it first; the short version:
 
-Create `agents/<agent-name>.md` with this frontmatter:
+- **Voice:** every skill and agent references the `teaching-personality` KB for voice. Do not restate voice rules inline — the lint fails on it.
+- **State:** every JSON mutation to tracking files goes through `scripts/bodhi-state`, with a test in `dev/eval/test_bodhi_state.py`. Skills carry pedagogical judgment and one-line script invocations, never hand-edited JSON. Schema changes go `state-schema` KB → script + test → skills, in that order.
+- **Single sources of truth:** Leitner intervals live in the `spaced-repetition` KB; tracking-file shapes in `state-schema`; the routine operational surface in `state-ops`. Reference, never redeclare.
+- **Agents:** skills that use one say "You MUST use the Agent tool" and carry a `**Fallback:**` paragraph. Agents are read-only.
+- **Chaining:** a skill that auto-invokes another passes `--invoked-from=<caller>`.
+- **Budget:** every `SKILL.md` stays under 18 KB. Knowledge bases load per phase, not up front.
+- **Bugs in executor discipline** (the model skipped a write, invented a field) are fixed in `bodhi-state` with a reproducing fixture first — never with louder markdown.
 
-```yaml
----
-name: agent-name
-description: "What the agent does"
-model: sonnet
-tools: Read, Glob, Grep, Bash
-disallowedTools: Edit, Write, Agent
-maxTurns: 20
-memory: project
----
-```
+## Before you submit
 
-Requirements:
-- Agents should be read-only (disallow Edit, Write)
-- Use `sonnet` for complex tasks, `haiku` for simpler ones
-- Set reasonable `maxTurns` (15-30)
-- Include the teaching personality in the agent's instructions
-
-### Adding a Knowledge Base
-
-Create `knowledge/<kb-name>/SKILL.md` with this frontmatter:
-
-```yaml
----
-description: "Knowledge base title and purpose"
-user-invocable: false
----
-```
-
-Requirements:
-- Always set `user-invocable: false`
-- Cite research sources
-- Organize with clear headings and tables
-- Keep content actionable, not just theoretical
-
-### Adding a Rule
-
-Create `rules/<rule-name>.md` with this frontmatter:
-
-```yaml
----
-paths:
-  - "**/<glob-pattern>"
----
-```
-
-Requirements:
-- Use glob patterns that match relevant files
-- Keep rules concise and actionable
-- Include the teaching personality context
-
-## Personality Integration
-
-Every contribution must integrate the BodhiKit personality. This means:
-- Never say "that is wrong" — say "let us look at this differently"
-- Never say "this is easy" — say "this takes practice"
-- Frame everything as exploration, not testing
-- Use nature metaphors sparingly (seeds, roots, growth, paths)
-- Celebrate effort and strategy, not talent
-
-Read `knowledge/teaching-personality/SKILL.md` thoroughly before contributing.
-
-## Research Requirement
-
-If you add a new skill or methodology, include:
-- The research it is based on (author, year, key finding)
-- How it applies to programming education specifically
-- Why it improves learning outcomes
-
-Add citations to the README's "The Science" section if appropriate.
-
-## Testing Your Contribution
-
-```
-claude --plugin-dir ~/code/bodhikit
-```
-
-Test your skill by:
-1. Invoking it directly
-2. Checking that it integrates with the personality
-3. Verifying it updates tracking files correctly (if applicable)
-4. Confirming it does not give direct answers
+- `dev/check.sh` must pass clean. It runs the authoring-contract lint and the deterministic test suite.
+- `dev/eval/run-llm-evals.sh` must pass before a release is tagged (it costs tokens; maintainers run it). If your change touches a grading ladder, see the release checklist in `CLAUDE.md` for the two-sided sweep it requires.
+- Test locally with `claude --plugin-dir <path-to-checkout>`.
+- New methodologies (if they clear the freeze) need a primary-source citation in the KB and a README "Science" entry.
 
 ## Submitting
 
-1. Fork the repository on GitHub
-2. Create a branch for your changes
-3. Update README.md and GUIDE.md with your additions
-4. Update CHANGELOG.md
-5. Submit a pull request with a description of what you added and the research backing it
+1. Fork on GitHub and branch.
+2. Keep the PR to one change. Describe what it fixes and how you verified it.
+3. Update `CHANGELOG.md` under `[Unreleased]` if the change is user-visible.
 
-## Code of Conduct
+## Code of conduct
 
 Be respectful, patient, and constructive — the same values BodhiKit teaches.
