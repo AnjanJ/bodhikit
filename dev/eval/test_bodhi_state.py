@@ -1371,6 +1371,79 @@ def t_profile_patterns():
               out["addedChallenges"] == [] and out["addedStrengths"] == [], out)
 
 
+def t_bloom_render():
+    """Every emitter that returns a bloomLevel also returns the canonical
+    learner-facing label + outcome clause (blooms-taxonomy KB)."""
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review=json.loads(json.dumps(V2_SR)))
+        run(proj, "migrate-spaced-review")
+        out = run(proj, "record-review", "--concept", "B-tree indexes",
+                  "--result", "correct", "--tested-bloom", "3")
+        check("render: record-review carries label", out["bloomLabel"] == "Apply", out)
+        check("render: record-review carries outcome clause",
+              out["bloomOutcome"].startswith("you can use it"), out)
+        out = run(proj, "session-brief", "--concept", "Query planning")
+        check("render: unclassified has no label (not a zero)",
+              out["bloomLevel"] == 0 and out["bloomLabel"] is None
+              and out["bloomOutcome"] == "nothing observed yet", out)
+        out = run(proj, "gate-check", "--prior-module", "Module A")
+        bt = [p for p in out["prerequisites"] if p["name"] == "B-tree indexes"][0]
+        check("render: gate rows carry label", bt["bloomLabel"] == "Apply", bt)
+        out = run(proj, "snapshot")
+        scale = out.get("bloomScale", [])
+        check("render: snapshot ships the 6-rung legend",
+              [r["label"] for r in scale]
+              == ["Remember", "Understand", "Apply", "Analyze", "Evaluate", "Create"],
+              scale)
+        check("render: every rung has an outcome clause in second person",
+              all(r["outcome"].startswith("you can") for r in scale), scale)
+
+
+def t_gate_evidence():
+    """A level reached by ONE review earns a reconfirm question, not a free
+    pass; two level-3+ corrects (or Box >= 3) clear it. (1.17.0)"""
+    with tempfile.TemporaryDirectory() as root:
+        sr = {"version": 3, "concepts": [
+            {"name": "Joins", "module": "Module A", "introduced": "2026-01-01",
+             "box": 1, "bloomLevel": 0, "nextReview": "2026-01-02",
+             "lastReviewed": None, "reviewHistory": []}],
+            "sessionHistory": []}
+        proj = make_project(root, spaced_review=sr)
+        # one correct at Apply, today -> bloom 3, box 2, evidence 1
+        run(proj, "record-review", "--concept", "Joins",
+            "--result", "correct", "--tested-bloom", "3")
+        out = run(proj, "gate-check", "--prior-module", "Module A")
+        j = out["prerequisites"][0]
+        check("gate: single level-3 review = reconfirm, not pass",
+              j["status"] == "stale-reconfirm" and j["reason"] == "single-evidence"
+              and j["evidenceAt3Plus"] == 1, j)
+        check("gate: verdict offer on single evidence", out["verdict"] == "offer")
+        # a miss then a second correct at Apply: box back to 2, evidence 2
+        run(proj, "record-review", "--concept", "Joins",
+            "--result", "incorrect", "--tested-bloom", "3")
+        run(proj, "record-review", "--concept", "Joins",
+            "--result", "correct", "--tested-bloom", "3")
+        out = run(proj, "gate-check", "--prior-module", "Module A")
+        j = out["prerequisites"][0]
+        check("gate: two level-3 corrects below box 3 = satisfied by evidence",
+              j["status"] == "satisfied" and j["reason"] == "evidence"
+              and j["box"] < 3 and j["evidenceAt3Plus"] == 2, j)
+        # a correct graded at Understand does not count toward apply evidence
+        sr2 = read_sr(proj)
+        sr2["concepts"][0]["reviewHistory"] = [
+            {"date": TODAY.isoformat(), "result": "correct", "bloomLevel": 3},
+            {"date": TODAY.isoformat(), "result": "correct", "bloomLevel": 2}]
+        sr2["concepts"][0]["box"] = 2
+        with open(os.path.join(proj, ".bodhi", "spaced-review.json"), "w") as f:
+            json.dump(sr2, f)
+        out = run(proj, "gate-check", "--prior-module", "Module A")
+        j = out["prerequisites"][0]
+        check("gate: a level-2 correct is not apply evidence",
+              j["status"] == "stale-reconfirm" and j["evidenceAt3Plus"] == 1, j)
+        out = run(proj, "session-brief", "--concept", "Joins")
+        check("brief: exposes evidenceAt3Plus", out["evidenceAt3Plus"] == 1, out)
+
+
 def main():
     for t in (t_migrate, t_record_review, t_sessions_and_forget,
               t_touch_state_and_profile, t_gate_check,
@@ -1385,7 +1458,8 @@ def main():
               t_profile_project_list_shape,
               t_session_brief, t_crossed_bloom3, t_snapshot,
               t_due_never_taught, t_concept_tiers,
-              t_profile_project_lifecycle, t_profile_patterns, t_park):
+              t_profile_project_lifecycle, t_profile_patterns, t_park,
+              t_bloom_render, t_gate_evidence):
         print(f"-- {t.__name__}")
         t()
     print(f"\n{PASS} passed, {FAIL} failed")

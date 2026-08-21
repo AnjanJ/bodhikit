@@ -45,6 +45,39 @@ SESSION_TYPES = {
 
 CONFIDENCE_VALUES = {"sure", "mostly", "guessing"}
 
+# Learner-facing rendering of a Bloom level (blooms-taxonomy KB, canonical).
+# The number is an instructor-facing instrument. A learner reads the LABEL (a
+# named rung is motivating) together with the OUTCOME clause (which is what
+# makes the label mean something). Every emitter that returns a bloomLevel
+# also returns bloomLabel/bloomOutcome, so skills render and never translate.
+BLOOM_LABELS = {0: None, 1: "Remember", 2: "Understand", 3: "Apply",
+                4: "Analyze", 5: "Evaluate", 6: "Create"}
+BLOOM_OUTCOMES = {
+    0: "nothing observed yet",
+    1: "you can recall the terms and what they refer to",
+    2: "you can explain what it does in your own words",
+    3: "you can use it in working code with some guidance",
+    4: "you can debug it and work with it independently",
+    5: "you can judge between approaches and defend a design choice",
+    6: "you can design something new with it and teach it",
+}
+
+
+def bloom_render(level):
+    """{bloomLabel, bloomOutcome} for a level; clamps junk to the 0..6 scale."""
+    try:
+        lvl = int(level)
+    except (TypeError, ValueError):
+        lvl = 0
+    lvl = max(0, min(6, lvl))
+    return {"bloomLabel": BLOOM_LABELS[lvl], "bloomOutcome": BLOOM_OUTCOMES[lvl]}
+
+
+def bloom_scale():
+    """The full ladder, for dashboards that render a legend."""
+    return [{"level": n, "label": BLOOM_LABELS[n], "outcome": BLOOM_OUTCOMES[n]}
+            for n in range(1, 7)]
+
 # Prerequisite-gate recency window (1.11.0): a bloomLevel >= 3 concept only
 # auto-satisfies the gate if its retention evidence is current — box >= 3 OR
 # reviewed within this many days. Otherwise it is "stale" and the gate offers
@@ -314,6 +347,7 @@ def apply_review(concept, result, tested_bloom, confidence=None, note=None,
     return {"concept": concept["name"], "box": f"{old_box} -> {concept['box']}",
             "retry": retry,
             "bloomLevel": new_bloom,
+            **bloom_render(new_bloom),
             # 1.14.0: THIS write crossed the Bloom-3 line — the exact condition
             # for /teach's bump-profile totalConceptsLearned duty. Executors
             # previously re-derived it ("if unsure, scan progress.md").
@@ -1145,6 +1179,8 @@ def cmd_session_brief(args):
                                         or last_result == "incorrect"),
         "box": c.get("box", 1),
         "bloomLevel": c.get("bloomLevel", 0),
+        **bloom_render(c.get("bloomLevel", 0)),
+        "evidenceAt3Plus": evidence_at_3_plus(c),
         "feynmanPassed": c.get("feynmanPassed", False),
         "lastReviewed": c.get("lastReviewed"),
         "daysSinceLastReview": (t - last).days if last else None,
@@ -1274,26 +1310,49 @@ def cmd_snapshot(args):
             "blockedOnFeynman": blocked_on_feynman,
         },
         "calibration": calibration,
+        "bloomScale": bloom_scale(),
     })
 
 
-def gate_status(c, t):
-    """Per-prerequisite verdict for the /teach gate (canonical, 1.11.0)."""
+def evidence_at_3_plus(c):
+    """Independent observations of the apply rung: correct results graded at
+    Bloom >= 3. A single review can inflate the ratchet; two cannot as easily."""
+    return sum(1 for h in c.get("reviewHistory", [])
+               if h.get("result") == "correct" and (h.get("bloomLevel") or 0) >= 3)
+
+
+def gate_verdict(c, t):
+    """(status, reason) for one prerequisite (canonical, 1.11.0; evidence rule 1.17.0).
+
+    The Bloom ratchet is one-way and a single LLM grade is noisy, so a level-3
+    reached by exactly one review is not treated as settled: it earns one
+    reconfirm question (the existing stale-reconfirm path), not a free pass.
+    Two independent level-3+ corrects, or Box >= 3 (which already implies two
+    spaced successes), clear the gate.
+    """
     bloom = c.get("bloomLevel", 0)
     box = c.get("box", 1)
     last = parse_date(c.get("lastReviewed"))
     recent = last is not None and (t - last).days <= GATE_RECENCY_DAYS
     if bloom == 0:
-        return "no-opinion"        # never classified by a v3 writer; allow
+        return "no-opinion", "unclassified"   # never classified by a v3 writer; allow
     if bloom >= 3:
-        if box >= 3 or recent:
-            return "satisfied"
-        return "stale-reconfirm"   # Bloom ratchet alone is not current evidence
+        if box >= 3:
+            return "satisfied", "box"
+        if recent and evidence_at_3_plus(c) >= 2:
+            return "satisfied", "evidence"
+        if recent:
+            return "stale-reconfirm", "single-evidence"
+        return "stale-reconfirm", "stale"    # Bloom ratchet alone is not current evidence
     # 1 <= bloom < 3: strong v2 retention evidence fallthrough (1.10.10)
     hist = [h.get("result") for h in c.get("reviewHistory", [])]
     if box >= 3 and len(hist) >= 2 and hist[-1] == hist[-2] == "correct":
-        return "apply-equivalent"  # gate-time read only; bloomLevel untouched
-    return "gap"
+        return "apply-equivalent", "box"     # gate-time read only; bloomLevel untouched
+    return "gap", "below-apply"
+
+
+def gate_status(c, t):
+    return gate_verdict(c, t)[0]
 
 
 def cmd_gate_check(args):
@@ -1352,9 +1411,14 @@ def cmd_gate_check(args):
                    if c.get("module", "").strip().lower() == str(prior).strip().lower()]
         source = "prior-module"
 
-    report = [{"name": c["name"], "bloomLevel": c.get("bloomLevel", 0),
-               "box": c.get("box", 1), "lastReviewed": c.get("lastReviewed"),
-               "status": gate_status(c, t)} for c in prereqs]
+    report = []
+    for c in prereqs:
+        status, reason = gate_verdict(c, t)
+        report.append({"name": c["name"], "bloomLevel": c.get("bloomLevel", 0),
+                       **bloom_render(c.get("bloomLevel", 0)),
+                       "box": c.get("box", 1), "lastReviewed": c.get("lastReviewed"),
+                       "evidenceAt3Plus": evidence_at_3_plus(c),
+                       "status": status, "reason": reason})
     gaps = [r for r in report if r["status"] == "gap"]
     stale = [r for r in report if r["status"] == "stale-reconfirm"]
     emit({"fires": True, "currentModule": current,

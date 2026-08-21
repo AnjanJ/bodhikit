@@ -436,6 +436,18 @@ if [ "$want" = "all" ] || [ "$want" = "grading" ] || [ "$want" = "grade-misconce
     grade-misconception "" "" nudge
 fi
 
+# grade-understand-band (1.17.0) pins the ONE boundary the grading group never
+# tested: Bloom 2 vs 3. That line is the prerequisite gate's input — a 3 from a
+# single review now earns a reconfirm rather than a pass, but a 3 that should
+# have been a 2 is still a one-way ratchet. Own-words, accurate, no
+# misconception, and an honest "I could not write one" on every apply probe:
+# the answer demonstrates Understand and nothing above it.
+if [ "$want" = "all" ] || [ "$want" = "grading" ] || [ "$want" = "grade-understand-band" ]; then
+  repeat_scenario grade-understand-band \
+    "/bodhikit:teach B-tree indexes — $SIM_CONTRACT Understanding-only session: I just want to understand, no exercise. Simulate my responses. My explain-back, in my own words: 'An index is like the index at the back of a book — instead of reading every page to find a topic, you look it up in a sorted list that points to the right page. A B-tree keeps that list sorted in a shallow tree so the database reaches the right rows in a few steps instead of scanning the whole table.' When you ask me to write one, to say which column I would index in a given query, or how I would use it in practice, I answer honestly: 'I could not actually write one or pick the column — I have only read about them, I have never used one.' After your refinement attempt I still cannot produce or choose an index, though my explanation stays accurate and in my own words. My final explanation is the same book-index analogy. Grade me honestly — including the Bloom level my answers actually demonstrated — and complete ALL tracking updates exactly as the skill specifies." \
+    grade-understand-band "" "" nudge
+fi
+
 # --- Transcript-fidelity scenarios (1.12.0) -----------------------------------
 # Protocol gates with no file trace (the pretest is deliberately unrecorded;
 # hint discipline is conversational). Wording-tolerant regexes over the full

@@ -41,6 +41,8 @@ are the highest-write-count skills and ran on the honor system before 1.16.0.
 Interactive teaching skills (`/teach`, `/pair`, `/continue`) still warrant a
 manual dogfood pass on real learning data when their write paths change.
 
+The grading group includes `grade-understand-band` (1.17.0): an accurate own-words explanation with an honest inability to write or choose an index must land at Bloom 1-2, never 3 — the 2-vs-3 line is the prerequisite gate's input and was previously untested on the low side. It has NOT yet been run against a live model; the first `grading` sweep after 1.17.0 should read its recorded levels alongside `grade-apply-band`.
+
 ## Layer 3: grading-calibration + transcript-fidelity evals (1.12.0)
 
 The deterministic layer guarantees the file *mechanics*; these guarantee the

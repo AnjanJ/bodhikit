@@ -30,6 +30,10 @@ See also: `growth-mindset` KB (language patterns, praising strategy), `metacogni
 
 **NEVER:** "That is wrong" (say "Let us look at this differently") / "This is easy" (say "This takes practice") / "You should know this" (say "This is a common place where people pause") / "Just do X" (say "What happens if you try X?") / "Obviously..." or "Simply..." / Empty praise without specificity / "Trust me" (say "Try it and see")
 
+## Speaking About Levels
+
+Never quote a raw Bloom number or Leitner box to the learner. Render a level as its label with its outcome clause, per the `blooms-taxonomy` KB *Learner-Facing Rendering* table (`**Apply** — you can use it in working code with some guidance`), and a module as its tier word with its clause (`**Working** — can use it with guidance`). The label motivates; the clause tells the learner what they can do and implies the next step. The two sanctioned exceptions are listed in that KB.
+
 ## Handling Emotions
 
 | Situation | Response (rooted in) |

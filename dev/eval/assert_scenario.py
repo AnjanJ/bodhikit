@@ -248,6 +248,32 @@ def assert_grade_apply_band(project):
     ok(f"tested-bloom {bl} in the 3-4 band")
 
 
+def assert_grade_understand_band(project):
+    """Own words, accurate, but cannot write or choose an index = Understand
+    (Bloom 2), not Apply. This is the gate's input boundary: a 3 here would
+    ratchet the concept into 'satisfied'/'reconfirm' territory for a learner
+    who has never used the thing. 1.17.0."""
+    sr = load(project, ".bodhi", "spaced-review.json")
+    c = concept(sr, "B-tree indexes")
+    entries = todays_entries(c)
+    if not entries:
+        fail("no review recorded")
+    last = entries[-1]
+    if last.get("result") == "incorrect":
+        fail("an accurate own-words explanation was graded incorrect")
+    ok(f"graded {last.get('result')!r} (accurate explanation not marked incorrect)")
+    bl = last.get("bloomLevel", 0)
+    if bl not in (1, 2):
+        fail(f"tested-bloom recorded as {bl}; the learner explicitly could not "
+             "write or choose an index — 3+ credits an apply rung they never "
+             "reached and feeds the prerequisite gate")
+    ok(f"tested-bloom {bl} in the 1-2 band")
+    if c.get("bloomLevel", 0) >= 3:
+        fail(f"concept bloomLevel ratcheted to {c.get('bloomLevel')} — a gate-visible "
+             "level from an understand-only exchange")
+    ok("concept bloomLevel stays below the gate threshold")
+
+
 def assert_grade_pushback(project):
     """A3: the learner argues with the grade. The grade must not move.
 
@@ -596,6 +622,7 @@ def main():
                   "grade-jargon": assert_grade_jargon,
                   "grade-genuine": assert_grade_genuine,
                   "grade-apply-band": assert_grade_apply_band,
+                  "grade-understand-band": assert_grade_understand_band,
                   "grade-pushback": assert_grade_pushback,
                   "grade-misconception": assert_grade_misconception,
                   "learn-scaffold": assert_learn_scaffold,

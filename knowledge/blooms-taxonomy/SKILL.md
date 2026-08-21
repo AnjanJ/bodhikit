@@ -18,6 +18,26 @@ user-invocable: false
 | 5 | **Evaluate** | Critique design decisions, justify choices, review code | "Which of these two implementations is better and why?" |
 | 6 | **Create** | Design systems from scratch, build novel solutions, architect | "Design an API for a task management system" |
 
+## Learner-Facing Rendering (canonical — every skill, not just `/progress`)
+
+The number is an instructor-facing instrument. A learner reads the **label** together with its **outcome clause**, always as a pair: the label is kept because a named rung is motivating ("you are at Apply"); the clause is kept because it is what makes the label mean something ("you can use it in working code with some guidance"). One without the other is either a grade or a platitude.
+
+| Level | Label | Outcome clause (second person) |
+|---|---|---|
+| 0 | — | nothing observed yet (not rendered as a level — see *Unclassified is not a zero*) |
+| 1 | **Remember** | you can recall the terms and what they refer to |
+| 2 | **Understand** | you can explain what it does in your own words |
+| 3 | **Apply** | you can use it in working code with some guidance |
+| 4 | **Analyze** | you can debug it and work with it independently |
+| 5 | **Evaluate** | you can judge between approaches and defend a design choice |
+| 6 | **Create** | you can design something new with it and teach it |
+
+Rendering rule: `**Label** — outcome clause`, e.g. `**Apply** — you can use it in working code with some guidance`. Movement reads as labels: "Ownership went from Understand to Apply", never "2 → 3". `bodhi-state` returns `bloomLabel` and `bloomOutcome` next to every `bloomLevel` it emits (`record-review`, `session-brief`, `gate-check`, and a `bloomScale` legend in `snapshot`) — render those fields; do not maintain a translation table in a skill.
+
+Where a bare number is still allowed: (1) `/evaluate`'s self-prediction question, because `predictionDelta` needs learner and tutor on one numeric scale — anchor each number with its clause in the same breath; (2) the **Bloom adjustments** line of a `progress.md` entry, written as `Label (N)` so the prose can be checked against the tracking JSON; (3) script invocations (`--tested-bloom N`), which the learner never sees.
+
+Concept *tiers* (below) are a separate, coarser vocabulary for module rollups — *Solid / Working / Introduced* summarize a whole module; the labels above describe one concept.
+
 ## Key Principles
 
 - Track Bloom's level PER CONCEPT, not globally
@@ -42,7 +62,7 @@ Every classified concept sits in exactly one tier. The ladder is ordered and eva
 | **introduced** | classified (Bloom 1+), everything below familiar | *Introduced* — can explain what it does |
 | **unclassified** | Bloom 0 — no v3 writer has classified it yet | *—* (not "introduced": nothing has been observed) |
 
-**`mastered` is the predicate; *Solid* is the display word.** The four-conjunct formula is the canonical one from the `state-ops` KB (`is_mastered`) — this table names its tier, it does not restate or fork it. The right-hand column is display vocabulary for `/progress`: the plugin's internal scales are instructor-facing instruments, and a learner reads a position ("can use it with guidance"), not a number. Always render the word with its outcome clause; the clause is what makes the word mean something.
+**`mastered` is the predicate; *Solid* is the display word.** The four-conjunct formula is the canonical one from the `state-ops` KB (`is_mastered`) — this table names its tier, it does not restate or fork it. The right-hand column is display vocabulary for module rollups in any skill (`/progress`, `/evaluate`, `/mentor`): the plugin's internal scales are instructor-facing instruments, and a learner reads a position ("can use it with guidance"), not a number. Always render the word with its outcome clause; the clause is what makes the word mean something.
 
 **Why `familiar` is Bloom 3 + Box 2, and not more.** The two conjuncts test different things and both are load-bearing: Bloom 3 says the learner reached the apply rung at least once, Box 2 says at least one retrieval survived a delay. Dropping either would let a single lucky answer read as *Working*. But the tier deliberately does NOT require a consecutive-correct streak or the Feynman gate — those are what separate *familiar* from *mastered*. A concept can sit at *familiar* indefinitely; that is the honest state of most working knowledge.
 

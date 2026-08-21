@@ -137,11 +137,13 @@ The `/teach` Phase 1 gate fires only on the first session of a new module (detec
 
 | Verdict | Condition | Gate behavior |
 |---|---|---|
-| `satisfied` | `bloomLevel >= 3` AND current evidence (`box >= 3` OR reviewed within 30 days) | Pass |
-| `stale-reconfirm` | `bloomLevel >= 3` but box < 3 AND last review > 30 days ago | One quick reconfirm question — the Bloom ratchet alone is not current evidence |
+| `satisfied` | `bloomLevel >= 3` AND (`box >= 3` OR two or more correct reviews graded at Bloom 3+ with the latest reviewed within 30 days) | Pass (`reason: box` or `evidence`) |
+| `stale-reconfirm` | `bloomLevel >= 3` but box < 3 AND either only ONE level-3+ correct on record (`reason: single-evidence`) or last review > 30 days ago (`reason: stale`) | One quick reconfirm question — a single grade is noisy and the Bloom ratchet is one-way, so one review is not settled evidence. Phrase by reason: "we have only seen this once" vs "it has been a while" |
 | `no-opinion` | `bloomLevel == 0` | Pass (legacy fallthrough) |
 | `apply-equivalent` | `1 <= bloomLevel < 3` but `box >= 3` AND last two reviews correct | Pass (gate-time read only; bloomLevel untouched) |
 | `gap` | otherwise | Surface as an offer — never auto-block; the learner decides |
+
+Each prerequisite row also carries `evidenceAt3Plus` (count of level-3+ corrects) and `bloomLabel`/`bloomOutcome` for learner-facing phrasing (`blooms-taxonomy` KB rendering rule).
 
 Prerequisites come from the plan's `**Prerequisites for next module:**` declaration (passed via `--prereqs`) or, as fallback, all concepts of the tracked `previousModule` (the verdict JSON reports `prerequisiteSource: "declared" | "prior-module"` so the skill can tell the learner which mapping it used). When neither is available the gate declines to fire (`fires: false` with the reason) — it never infers a prerequisite module from concept dates; a guessed gate generates false reconfirm questions, which cost more trust than no gate.
 
