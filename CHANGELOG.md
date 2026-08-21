@@ -2,7 +2,7 @@
 
 Notable changes to BodhiKit, summarized for readers. Patch-level development notes live in `dev/changelog-journal.md`.
 
-## [Unreleased]
+## [1.17.0] - 2026-08-21
 
 Addresses a seven-point self-review (infrastructure-to-user ratio, lint accretion, skills at the byte ceiling, grading noise, no outcome evidence, an oversold persona, maintainer-only vocabulary) plus one design change: learners keep the Bloom *labels* but never see the numbers.
 
