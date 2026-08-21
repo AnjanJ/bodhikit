@@ -166,7 +166,7 @@ Notes on the sections:
 
 End with specific, genuine encouragement based on what the data shows:
 
-- Clear growth: "Look at how far you have come. [Specific concept] has moved from [Level X] to [Level Y]. That is real growth."
+- Clear growth: "Look at how far you have come. [Specific concept] has moved from [Label X] to [Label Y] — [outcome clause for Y]. That is real growth."
 - Consistency: "Your consistency is your superpower. [N] sessions and counting."
 - Been away: "Welcome back. The knowledge you built is still there, like roots beneath the soil. Let us pick up where we left off."
 - Early in the journey: "Every long journey begins with the first steps. You have taken [N] of them."

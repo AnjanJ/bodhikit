@@ -78,8 +78,8 @@ Compare initial → intermediate → current per sub-topic. The trajectory repor
 
 Identify:
 - **Biggest growth areas** — sub-topics with the largest Bloom delta from initial to current. Anchor each with the trajectory report's evidence quote.
-- **Consistent strengths** — sub-topics at Bloom 4+ across multiple assessments (the report flags these as candidates in its Patterns section).
-- **Persistent challenges** — sub-topics at Bloom <3 across 3+ assessments (the report flags these too). Frame as opportunities, not failures.
+- **Consistent strengths** — sub-topics at Analyze or above across multiple assessments (the report flags these as candidates in its Patterns section).
+- **Persistent challenges** — sub-topics below Apply across 3+ assessments (the report flags these too). Frame as opportunities, not failures.
 - **Recent growth** — Bloom moves in the last assessment window. Cross-check against Phase 2.5's fresh results.
 - **Retention concerns** — concepts in Box 1 that have demoted from a higher box (the report's "Concepts demoted" list). These are precision-gap candidates worth surfacing.
 
@@ -92,7 +92,7 @@ The trajectory report's "Notes for the Parent Skill" section names a suggested f
 Present a comprehensive report including:
 
 - **Journey Summary:** topic, duration, sessions, streak, modules completed (%), exercises, quizzes
-- **Growth Map:** table of topic areas with starting level, current level, change, confidence (H/M/L)
+- **Growth Map:** table of topic areas with starting and current position as labels (`Understand → Apply`), each current label with its outcome clause per the `blooms-taxonomy` KB rendering rule, plus confidence (H/M/L). No raw numbers here — Phase 2.5's prediction comparison is the one place the scale is shown
 - **Where You Shine:** 2-3 strengths with evidence
 - **Active Growth Areas:** 2-3 areas with positive trajectory
 - **Areas Needing Attention:** 1-2 areas needing focus (framed as opportunities)
@@ -155,7 +155,7 @@ The closing offers above (capstone/mentor) are the receipt; these writes are wha
 
 3. **Append the new assessment block to `.bodhi/assessments/latest.md` with the Write tool**: date + full evaluation results (Growth Map, Strengths, Active Growth, Areas Needing Attention, Spaced Repetition Health, Key Concepts Status, Calibration Check, Recommendations) at the top; the prior assessment block stays in place (`/housekeep` rotates it later).
 
-4. **Append the evaluation entry to `.bodhi/progress.md` with the Write tool**: `## YYYY-MM-DD — Evaluation (milestone)`, **Headline trajectory**, **Bloom adjustments**, **Next chapter**. Full detail stays in `assessments/latest.md`; this is the pointer + headline. Existing content preserved verbatim below.
+4. **Append the evaluation entry to `.bodhi/progress.md` with the Write tool**: `## YYYY-MM-DD — Evaluation (milestone)`, **Headline trajectory**, **Bloom adjustments** (`Label (N)`), **Next chapter**. Full detail stays in `assessments/latest.md`; this is the pointer + headline. Existing content preserved verbatim below.
 
 5. **Patterns + project status (via the script — do not hand-tally or hand-edit):**
    - `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> profile-update-patterns` — the script counts `assessment-history.json` (3+ entries at Bloom <3 → `persistentChallenges`; 3+ at Bloom 4+ → `consistentStrengths`, append-only, deduplicated). Run it AFTER step 1's `record-assessment` so today's entry counts.

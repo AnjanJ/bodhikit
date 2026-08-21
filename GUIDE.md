@@ -3,7 +3,6 @@
 ## Table of Contents
 
 - [Getting Started](#getting-started)
-- [Upgrading from Earlier Versions](#upgrading-from-earlier-versions)
 - [Your Journey from Zero to Completion](#your-journey-from-zero-to-completion)
 - [How Teaching Works](#how-teaching-works)
 - [When BodhiKit Reaches for an Analogy](#when-bodhikit-reaches-for-an-analogy)
@@ -68,51 +67,7 @@ Start your first learning project:
 
 BodhiKit will ask you questions to understand your background, goals, and current skill level. Then it will create a personalized learning plan and give you your first exercise.
 
----
-
-## Upgrading from Earlier Versions
-
-If you already have learning projects from any version before 1.10, run the one-shot migration once per project:
-
-```
-/bodhikit:housekeep migrate
-```
-
-You can run it from inside a specific project folder, or from the `learningWithBodhi/` root to convert every project at once.
-
-### What it does
-
-The migration is chained — it runs whichever transforms are missing for your project, in version order. Two targets exist as of 1.10:
-
-**1.7.0 target** (v1 → v2 layout — progressive disclosure). Converts:
-
-- `state.json` — strips long narrative fields (`lastSessionSummary`, `bloomResetNote`); they move to `progress.md` where prose belongs. State stays slim: pointers, counts, current values.
-- `plan.md` (monolithic) → `plan/README.md` + `plan/phase-{N}.md` (sectional). Skills like `/teach` and `/continue` load only the current phase, not the whole plan.
-- `progress.md` (flat chronological log) → live + archive + summary. The latest session sits at the top; older sessions move to `progress/archive/` with one-line pointers in a summary block.
-- `assessment.md` (flat) → `assessments/latest.md` + `assessments/archive/`. Same pattern.
-- `.bodhi-profile.json` (monolithic) → `.bodhi-profile.json` (top-level: cumulative stats, patterns) + `.bodhi-profile.projects.json` (per-project metadata).
-
-**1.10 target** (v2 → v3 schema bump on `spaced-review.json`). Per-concept Bloom + Feynman tracking — the fields that make mastery observable end-to-end:
-
-- `concepts[].bloomLevel` (0–6, integer) — current Bloom's level for the concept. Set by `/quiz`, `/teach`, `/practice` as they observe the learner's level. Ratchet-up only.
-- `concepts[].feynmanPassed` (boolean) — set to `true` when the learner produces a clear, jargon-free explain-back. Owned by `/teach` (Phase 2 checkpoint / understanding-only path / Phase 5). Set, never unset.
-- `concepts[].consecutiveCorrectAtL4Plus` (integer) — running counter for the mastery criterion. Incremented by `/quiz` on correct answers at Bloom 4+; reset to 0 on any incorrect, any partial, or on `/forget` ("consecutive correct" means uninterrupted corrects — a partial breaks the streak).
-- New entries in `reviewHistory[]` also include `bloomLevel` to record which level a given quiz question tested at, and (1.11.3) `boxBefore` — the box the concept occupied when the review was answered, which makes `bodhi-state retention` (retention-at-review rates by spacing gap and box) exact rather than reconstructed.
-
-Together these fields make the canonical mastery formula computable: `mastered = bloomLevel ≥ 4 AND consecutiveCorrectAtL4Plus ≥ 3 AND box ≥ 4 AND feynmanPassed`.
-
-### Safety
-
-- **Per-target idempotent.** Each transform's marker file (`.bodhi/.migration-1.7.0.md`, `.bodhi/.migration-1.10.md`) tracks whether it has run; running the command twice in a row is a no-op once both markers are present.
-- **Non-destructive.** Each transform backs up its pre-state to a dedicated directory (`.bodhi/.pre-1.7.0-backup/`, `.bodhi/.pre-1.10-backup/`) for one minor version each. If anything looks off, you can restore from there.
-- **Transparent.** The command prints a before/after byte report scoped to whichever transforms ran, and lists every archive entry it created.
-- **End-to-end dogfooded.** The 1.10 transform was hardened through a seven-pass live dogfood on real learning projects (see CHANGELOG 1.10.7 through 1.10.13 for the bugs caught and fixed).
-
-### After migrating
-
-Your skills work exactly as before — just faster, because routine sessions read less context, and Bloom/mastery is now observable in the data instead of inferred. Sessions you don't need (history, full plan arc, prior assessments) stay on disk, accessible by pointer when a situation justifies it (e.g., `/evaluate` reading the full history for trajectory analysis, `/continue` reading recent archive entries when you've been gone for over 30 days).
-
-The new `/housekeep` skill also handles ongoing rotation — at session boundaries, it moves the previous live session into `progress/archive/` and writes a one-line summary pointer. See [Housekeeping Your Tracking Files](#housekeeping-your-tracking-files) for details.
+**Upgrading from an earlier version?** See [MIGRATION.md](./MIGRATION.md) — one command, `/bodhikit:housekeep migrate`, converts tracking files from any version since 1.6.
 
 ---
 
@@ -138,11 +93,17 @@ Priya answers: *production network services, strong Python/Django, 10h/week, 10 
 
 BodhiKit then runs **Cross-Project Reconciliation** — since this is her first BodhiKit project, the cross-project profile is empty and this phase passes silently. (If she had three active projects already, BodhiKit would surface a capacity flag here. See [/learn](#learnbodhikitlearn-topic) for details.)
 
-Next, the **skill-assessor agent** takes over for 8–10 adaptive questions. It starts at Bloom Level 3 ("can you apply this?") and adjusts up or down per topic. Priya answers questions on ownership, lifetimes, traits, async, error handling. She knows ownership conceptually but cannot write it; lifetimes are a blank wall; traits feel like Python's duck-typing-meets-interfaces; async she knows from Python. The agent returns a structured assessment:
+Next, the **skill-assessor agent** takes over for 8–10 adaptive questions. It starts at the Apply rung ("can you use this in working code?") and adjusts up or down per topic. Priya answers questions on ownership, lifetimes, traits, async, error handling. She knows ownership conceptually but cannot write it; lifetimes are a blank wall; traits feel like Python's duck-typing-meets-interfaces; async she knows from Python. The agent returns a structured assessment:
 
-> Ownership: Level 2 (HIGH conf), Borrowing: Level 1 (HIGH), Lifetimes: Level 0 (HIGH),
-> Traits: Level 2 (MEDIUM), Generics: Level 1 (MEDIUM), Error handling (Result/?): Level 1 (HIGH),
-> Async: Level 2 (HIGH), Tokio: Level 0 (HIGH), Testing: Level 3 (transferred from Python).
+> Ownership: **Understand** — you can explain what it does in your own words (you rated yourself higher: that's the gap we'll close first).
+> Borrowing: **Remember** — you can recall the terms and what they refer to.
+> Lifetimes: nothing observed yet — a blank wall, and that is a fine place to start.
+> Traits: **Understand** — you can explain what it does in your own words (your duck-typing analogy gets you partway; I am less sure of this one).
+> Generics: **Remember** — you can recall the terms and what they refer to.
+> Error handling (Result/?): **Remember** — you can recall the terms and what they refer to.
+> Async: **Understand** — you can explain what it does in your own words (carried over from Python).
+> Tokio: nothing observed yet.
+> Testing: **Apply** — you can use it in working code with some guidance (transferred from Python).
 
 BodhiKit uses this to generate a **personalized learning plan**: 3 phases over ~10 weeks, with modules calibrated to Priya's starting points. Phase 0 (Week 1–2): ownership, borrowing, lifetimes — the hard foundation. Phase 1 (Week 3–6): traits, generics, error handling, modules. Phase 2 (Week 7–10): async runtime, tokio, the TCP server capstone project. The plan is written to `learningWithBodhi/rust-network-services/.bodhi/plan/README.md` plus per-phase files.
 
@@ -182,7 +143,7 @@ Lifetimes are not making sense. Three sessions in a row Priya has gotten the syn
 /bodhikit:assess lifetimes
 ```
 
-A standalone assessment, ~8 questions, 15 minutes. The result lands honestly: *Lifetimes: Level 1 (HIGH confidence) — recognition only, no productive use.* No shame, no judgment. The result also gets written to `assessment-history.json` so `/evaluate` can plot her trajectory later.
+A standalone assessment, ~8 questions, 15 minutes. The result lands honestly: *Lifetimes: **Remember** — you can recall the terms and what they refer to. Recognition only, no productive use yet — and I am confident in that reading.* No shame, no judgment. The result also gets written to `assessment-history.json` so `/evaluate` can plot her trajectory later.
 
 ```
 /bodhikit:teach lifetime elision
@@ -233,7 +194,7 @@ She is past the foundation and starting the async track. She wants to take stock
 
 This is **not** a quiz. BodhiKit announces upfront that it is going to take a few minutes: it launches the **trajectory-analyzer agent** to read her entire history (all archives, all assessments, the spaced-review trail, every plan phase) in the agent's context — keeping her conversation light. Then it runs a fresh ~15-question assessment across the full plan via the skill-assessor agent. Then it synthesizes.
 
-> "Here is the path you have walked. Ownership went 2 → 3 → 4 over Weeks 1–6, evidence from your Week-3 session: 'I rewrote the function so the caller owns the buffer.' Lifetimes went 0 → 1 → 2 — you have a working model now but stumble on multi-lifetime signatures (Week 5 quiz miss). Strong work on testing — Level 3 transferred from Python, now Level 4. Persistent challenge: trait bounds, three rounds of demote-and-recover. The plan still fits; suggest staying the course for Phase 2 (async/tokio). One thing worth naming: you have built a real CLI, debugged a real bug, and shipped your own tests. That is what Phase 1 was for."
+> "Here is the path you have walked. Ownership went from Understand to Apply to Analyze over Weeks 1–6 — you can debug it and work with it independently now; evidence from your Week-3 session: 'I rewrote the function so the caller owns the buffer.' Lifetimes went from nothing observed to Remember to Understand — you can explain what they do in your own words, but you stumble on multi-lifetime signatures (Week 5 quiz miss). Strong work on testing — it came in at Apply from Python and is now Analyze: you debug failing tests on your own. Persistent challenge: trait bounds, three rounds of demote-and-recover. The plan still fits; suggest staying the course for Phase 2 (async/tokio). One thing worth naming: you have built a real CLI, debugged a real bug, and shipped your own tests. That is what Phase 1 was for."
 
 Mid-journey `/evaluate` does NOT trigger the capstone offer — that only fires when a project moves to `completedProjects`. It can, however, *offer* `/mentor` when she is at a fork in the road (a major Bloom milestone) — accepting is always her call.
 
@@ -257,7 +218,7 @@ The capstone TCP server is built. Tests pass. `state.json` shows 100% module com
 
 This time the evaluation moves the project from `activeProjects` to `completedProjects`. `cumulativeStats.totalConceptsLearned` and `totalMilestonesReached` bump. The closing section emits a one-paragraph **opt-in offer**:
 
-> "You have walked this path well. There is one optional thing to consider before we close the book on this project: a teach-back. It is not a victory lap — it is a chance to write something defensible on a topic that was once hard for you. The candidates I would suggest are lifetimes, trait bounds, and tokio's spawn semantics — each of these climbed from Bloom < 3 to ≥ 4 in your history, and each has at least one demote-and-recover in your spaced review. Would you like to write a teach-back? You can skip this — completion already happened."
+> "You have walked this path well. There is one optional thing to consider before we close the book on this project: a teach-back. It is not a victory lap — it is a chance to write something defensible on a topic that was once hard for you. The candidates I would suggest are lifetimes, trait bounds, and tokio's spawn semantics — each of these climbed from below Apply to Analyze or better in your history, and each has at least one demote-and-recover in your spaced review. Would you like to write a teach-back? You can skip this — completion already happened."
 
 Priya picks lifetimes. She runs:
 
@@ -460,7 +421,7 @@ These three skills let you see what you know, what you have planned, and where y
 
 #### `/bodhikit:progress [quick|all|project-name]`
 
-**What it does.** Three views on the same question, at three depths. **`quick`**: a flourish-free 3-line check-in (project, current module + completion, streak, concepts due today) — this is what `/continue` shows first. **No argument** (or a project name): the full dashboard — module completion with mastery %, Bloom level per sub-topic, spaced-review retention by box, confidence calibration once you have tagged quiz answers, and a growth-trajectory closing. **`all`**: a one-line-per-project table across active, stale, and dormant tracks with health flags (unmigrated files, broken JSON, incomplete layouts).
+**What it does.** Three views on the same question, at three depths. **`quick`**: a flourish-free 3-line check-in (project, current module + completion, streak, concepts due today) — this is what `/continue` shows first. **No argument** (or a project name): the full dashboard — module completion with mastery %, a per-module tier (**Solid** / **Working** / **Introduced**), per-concept labels with their outcome clauses (e.g. **Apply** — you can use it in working code with some guidance), spaced-review retention by box, confidence calibration once you have tagged quiz answers, and a growth-trajectory closing. **`all`**: a one-line-per-project table across active, stale, and dormant tracks with health flags (unmigrated files, broken JSON, incomplete layouts).
 
 **When to use.** `quick` when you want "where am I?" without committing to a session. The dashboard weekly or bi-weekly to take stock, or before deciding whether to push forward or shore up foundations. `all` when you run multiple projects and want the portfolio view.
 
@@ -604,7 +565,7 @@ These three go beyond the routine when you need depth, materials, or a code-leve
 ```
 /bodhikit:practice error handling
 ```
-> "Write a function `parse_config(path: &str) -> Result<Config, ConfigError>` that handles file-not-found, invalid TOML, and missing-required-field cases distinctly. No starter code — you are at Bloom Level 3 on errors. Tests are in `exercises/error-handling/tests.rs`. When you have a working version, say so and I will look at it."
+> "Write a function `parse_config(path: &str) -> Result<Config, ConfigError>` that handles file-not-found, invalid TOML, and missing-required-field cases distinctly. No starter code — on error handling you are at **Apply**: you can use it in working code with some guidance, and this time the guidance is the test file. Tests are in `exercises/error-handling/tests.rs`. When you have a working version, say so and I will look at it."
 
 **Pedagogy:** [Deliberate Practice](#5-deliberate-practice-ericsson), [Constructivism](#9-constructivism--spiral-curriculum-piaget-bruner-papert), [Bloom](#1-blooms-taxonomy) (calibration).
 
@@ -757,7 +718,7 @@ These three skills are the long-arc ones — for evaluating where you have been 
 ```
 /bodhikit:teach-back
 ```
-> "Three topics from your history that meet the formerly-shaky-now-solid signal: (1) lifetimes — went from blank-wall in Week 1 to Bloom 4 by Week 9, with a demote-and-recover in Week 5; (2) trait bounds — three rounds of demote-and-recover, now stable at Box 4; (3) tokio spawn semantics — the bug you debugged in Week 6 reset this from 3 to 1, and it climbed back to 4 by Week 9. Which one do you want to write?"
+> "Three topics from your history that meet the formerly-shaky-now-solid signal: (1) lifetimes — went from blank-wall in Week 1 to Analyze (you can debug it and work with it independently) by Week 9, with a demote-and-recover in Week 5; (2) trait bounds — three rounds of demote-and-recover, now stable at Box 4; (3) tokio spawn semantics — the bug you debugged in Week 6 knocked this back to Box 1, and it climbed back to Analyze by Week 9. Which one do you want to write?"
 
 **Pedagogy:** [Feynman](#4-feynman-technique) (writing as gap-revealer), [Desirable Difficulties](#6-desirable-difficulties-bjork) (formerly-shaky topics on purpose).
 
@@ -847,16 +808,19 @@ If you are following a book or course, BodhiKit can:
 
 ### Bloom's Taxonomy Levels
 
-BodhiKit tracks your skill level per concept using Bloom's Taxonomy:
+BodhiKit tracks your skill level per concept using Bloom's Taxonomy, and always shows it to you as a **label plus an outcome clause** — never a bare number:
 
-| Level | Name | What It Means |
-|-------|------|--------------|
-| 1 | Remember | You have heard of this but cannot use it yet |
-| 2 | Understand | You understand the idea but need practice applying it |
-| 3 | Apply | You can use this with some guidance |
-| 4 | Analyze | You can work with this independently and debug issues |
-| 5 | Evaluate | You can evaluate approaches and make design decisions |
-| 6 | Create | You can design novel solutions and teach others |
+| Label | What it means |
+|-------|---------------|
+| **Remember** | you can recall the terms and what they refer to |
+| **Understand** | you can explain what it does in your own words |
+| **Apply** | you can use it in working code with some guidance |
+| **Analyze** | you can debug it and work with it independently |
+| **Evaluate** | you can judge between approaches and defend a design choice |
+| **Create** | you can design something new with it and teach it |
+| *(nothing observed yet)* | the concept has not been assessed or taught — not rendered as a level |
+
+The labels are kept because a named rung is motivating; the outcome clause is what makes the label mean something. Underneath, each rung is a number from 1 to 6 — an instructor-facing instrument that BodhiKit does not quote to you, except in `/evaluate`'s self-prediction question, where you and the tutor need a shared scale. Module tiers (**Solid** / **Working** / **Introduced**) shown by `/progress` are a separate, coarser summary of how a whole module's concepts are doing.
 
 ### Mastery Criteria
 

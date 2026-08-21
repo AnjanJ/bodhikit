@@ -64,11 +64,12 @@ A few topics from your journey stand out as worth writing about. Not because you
 know them best — because you wrestled with them and won. The posts that help
 the next learner most are the ones written by someone who remembers being lost.
 
-1. **<topic A>** — assessed at Bloom <X> initially, now <Y>. Demoted <N> times in
-   spaced review across <M> sessions. Your reflection on <date> named this as
-   "<short quote from progress.md>". Now sitting solidly in Box <K>.
+1. **<topic A>** — started at <Label X>, now <Label Y>: <outcome clause for Y>.
+   Slipped <N> times in spaced review across <M> sessions. Your reflection on
+   <date> named this as "<short quote from progress.md>". Now solid — it has
+   survived the long-interval reviews.
 
-2. **<topic B>** — initially Bloom <X>; reached <Y> after <N> sessions. Flagged
+2. **<topic B>** — from <Label X> to <Label Y> after <N> sessions. Flagged
    in persistentChallenges for <weeks>, then moved to consistentStrengths after
    the <module> work. The arc is clear in the data.
 
@@ -81,7 +82,7 @@ The felt sense matters more than the numbers here.
 
 ### Handle the smooth-journey case
 
-If **no topics** match the "formerly shaky AND now solid" pattern (e.g., the learner's path was steady, with no demotions or pre-Bloom-3 phases), say so honestly. Do not invent candidates:
+If **no topics** match the "formerly shaky AND now solid" pattern (e.g., the learner's path was steady, with no demotions or stretches below Apply), say so honestly. Do not invent candidates:
 
 > "Your journey through this project was steady — no topic shows the wrestled-and-won pattern that makes the strongest writing. Some learners' depth shows in the breadth of the journey, not in any single struggle. Worth letting this project sit, and revisiting `/teach-back` after the next one if a clearer story emerges."
 

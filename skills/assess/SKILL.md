@@ -49,39 +49,33 @@ Present the assessment results to the learner:
 
 ### Your Current Landscape
 
-| Sub-topic | Level | What This Means |
-|-----------|-------|----------------|
-| [name] | Level [N] ([Name]) | [1-sentence plain-language description] |
+| Sub-topic | Where you are |
+|-----------|---------------|
+| [name] | **[Label]** — [outcome clause] |
 
 ### What You Know Well
-[Concepts at Level 3+ — specific, genuine acknowledgment]
+[Concepts at Apply or above — specific, genuine acknowledgment]
 
 ### Your Growing Edge
-[Concepts at Level 2-3 — where the most productive learning will happen]
+[Concepts at Understand/Apply — where the most productive learning will happen]
 
 ### New Territory
-[Concepts at Level 0-1 — exciting ground to explore]
+[Concepts at Remember or not yet observed — exciting ground to explore]
 
 ### Recommended Focus
 [1-3 sentences on where to start, based on ZPD analysis]
 ```
 
-Translate Bloom's levels into plain language:
-- Level 1: "You have heard of this but cannot use it yet"
-- Level 2: "You understand the idea but need practice applying it"
-- Level 3: "You can use this with some guidance"
-- Level 4: "You can work with this independently and debug issues"
-- Level 5: "You can evaluate approaches and make design decisions"
-- Level 6: "You can design novel solutions and teach others"
+Render every level as `**Label** — outcome clause` from the `blooms-taxonomy` KB *Learner-Facing Rendering* table; the agent's numeric levels are for the tracking write, not for the learner.
 
 ---
 
 ## After Assessment
 
 If inside an active learning project:
-- Append a new assessment block at the top of `.bodhi/assessments/latest.md`: `## <Topic> — <YYYY-MM-DD>`, then the per-area Bloom table, evidence, recommendations. The prior assessment block stays in place — `/housekeep` will rotate it to `assessments/archive/` on its next run.
+- Append a new assessment block at the top of `.bodhi/assessments/latest.md`: `## <Topic> — <YYYY-MM-DD>`, then the per-area level table (label + outcome), evidence, recommendations. The prior assessment block stays in place — `/housekeep` will rotate it to `assessments/archive/` on its next run.
 - Append the structured entry via `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> record-assessment --trigger assess --data '<entry JSON>'` per the `state-ops` KB write path (fallback: manual append preserving the file's shape).
-- Append a short assessment entry to `.bodhi/progress.md` (live document): `## YYYY-MM-DD — Assessment (<topic>)`, then **Bloom levels** table summary + **Headline finding**. Full detail stays in `assessments/latest.md`; the `progress.md` entry is just the pointer + key result.
+- Append a short assessment entry to `.bodhi/progress.md` (live document): `## YYYY-MM-DD — Assessment (<topic>)`, then **Bloom levels** (`Label (N)` per area) + **Headline finding**. Full detail stays in `assessments/latest.md`; the `progress.md` entry is just the pointer + key result.
 - `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> touch-state --activity "<one line>"`. If the assessment shifted any per-topic level, also update `state.json.currentBloomLevel` manually per the `state-schema` KB fallback discipline (the Bloom maps are an explicit manual carve-out — read, mutate in place, write, verify).
 - Offer: "Would you like me to adjust your learning plan based on this assessment?"
 

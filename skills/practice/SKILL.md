@@ -186,7 +186,7 @@ After the learner indicates they have completed (or attempted) the exercise:
 
    d. **Profile counter** (every successful completion): `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> bump-profile --counter totalExercises`.
 
-   e. **Append the exercise entry to `.bodhi/progress.md` with the Write tool**: `## YYYY-MM-DD — Exercise: <topic>`, then **What was attempted**, **Code-review findings**, **Bloom adjustments** (numeric, matching the script call), **Next**. Existing content preserved verbatim below.
+   e. **Append the exercise entry to `.bodhi/progress.md` with the Write tool**: `## YYYY-MM-DD — Exercise: <topic>`, then **What was attempted**, **Code-review findings**, **Bloom adjustments** (`Label (N)`, matching the script call), **Next**. Existing content preserved verbatim below.
 
    **Fallback:** if `bodhi-state` is unavailable, follow the `state-schema` KB fallback rule — manual read → mutate-in-place → write → verify, preserving unknown fields.
 
