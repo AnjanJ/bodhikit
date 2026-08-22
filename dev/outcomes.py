@@ -135,6 +135,11 @@ def main(paths):
     w("")
     w("## Session mix")
     w("")
+    w("Counts only sessions that wrote a `sessionHistory` entry (reviews, quizzes, "
+      "practice, evaluations). Teaching sessions update the session counter above "
+      "but do not write a history entry, so this table totals less than "
+      "_Sessions_.")
+    w("")
     mix = {}
     for e in exports:
         for k, v in e.get("sessionTypeCounts", {}).items():

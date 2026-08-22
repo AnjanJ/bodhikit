@@ -1,6 +1,6 @@
 # BodhiKit outcomes — what the tracking data actually shows
 
-_Generated 2026-08-21 by `dev/outcomes.py` from `bodhi-state export-anonymized`. No concept names, topic names, or free text leave the learner's machine — only counts, distributions, and rates._
+_Generated 2026-08-22 by `dev/outcomes.py` from `bodhi-state export-anonymized`. No concept names, topic names, or free text leave the learner's machine — only counts, distributions, and rates._
 
 ## Read this first
 
@@ -10,12 +10,12 @@ This is **one learner, 5 projects**. It is published because a project whose the
 
 | | Days active | Sessions | Concepts | Classified | Mastered | Feynman passed | Reviews | Overall recall |
 |---|---|---|---|---|---|---|---|---|
-| P1 | 12 | 3 | 8 | 3 | 0 | 1 | 8 | 50% |
+| P1 | 13 | 3 | 8 | 3 | 0 | 1 | 8 | 50% |
 | P2 | — | 1 | 8 | 0 | 0 | 0 | 0 | — |
-| P3 | 44 | 2 | 6 | 1 | 0 | 1 | 1 | 100% |
-| P4 | 44 | 2 | 6 | 1 | 0 | 2 | 3 | 67% |
-| P5 | 44 | 2 | 8 | 1 | 0 | 0 | 1 | 100% |
-| **All** | | 10 | 36 | 6 | 0 | 4 | 13 | 62% |
+| P3 | 45 | 2 | 6 | 1 | 0 | 1 | 1 | 100% |
+| P4 | 45 | 3 | 6 | 1 | 0 | 2 | 3 | 67% |
+| P5 | 45 | 2 | 8 | 1 | 0 | 0 | 1 | 100% |
+| **All** | | 11 | 36 | 6 | 0 | 4 | 13 | 62% |
 
 _Classified_ = concepts a teaching or review session has actually graded (Bloom ≥ 1); the rest were scaffolded by the plan and never reached. _Mastered_ uses the four-part formula (Analyze-level or above, three consecutive correct at that level, Box 4-5, Feynman explain-back passed).
 
@@ -58,6 +58,8 @@ The Leitner literature targets roughly 80-90% recall at each scheduled review. B
 9 answers carried a confidence tag. Too few to report a rate.
 
 ## Session mix
+
+Counts only sessions that wrote a `sessionHistory` entry (reviews, quizzes, practice, evaluations). Teaching sessions update the session counter above but do not write a history entry, so this table totals less than _Sessions_.
 
 | Session type | Count |
 |---|---|
