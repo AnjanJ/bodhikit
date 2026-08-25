@@ -1418,11 +1418,14 @@ def t_gate_evidence():
               j["status"] == "stale-reconfirm" and j["reason"] == "single-evidence"
               and j["evidenceAt3Plus"] == 1, j)
         check("gate: verdict offer on single evidence", out["verdict"] == "offer")
-        # a miss then a second correct at Apply: box back to 2, evidence 2
-        run(proj, "record-review", "--concept", "Joins",
-            "--result", "incorrect", "--tested-bloom", "3")
-        run(proj, "record-review", "--concept", "Joins",
-            "--result", "correct", "--tested-bloom", "3")
+        # two level-3 corrects on record, box still below 3: evidence clears it
+        sr1 = read_sr(proj)
+        sr1["concepts"][0]["reviewHistory"] = [
+            {"date": TODAY.isoformat(), "result": "correct", "bloomLevel": 3},
+            {"date": TODAY.isoformat(), "result": "correct", "bloomLevel": 3}]
+        sr1["concepts"][0]["box"] = 2
+        with open(os.path.join(proj, ".bodhi", "spaced-review.json"), "w") as f:
+            json.dump(sr1, f)
         out = run(proj, "gate-check", "--prior-module", "Module A")
         j = out["prerequisites"][0]
         check("gate: two level-3 corrects below box 3 = satisfied by evidence",
@@ -1444,6 +1447,77 @@ def t_gate_evidence():
         check("brief: exposes evidenceAt3Plus", out["evidenceAt3Plus"] == 1, out)
 
 
+
+def t_gate_evidence_reset():
+    """Apply-rung evidence counts only since the most recent miss (1.18.0).
+    Before: two old corrects kept a prerequisite `satisfied` through three
+    straight misses and through an explicit /forget."""
+    with tempfile.TemporaryDirectory() as root:
+        def gate(proj):
+            out = run(proj, "gate-check", "--prior-module", "Module A")
+            return out["prerequisites"][0]
+
+        def write_sr(proj, sr):
+            with open(os.path.join(proj, ".bodhi", "spaced-review.json"), "w") as f:
+                json.dump(sr, f)
+        sr = {"version": 3, "concepts": [
+            {"name": "Joins", "module": "Module A", "introduced": "2026-01-01",
+             "box": 2, "bloomLevel": 3, "nextReview": TODAY.isoformat(),
+             "lastReviewed": TODAY.isoformat(),
+             "reviewHistory": [
+                 {"date": "2026-01-02", "result": "correct", "bloomLevel": 3},
+                 {"date": "2026-01-05", "result": "correct", "bloomLevel": 3}]}],
+            "sessionHistory": []}
+        proj = make_project(root, spaced_review=sr)
+        j = gate(proj)
+        check("reset: baseline two corrects = satisfied/evidence",
+              j["status"] == "satisfied" and j["reason"] == "evidence", j)
+        # (a) three straight misses after the evidence: not satisfied any more
+        for _ in range(3):
+            run(proj, "record-review", "--concept", "Joins",
+                "--result", "incorrect", "--tested-bloom", "3")
+        j = gate(proj)
+        check("reset: three misses after old evidence = reconfirm, evidence 0",
+              j["status"] == "stale-reconfirm" and j["reason"] == "single-evidence"
+              and j["evidenceAt3Plus"] == 0 and j["box"] == 1, j)
+        # (c) the other side of the bound: two fresh corrects after the misses
+        run(proj, "record-review", "--concept", "Joins",
+            "--result", "correct", "--tested-bloom", "3")
+        j = gate(proj)
+        check("reset: one fresh correct after a miss = still reconfirm",
+              j["status"] == "stale-reconfirm" and j["evidenceAt3Plus"] == 1, j)
+        run(proj, "record-review", "--concept", "Joins",
+            "--result", "correct", "--tested-bloom", "3")
+        j = gate(proj)
+        check("reset: two fresh corrects after a miss = satisfied again",
+              j["status"] == "satisfied" and j["evidenceAt3Plus"] == 2, j)
+        # (b) an explicit /forget resets the count too
+        run(proj, "forget", "--concept", "Joins")
+        j = gate(proj)
+        check("reset: /forget after evidence = reconfirm, not satisfied",
+              j["status"] == "stale-reconfirm" and j["evidenceAt3Plus"] == 0, j)
+        # (d) deferred entries are scheduling, not observations: ignored
+        sr2 = read_sr(proj)
+        sr2["concepts"][0]["reviewHistory"] = [
+            {"date": "2026-01-02", "result": "correct", "bloomLevel": 3},
+            {"date": TODAY.isoformat(), "deferred": True, "note": "not reached"},
+            {"date": TODAY.isoformat(), "result": "correct", "bloomLevel": 3}]
+        sr2["concepts"][0]["box"] = 2
+        sr2["concepts"][0]["lastReviewed"] = TODAY.isoformat()
+        write_sr(proj, sr2)
+        j = gate(proj)
+        check("reset: a deferred entry neither counts nor resets",
+              j["status"] == "satisfied" and j["evidenceAt3Plus"] == 2, j)
+        # sub-3 fallthrough also ignores deferred entries
+        sr2["concepts"][0]["bloomLevel"] = 2
+        sr2["concepts"][0]["box"] = 3
+        sr2["concepts"][0]["reviewHistory"].append(
+            {"date": TODAY.isoformat(), "deferred": True})
+        write_sr(proj, sr2)
+        j = gate(proj)
+        check("reset: apply-equivalent fallthrough skips deferred entries",
+              j["status"] == "apply-equivalent", j)
+
 def main():
     for t in (t_migrate, t_record_review, t_sessions_and_forget,
               t_touch_state_and_profile, t_gate_check,
@@ -1459,7 +1533,8 @@ def main():
               t_session_brief, t_crossed_bloom3, t_snapshot,
               t_due_never_taught, t_concept_tiers,
               t_profile_project_lifecycle, t_profile_patterns, t_park,
-              t_bloom_render, t_gate_evidence):
+              t_bloom_render, t_gate_evidence,
+              t_gate_evidence_reset):
         print(f"-- {t.__name__}")
         t()
     print(f"\n{PASS} passed, {FAIL} failed")

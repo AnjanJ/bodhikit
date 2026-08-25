@@ -1315,20 +1315,35 @@ def cmd_snapshot(args):
 
 
 def evidence_at_3_plus(c):
-    """Independent observations of the apply rung: correct results graded at
-    Bloom >= 3. A single review can inflate the ratchet; two cannot as easily."""
-    return sum(1 for h in c.get("reviewHistory", [])
-               if h.get("result") == "correct" and (h.get("bloomLevel") or 0) >= 3)
+    """Independent observations of the apply rung SINCE THE LAST MISS: correct
+    results graded at Bloom >= 3, counted from the most recent `incorrect`
+    (a learner-initiated /forget writes one, so it resets the count too).
+    Evidence that predates a demonstrated forgetting event is not current
+    evidence; without the reset, two old corrects kept a concept `satisfied`
+    through any number of later misses. Deferred entries are scheduling
+    notes, not observations, and are skipped."""
+    n = 0
+    for h in c.get("reviewHistory", []):
+        if h.get("deferred"):
+            continue
+        result = h.get("result")
+        if result == "incorrect":
+            n = 0
+        elif result == "correct" and (h.get("bloomLevel") or 0) >= 3:
+            n += 1
+    return n
 
 
 def gate_verdict(c, t):
-    """(status, reason) for one prerequisite (canonical, 1.11.0; evidence rule 1.17.0).
+    """(status, reason) for one prerequisite (canonical).
 
     The Bloom ratchet is one-way and a single LLM grade is noisy, so a level-3
     reached by exactly one review is not treated as settled: it earns one
-    reconfirm question (the existing stale-reconfirm path), not a free pass.
-    Two independent level-3+ corrects, or Box >= 3 (which already implies two
-    spaced successes), clear the gate.
+    reconfirm question (the stale-reconfirm path), not a free pass. Two
+    level-3+ corrects since the last miss, or Box >= 3 (which already implies
+    two spaced successes), clear the gate. `single-evidence` means "fewer than
+    two such corrects on record since the last miss" — after a /forget that
+    count is zero and the gate asks again, which is the point of forgetting.
     """
     bloom = c.get("bloomLevel", 0)
     box = c.get("box", 1)
@@ -1345,7 +1360,8 @@ def gate_verdict(c, t):
             return "stale-reconfirm", "single-evidence"
         return "stale-reconfirm", "stale"    # Bloom ratchet alone is not current evidence
     # 1 <= bloom < 3: strong v2 retention evidence fallthrough (1.10.10)
-    hist = [h.get("result") for h in c.get("reviewHistory", [])]
+    hist = [h.get("result") for h in c.get("reviewHistory", [])
+            if not h.get("deferred")]
     if box >= 3 and len(hist) >= 2 and hist[-1] == hist[-2] == "correct":
         return "apply-equivalent", "box"     # gate-time read only; bloomLevel untouched
     return "gap", "below-apply"
