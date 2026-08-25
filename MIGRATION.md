@@ -2,6 +2,10 @@
 
 Upgrading the plugin itself is `/plugin update bodhikit@bodhikit` (or reinstall) followed by a Claude Code restart. Your `learningWithBodhi/` folders are never touched by an install. This page covers the one thing that *can* need attention: the tracking files inside existing learning projects.
 
+## 1.18.0
+
+No tracking-file change. Run `/plugin update bodhikit@bodhikit` (or reinstall) and **restart Claude Code** — the knowledge bases are now registered skills and the learning-project rule arrives through a SessionStart hook, and both take effect on the next session start. If you had been enabling the plugin per-project, nothing else changes.
+
 ## The one command
 
 If you have learning projects from any version before 1.10, run this once per project (or once from the `learningWithBodhi/` root to convert every project):
