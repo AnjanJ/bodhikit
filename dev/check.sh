@@ -341,6 +341,15 @@ if [ -f dev/eval/test_bodhi_state.py ]; then
   else
     ok "bodhi-state test suite passed"
   fi
+  if [ -f dev/eval/test_stop_hook.py ]; then
+    if ! python3 dev/eval/test_stop_hook.py >/tmp/bodhi-stop-hook-tests.log 2>&1; then
+      err "stop-hook test suite failed — see /tmp/bodhi-stop-hook-tests.log"
+    else
+      ok "stop-hook test suite passed"
+    fi
+  else
+    err "dev/eval/test_stop_hook.py missing"
+  fi
 else
   err "dev/eval/test_bodhi_state.py missing"
 fi
