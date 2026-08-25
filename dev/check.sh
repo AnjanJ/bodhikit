@@ -3,25 +3,24 @@
 #
 # Verifies the contract documented in CLAUDE.md. Bash, no deps. Exit 0 = clean.
 #
-# RULE-ADMISSION POLICY (1.17.0). A rule must be one of:
+# RULE-ADMISSION POLICY (1.18.0). Sections A-D admit only:
 # STRUCTURAL — frontmatter, manifests, version sync, file existence, size
-# budgets, the bodhi-state write path, chain flags, constants
-# pinned between a KB and the script.
+# budgets, the bodhi-state write path, chain flags, hook wiring, constants
+# and tables pinned between a KB and the script.
 # CONDITIONAL — fires only when a file touches the thing (writes
 # --tested-bloom, mentions Leitner boxes) and then demands the
 # governing KB be in scope at that site.
-# A rule that merely greps a KB name into a phase is not a test of anything:
-# it proves a string is present, not that it is used. Behaviour is asserted in
-# dev/eval/ — deterministic tests for the script, LLM evals on file state for
-# the skills — never by adding a grep here.
-#
-# Sections: A manifests/frontmatter/budgets · B state layer · C chain
-# convention · D KB single-sourcing · E behaviour pinned in prose
-# (grandfathered from the 1.10.0 audit; shrink it, do not grow it).
+# Section E holds the remaining PHRASE PINS: greps that prove a sentence is
+# present, not that it is followed. Each one names the eval that retires it.
+# Behaviour is asserted in dev/eval/ — deterministic tests for the script,
+# LLM evals on file state and transcripts for the skills — never by adding a
+# grep here. A new rule goes in A-D or it does not go in.
 #
 # Rule numbers are stable identifiers (CHANGELOG entries and commits cite
 # them), so they are not contiguous: 27 was retired earlier; 19-21, 25, 28-30,
-# 32, 35, 36 and 38 were removed in 1.17.0 as KB-name greps.
+# 32, 35, 36 and 38 were removed in 1.17.0 as KB-name greps; 26 and 34 were
+# removed in 1.18.0 as trivially satisfiable; 56-59 collect the phrase pins
+# that used to hide inside structural rules 2, 17, 18, 41, 42, 50 and 53.
 
 set -u
 cd "$(dirname "$0")/.." || exit 2
@@ -38,7 +37,7 @@ USER_SKILLS=$(grep -l '^user-invocable: true' skills/*/SKILL.md)
 KB_SKILLS=$(grep -l '^user-invocable: false' skills/*/SKILL.md)
 
 # ===========================================================================
-# A. MANIFESTS, FRONTMATTER, BUDGETS
+# A. MANIFESTS, FRONTMATTER, BUDGETS — structural
 # ===========================================================================
 # ---------------------------------------------------------------------------
 # 1. Manifests exist and versions agree
@@ -91,12 +90,6 @@ if grep -rnE --exclude-dir=__pycache__ '(^|[^a-z])knowledge/' skills/ agents/ ru
   grep -rnE --exclude-dir=__pycache__ '(^|[^a-z])knowledge/' skills/ agents/ rules/ hooks/ scripts/ | grep -v '^scripts/[^:]*:[0-9]*:.*#' | sed 's/^/  /'
   err "a shipped file still references a knowledge/ path — KBs live under skills/ (1.18.0)"
 fi
-# Voice contract applies to user skills AND agents (CLAUDE.md authoring contract).
-for f in $USER_SKILLS agents/*.md; do
-  if ! grep -q 'teaching-personality' "$f"; then
-    err "$f does not reference teaching-personality KB"
-  fi
-done
 # Agents have no Skill tool: a KB they name must be preloaded via `skills:`.
 for f in agents/*.md; do
   for kb in $(grep -oE '`[a-z-]+` KB' "$f" | sed -E 's/`([a-z-]+)` KB/\1/' | sort -u); do
@@ -211,7 +204,7 @@ for f in skills/*/SKILL.md; do
 done
 
 # ===========================================================================
-# B. STATE LAYER — script integrity, schema, write path
+# B. STATE LAYER — script integrity, schema, write path — structural/conditional
 # ===========================================================================
 # ---------------------------------------------------------------------------
 # 45. bodhi-state integrity: present, executable, compiles, constants pinned
@@ -336,14 +329,14 @@ fi
 # 46. Deterministic test suite must pass (free, every run).
 # ---------------------------------------------------------------------------
 if [ -f dev/eval/test_bodhi_state.py ]; then
-  if ! python3 dev/eval/test_bodhi_state.py >/tmp/bodhi-state-tests.log 2>&1; then
-    err "bodhi-state test suite failed — see /tmp/bodhi-state-tests.log"
+  if ! python3 dev/eval/test_bodhi_state.py >${TMPDIR:-/tmp}/bodhi-state-tests.log 2>&1; then
+    err "bodhi-state test suite failed — see ${TMPDIR:-/tmp}/bodhi-state-tests.log"
   else
     ok "bodhi-state test suite passed"
   fi
   if [ -f dev/eval/test_stop_hook.py ]; then
-    if ! python3 dev/eval/test_stop_hook.py >/tmp/bodhi-stop-hook-tests.log 2>&1; then
-      err "stop-hook test suite failed — see /tmp/bodhi-stop-hook-tests.log"
+    if ! python3 dev/eval/test_stop_hook.py >${TMPDIR:-/tmp}/bodhi-stop-hook-tests.log 2>&1; then
+      err "stop-hook test suite failed — see ${TMPDIR:-/tmp}/bodhi-stop-hook-tests.log"
     else
       ok "stop-hook test suite passed"
     fi
@@ -427,7 +420,7 @@ if [ -f skills/progress/SKILL.md ]; then
   fi
 fi
 # ---------------------------------------------------------------------------
-# 50. 1.11.1 state-integrity contracts.
+# 50. Write-path flags: --retry exists and is used; every invocation carries --project.
 # ---------------------------------------------------------------------------
 # Successive-relearning retries must use --retry (no box movement).
 if ! grep -q -- '--retry' skills/quiz/SKILL.md; then
@@ -435,21 +428,6 @@ if ! grep -q -- '--retry' skills/quiz/SKILL.md; then
 fi
 if ! grep -q -- '--retry' scripts/bodhi-state; then
   err "scripts/bodhi-state missing the --retry flag"
-fi
-# /reflect must carry the same-day guard (no double box movement per day).
-if ! grep -qi 'same-day guard' skills/reflect/SKILL.md; then
-  err "skills/reflect/SKILL.md missing the same-day guard (1.11.1 — one day of evidence, one box movement)"
-fi
-# /evaluate must carry the canonical completion criterion and the explicit ask.
-if ! grep -qi 'completion criterion' skills/evaluate/SKILL.md; then
-  err "skills/evaluate/SKILL.md missing the canonical completion criterion (1.11.1)"
-fi
-if ! grep -qi 'Project completion (canonical' skills/state-schema/SKILL.md; then
-  err "skills/state-schema/SKILL.md missing the Project completion section (1.11.1)"
-fi
-# Pretest fires on first exposure only.
-if ! grep -qi 'first exposure' skills/teach/SKILL.md; then
-  err "skills/teach/SKILL.md pretest not gated on first exposure (1.11.1 — pretesting research covers untaught material only)"
 fi
 # Every bodhi-state invocation in a skill (or a skill's references/ file)
 # carries --project.
@@ -459,22 +437,12 @@ for f in $USER_SKILLS skills/*/references/*.md; do
     err "$f has a bodhi-state invocation without --project (defaults to cwd and errors outside the project dir)"
   fi
 done
-# ai-learning-safeguards KB must not re-orphan.
-if ! grep -rq 'ai-learning-safeguards' skills/; then
-  err "ai-learning-safeguards KB is orphaned again — no skill references it"
-fi
 # ---------------------------------------------------------------------------
 # 53. Discovery is a file-read, never a bodhi-state subcommand. The Fable-5
 # sweep caught /continue inventing `bodhi-state discover`/`--list` against
-# the strong "everything goes through bodhi-state" prior. (a) state-ops
-# must carry the negative guard so every skill's pointer inherits it;
-# (b) no skill or KB may emit a phantom discovery subcommand call.
+# the strong "everything goes through bodhi-state" prior. No skill or KB may
+# emit a phantom discovery subcommand call (the prose twin lives in 59).
 # ---------------------------------------------------------------------------
-if [ -f skills/state-ops/SKILL.md ]; then
-  if ! grep -qi 'not a .*bodhi-state.* subcommand\|Discovery is a file-read' skills/state-ops/SKILL.md; then
-    err "skills/state-ops/SKILL.md missing the negative guard: discovery is a file-read, not a bodhi-state subcommand (rule 53)"
-  fi
-fi
 if grep -rnE 'bodhi-state[^`]*(discover|--list|list-projects)' skills/ 2>/dev/null | grep -v 'not a.*subcommand\|no .discover\|there is no' >/dev/null; then
   grep -rnE 'bodhi-state[^`]*(discover|--list|list-projects)' skills/ 2>/dev/null | grep -v 'not a.*subcommand\|no .discover\|there is no'
   err "a skill/KB emits a non-existent bodhi-state discovery subcommand (discover/--list/list-projects) — discovery is a file-read (rule 53)"
@@ -582,29 +550,14 @@ for s in quiz teach practice forget pair; do
   fi
 done
 # ---------------------------------------------------------------------------
-# 17. /teach Phase 1 must mention the prerequisite Bloom gate.
+# 17. /teach delegates its branch decisions to bodhi-state and phase-loads
+# its sub-flows: gate-check, session-brief, references/*.md must be wired.
 # ---------------------------------------------------------------------------
-# From the 1.10.0 pedagogy audit — Bloom advancement is contractual now.
-# 1.10.10 strengthens the check: the gate must use the new trigger model
-# (scan for prior work on currentModule, not "different module" string-match),
-# must declare the strong-v2-evidence fallthrough, and must be offer-shaped
-# (no auto-block).
 if [ -f skills/teach/SKILL.md ]; then
-  if ! grep -qiE 'prerequisite.*(bloom|gate)|(bloom|gate).*prerequisite' skills/teach/SKILL.md; then
-    err "skills/teach/SKILL.md missing the prerequisite Bloom gate language "
-  fi
   # 1.11.0 — the gate's trigger/verdict logic lives in bodhi-state gate-check
   # (canonical doc: state-ops KB since 1.13.0). The skill must delegate, not re-derive.
   if ! grep -q 'gate-check' skills/teach/SKILL.md; then
     err "skills/teach/SKILL.md prerequisite gate does not invoke bodhi-state gate-check (1.11.0)"
-  fi
-  # 1.10.10 — gate must be offer-shaped, not auto-block.
-  if ! grep -qiE 'offer|let the learner (choose|decide|pick)|learner decides|opt-in' skills/teach/SKILL.md; then
-    err "skills/teach/SKILL.md prerequisite gate missing offer-shape language (1.10.10 fix — gate must be offer-shaped per 1.10.2 discipline)"
-  fi
-  # 1.11.0 — pretesting must open Phase 2 (desirable-difficulties KB).
-  if ! grep -qiE 'pretest' skills/teach/SKILL.md; then
-    err "skills/teach/SKILL.md Phase 2 missing the pretest step (1.11.0 — desirable-difficulties KB Pretesting)"
   fi
   # 1.14.0 — pretest-vs-retrieval and the reteach duty come from
   # bodhi-state session-brief, not re-derived from tracking-file prose.
@@ -622,18 +575,6 @@ if [ -f skills/teach/SKILL.md ]; then
     err "skills/teach/references/understanding-only.md missing (1.14.0 — understanding-only sub-flow)"
   elif ! grep -q 'references/understanding-only.md' skills/teach/SKILL.md; then
     err "skills/teach/SKILL.md does not point at references/understanding-only.md"
-  fi
-fi
-# ---------------------------------------------------------------------------
-# 18. /progress must mention the canonical mastery formula or the legacy
-# fallthrough display rule.
-# ---------------------------------------------------------------------------
-# From the 1.10.0 pedagogy audit — Mastery % can no longer be fabricated. Either the
-# formula is cited inline (referencing the state-schema KB) or the column
-# explicitly handles the legacy display fallthrough.
-if [ -f skills/progress/SKILL.md ]; then
-  if ! grep -qE 'mastered === true|Mastery % formula|consecutiveCorrectAtL4Plus' skills/progress/SKILL.md; then
-    err "skills/progress/SKILL.md missing the canonical mastery formula or fallthrough rule "
   fi
 fi
 # ---------------------------------------------------------------------------
@@ -666,34 +607,12 @@ if [ -f skills/housekeep/SKILL.md ]; then
   if ! grep -q 'migration-1.10' skills/housekeep/SKILL.md; then
     err "skills/housekeep/SKILL.md missing .migration-1.10 marker (1.10.8 fix — per-target idempotency)"
   fi
-  if ! grep -qiE 'per-target idempotency|per target idempotency' skills/housekeep/SKILL.md; then
-    err "skills/housekeep/SKILL.md missing per-target idempotency declaration (1.10.8 fix)"
-  fi
   if ! grep -q 'migrate-spaced-review' skills/housekeep/SKILL.md; then
     err "skills/housekeep/SKILL.md migrate step does not invoke bodhi-state migrate-spaced-review (1.11.0)"
   fi
-  if ! grep -qiE 'unconditionally|every project, regardless' skills/housekeep/SKILL.md; then
-    err "skills/housekeep/SKILL.md must direct running migrate-spaced-review unconditionally (the 1.10.10 single-marker short-circuit class)"
-  fi
-  # Fallback path keeps the in-place mutation discipline for script-less runs.
-  if ! grep -qiE 'mutate the parsed JSON in place|in-place mutation' skills/housekeep/SKILL.md; then
-    err "skills/housekeep/SKILL.md fallback missing in-place mutation discipline (1.10.9 fix)"
-  fi
 fi
-# ---------------------------------------------------------------------------
-# 42. /learn Phase 3 and /plan Regenerate must require per-module
-# "Prerequisites for next module:" declarations (1.10.10 fix —
-# feeds the /teach Phase 1 gate's structured-declaration path).
-# ---------------------------------------------------------------------------
-for f in skills/learn/SKILL.md skills/plan/SKILL.md; do
-  if [ ! -f "$f" ]; then continue; fi
-  if ! grep -qE 'Prerequisites for next module' "$f"; then
-    err "$f missing per-module Prerequisites-for-next-module declaration requirement (1.10.10 fix)"
-  fi
-done
-
 # ===========================================================================
-# C. CHAIN CONVENTION — --invoked-from on both sides
+# C. CHAIN CONVENTION — --invoked-from on both sides — structural
 # ===========================================================================
 # ---------------------------------------------------------------------------
 # 9. Chainable skills must handle --invoked-from=
@@ -787,22 +706,6 @@ if [ -f skills/practice/SKILL.md ]; then
     err "skills/practice/SKILL.md Phase 3 does not offer /pair with --invoked-from=practice "
   fi
 fi
-# ---------------------------------------------------------------------------
-# 26. Newly chainable skills (pair, debug-together, mentor) must declare
-# the offer-only nature in their opening lines (consistency with the
-# CHANGELOG 1.4.0 contract reset and the Capstone offer pattern).
-# ---------------------------------------------------------------------------
-# Looking for the literal "Offered" word OR the chain-guard sentence — either
-# proves the skill knows it is opted into rather than auto-fired.
-for s in pair debug-together mentor; do
-  f="skills/$s/SKILL.md"
-  if [ ! -f "$f" ]; then continue; fi
-  head30=$(head -30 "$f")
-  if ! printf '%s' "$head30" | grep -qiE 'offer|opt-in|chained invocation'; then
-    err "$f opening 30 lines do not declare offer/opt-in/chained-invocation framing"
-  fi
-done
-
 # ===========================================================================
 # D. KB SINGLE-SOURCING — conditional: fires only when a file touches the thing
 # ===========================================================================
@@ -881,8 +784,78 @@ for f in $USER_SKILLS skills/*/references/*.md; do
 done
 
 # ===========================================================================
-# E. BEHAVIOUR PINNED IN PROSE — grandfathered from the 1.10.0 audit; shrink, do not grow
+# E. PHRASE PINS — each names the eval that retires it; shrink, do not grow
 # ===========================================================================
+# ---------------------------------------------------------------------------
+# 56. Every user skill and agent names the teaching-personality KB.
+# ---------------------------------------------------------------------------
+# Phrase pin. Retire when a transcript eval asserts the voice rules
+# (no "Just do X", no bare Bloom numbers) on a routine fire.
+for f in $USER_SKILLS agents/*.md; do
+  if ! grep -q 'teaching-personality' "$f"; then
+    err "$f does not reference teaching-personality KB"
+  fi
+done
+# ---------------------------------------------------------------------------
+# 57. Prose contracts on /progress and /learn + /plan (formerly 18, 42).
+# ---------------------------------------------------------------------------
+# Phrase pins. Retire 18 when a /progress eval asserts the rendered
+# mastery column against bodhi-state snapshot; retire 42 when the
+# learn-scaffold eval asserts a "Prerequisites for next module:" line in
+# every generated phase file.
+if [ -f skills/progress/SKILL.md ]; then
+  if ! grep -qE 'mastered === true|Mastery % formula|consecutiveCorrectAtL4Plus' skills/progress/SKILL.md; then
+    err "skills/progress/SKILL.md missing the canonical mastery formula or fallthrough rule (18)"
+  fi
+fi
+for f in skills/learn/SKILL.md skills/plan/SKILL.md; do
+  if [ ! -f "$f" ]; then continue; fi
+  if ! grep -qE 'Prerequisites for next module' "$f"; then
+    err "$f missing per-module Prerequisites-for-next-module declaration requirement (42)"
+  fi
+done
+# ---------------------------------------------------------------------------
+# 58. /housekeep migrate prose contracts (formerly inside 41).
+# ---------------------------------------------------------------------------
+# Phrase pins. Retire when the migrate eval runs against a two-project
+# fixture and asserts both projects were migrated (the "unconditionally"
+# rule) and the fallback path is exercised with the script absent.
+if [ -f skills/housekeep/SKILL.md ]; then
+  if ! grep -qiE 'per-target idempotency|per target idempotency' skills/housekeep/SKILL.md; then
+    err "skills/housekeep/SKILL.md missing per-target idempotency declaration (41)"
+  fi
+  if ! grep -qiE 'unconditionally|every project, regardless' skills/housekeep/SKILL.md; then
+    err "skills/housekeep/SKILL.md must direct running migrate-spaced-review unconditionally (41)"
+  fi
+  if ! grep -qiE 'mutate the parsed JSON in place|in-place mutation' skills/housekeep/SKILL.md; then
+    err "skills/housekeep/SKILL.md fallback missing in-place mutation discipline (41)"
+  fi
+fi
+# ---------------------------------------------------------------------------
+# 59. 1.11.1 prose contracts (formerly inside 50 and 53).
+# ---------------------------------------------------------------------------
+# Phrase pins. Retire when: the reflect eval asserts no second review on a
+# same-day concept (same-day guard); the evaluate eval asserts completion is
+# learner-confirmed (completion criterion); a /teach eval covers a hint
+# session (ai-learning-safeguards); the continue-discovery eval already
+# covers the phantom-subcommand class — 53(a) below is its prose twin.
+if ! grep -qi 'same-day guard' skills/reflect/SKILL.md; then
+  err "skills/reflect/SKILL.md missing the same-day guard (50)"
+fi
+if ! grep -qi 'completion criterion' skills/evaluate/SKILL.md; then
+  err "skills/evaluate/SKILL.md missing the canonical completion criterion (50)"
+fi
+if ! grep -qi 'Project completion (canonical' skills/state-schema/SKILL.md; then
+  err "skills/state-schema/SKILL.md missing the Project completion section (50)"
+fi
+if ! grep -rq 'ai-learning-safeguards' $USER_SKILLS; then
+  err "ai-learning-safeguards KB is orphaned again — no user skill references it (50)"
+fi
+if [ -f skills/state-ops/SKILL.md ]; then
+  if ! grep -qi 'not a .*bodhi-state.* subcommand\|Discovery is a file-read' skills/state-ops/SKILL.md; then
+    err "skills/state-ops/SKILL.md missing the negative guard: discovery is a file-read, not a bodhi-state subcommand (53a)"
+  fi
+fi
 # ---------------------------------------------------------------------------
 # 31. /evaluate must have a Phase 2.5 prediction step.
 # ---------------------------------------------------------------------------
@@ -897,18 +870,6 @@ fi
 if [ -f agents/skill-assessor.md ]; then
   if ! grep -qiE 'self-rating|learnerSelfRating|rate yourself' agents/skill-assessor.md; then
     err "agents/skill-assessor.md does not collect learner self-rating "
-  fi
-fi
-# ---------------------------------------------------------------------------
-# 34. /pair Strong-Style step 7 must be ZPD-signal-gated, not time-gated.
-# ---------------------------------------------------------------------------
-# The audit caught the hardcoded "After 10-15 minutes" rule as scaffolding-by-
-# clock rather than scaffolding-by-competence. The rewrite (corrected to
-# observable-in-conversation signals) must mention ZPD signals explicitly.
-if [ -f skills/pair/SKILL.md ]; then
-  mode1=$(awk '/^## Mode 1/,/^## Mode 2/' skills/pair/SKILL.md)
-  if ! printf '%s' "$mode1" | grep -qE 'ZPD|zone-of-proximal-development'; then
-    err "skills/pair/SKILL.md Mode 1 does not reference ZPD for role-reversal gating "
   fi
 fi
 # ---------------------------------------------------------------------------

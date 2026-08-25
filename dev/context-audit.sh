@@ -238,7 +238,7 @@ emit "$(printf '%-22s%s' ------ "$(printf '%s' "$hdr_files" | sed 's/[^ ]/-/g')"
 # Per-skill classifier.
 classify_skill() {
   local f="$1"
-  body_after_frontmatter "$f" > /tmp/.audit-skill-body 2>/dev/null
+  body_after_frontmatter "$f" > ${TMPDIR:-/tmp}/.audit-skill-body 2>/dev/null
 
   local row=""
   for tf in $tracking_files; do
@@ -279,7 +279,7 @@ classify_skill() {
       if [ "$branch_window" -gt 0 ]; then
         branch_window=$((branch_window - 1))
       fi
-    done < /tmp/.audit-skill-body
+    done < ${TMPDIR:-/tmp}/.audit-skill-body
     [ -z "$class" ] && class="."
     row="$row $(printf '%-12s' "$class")"
   done
@@ -291,7 +291,7 @@ for f in skills/*/SKILL.md; do
   row=$(classify_skill "$f")
   emit "$(printf '%-22s%s' "$name" "$row")"
 done
-rm -f /tmp/.audit-skill-body
+rm -f ${TMPDIR:-/tmp}/.audit-skill-body
 
 emit ""
 
@@ -552,10 +552,10 @@ declare -A proj100 2>/dev/null || true
 proj_get() {
   # Bash 3.2 compatibility on macOS — use a flat file as lookup.
   local key="$1"
-  local file=/tmp/.audit-proj
+  local file=${TMPDIR:-/tmp}/.audit-proj
   [ -f "$file" ] && grep -E "^$key " "$file" | awk '{print $2}'
 }
-: > /tmp/.audit-proj
+: > ${TMPDIR:-/tmp}/.audit-proj
 if [ -d "$tracking_root" ]; then
   while IFS= read -r f; do
     base=$(basename "$f")
@@ -576,7 +576,7 @@ if [ -d "$tracking_root" ]; then
         fi
         ;;
     esac
-    echo "$base $p" >> /tmp/.audit-proj
+    echo "$base $p" >> ${TMPDIR:-/tmp}/.audit-proj
   done < <(find "$tracking_root" \( -path '*/.bodhi/*' -o -name '.bodhi-profile*.json' \) -type f \( -name '*.json' -o -name '*.md' \) ! -path '*/.bodhi/archive/*' ! -path '*/.pre-1.7.0-backup/*')
 fi
 
@@ -597,7 +597,7 @@ for f in skills/*/SKILL.md; do
 
   # Sum unconditional tracking-file reads.
   warm=0
-  body_after_frontmatter "$f" > /tmp/.audit-skill-body
+  body_after_frontmatter "$f" > ${TMPDIR:-/tmp}/.audit-skill-body
   for tf in $tracking_files; do
     needle=$(printf '%s' "$tf" | sed 's/[.]/\\./g')
     # Same classifier logic as section 5, but only counting U.
@@ -624,7 +624,7 @@ for f in skills/*/SKILL.md; do
         fi
       fi
       if [ "$branch_window" -gt 0 ]; then branch_window=$((branch_window - 1)); fi
-    done < /tmp/.audit-skill-body
+    done < ${TMPDIR:-/tmp}/.audit-skill-body
 
     if [ "$class" = "U" ]; then
       p=$(proj_get "$tf")
@@ -636,7 +636,7 @@ for f in skills/*/SKILL.md; do
   total=$((cold + warm))
   printf '%010d|%-22s %10d %10d %10d\n' "$total" "$name" "$cold" "$warm" "$total" >> "$tmpsort"
 done
-rm -f /tmp/.audit-skill-body /tmp/.audit-proj
+rm -f ${TMPDIR:-/tmp}/.audit-skill-body ${TMPDIR:-/tmp}/.audit-proj
 
 sort -r "$tmpsort" | while IFS='|' read -r _key row; do
   emit "$row"
