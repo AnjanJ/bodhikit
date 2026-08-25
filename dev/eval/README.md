@@ -104,3 +104,21 @@ before judging" — run the scenario twice before treating a red as real.
 Any time a new bug class is found in the wild: reproduce it as a fixture +
 assertion first, then fix. The fixture should carry non-canonical fields —
 preserving learner annotations is the contract most worth guarding.
+
+## Which scenarios have actually run (keep this table honest)
+
+A scenario that has never been run against a live model is a hypothesis, not
+a test. The run header prints the model; a pass certifies that executor only.
+
+| Scenario | Group | Last live pass |
+|---|---|---|
+| migrate, forget, quiz, reflect | executor-discipline | 1.14.0 sweep (sonnet-5) |
+| grade-jargon, grade-genuine, grade-apply-band, grade-pushback, grade-misconception | grading | 1.14.0 sweep (sonnet-5); noise measured 3/3 vs 1/3 on the same tree |
+| grade-understand-band | grading | **never run** (added 1.17.0) |
+| teach-pretest, teach-hint-discipline | fidelity | 1.14.0 sweep (sonnet-5) |
+| continue-discovery | discovery | 1.14.1 (sonnet-5) |
+| kb-load | fidelity | 1.18.0, first run (sonnet-5) — the KB-loading regression guard |
+| learn-scaffold, plan-regenerate, evaluate | lifecycle | **never run live** (validated offline in 1.16.0) |
+
+Update the row when you run a scenario. `BODHI_EVAL_RUNS=N` sweeps report a
+rate; a single pass on a grading scenario is one sample.

@@ -75,7 +75,12 @@ fi
 # "BodhiKit eval" results actually characterized a different executor than the
 # plugin runs on in production. Pin the model so results are reproducible and
 # describe the real executor. Override with BODHI_EVAL_MODEL.
-EVAL_MODEL="${BODHI_EVAL_MODEL:-claude-sonnet-5}"
+#
+# 1.18.0: the default is the model the maintainer actually learns on. A pass
+# certifies exactly one executor — the one printed in the run header — and
+# for two release lines that was claude-sonnet-5 while every real session
+# ran on claude-fable-5.
+EVAL_MODEL="${BODHI_EVAL_MODEL:-claude-fable-5}"
 
 # F2 routing: a shell that exports ANTHROPIC_BASE_URL / ANTHROPIC_AUTH_TOKEN
 # (e.g. to a local Ollama on 127.0.0.1:11434) overrides the claude.ai OAuth
@@ -91,6 +96,7 @@ if [ "${BODHI_EVAL_USE_MAX:-1}" = "1" ]; then
 else
   EVAL_ENV=(env)
 fi
+echo "== bodhikit LLM evals — runtime: $RUNTIME  model: $EVAL_MODEL  (a pass certifies this executor only)"
 
 # Learner-departure nudge (1.14.0). Even with SYS_HARNESS, the model sometimes
 # ends its turn at a natural dialogue boundary awaiting the learner's reply —
@@ -141,6 +147,9 @@ run_headless() {
         --output-format stream-json --verbose \
         > "$hl_out" 2>"$hl_home/stderr.txt" )
   else
+    # --output-format json so the session id is captured: the learner-departure
+    # nudge resumes THIS run by id. (`-p --continue` resumed "the most recent
+    # session in cwd" — the contributor's own, when HOME is not sandboxed.)
     ( cd "$hl_cwd" && \
       CLAUDE_PLUGIN_ROOT="$REPO" "${EVAL_ENV[@]}" claude -p "$hl_prompt" \
         --model "$EVAL_MODEL" \
@@ -148,9 +157,18 @@ run_headless() {
         --append-system-prompt "$SYS_HARNESS" \
         --dangerously-skip-permissions \
         --max-turns "$hl_maxturns" \
-        > "$hl_out" 2>&1 )
+        --output-format json \
+        > "$hl_out.json" 2>"$hl_home/stderr.txt" )
+    LAST_SESSION_ID=$(python3 -c 'import json,sys
+try:
+    d = json.load(open(sys.argv[1]))
+except Exception:
+    d = {}
+open(sys.argv[2], "a").write(str(d.get("result", "")) + "\n")
+print(d.get("session_id", ""))' "$hl_out.json" "$hl_out" 2>/dev/null)
   fi
 }
+LAST_SESSION_ID=""
 
 run_headless_continue() {
   hl_home="$1"; hl_cwd="$2"; hl_maxturns="$3"; hl_out="$4"
@@ -165,14 +183,25 @@ run_headless_continue() {
         --append-system-prompt "$SYS_HARNESS" \
         >> "$hl_out" 2>>"$hl_home/bodhi-cli-stderr.txt" )
   else
+    if [ -z "$LAST_SESSION_ID" ]; then
+      echo "  -- no session id captured; cannot resume this run for the nudge"
+      return
+    fi
     ( cd "$hl_cwd" && \
-      CLAUDE_PLUGIN_ROOT="$REPO" "${EVAL_ENV[@]}" claude -p --continue "$NUDGE_MSG" \
+      CLAUDE_PLUGIN_ROOT="$REPO" "${EVAL_ENV[@]}" claude -p --resume "$LAST_SESSION_ID" "$NUDGE_MSG" \
         --model "$EVAL_MODEL" \
         --plugin-dir "$REPO" \
         --append-system-prompt "$SYS_HARNESS" \
         --dangerously-skip-permissions \
         --max-turns "$hl_maxturns" \
-        >> "$hl_out" 2>&1 )
+        --output-format json \
+        > "$hl_out.nudge.json" 2>>"$hl_home/stderr.txt" )
+    python3 -c 'import json,sys
+try:
+    d = json.load(open(sys.argv[1]))
+except Exception:
+    d = {}
+open(sys.argv[2], "a").write("\n-- nudge --\n" + str(d.get("result", "")) + "\n")' "$hl_out.nudge.json" "$hl_out" 2>/dev/null
   fi
 }
 
