@@ -151,8 +151,12 @@ def die(msg, code=1):
     sys.exit(code)
 
 
+_WRITE_NOTES = {}   # merged into the next emit(): e.g. migratedFromVersion
+
+
 def emit(obj):
     obj.setdefault("ok", True)
+    obj.update(_WRITE_NOTES)
     print(json.dumps(obj, indent=2, ensure_ascii=False))
 
 
@@ -232,6 +236,35 @@ def state_path(project):
     return os.path.join(bodhi_dir(project), "state.json")
 
 
+_LOADED_VERSION = {}   # spaced-review path -> version found on disk at load
+
+
+def ensure_pre_v3_backup(path):
+    """Copy a v1/v2 spaced-review.json to .pre-1.10-backup/ once. Never
+    overwrites — the first copy may be the only pre-v3 one."""
+    backup_dir = os.path.join(os.path.dirname(path), ".pre-1.10-backup")
+    backup = os.path.join(backup_dir, "spaced-review.json")
+    if not os.path.exists(backup):
+        os.makedirs(backup_dir, exist_ok=True)
+        shutil.copyfile(path, backup)
+        load_json(backup)  # backup must parse before we mutate the source
+    return backup
+
+
+def write_spaced_review(path, data):
+    """Every mutating subcommand's write. A file loaded at v1/v2 is backed up
+    before it is stamped v3 — previously any write silently upgraded the file
+    and `migrate-spaced-review` then reported noop, so the pre-v3 backup its
+    contract promises was never made."""
+    loaded = _LOADED_VERSION.get(path, 3)
+    if loaded < 3 and os.path.exists(path):
+        backup = ensure_pre_v3_backup(path)
+        _WRITE_NOTES["migratedFromVersion"] = loaded
+        _WRITE_NOTES["backup"] = backup
+    data["version"] = 3
+    write_json(path, data)
+
+
 def load_spaced_review(project, create=False):
     path = sr_path(project)
     if not os.path.exists(path):
@@ -240,6 +273,8 @@ def load_spaced_review(project, create=False):
                           "concepts": [], "sessionHistory": []}
         die(f"{path} does not exist")
     data = load_json(path)
+    v = data.get("version", 1)
+    _LOADED_VERSION[path] = v if isinstance(v, int) else 1
     # Read-tolerate v1/v2: fill v3 per-concept fields in memory; persisted on
     # the next write (state-migration KB pattern).
     if not isinstance(data.get("concepts", []), list):
@@ -427,8 +462,7 @@ def cmd_add_concept(args):
         return
     data.setdefault("concepts", []).append(
         new_concept(args.concept, args.module, args.question or ""))
-    data["version"] = 3
-    write_json(path, data)
+    write_spaced_review(path, data)
     emit({"action": "added", "concept": args.concept, "module": args.module,
           "box": 1, "nextReview": data["concepts"][-1]["nextReview"]})
 
@@ -448,9 +482,8 @@ def cmd_record_review(args):
     change = apply_review(concept, args.result, args.tested_bloom,
                           confidence=args.confidence, note=args.note,
                           source=args.source, retry=args.retry)
-    data["version"] = 3
     data["lastReviewCheck"] = now_iso()
-    write_json(path, data)
+    write_spaced_review(path, data)
     change["created"] = created
     emit(change)
 
@@ -461,8 +494,7 @@ def cmd_set_feynman(args):
     if concept is None:
         die(f"concept {args.concept!r} not tracked")
     concept["feynmanPassed"] = True  # set, never unset
-    data["version"] = 3
-    write_json(path, data)
+    write_spaced_review(path, data)
     emit({"concept": concept["name"], "feynmanPassed": True})
 
 
@@ -492,8 +524,7 @@ def cmd_record_session(args):
         entry["subtype"] = args.subtype
     entry.update(extra)
     data.setdefault("sessionHistory", []).append(entry)
-    data["version"] = 3
-    write_json(path, data)
+    write_spaced_review(path, data)
     emit({"action": "session-recorded", "entry": entry})
 
 
@@ -557,8 +588,7 @@ def cmd_forget(args):
     if args.note:
         entry["notes"] = args.note
     data.setdefault("sessionHistory", []).append(entry)
-    data["version"] = 3
-    write_json(path, data)
+    write_spaced_review(path, data)
     # lastActivity pointer in state.json
     sp = state_path(args.project)
     if os.path.exists(sp):
@@ -608,8 +638,7 @@ def cmd_park(args):
     if args.note:
         entry["notes"] = args.note
     data.setdefault("sessionHistory", []).append(entry)
-    data["version"] = 3
-    write_json(path, data)
+    write_spaced_review(path, data)
     sp = state_path(args.project)
     if os.path.exists(sp):
         state = load_state(args.project)[1]
@@ -646,8 +675,7 @@ def cmd_defer(args):
             entry["note"] = args.note
         c.setdefault("reviewHistory", []).append(entry)
         rolled[c["name"]] = c["nextReview"]
-    data["version"] = 3
-    write_json(path, data)
+    write_spaced_review(path, data)
     emit({"action": "deferred", "days": days, "concepts": rolled})
 
 
@@ -1538,12 +1566,7 @@ def cmd_migrate(args):
     snapshot = json.loads(json.dumps(data))
 
     # Backup (never overwrite an existing backup — it may be the only pre-v3 copy).
-    backup_dir = os.path.join(bdir, ".pre-1.10-backup")
-    backup = os.path.join(backup_dir, "spaced-review.json")
-    if not os.path.exists(backup):
-        os.makedirs(backup_dir, exist_ok=True)
-        shutil.copyfile(path, backup)
-        load_json(backup)  # backup must parse before we mutate the source
+    backup = ensure_pre_v3_backup(path)
 
     fields_added = 0
     for c in concepts:

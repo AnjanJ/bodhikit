@@ -1597,6 +1597,37 @@ def t_validation_on_load():
         check("load: non-object profile entry fails cleanly",
               out.get("ok") is False and "activeProjects[0]" in out.get("error", ""), out)
 
+
+def t_write_on_v2_backs_up():
+    """A mutating write on a v1/v2 file must make the pre-v3 backup migrate
+    promises before stamping version 3 (1.18.0). Before: the first
+    record-session upgraded the file silently and migrate then said noop."""
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review=json.loads(json.dumps(V2_SR)))
+        backup = os.path.join(proj, ".bodhi", ".pre-1.10-backup", "spaced-review.json")
+        out = run(proj, "record-session", "--type", "quiz",
+                  "--data", '{"questionsAsked": 1}')
+        check("v2 write: backup created before the first v3 write",
+              os.path.exists(backup), out)
+        check("v2 write: output reports migratedFromVersion 2",
+              out.get("migratedFromVersion") == 2 and out.get("backup") == backup, out)
+        with open(backup) as f:
+            saved = json.load(f)
+        check("v2 write: backup is the untouched v2 file",
+              saved["version"] == 2 and "bloomLevel" not in saved["concepts"][0], saved)
+        check("v2 write: live file is now v3", read_sr(proj)["version"] == 3)
+        # a second write neither re-reports nor overwrites the backup
+        out = run(proj, "record-review", "--concept", "B-tree indexes",
+                  "--result", "correct", "--tested-bloom", "3")
+        check("v2 write: second write does not report a migration",
+              "migratedFromVersion" not in out, out)
+        with open(backup) as f:
+            check("v2 write: backup untouched by later writes",
+                  json.load(f) == saved)
+        out = run(proj, "migrate-spaced-review")
+        check("v2 write: migrate afterwards is an honest noop",
+              out["action"] == "noop" and os.path.exists(backup), out)
+
 def main():
     for t in (t_migrate, t_record_review, t_sessions_and_forget,
               t_touch_state_and_profile, t_gate_check,
@@ -1613,7 +1644,8 @@ def main():
               t_due_never_taught, t_concept_tiers,
               t_profile_project_lifecycle, t_profile_patterns, t_park,
               t_bloom_render, t_gate_evidence,
-              t_gate_evidence_reset, t_validation_on_load):
+              t_gate_evidence_reset, t_validation_on_load,
+              t_write_on_v2_backs_up):
         print(f"-- {t.__name__}")
         t()
     print(f"\n{PASS} passed, {FAIL} failed")
