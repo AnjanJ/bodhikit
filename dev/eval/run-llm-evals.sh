@@ -205,6 +205,13 @@ open(sys.argv[2], "a").write("\n-- nudge --\n" + str(d.get("result", "")) + "\n"
   fi
 }
 
+# A run cut off by the claude.ai usage limit is not a verdict on the skill.
+# Label it INCONCLUSIVE (still non-zero exit) so a truncated transcript is
+# never read as an executor-discipline failure. Returns 0 when truncated.
+truncated_by_limit() {
+  grep -qiE "hit your session limit|usage limit|rate.?limit(ed)? .*resets" "$1" 2>/dev/null
+}
+
 run_scenario() {
   name="$1"; prompt="$2"; assert="$3"; prep="${4:-}"; transcript_mode="${5:-}"; nudge="${6:-}"; maxturns="${7:-30}"
   # BODHI_EVAL_SWEEP/KEEP are set by repeat_scenario so a sampled run lands in
@@ -234,6 +241,9 @@ run_scenario() {
   if [ -n "$transcript_mode" ]; then
     transcript="$tmp/transcript.jsonl"
     run_headless "$tmp" "$tmp/learningWithBodhi/sql-deep-dive" "$prompt" "$maxturns" "$transcript" stream
+    if truncated_by_limit "$transcript"; then
+      echo "INCONCLUSIVE: $name — usage limit hit mid-run (transcript at $transcript); re-run after the limit resets"; FAIL=1; return
+    fi
     if python3 "$REPO/dev/eval/assert_scenario.py" "$assert" "$tmp/learningWithBodhi/sql-deep-dive" "$transcript"; then
       echo "PASS: $name"
     else
@@ -244,6 +254,9 @@ run_scenario() {
     fi
   else
     run_headless "$tmp" "$tmp/learningWithBodhi/sql-deep-dive" "$prompt" "$maxturns" "$tmp/transcript.txt"
+    if truncated_by_limit "$tmp/transcript.txt"; then
+      echo "INCONCLUSIVE: $name — usage limit hit mid-run (transcript at $tmp/transcript.txt); re-run after the limit resets"; FAIL=1; return
+    fi
     nudges=0
     while true; do
       assert_out=$(python3 "$REPO/dev/eval/assert_scenario.py" "$assert" "$tmp/learningWithBodhi/sql-deep-dive" 2>&1)
