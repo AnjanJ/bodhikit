@@ -32,6 +32,8 @@ Open with: "Let us see what has taken root. This is not a test — it is a conve
 
 ---
 
+The `due` output's `box`, `bloomLevel` and `neverTaught` fields are for choosing and ordering questions — never voiced. To the learner a due concept is "due today" or "overdue since <date>", never a box number (`teaching-personality` KB *Speaking About Levels*).
+
 ## Phase 2: Adaptive Questions
 
 **For this phase, reference the `assessment-framework` KB for question templates and Bloom's-level mapping, AND the `zone-of-proximal-development` KB for the within-quiz escalation/de-escalation signals applied below.**

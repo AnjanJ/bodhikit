@@ -447,7 +447,9 @@ def assistant_turns(transcript_path):
     return turns
 
 
-HINT_TURN_RE = re.compile(r"\bHint\s*[123]\b|\*\*Hint\b", re.I)
+# A hint DELIVERY starts a line ("**Hint 1 (direction):**", "Hint 2:"); the
+# word inside a recap ("after three hints") is not one.
+HINT_TURN_RE = re.compile(r"^\s*(?:\*\*)?Hint\s*[123]\b", re.M)
 SHOWS_ARTIFACT_RE = re.compile(r"```|^\s*>\s*\S", re.M)
 
 
@@ -492,9 +494,14 @@ KB_LOAD_RE = re.compile(
     r'feynman-technique|metacognition|assessment-framework)"')
 
 
+RECAP_RE = re.compile(r"^#{1,4}\s*(Recap|Harness recap|Writes completed)\b.*$", re.M | re.I)
+
+
 def assistant_prose(transcript_path):
     """Assistant TEXT blocks only — what the learner reads — without the
-    tool_use renderings (which legitimately carry --tested-bloom N)."""
+    tool_use renderings (which legitimately carry --tested-bloom N) and
+    without a trailing harness recap (a '## Recap' section written for the
+    eval, which legitimately names boxes and levels)."""
     texts = []
     with open(transcript_path) as f:
         for line in f:
@@ -505,9 +512,9 @@ def assistant_prose(transcript_path):
             if ev.get("type") == "assistant":
                 for block in ev.get("message", {}).get("content", []):
                     if isinstance(block, dict) and block.get("type") == "text":
-                        texts.append(block.get("text", ""))
+                        texts.append(RECAP_RE.split(block.get("text", ""), 1)[0])
             elif ev.get("type") == "result" and isinstance(ev.get("result"), str):
-                texts.append(ev["result"])
+                texts.append(RECAP_RE.split(ev["result"], 1)[0])
             elif ev.get("type") == "delta" and isinstance(ev.get("text"), str):
                 texts.append(ev["text"])
     return "\n".join(texts)
