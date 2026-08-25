@@ -422,6 +422,34 @@ def assert_teach_hint_discipline(project, transcript):
     ok("no unearned 'correct' recorded")
 
 
+KB_LOAD_RE = re.compile(
+    r'\[tool_use Skill \{[^\]]*"skill":\s*"(?:bodhikit:)?'
+    r'(state-ops|teaching-personality|spaced-repetition|blooms-taxonomy|'
+    r'feynman-technique|metacognition|assessment-framework)"')
+
+
+def assert_kb_load(project, transcript):
+    """A routine /quiz fire must load at least one knowledge base through the
+    Skill tool. From 1.0 to 1.17 the KBs lived in knowledge/, which Claude
+    Code never registers, so every 'Reference the `X` KB' was inert; since
+    1.18.0 they are user-invocable:false skills and this is the proof they
+    load. Read the transcript before judging a failure: the detector keys on
+    the Skill tool_use input, not on narration."""
+    text = assistant_text(transcript)
+    if not text.strip():
+        fail("empty transcript — run did not produce assistant output")
+    m = KB_LOAD_RE.search(text)
+    if not m:
+        fail("no Skill tool_use loading a bodhikit knowledge base found — the "
+             "executor never loaded state-ops/teaching-personality/etc. (are the "
+             "KBs registered? is the loading sentence in the skill preamble?)")
+    ok(f"knowledge base loaded via the Skill tool ({m.group(1)})")
+    if re.search(r"Unknown skill: bodhikit:", text):
+        fail("a Skill call for a bodhikit KB returned 'Unknown skill' — the KB "
+             "is not registered under skills/")
+    ok("no 'Unknown skill' responses for KB loads")
+
+
 def assert_continue_discovery(project, transcript):
     """/continue must find the active project by reading the filesystem, never
     by inventing a bodhi-state discovery subcommand. Regression guard for the
@@ -630,7 +658,8 @@ def main():
                   "evaluate": assert_evaluate}
     with_transcript = {"teach-pretest": assert_teach_pretest,
                        "teach-hint-discipline": assert_teach_hint_discipline,
-                       "continue-discovery": assert_continue_discovery}
+                       "continue-discovery": assert_continue_discovery,
+                       "kb-load": assert_kb_load}
     if name in with_transcript:
         if not transcript:
             fail(f"scenario {name} requires a transcript path")

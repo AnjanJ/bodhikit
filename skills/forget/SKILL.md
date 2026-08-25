@@ -8,6 +8,8 @@ argument-hint: "[--park|--unpark] <concept>[, <concept>, ...]"
 
 You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-ops` KB for tracking-state operations. Methodology KBs load per-phase below.
 
+**Knowledge bases are skills.** A `` `name` KB `` named anywhere in this file is the skill `bodhikit:name` — load it with the Skill tool when the phase that references it begins, not before (progressive disclosure).
+
 **Chained invocation:** if `$ARGUMENTS` contains `--invoked-from=`, skip personality/state-ops re-load and skip discovery.
 
 The learner is in charge of their own retention. If they sense a concept has slipped — before the algorithm catches it — they can demote it explicitly. This respects learner autonomy and honest self-assessment.

@@ -75,8 +75,8 @@ top_of_body() {
 # Tracking-file names this audit knows about. v2 schema (1.7.0).
 tracking_files="state.json progress.md spaced-review.json resources.md plan plan.md assessment.md assessments assessment-history.json .bodhi-profile.json .bodhi-profile.projects.json"
 
-# KB names declared in knowledge/.
-kb_names=$(find knowledge -mindepth 1 -maxdepth 1 -type d -exec basename {} \;)
+# KB names declared in skills/.
+kb_names=$(for f in $(grep -l '^user-invocable: false' skills/*/SKILL.md); do basename "$(dirname "$f")"; done)
 
 # ---------------------------------------------------------------------------
 # 1. SKILLS — per-skill breakdown (cold-fire load)
@@ -87,7 +87,7 @@ emit "$(printf '%-22s %6s %6s %6s %6s %10s' SKILL LINES BYTES TOP_KB PHASE_KB CO
 emit "$(printf '%-22s %6s %6s %6s %6s %10s' ------ ----- ----- ------ -------- ---------)"
 
 tmpsort=$(mktemp)
-for f in skills/*/SKILL.md; do
+for f in $(grep -l '^user-invocable: false' skills/*/SKILL.md); do
   name=$(basename "$(dirname "$f")")
   lines=$(wc -l < "$f" | tr -d ' ')
   bytes=$(wc -c < "$f" | tr -d ' ')
@@ -110,7 +110,7 @@ for f in skills/*/SKILL.md; do
 
   cold=$bytes
   for kb in $top_kbs; do
-    kbfile="knowledge/$kb/SKILL.md"
+    kbfile="skills/$kb/SKILL.md"
     if [ -f "$kbfile" ]; then
       kbbytes=$(wc -c < "$kbfile" | tr -d ' ')
       cold=$((cold + kbbytes))
@@ -140,7 +140,7 @@ emit "$(printf '%-32s %6s %6s %5s' KB LINES BYTES IN_REF)"
 emit "$(printf '%-32s %6s %6s %5s' --- ----- ----- ------)"
 
 tmpsort=$(mktemp)
-for f in knowledge/*/SKILL.md; do
+for f in skills/*/SKILL.md; do
   name=$(basename "$(dirname "$f")")
   lines=$(wc -l < "$f" | tr -d ' ')
   bytes=$(wc -c < "$f" | tr -d ' ')
@@ -329,7 +329,7 @@ for f in skills/*/SKILL.md; do
     # Demotion candidate: KB is referenced top-of-file but also only inside
     # ONE phase (or zero — meaning the top reference is the only use).
     if [ "$phase_hits" -le 1 ] && [ "$total_phases" -ge 2 ]; then
-      kbfile="knowledge/$kb/SKILL.md"
+      kbfile="skills/$kb/SKILL.md"
       kbbytes=0
       [ -f "$kbfile" ] && kbbytes=$(wc -c < "$kbfile" | tr -d ' ')
       emit "  $name: \`$kb\` (${kbbytes}b) — referenced top-of-file; used in $phase_hits / $total_phases phases"
@@ -351,7 +351,7 @@ emit "## 7. Duplicated phrases (>=60 chars, in 2+ files)"
 emit ""
 
 tmplines=$(mktemp)
-for f in skills/*/SKILL.md agents/*.md rules/*.md knowledge/*/SKILL.md; do
+for f in skills/*/SKILL.md agents/*.md rules/*.md; do
   awk -v file="$f" '
     /^[[:space:]]*$/ {next}
     /^[[:space:]]*```/ {next}
@@ -590,7 +590,7 @@ for f in skills/*/SKILL.md; do
   cold=$bytes
   for kb in $kb_names; do
     if printf '%s' "$top" | grep -q "\`$kb\`"; then
-      kbfile="knowledge/$kb/SKILL.md"
+      kbfile="skills/$kb/SKILL.md"
       [ -f "$kbfile" ] && cold=$((cold + $(wc -c < "$kbfile" | tr -d ' ')))
     fi
   done
@@ -648,10 +648,10 @@ emit ""
 # ---------------------------------------------------------------------------
 # 10. Stdout summary
 # ---------------------------------------------------------------------------
-total_skills=$(find skills -name SKILL.md | wc -l | tr -d ' ')
-total_kbs=$(find knowledge -name SKILL.md | wc -l | tr -d ' ')
-total_skill_bytes=$(find skills -name SKILL.md -exec cat {} + | wc -c | tr -d ' ')
-total_kb_bytes=$(find knowledge -name SKILL.md -exec cat {} + | wc -c | tr -d ' ')
+total_skills=$(grep -l '^user-invocable: true' skills/*/SKILL.md | wc -l | tr -d ' ')
+total_kbs=$(grep -l '^user-invocable: false' skills/*/SKILL.md | wc -l | tr -d ' ')
+total_skill_bytes=$(cat $(grep -l '^user-invocable: true' skills/*/SKILL.md) | wc -c | tr -d ' ')
+total_kb_bytes=$(cat $(grep -l '^user-invocable: false' skills/*/SKILL.md) | wc -c | tr -d ' ')
 
 echo ""
 echo "Report written to: $out"

@@ -1,6 +1,18 @@
 {
-  "description": "BodhiKit safety net: verify tracking-file schemas before the session stops. Fail-open at every layer: a missing python3 (e.g. Windows without the launcher alias) or a mis-expanded path exits 0 instead of surfacing a blocking hook error.",
+  "description": "BodhiKit hooks, all fail-open (a missing python3 or a mis-expanded path exits 0). SessionStart: inject rules/learning-project.md when the session starts inside a learning project (plugins do not load rules/). Stop: verify tracking-file schemas before the session ends.",
   "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "command -v python3 >/dev/null 2>&1 && python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-session-context.py\" || exit 0",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "hooks": [

@@ -8,6 +8,8 @@ argument-hint: "[strong-style|ping-pong|navigate]"
 
 You are BodhiKit (pairing mode). Reference the `teaching-personality` KB for voice. Reference the `state-ops` KB for tracking-state operations. Methodology KBs load per-phase below.
 
+**Knowledge bases are skills.** A `` `name` KB `` named anywhere in this file is the skill `bodhikit:name` — load it with the Skill tool when the phase that references it begins, not before (progressive disclosure).
+
 **Chained invocation:** if `$ARGUMENTS` contains `--invoked-from=`, skip personality and state-ops re-load and skip Phase 1 discovery — the caller has resolved the project. Use the remainder of `$ARGUMENTS` after the flag as the topic / concept. Mode auto-selection by Bloom level still runs unless the caller passed an explicit mode (`strong-style`, `ping-pong`, `navigate`).
 
 This skill is built on research-backed pair programming methodologies:

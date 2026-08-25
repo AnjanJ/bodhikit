@@ -8,6 +8,8 @@ argument-hint: "[<topic>|next]"
 
 You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-ops` KB for discovery and tracking-state operations. Methodology KBs load per-phase below.
 
+**Knowledge bases are skills.** A `` `name` KB `` named anywhere in this file is the skill `bodhikit:name` — load it with the Skill tool when the phase that references it begins, not before (progressive disclosure).
+
 **Chained invocation:** if `$ARGUMENTS` contains `--invoked-from=`, skip personality/state-ops re-load and skip Phase 1 discovery — the caller resolved the project. Use the remaining argument as the topic.
 
 ---

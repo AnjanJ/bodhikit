@@ -30,6 +30,13 @@ fail=0
 err() { printf 'FAIL: %s\n' "$1"; fail=1; }
 ok() { printf 'OK:   %s\n' "$1"; }
 
+# Two kinds of SKILL.md live under skills/ (1.18.0): user-invocable skills
+# and knowledge bases (`user-invocable: false`, model-loaded via the Skill
+# tool). Claude Code registers skills from skills/ only — a knowledge/ tree is
+# never loaded — so the KBs moved; the frontmatter line is the discriminator.
+USER_SKILLS=$(grep -l '^user-invocable: true' skills/*/SKILL.md)
+KB_SKILLS=$(grep -l '^user-invocable: false' skills/*/SKILL.md)
+
 # ===========================================================================
 # A. MANIFESTS, FRONTMATTER, BUDGETS
 # ===========================================================================
@@ -57,26 +64,51 @@ elif [ -n "$plugin_v" ] && [ "$readme_v" != "$plugin_v" ]; then
   err "README version badge ($readme_v) drifted from plugin.json ($plugin_v)"
 fi
 # ---------------------------------------------------------------------------
-# 2. Skill frontmatter contract
+# 2. Skill frontmatter contract — every SKILL.md declares description and
+# user-invocable (true = command, false = knowledge base); every user skill
+# carries the KB-loading sentence (the mechanism by which "reference the X KB"
+# becomes a Skill-tool call — without it the references point at nothing).
 # ---------------------------------------------------------------------------
 for f in skills/*/SKILL.md; do
   if ! head -10 "$f" | grep -q '^description:'; then
     err "$f missing 'description:' in frontmatter"
   fi
-  if ! head -10 "$f" | grep -q '^user-invocable: true'; then
-    err "$f missing 'user-invocable: true'"
+  if ! head -10 "$f" | grep -qE '^user-invocable: (true|false)$'; then
+    err "$f missing 'user-invocable: true|false'"
   fi
 done
-# Voice contract applies to skills AND agents (CLAUDE.md authoring contract).
-for f in skills/*/SKILL.md agents/*.md; do
+for f in $USER_SKILLS; do
+  if ! grep -q 'Knowledge bases are skills' "$f"; then
+    err "$f missing the KB-loading sentence (**Knowledge bases are skills.** ... load it with the Skill tool)"
+  fi
+done
+if [ ! -f rules/learning-project.md ]; then
+  err "rules/learning-project.md missing"
+elif ! grep -q 'learning-project.md' scripts/bodhi-session-context.py 2>/dev/null; then
+  err "scripts/bodhi-session-context.py must inject rules/learning-project.md (plugins do not load rules/ — the SessionStart hook is the only path)"
+fi
+if grep -rnE --exclude-dir=__pycache__ '(^|[^a-z])knowledge/' skills/ agents/ rules/ hooks/ scripts/ 2>/dev/null | grep -v '^scripts/[^:]*:[0-9]*:.*#' >/dev/null; then
+  grep -rnE --exclude-dir=__pycache__ '(^|[^a-z])knowledge/' skills/ agents/ rules/ hooks/ scripts/ | grep -v '^scripts/[^:]*:[0-9]*:.*#' | sed 's/^/  /'
+  err "a shipped file still references a knowledge/ path — KBs live under skills/ (1.18.0)"
+fi
+# Voice contract applies to user skills AND agents (CLAUDE.md authoring contract).
+for f in $USER_SKILLS agents/*.md; do
   if ! grep -q 'teaching-personality' "$f"; then
     err "$f does not reference teaching-personality KB"
   fi
 done
+# Agents have no Skill tool: a KB they name must be preloaded via `skills:`.
+for f in agents/*.md; do
+  for kb in $(grep -oE '`[a-z-]+` KB' "$f" | sed -E 's/`([a-z-]+)` KB/\1/' | sort -u); do
+    if ! awk '/^---$/{n++; next} n==1' "$f" | grep -qE "^  - $kb$"; then
+      err "$f references the $kb KB but does not preload it (skills: list in frontmatter) — agents cannot call the Skill tool"
+    fi
+  done
+done
 # ---------------------------------------------------------------------------
 # 3. Agent-using skills must include mandate phrase and Fallback
 # ---------------------------------------------------------------------------
-for f in skills/*/SKILL.md; do
+for f in $USER_SKILLS; do
   if grep -q 'Agent tool' "$f"; then
     if ! grep -q 'You MUST use the Agent tool' "$f"; then
       err "$f uses an Agent but lacks the literal mandate phrase"
@@ -103,18 +135,23 @@ done
 # ---------------------------------------------------------------------------
 # 8. KB frontmatter contract
 # ---------------------------------------------------------------------------
-for f in knowledge/*/SKILL.md; do
-  if ! head -10 "$f" | grep -q '^user-invocable: false'; then
-    err "$f must declare 'user-invocable: false'"
+for f in $KB_SKILLS; do
+  if head -10 "$f" | grep -q '^argument-hint:'; then
+    err "$f is a knowledge base but declares an argument-hint"
   fi
 done
 # ---------------------------------------------------------------------------
 # 11. README skill count sanity (best-effort)
 # ---------------------------------------------------------------------------
 declared=$(grep -oE 'Skills \([0-9]+\)' README.md | head -1 | grep -oE '[0-9]+')
-actual=$(find skills -name SKILL.md | wc -l | tr -d ' ')
+actual=$(printf '%s\n' $USER_SKILLS | wc -l | tr -d ' ')
 if [ -n "$declared" ] && [ "$declared" != "$actual" ]; then
-  err "README says Skills ($declared) but $actual SKILL.md files exist under skills/"
+  err "README says Skills ($declared) but $actual user-invocable SKILL.md files exist under skills/"
+fi
+declared_kb=$(grep -oE 'Knowledge Bases \([0-9]+\)' README.md | head -1 | grep -oE '[0-9]+')
+actual_kb=$(printf '%s\n' $KB_SKILLS | wc -l | tr -d ' ')
+if [ -n "$declared_kb" ] && [ "$declared_kb" != "$actual_kb" ]; then
+  err "README says Knowledge Bases ($declared_kb) but $actual_kb user-invocable:false SKILL.md files exist under skills/"
 fi
 # ---------------------------------------------------------------------------
 # 14. Progressive disclosure: KBs referenced top-of-file should be in
@@ -127,8 +164,8 @@ fi
 # isn't teaching-personality or state-ops/state-schema → soft warn.
 #
 # Skips: /housekeep (legitimate conditional load of state-migration).
-kb_names=$(find knowledge -mindepth 1 -maxdepth 1 -type d -exec basename {} \;)
-for f in skills/*/SKILL.md; do
+kb_names=$(for f in $KB_SKILLS; do basename "$(dirname "$f")"; done)
+for f in $USER_SKILLS; do
   case "$f" in *housekeep*) continue;; esac
   top=$(awk 'BEGIN{n=0} /^---$/{n++; next} n>=2 || (n==1 && NR>1) {print}' "$f" | head -8)
   for kb in $kb_names; do
@@ -153,6 +190,9 @@ if [ -f hooks/hooks.json ]; then
   fi
   if [ ! -f scripts/bodhi-stop-hook.py ]; then
     err "hooks/hooks.json present but scripts/bodhi-stop-hook.py missing"
+  fi
+  if ! grep -q 'SessionStart' hooks/hooks.json || [ ! -f scripts/bodhi-session-context.py ]; then
+    err "hooks/hooks.json must register the SessionStart hook (scripts/bodhi-session-context.py) — plugins do not load rules/ (1.18.0)"
   fi
 else
   err "hooks/hooks.json missing (1.11.0 Stop-hook safety net)"
@@ -192,8 +232,8 @@ else
     if ! grep -q "\"$t\"" scripts/bodhi-state; then
       err "scripts/bodhi-state SESSION_TYPES missing canonical type '$t' (state-ops KB)"
     fi
-    if ! grep -q "\`$t\`" knowledge/state-ops/SKILL.md; then
-      err "knowledge/state-ops/SKILL.md vocabulary table missing canonical type '$t'"
+    if ! grep -q "\`$t\`" skills/state-ops/SKILL.md; then
+      err "skills/state-ops/SKILL.md vocabulary table missing canonical type '$t'"
     fi
   done
 
@@ -210,8 +250,8 @@ else
   if ! grep -q '^GATE_RECENCY_DAYS = 30$' scripts/bodhi-state; then
     err "scripts/bodhi-state GATE_RECENCY_DAYS drifted from the state-ops KB gate table (30 days)"
   fi
-  if ! grep -q 'reviewed within 30 days' knowledge/state-ops/SKILL.md; then
-    err "knowledge/state-ops/SKILL.md gate table no longer states the 30-day recency window (pins GATE_RECENCY_DAYS)"
+  if ! grep -q 'reviewed within 30 days' skills/state-ops/SKILL.md; then
+    err "skills/state-ops/SKILL.md gate table no longer states the 30-day recency window (pins GATE_RECENCY_DAYS)"
   fi
 
   # (b) Retention rollup tiers. The spaced-repetition KB explicitly warns that
@@ -221,8 +261,8 @@ else
   if ! grep -q 'b >= 4' scripts/bodhi-state || ! grep -q 'b >= 2' scripts/bodhi-state; then
     err "scripts/bodhi-state cmd_snapshot rollup thresholds drifted from the spaced-repetition KB 3-tier table (Box 4-5 / 2-3 / 1)"
   fi
-  if ! grep -q 'Box 4-5' knowledge/spaced-repetition/SKILL.md; then
-    err "knowledge/spaced-repetition/SKILL.md rollup table no longer states Box 4-5 (pins cmd_snapshot tiers)"
+  if ! grep -q 'Box 4-5' skills/spaced-repetition/SKILL.md; then
+    err "skills/spaced-repetition/SKILL.md rollup table no longer states Box 4-5 (pins cmd_snapshot tiers)"
   fi
 
   # (c) Confidence vocabulary. cmd_record_review validates against the script's
@@ -233,8 +273,8 @@ else
       err "scripts/bodhi-state CONFIDENCE_VALUES drifted from the state-ops KB (sure|mostly|guessing)"
       break
     fi
-    if ! grep -q "$cv" knowledge/state-ops/SKILL.md; then
-      err "knowledge/state-ops/SKILL.md subcommand table missing confidence value '$cv'"
+    if ! grep -q "$cv" skills/state-ops/SKILL.md; then
+      err "skills/state-ops/SKILL.md subcommand table missing confidence value '$cv'"
     fi
   done
 
@@ -243,8 +283,8 @@ else
   if ! grep -q '^LAST_ACTIVITY_MAX = 120$' scripts/bodhi-state; then
     err "scripts/bodhi-state LAST_ACTIVITY_MAX drifted from the state-ops KB guidance (120 chars)"
   fi
-  if ! grep -q '120 chars' knowledge/state-ops/SKILL.md; then
-    err "knowledge/state-ops/SKILL.md no longer states the 120-char lastActivity guidance (pins LAST_ACTIVITY_MAX)"
+  if ! grep -q '120 chars' skills/state-ops/SKILL.md; then
+    err "skills/state-ops/SKILL.md no longer states the 120-char lastActivity guidance (pins LAST_ACTIVITY_MAX)"
   fi
 
   # (e) Concept tier ladder (1.14.x). `familiar` and `introduced`
@@ -257,8 +297,8 @@ else
   if ! grep -q 'bloomLevel", 0) >= 3 and c.get("box", 1) >= 2' scripts/bodhi-state; then
     err "scripts/bodhi-state concept_tier familiar threshold drifted from the blooms-taxonomy KB ladder (Bloom 3+ AND Box 2+)"
   fi
-  if ! grep -q 'Bloom 3+ AND Box 2+' knowledge/blooms-taxonomy/SKILL.md; then
-    err "knowledge/blooms-taxonomy/SKILL.md tier ladder no longer states the familiar criteria (pins concept_tier)"
+  if ! grep -q 'Bloom 3+ AND Box 2+' skills/blooms-taxonomy/SKILL.md; then
+    err "skills/blooms-taxonomy/SKILL.md tier ladder no longer states the familiar criteria (pins concept_tier)"
   fi
   # The four tier keys are a vocabulary the same way SESSION_TYPES is: /progress
   # indexes into them by name, so a rename on either side breaks the render.
@@ -266,8 +306,8 @@ else
     if ! grep -q "\"$tier\": 0" scripts/bodhi-state; then
       err "scripts/bodhi-state new_module_row missing tier key '$tier'"
     fi
-    if ! grep -qi "\*\*$tier\*\*\|\`$tier\`" knowledge/blooms-taxonomy/SKILL.md; then
-      err "knowledge/blooms-taxonomy/SKILL.md tier ladder missing tier '$tier'"
+    if ! grep -qi "\*\*$tier\*\*\|\`$tier\`" skills/blooms-taxonomy/SKILL.md; then
+      err "skills/blooms-taxonomy/SKILL.md tier ladder missing tier '$tier'"
     fi
   done
   # (f) Learner-facing Bloom labels + outcome clauses (1.17.0). The script
@@ -278,8 +318,8 @@ else
     if ! grep -q "\"$lbl\"" scripts/bodhi-state; then
       err "scripts/bodhi-state BLOOM_LABELS missing '$lbl' (blooms-taxonomy KB rendering table)"
     fi
-    if ! grep -q "| \*\*$lbl\*\* | you can" knowledge/blooms-taxonomy/SKILL.md; then
-      err "knowledge/blooms-taxonomy/SKILL.md rendering table missing '**$lbl** | you can ...' (pins BLOOM_LABELS/BLOOM_OUTCOMES)"
+    if ! grep -q "| \*\*$lbl\*\* | you can" skills/blooms-taxonomy/SKILL.md; then
+      err "skills/blooms-taxonomy/SKILL.md rendering table missing '**$lbl** | you can ...' (pins BLOOM_LABELS/BLOOM_OUTCOMES)"
     fi
   done
   if ! grep -q '"bloomLabel": BLOOM_LABELS' scripts/bodhi-state; then
@@ -288,8 +328,8 @@ else
   if ! grep -q 'evidence_at_3_plus(c) >= 2' scripts/bodhi-state; then
     err "scripts/bodhi-state gate evidence rule drifted (two level-3+ corrects clear the gate; state-ops KB)"
   fi
-  if ! grep -q 'two or more correct reviews graded at Bloom 3+' knowledge/state-ops/SKILL.md; then
-    err "knowledge/state-ops/SKILL.md gate table no longer states the two-review evidence rule (pins gate_verdict)"
+  if ! grep -q 'two or more correct reviews graded at Bloom 3+' skills/state-ops/SKILL.md; then
+    err "skills/state-ops/SKILL.md gate table no longer states the two-review evidence rule (pins gate_verdict)"
   fi
 fi
 # ---------------------------------------------------------------------------
@@ -319,17 +359,17 @@ fi
 # state-schema KB must NOT re-grow an operational duplicate (one home
 # per fact; the split exists to keep routine fires light).
 # ---------------------------------------------------------------------------
-if [ ! -f knowledge/state-ops/SKILL.md ]; then
-  err "knowledge/state-ops/SKILL.md missing (1.13.0 operational surface)"
+if [ ! -f skills/state-ops/SKILL.md ]; then
+  err "skills/state-ops/SKILL.md missing (1.13.0 operational surface)"
 else
   for token in 'record-review' 'record-session' 'gate-check' 'consecutiveCorrectAtL4Plus >= 3' 'Discovery procedure'; do
-    if ! grep -q "$token" knowledge/state-ops/SKILL.md; then
-      err "knowledge/state-ops/SKILL.md missing '$token' (operational surface incomplete)"
+    if ! grep -q "$token" skills/state-ops/SKILL.md; then
+      err "skills/state-ops/SKILL.md missing '$token' (operational surface incomplete)"
     fi
   done
 fi
-if grep -q '| Subcommand | Owns |' knowledge/state-schema/SKILL.md; then
-  err "knowledge/state-schema/SKILL.md re-grew the subcommand table — it lives in state-ops (1.13.0 split)"
+if grep -q '| Subcommand | Owns |' skills/state-schema/SKILL.md; then
+  err "skills/state-schema/SKILL.md re-grew the subcommand table — it lives in state-ops (1.13.0 split)"
 fi
 # ---------------------------------------------------------------------------
 # 43. State-writing skills MUST route JSON mutations through bodhi-state
@@ -395,8 +435,8 @@ fi
 if ! grep -qi 'completion criterion' skills/evaluate/SKILL.md; then
   err "skills/evaluate/SKILL.md missing the canonical completion criterion (1.11.1)"
 fi
-if ! grep -qi 'Project completion (canonical' knowledge/state-schema/SKILL.md; then
-  err "knowledge/state-schema/SKILL.md missing the Project completion section (1.11.1)"
+if ! grep -qi 'Project completion (canonical' skills/state-schema/SKILL.md; then
+  err "skills/state-schema/SKILL.md missing the Project completion section (1.11.1)"
 fi
 # Pretest fires on first exposure only.
 if ! grep -qi 'first exposure' skills/teach/SKILL.md; then
@@ -404,7 +444,7 @@ if ! grep -qi 'first exposure' skills/teach/SKILL.md; then
 fi
 # Every bodhi-state invocation in a skill (or a skill's references/ file)
 # carries --project.
-for f in skills/*/SKILL.md skills/*/references/*.md; do
+for f in $USER_SKILLS skills/*/references/*.md; do
   [ -f "$f" ] || continue
   if grep 'scripts/bodhi-state" ' "$f" | grep -vq -- '--project'; then
     err "$f has a bodhi-state invocation without --project (defaults to cwd and errors outside the project dir)"
@@ -421,13 +461,13 @@ fi
 # must carry the negative guard so every skill's pointer inherits it;
 # (b) no skill or KB may emit a phantom discovery subcommand call.
 # ---------------------------------------------------------------------------
-if [ -f knowledge/state-ops/SKILL.md ]; then
-  if ! grep -qi 'not a .*bodhi-state.* subcommand\|Discovery is a file-read' knowledge/state-ops/SKILL.md; then
-    err "knowledge/state-ops/SKILL.md missing the negative guard: discovery is a file-read, not a bodhi-state subcommand (rule 53)"
+if [ -f skills/state-ops/SKILL.md ]; then
+  if ! grep -qi 'not a .*bodhi-state.* subcommand\|Discovery is a file-read' skills/state-ops/SKILL.md; then
+    err "skills/state-ops/SKILL.md missing the negative guard: discovery is a file-read, not a bodhi-state subcommand (rule 53)"
   fi
 fi
-if grep -rnE 'bodhi-state[^`]*(discover|--list|list-projects)' skills/ knowledge/ 2>/dev/null | grep -v 'not a.*subcommand\|no .discover\|there is no' >/dev/null; then
-  grep -rnE 'bodhi-state[^`]*(discover|--list|list-projects)' skills/ knowledge/ 2>/dev/null | grep -v 'not a.*subcommand\|no .discover\|there is no'
+if grep -rnE 'bodhi-state[^`]*(discover|--list|list-projects)' skills/ 2>/dev/null | grep -v 'not a.*subcommand\|no .discover\|there is no' >/dev/null; then
+  grep -rnE 'bodhi-state[^`]*(discover|--list|list-projects)' skills/ 2>/dev/null | grep -v 'not a.*subcommand\|no .discover\|there is no'
   err "a skill/KB emits a non-existent bodhi-state discovery subcommand (discover/--list/list-projects) — discovery is a file-read (rule 53)"
 fi
 # ---------------------------------------------------------------------------
@@ -440,7 +480,7 @@ fi
 # Everywhere else, mentioning these fields is drift.
 # Applies to skills AND agents — both can touch tracking files.
 for f in skills/*/SKILL.md agents/*.md; do
-  case "$f" in *housekeep*|*progress*) continue;; esac
+  case "$f" in *housekeep*|*progress*|*state-migration*|*state-lifecycle*|*state-schema*) continue;; esac
   while IFS= read -r line; do
     case "$line" in
       *"Do NOT write"*|*"do not write"*|*"removed in v2"*|*"v2 — narrative"*) continue;;
@@ -461,7 +501,7 @@ done
 # as legacy-layout health flags. Everywhere else is drift.
 # Applies to skills AND agents.
 for f in skills/*/SKILL.md agents/*.md; do
-  case "$f" in *housekeep*|*progress*) continue;; esac
+  case "$f" in *housekeep*|*progress*|*state-migration*|*state-lifecycle*|*state-schema*) continue;; esac
   # Match `.bodhi/assessment.md` (NOT `.bodhi/assessments/...`) and
   # `.bodhi/plan.md` (NOT `.bodhi/plan/...`).
   if grep -qE '\.bodhi/assessment\.md([^/s]|$)' "$f"; then
@@ -564,6 +604,11 @@ if [ -f skills/teach/SKILL.md ]; then
   fi
   # 1.14.0 — the understanding-only sub-flow is phase-loaded from
   # references/, not inlined (progressive disclosure inside the skill).
+  if [ ! -f skills/teach/references/prerequisite-gate.md ]; then
+    err "skills/teach/references/prerequisite-gate.md missing (1.18.0 — gate handling is phase-loaded)"
+  elif ! grep -q 'references/prerequisite-gate.md' skills/teach/SKILL.md; then
+    err "skills/teach/SKILL.md does not point at references/prerequisite-gate.md"
+  fi
   if [ ! -f skills/teach/references/understanding-only.md ]; then
     err "skills/teach/references/understanding-only.md missing (1.14.0 — understanding-only sub-flow)"
   elif ! grep -q 'references/understanding-only.md' skills/teach/SKILL.md; then
@@ -591,7 +636,7 @@ fi
 # The corrected rule keys off bloomLevel: 0 alone. Any file pairing
 # bloomLevel: 0 with lastReviewed === null in the SAME logical predicate
 # is using the pre-1.10.7 broken rule.
-for f in skills/*/SKILL.md knowledge/state-schema/SKILL.md knowledge/state-ops/SKILL.md knowledge/state-migration/SKILL.md; do
+for f in skills/*/SKILL.md; do
   # historical-note paragraphs are allowed to MENTION the old rule for
   # explanation. The check looks specifically for the broken predicate.
   if grep -qE 'bloomLevel.*0.*AND.*lastReviewed.*null|lastReviewed.*null.*AND.*bloomLevel.*0' "$f"; then
@@ -758,8 +803,7 @@ done
 # only by manual carve-outs / fallbacks / housekeep). Since 1.13.0 the two
 # are split so routine fires stop paying for field shapes they cannot use.
 # ---------------------------------------------------------------------------
-for f in skills/*/SKILL.md agents/*.md rules/*.md; do
-  case "$f" in *state-schema*|*state-ops*) continue;; esac
+for f in $USER_SKILLS agents/*.md rules/*.md; do
   if grep -qE 'state\.json|spaced-review\.json|progress\.md|bodhi-profile' "$f"; then
     if ! grep -qE 'state-(ops|schema)' "$f"; then
       err "$f touches tracking files but references neither state-ops nor state-schema KB"
@@ -780,8 +824,7 @@ done
 # ---------------------------------------------------------------------------
 # 5. Files that touch Leitner boxes must reference spaced-repetition KB
 # ---------------------------------------------------------------------------
-for f in skills/*/SKILL.md agents/*.md rules/*.md; do
-  case "$f" in *spaced-repetition*) continue;; esac
+for f in $USER_SKILLS agents/*.md rules/*.md; do
   if grep -qE 'Box [0-9]|Leitner' "$f"; then
     if ! grep -q 'spaced-repetition' "$f"; then
       err "$f mentions Leitner/boxes but does not reference spaced-repetition KB"
@@ -815,7 +858,7 @@ done
 #
 # Both are one-way writes, which is exactly why the governing rule has to be
 # in context at the moment of the call.
-for f in skills/*/SKILL.md skills/*/references/*.md; do
+for f in $USER_SKILLS skills/*/references/*.md; do
   [ -f "$f" ] || continue
   if grep -q -- '--tested-bloom' "$f" && ! grep -q 'blooms-taxonomy' "$f"; then
     err "$f writes --tested-bloom (one-way ratchet, feeds the prerequisite gate) but never references the blooms-taxonomy KB — the anti-inflation rule is out of scope at the write site"

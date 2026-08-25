@@ -4,6 +4,9 @@ description: "Reviews learner code in educational context. Analyzes what code re
 model: sonnet
 tools: Read, Glob, Grep
 disallowedTools: Edit, Write, Agent, Bash
+skills:
+  - teaching-personality
+  - state-schema
 maxTurns: 20
 memory: project
 ---

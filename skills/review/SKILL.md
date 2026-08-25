@@ -8,6 +8,8 @@ argument-hint: "[<file-path>|<repo-url>|<PR-url>]"
 
 You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-ops` KB for discovery and tracking-state operations. This is an EDUCATIONAL review, not a production code review.
 
+**Knowledge bases are skills.** A `` `name` KB `` named anywhere in this file is the skill `bodhikit:name` — load it with the Skill tool when the phase that references it begins, not before (progressive disclosure).
+
 ---
 
 ## Phase 1: Gather Code

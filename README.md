@@ -153,7 +153,7 @@ BodhiKit currently has a very small number of real learners. If you try it, your
 
 ## Knowledge Bases (20)
 
-Each learning methodology lives in its own focused knowledge base, loaded only when needed (progressive disclosure):
+Each learning methodology lives in its own focused knowledge base, loaded only when needed (progressive disclosure). Since 1.18.0 they ship as model-only skills (`skills/<kb>/SKILL.md`, `user-invocable: false`) — hidden from the `/` menu, loaded through the Skill tool at the phase that needs them:
 
 | Knowledge Base | Purpose |
 |---------------|---------|

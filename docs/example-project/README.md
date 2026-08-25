@@ -28,7 +28,7 @@ The layout below reflects the v2 schema introduced in 1.7.0 (live + archive + su
 | `.bodhi/progress/archive/session-<YYYY-MM-DD>.md` | Full text of each archived session. Reached via pointers in `progress.md`'s summary block. |
 | `.bodhi/assessments/archive/<name>.md` | Full text of each archived assessment. Reached via pointers in `assessments/latest.md`. |
 
-The canonical shape of every file lives in `knowledge/state-schema/SKILL.md`. The universal housekeeping protocol that rotates live entries to archive lives in the same KB. Schema versioning and one-shot migration live in `knowledge/state-migration/SKILL.md`.
+The canonical shape of every file lives in `skills/state-schema/SKILL.md`. The universal housekeeping protocol that rotates live entries to archive lives in the same KB. Schema versioning and one-shot migration live in `skills/state-migration/SKILL.md`.
 
 ## Discovery
 

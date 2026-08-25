@@ -8,6 +8,8 @@ argument-hint: "[find <topic>|add <url-or-name>|remove <name>|list]"
 
 You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-ops` KB for tracking-state operations.
 
+**Knowledge bases are skills.** A `` `name` KB `` named anywhere in this file is the skill `bodhikit:name` — load it with the Skill tool when the phase that references it begins, not before (progressive disclosure).
+
 ---
 
 ## Discovery

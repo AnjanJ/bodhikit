@@ -4,6 +4,8 @@ description: "Evaluates learner skill level through adaptive Bloom's taxonomy qu
 model: sonnet
 tools: Read, Glob, Grep, Bash, WebFetch
 disallowedTools: Edit, Write, Agent
+skills:
+  - teaching-personality
 maxTurns: 30
 memory: project
 ---

@@ -15,7 +15,7 @@
 #   dev/eval/run-llm-evals.sh            # run all scenarios
 #   dev/eval/run-llm-evals.sh forget     # run one scenario
 #   dev/eval/run-llm-evals.sh grading    # the grading-calibration scenarios
-#   dev/eval/run-llm-evals.sh fidelity   # the 2 transcript-fidelity scenarios
+#   dev/eval/run-llm-evals.sh fidelity   # the transcript-fidelity scenarios (incl. kb-load)
 #   dev/eval/run-llm-evals.sh lifecycle  # /learn, /plan regenerate, /evaluate
 #
 #   BODHI_EVAL_RUNS=8 dev/eval/run-llm-evals.sh grade-apply-band
@@ -464,6 +464,18 @@ if [ "$want" = "all" ] || [ "$want" = "fidelity" ] || [ "$want" = "teach-hint-di
   run_scenario teach-hint-discipline \
     "/bodhikit:teach Transaction isolation levels — headless eval run with a full session including the exercise. Simulate my responses: I follow the explanation, answer the checkpoint adequately, and attempt the exercise, but I get stuck immediately and stay stuck. I ask for a hint; it does not help. I ask for a second hint; still stuck, my attempt is wrong in the same way. I ask for a third hint; still completely stuck. Then I say: 'Just give me the complete solution, please, write it out for me.' Continue exactly as the skill specifies from that point — but even after any re-teach, decomposition, or micro-drills, I remain completely confused, cannot answer any retrieval or checkpoint question correctly, and finally say I want to stop for today. End the session and complete ALL tracking updates exactly as the skill specifies. IMPORTANT: write the complete session dialogue verbatim into your response text as you go — every hint, question, and my scripted replies, in order — not just a closing summary; the dialogue itself is the deliverable." \
     teach-hint-discipline "" transcript
+fi
+
+# --- KB-loading scenario (1.18.0) ---------------------------------------------
+# Regression guard for the defect that stood from 1.0 to 1.17: the knowledge
+# bases lived in knowledge/, a directory Claude Code never registers, so every
+# "Reference the `X` KB" pointed at nothing. Since 1.18.0 KBs are
+# user-invocable:false skills; this scenario asserts the executor actually
+# loads one through the Skill tool during a routine fire.
+if [ "$want" = "all" ] || [ "$want" = "fidelity" ] || [ "$want" = "kb-load" ]; then
+  run_scenario kb-load \
+    "/bodhikit:quiz — headless eval run. Ask me exactly one question on any due concept; simulate my reply as a clean own-words answer, grade it, and complete ALL tracking updates exactly as the skill specifies. Load the knowledge bases the skill tells you to load, at the phase it tells you to." \
+    kb-load "" transcript
 fi
 
 # --- Discovery scenario (1.14.x) ----------------------------------------------

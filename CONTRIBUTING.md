@@ -24,7 +24,7 @@ Bug fixes, and refactors that reduce per-fire context cost, are always welcome. 
 - **Single sources of truth:** Leitner intervals live in the `spaced-repetition` KB; tracking-file shapes in `state-schema`; the routine operational surface in `state-ops`. Reference, never redeclare.
 - **Agents:** skills that use one say "You MUST use the Agent tool" and carry a `**Fallback:**` paragraph. Agents are read-only.
 - **Chaining:** a skill that auto-invokes another passes `--invoked-from=<caller>`.
-- **Budget:** every `SKILL.md` stays under 18 KB. Knowledge bases load per phase, not up front.
+- **Budget:** every `SKILL.md` stays under 18 KB. Knowledge bases are `user-invocable: false` skills under `skills/` (Claude Code registers nothing else) and load per phase through the Skill tool, not up front.
 - **Bugs in executor discipline** (the model skipped a write, invented a field) are fixed in `bodhi-state` with a reproducing fixture first — never with louder markdown.
 
 ## Before you submit

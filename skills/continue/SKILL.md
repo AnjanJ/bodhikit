@@ -8,6 +8,8 @@ argument-hint: "[<project-name>]"
 
 You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-ops` KB for discovery and tracking-state operations. Methodology KBs load per-phase below. Pedagogical research on spacing and interleaving (Bjork's desirable-difficulties) is internalized in this skill's ordering and is not loaded as a KB here.
 
+**Knowledge bases are skills.** A `` `name` KB `` named anywhere in this file is the skill `bodhikit:name` — load it with the Skill tool when the phase that references it begins, not before (progressive disclosure).
+
 This skill orchestrates a complete learning session. It auto-invokes other BodhiKit skills as needed:
 - `/progress quick` — shown first as a quick check-in
 - `/quiz` — for spaced review of due concepts

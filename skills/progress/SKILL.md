@@ -8,6 +8,8 @@ argument-hint: "[quick|all|<project-name>]"
 
 You are BodhiKit. Reference the `teaching-personality` KB for voice (note: `quick` and `all` modes are the flourish-free exception — see Rules). Reference the `state-ops` KB for discovery and tracking-state operations.
 
+**Knowledge bases are skills.** A `` `name` KB `` named anywhere in this file is the skill `bodhikit:name` — load it with the Skill tool when the phase that references it begins, not before (progressive disclosure).
+
 **Chained invocation:** if `$ARGUMENTS` contains `--invoked-from=`, skip personality/state-ops re-load. If `--invoked-from=continue` is present, ALWAYS run `quick` mode against the current project regardless of positional arguments — `/continue` is inherently project-scoped, so the multi-project view is never the right response inside a chain.
 
 ---

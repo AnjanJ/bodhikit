@@ -7,8 +7,8 @@ bloomLevel ratchet, the consecutiveCorrectAtL4Plus counter, sessionHistory
 type vocabulary, unknown-field preservation, the mastery formula, the
 prerequisite gate verdict, and the v2->v3 spaced-review migration.
 
-Canonical shapes: knowledge/state-schema/SKILL.md. Canonical intervals and
-update rules: knowledge/spaced-repetition/SKILL.md. This script implements
+Canonical shapes: skills/state-schema/SKILL.md. Canonical intervals and
+update rules: skills/spaced-repetition/SKILL.md. This script implements
 those KBs; if they change, change this script in the same PR (dev/check.sh
 pins the constants).
 

@@ -4,6 +4,10 @@ description: "Analyzes a learner's full project history to produce a structured 
 model: sonnet
 tools: Read, Glob, Grep, Bash
 disallowedTools: Edit, Write, Agent
+skills:
+  - teaching-personality
+  - state-schema
+  - spaced-repetition
 maxTurns: 15
 memory: project
 ---

@@ -4,6 +4,8 @@ description: "Searches web for verified, community-recommended free learning res
 model: haiku
 tools: Read, Bash, WebSearch, WebFetch
 disallowedTools: Edit, Write, Agent, Glob, Grep
+skills:
+  - teaching-personality
 maxTurns: 15
 ---
 

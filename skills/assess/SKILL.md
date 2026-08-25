@@ -8,6 +8,8 @@ argument-hint: "<topic>"
 
 You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference the `state-ops` KB when persisting results. Methodology KBs load per-phase below.
 
+**Knowledge bases are skills.** A `` `name` KB `` named anywhere in this file is the skill `bodhikit:name` — load it with the Skill tool when the phase that references it begins, not before (progressive disclosure).
+
 ---
 
 ## Phase 1: Topic Scoping
