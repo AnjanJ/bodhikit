@@ -1518,6 +1518,85 @@ def t_gate_evidence_reset():
         check("reset: apply-equivalent fallthrough skips deferred entries",
               j["status"] == "apply-equivalent", j)
 
+
+def t_validation_on_load():
+    """Drift that `verify` flags must fail every subcommand the same clean
+    way — {"ok": false, "error": ...} naming the repair — never a traceback
+    from whichever command happened to compute on the bad field (1.18.0)."""
+    with tempfile.TemporaryDirectory() as root:
+        sr = json.loads(json.dumps(V2_SR))
+        sr["version"] = 3
+        for c in sr["concepts"]:
+            c.update({"bloomLevel": 3, "feynmanPassed": False,
+                      "consecutiveCorrectAtL4Plus": 0})
+        sr["concepts"][0]["box"] = "three"
+        proj = make_project(root, spaced_review=sr)
+        for argv in (("due",), ("mastery",), ("snapshot",),
+                     ("record-review", "--concept", "B-tree indexes",
+                      "--result", "correct", "--tested-bloom", "3")):
+            out = run(proj, *argv, expect_fail=True)
+            check(f"load: string box fails cleanly in {argv[0]}",
+                  out.get("ok") is False and "box" in out.get("error", "")
+                  and "normalize" in out.get("error", ""), out)
+        out = run(proj, "verify", expect_fail=True)
+        check("verify: string box reported, not raised",
+              out.get("ok") is False and any("box" in e for e in out["errors"]), out)
+        # null name: verify reports it; a subcommand dies cleanly
+        sr["concepts"][0]["box"] = 2
+        sr["concepts"][0]["name"] = None
+        with open(os.path.join(proj, ".bodhi", "spaced-review.json"), "w") as f:
+            json.dump(sr, f)
+        out = run(proj, "verify", expect_fail=True)
+        check("verify: null concept name reported, not raised",
+              out.get("ok") is False and any("name" in e for e in out["errors"]), out)
+        out = run(proj, "due", expect_fail=True)
+        check("load: null name fails cleanly", out.get("ok") is False
+              and "name" in out.get("error", ""), out)
+        # list-typed state.json: verify reports; gate-check dies cleanly
+        with open(os.path.join(proj, ".bodhi", "state.json"), "w") as f:
+            json.dump(["not", "an", "object"], f)
+        out = run(proj, "verify", expect_fail=True)
+        check("verify: list-typed state.json reported, not raised",
+              out.get("ok") is False and any("state.json" in e for e in out["errors"]), out)
+        # int currentModule (a normalize-class drift) dies cleanly in gate-check
+        sr["concepts"][0]["name"] = "B-tree indexes"
+        with open(os.path.join(proj, ".bodhi", "spaced-review.json"), "w") as f:
+            json.dump(sr, f)
+        with open(os.path.join(proj, ".bodhi", "state.json"), "w") as f:
+            json.dump({"version": 2, "currentModule": 7, "sessionDates": []}, f)
+        out = run(proj, "gate-check", "--prior-module", "Module A", expect_fail=True)
+        check("load: int currentModule fails cleanly in gate-check",
+              out.get("ok") is False and "currentModule" in out.get("error", "")
+              and "normalize" in out.get("error", ""), out)
+        # strict dates: an int or prose lastReviewed is unparseable, not a
+        # wrong daysSinceLastReview
+        with open(os.path.join(proj, ".bodhi", "state.json"), "w") as f:
+            json.dump({"version": 2, "currentModule": "Module A", "sessionDates": []}, f)
+        sr["concepts"][0]["lastReviewed"] = 20260601
+        sr["concepts"][1]["lastReviewed"] = "June 1"
+        with open(os.path.join(proj, ".bodhi", "spaced-review.json"), "w") as f:
+            json.dump(sr, f)
+        out = run(proj, "session-brief", "--concept", "B-tree indexes")
+        check("dates: int lastReviewed yields no daysSinceLastReview",
+              out.get("daysSinceLastReview") is None, out)
+        out = run(proj, "session-brief", "--concept", "Query planning")
+        check("dates: prose lastReviewed yields no daysSinceLastReview",
+              out.get("daysSinceLastReview") is None, out)
+        # a date-time is still a date
+        sr["concepts"][0]["lastReviewed"] = TODAY.isoformat() + "T10:00:00"
+        with open(os.path.join(proj, ".bodhi", "spaced-review.json"), "w") as f:
+            json.dump(sr, f)
+        out = run(proj, "session-brief", "--concept", "B-tree indexes")
+        check("dates: ISO date-time still parses", out.get("daysSinceLastReview") == 0, out)
+        # profile projects list: a non-object entry dies cleanly
+        with open(os.path.join(root, ".bodhi-profile.json"), "w") as f:
+            json.dump({"version": 2, "cumulativeStats": {}}, f)
+        with open(os.path.join(root, ".bodhi-profile.projects.json"), "w") as f:
+            json.dump({"version": 2, "activeProjects": ["oops"], "completedProjects": []}, f)
+        out = run(proj, "profile-update-project", "--name", "x", "--phase", "1", expect_fail=True)
+        check("load: non-object profile entry fails cleanly",
+              out.get("ok") is False and "activeProjects[0]" in out.get("error", ""), out)
+
 def main():
     for t in (t_migrate, t_record_review, t_sessions_and_forget,
               t_touch_state_and_profile, t_gate_check,
@@ -1534,7 +1613,7 @@ def main():
               t_due_never_taught, t_concept_tiers,
               t_profile_project_lifecycle, t_profile_patterns, t_park,
               t_bloom_render, t_gate_evidence,
-              t_gate_evidence_reset):
+              t_gate_evidence_reset, t_validation_on_load):
         print(f"-- {t.__name__}")
         t()
     print(f"\n{PASS} passed, {FAIL} failed")

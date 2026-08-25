@@ -23,6 +23,7 @@ import argparse
 import datetime
 import json
 import os
+import re
 import shutil
 import sys
 import tempfile
@@ -130,11 +131,16 @@ def now_iso():
     return datetime.datetime.now().replace(microsecond=0).isoformat()
 
 
+_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}($|T)")
+
+
 def parse_date(s):
-    if not s:
+    """YYYY-MM-DD, or an ISO date-time; anything else (ints, prose, junk
+    suffixes) is None so callers report it instead of computing on it."""
+    if not isinstance(s, str) or not _DATE_RE.match(s):
         return None
     try:
-        return datetime.date.fromisoformat(str(s)[:10])
+        return datetime.date.fromisoformat(s[:10])
     except ValueError:
         return None
 
@@ -236,13 +242,69 @@ def load_spaced_review(project, create=False):
     data = load_json(path)
     # Read-tolerate v1/v2: fill v3 per-concept fields in memory; persisted on
     # the next write (state-migration KB pattern).
-    for c in data.get("concepts", []):
+    if not isinstance(data.get("concepts", []), list):
+        die(f"{path}: concepts is {type(data.get('concepts')).__name__}, "
+            f"expected list — run `bodhi-state verify`")
+    for i, c in enumerate(data.get("concepts", [])):
+        if not isinstance(c, dict):
+            die(f"{path}: concepts[{i}] is {type(c).__name__}, expected object "
+                f"— run `bodhi-state verify`")
         c.setdefault("bloomLevel", 0)
         c.setdefault("feynmanPassed", False)
         c.setdefault("consecutiveCorrectAtL4Plus", 0)
         c.setdefault("reviewHistory", [])
     data.setdefault("sessionHistory", [])
+    validate_spaced_review(data, path)
     return path, data
+
+
+def validate_spaced_review(data, path):
+    """Type-check the fields every subcommand computes on, once, at load.
+    A string box or a null name used to traceback in some subcommands and
+    pass silently through others; now every command fails the same way,
+    naming the field and the repair (`normalize`)."""
+    def bad(i, c, field, expected):
+        label = c.get("name") if isinstance(c.get("name"), str) else f"index {i}"
+        die(f"{path}: concept {label!r} has {field} {c.get(field)!r} "
+            f"(expected {expected}) — run `bodhi-state normalize`, or "
+            f"`bodhi-state verify` for the full list")
+    for i, c in enumerate(data.get("concepts", [])):
+        if not isinstance(c.get("name"), str) or not c.get("name").strip():
+            bad(i, c, "name", "non-empty string")
+        b = c.get("box")
+        if not isinstance(b, int) or isinstance(b, bool) or not 1 <= b <= MAX_BOX:
+            bad(i, c, "box", f"int 1-{MAX_BOX}")
+        bl = c.get("bloomLevel")
+        if not isinstance(bl, int) or isinstance(bl, bool) or not 0 <= bl <= 6:
+            bad(i, c, "bloomLevel", "int 0-6")
+        if not isinstance(c.get("feynmanPassed"), bool):
+            bad(i, c, "feynmanPassed", "true|false")
+        cc = c.get("consecutiveCorrectAtL4Plus")
+        if not isinstance(cc, int) or isinstance(cc, bool) or cc < 0:
+            bad(i, c, "consecutiveCorrectAtL4Plus", "int >= 0")
+        if not isinstance(c.get("reviewHistory"), list):
+            bad(i, c, "reviewHistory", "list")
+        for h in c["reviewHistory"]:
+            if not isinstance(h, dict):
+                bad(i, c, "reviewHistory", "list of objects")
+    if not isinstance(data.get("sessionHistory"), list):
+        die(f"{path}: sessionHistory is not a list — run `bodhi-state verify`")
+
+
+def load_state(project):
+    """state.json with the fields the script branches on type-checked; the
+    drift patterns `normalize` repairs (dict currentModule, nested session
+    bookkeeping) fail here with the repair named instead of a traceback."""
+    sp = state_path(project)
+    state = load_json(sp)
+    for key in ("currentModule", "previousModule", "lastActivity"):
+        v = state.get(key)
+        if v is not None and not isinstance(v, str):
+            die(f"{sp}: {key} is {type(v).__name__}, expected string — "
+                f"run `bodhi-state normalize`")
+    if not isinstance(state.get("sessionDates", []), list):
+        die(f"{sp}: sessionDates is not a list — run `bodhi-state normalize`")
+    return sp, state
 
 
 def find_concept(data, name):
@@ -500,7 +562,7 @@ def cmd_forget(args):
     # lastActivity pointer in state.json
     sp = state_path(args.project)
     if os.path.exists(sp):
-        state = load_json(sp)
+        state = load_state(args.project)[1]
         state["lastActivity"] = (args.activity or
                                  f"Demoted {len(names)} concept(s): {', '.join(names)}")[:120]
         write_json(sp, state)
@@ -550,7 +612,7 @@ def cmd_park(args):
     write_json(path, data)
     sp = state_path(args.project)
     if os.path.exists(sp):
-        state = load_json(sp)
+        state = load_state(args.project)[1]
         verb = "Resumed" if args.resume else "Parked"
         state["lastActivity"] = (f"{verb} {len(names)} concept(s): "
                                  f"{', '.join(names)}")[:LAST_ACTIVITY_MAX]
@@ -593,7 +655,7 @@ def cmd_touch_state(args):
     sp = state_path(args.project)
     if not os.path.exists(sp):
         die(f"{sp} does not exist")
-    state = load_json(sp)
+    state = load_state(args.project)[1]
     t = iso(today())
     dates = state.setdefault("sessionDates", [])
     if not isinstance(dates, list):
@@ -677,6 +739,10 @@ def load_profile_projects(project):
     for key in ("activeProjects", "completedProjects"):
         if not isinstance(data.get(key), list):
             data[key] = []
+        for i, e in enumerate(data[key]):
+            if not isinstance(e, dict):
+                die(f"{lp}: {key}[{i}] is {type(e).__name__}, expected object "
+                    f"— run `bodhi-state verify` and repair the entry")
     return pp, lp, data
 
 
@@ -1132,7 +1198,7 @@ def cmd_export_anonymized(args):
     }
     sp = state_path(args.project)
     if os.path.exists(sp):
-        state = load_json(sp)
+        state = load_state(args.project)[1]
         created = parse_date(state.get("createdAt"))
         out["project"] = {
             "totalSessions": state.get("totalSessions", 0),
@@ -1151,7 +1217,7 @@ def cmd_session_brief(args):
     judgment-tree residue class 1.11.0 closed for writes. Read-only.
     """
     sp = state_path(args.project)
-    state = load_json(sp) if os.path.exists(sp) else {}
+    state = load_state(args.project)[1] if os.path.exists(sp) else {}
     _, data = load_spaced_review(args.project, create=True)
     t = today()
     c = find_concept(data, args.concept)
@@ -1202,7 +1268,7 @@ def cmd_snapshot(args):
     sp = state_path(args.project)
     if not os.path.exists(sp):
         die(f"{sp} does not exist")
-    state = load_json(sp)
+    state = load_state(args.project)[1]
     _, data = load_spaced_review(args.project, create=True)
     t = today()
 
@@ -1375,7 +1441,7 @@ def cmd_gate_check(args):
     sp = state_path(args.project)
     if not os.path.exists(sp):
         die(f"{sp} does not exist")
-    state = load_json(sp)
+    state = load_state(args.project)[1]
     current = args.module or state.get("currentModule", "")
     if not str(current).strip():
         emit({"fires": False,
@@ -1647,6 +1713,8 @@ def cmd_verify(args):
     if os.path.exists(sp):
         try:
             state = load_json_raw(sp)
+            if not isinstance(state, dict):
+                raise TypeError(f"top level is {type(state).__name__}, expected object")
             if state.get("version") != 2:
                 warnings.append(f"state.json version is {state.get('version')!r}, expected 2")
             for legacy in ("lastSessionSummary", "bloomResetNote"):
@@ -1683,6 +1751,9 @@ def cmd_verify(args):
                                 "run `bodhi-state normalize`")
         except (json.JSONDecodeError, OSError) as e:
             errors.append(f"state.json unreadable: {e}")
+        except Exception as e:  # drift the checks above did not anticipate
+            errors.append(f"state.json structurally broken ({type(e).__name__}: {e}) "
+                          f"— run `bodhi-state normalize`")
     else:
         errors.append("state.json missing")
 
@@ -1690,6 +1761,8 @@ def cmd_verify(args):
     if os.path.exists(srp):
         try:
             sr = load_json_raw(srp)
+            if not isinstance(sr, dict):
+                raise TypeError(f"top level is {type(sr).__name__}, expected object")
             v = sr.get("version")
             if v not in (1, 2, 3):
                 errors.append(f"spaced-review.json version is {v!r}")
@@ -1697,10 +1770,21 @@ def cmd_verify(args):
                 warnings.append(f"spaced-review.json at v{v} — run "
                                 "`bodhi-state migrate-spaced-review`")
             seen_names = {}
-            for c in sr.get("concepts", []):
-                name = c.get("name", "(unnamed)")
-                if not c.get("name"):
-                    errors.append("spaced-review concept missing name")
+            concepts = sr.get("concepts", [])
+            if not isinstance(concepts, list):
+                errors.append(f"spaced-review.json concepts is "
+                              f"{type(concepts).__name__}, expected list")
+                concepts = []
+            for i, c in enumerate(concepts):
+                if not isinstance(c, dict):
+                    errors.append(f"spaced-review concepts[{i}] is "
+                                  f"{type(c).__name__}, expected object")
+                    continue
+                name = c.get("name")
+                if not isinstance(name, str) or not name.strip():
+                    errors.append(f"spaced-review concepts[{i}] name is "
+                                  f"{name!r}, expected non-empty string")
+                    name = f"index {i}"
                 key = name.strip().lower()
                 if key in seen_names:
                     errors.append(f"duplicate concept names (case-insensitive): "
@@ -1724,7 +1808,15 @@ def cmd_verify(args):
                 bl = c.get("bloomLevel", 0)
                 if not isinstance(bl, int) or not 0 <= bl <= 6:
                     errors.append(f"concept {name!r} bloomLevel {bl!r} not int 0-6")
-                for h in c.get("reviewHistory", []):
+                rh = c.get("reviewHistory", [])
+                if not isinstance(rh, list):
+                    errors.append(f"concept {name!r} reviewHistory is not a list")
+                    rh = []
+                for h in rh:
+                    if not isinstance(h, dict):
+                        errors.append(f"concept {name!r} reviewHistory entry "
+                                      f"{h!r} is not an object")
+                        continue
                     if h.get("deferred"):
                         if "result" in h:
                             errors.append(f"concept {name!r} deferral entry carries "
@@ -1737,7 +1829,14 @@ def cmd_verify(args):
                                       f"{hres!r} not in canonical vocabulary "
                                       f"(correct|incorrect|partial) — run "
                                       f"`bodhi-state normalize`")
-            for s in sr.get("sessionHistory", []):
+            sh = sr.get("sessionHistory", [])
+            if not isinstance(sh, list):
+                errors.append("spaced-review.json sessionHistory is not a list")
+                sh = []
+            for s in sh:
+                if not isinstance(s, dict):
+                    errors.append(f"sessionHistory entry {s!r} is not an object")
+                    continue
                 st = s.get("type")
                 if st not in SESSION_TYPES:
                     errors.append(f"sessionHistory type {st!r} not in canonical vocabulary")
@@ -1745,6 +1844,9 @@ def cmd_verify(args):
                     errors.append("sessionHistory 'other' entry missing subtype")
         except (json.JSONDecodeError, OSError) as e:
             errors.append(f"spaced-review.json unreadable: {e}")
+        except Exception as e:
+            errors.append(f"spaced-review.json structurally broken "
+                          f"({type(e).__name__}: {e}) — run `bodhi-state normalize`")
     elif os.path.exists(os.path.join(bdir, "state.json")):
         warnings.append("spaced-review.json missing while state.json exists — "
                         "the review schedule may have been deleted")
@@ -1761,6 +1863,8 @@ def cmd_verify(args):
                                   ".bodhi-profile.projects.json (v2 split)")
         except (json.JSONDecodeError, OSError) as e:
             errors.append(f"profile unreadable: {e}")
+        except Exception as e:
+            errors.append(f"profile structurally broken ({type(e).__name__}: {e})")
 
         # Project-list entry shape. Hand-edited by /learn and /evaluate; no
         # write path enforces it, so a dropped field would otherwise survive
@@ -1796,6 +1900,9 @@ def cmd_verify(args):
                                 f"restore the field(s) per the state-schema KB")
             except (json.JSONDecodeError, OSError) as e:
                 errors.append(f"profile projects list unreadable: {e}")
+            except Exception as e:
+                errors.append(f"profile projects list structurally broken "
+                              f"({type(e).__name__}: {e})")
 
     result = {"ok": not errors, "project": project,
               "errors": errors, "warnings": warnings}
