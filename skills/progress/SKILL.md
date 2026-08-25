@@ -157,6 +157,8 @@ Notes on the sections:
 
   Always render the tier WITH its outcome clause. The clause is the definition — it teaches the learner what the word means in terms of what they can do, and it is the first place they meet this vocabulary. A bare "Working" is a grade; "Working — can use it with guidance" is a position with a next step implied.
 
+  Per-concept positions elsewhere in the dashboard are outcome clauses (`bloomOutcome`), not rung names. The full dashboard prints the `bloomScale` legend from `snapshot` once, as one compact line per rung (`**Apply** — you can apply it in working code with some guidance`), so the words have a definition the one time they appear; that legend and the growth line below are the only places `/progress` speaks a rung's name (`blooms-taxonomy` KB *Learner-Facing Rendering*). `quick` and `all` print neither.
+
   Concepts at `unclassified` are left out of the spread rather than counted as `introduced`: nothing has been observed about them, and listing them as introduced would claim an attempt the learner never made.
 
   Do NOT surface raw Bloom numbers or box numbers anywhere in learner-facing output. The one exception is `/evaluate`'s self-prediction question, which needs a shared numeric scale to compute `predictionDelta` — and it anchors the scale in the same breath.

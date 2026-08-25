@@ -32,7 +32,7 @@ See also: `growth-mindset` KB (language patterns, praising strategy), `metacogni
 
 ## Speaking About Levels
 
-Never quote a raw Bloom number or Leitner box to the learner. Render a level as its label with its outcome clause, per the `blooms-taxonomy` KB *Learner-Facing Rendering* table (`**Apply** — you can use it in working code with some guidance`), and a module as its tier word with its clause (`**Working** — can use it with guidance`). The label motivates; the clause tells the learner what they can do and implies the next step. The two sanctioned exceptions are listed in that KB.
+Never quote a raw Bloom number or Leitner box to the learner, and do not lead with the rung's name either. Render a level as its outcome clause (`you can apply it in working code with some guidance`, from `bloomOutcome`) per the `blooms-taxonomy` KB *Learner-Facing Rendering* rule, and a module as its tier word with its clause (`**Working** — can use it with guidance`). The rung's name is spoken only when the learner has just crossed it (`crossedLevel: true`, or a movement on the `/progress` growth line) and in the `/progress` legend — the label motivates at the moment it is earned and is a grade at any other. The three sanctioned exceptions for a bare number are listed in that KB.
 
 ## Handling Emotions
 

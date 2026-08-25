@@ -1381,14 +1381,24 @@ def t_bloom_render():
                   "--result", "correct", "--tested-bloom", "3")
         check("render: record-review carries label", out["bloomLabel"] == "Apply", out)
         check("render: record-review carries outcome clause",
-              out["bloomOutcome"].startswith("you can use it"), out)
+              out["bloomOutcome"].startswith("you can apply it"), out)
+        check("render: first classification is a crossing",
+              out["crossedLevel"] is True and out["crossedBloom3"] is True, out)
+        out2 = run(proj, "record-review", "--concept", "B-tree indexes",
+                   "--result", "correct", "--tested-bloom", "3")
+        check("render: same rung again is not a crossing",
+              out2["crossedLevel"] is False and out2["crossedBloom3"] is False, out2)
+        out3 = run(proj, "record-review", "--concept", "B-tree indexes",
+                   "--result", "correct", "--tested-bloom", "4")
+        check("render: a rung above 3 is a crossing but not the Bloom-3 line",
+              out3["crossedLevel"] is True and out3["crossedBloom3"] is False, out3)
         out = run(proj, "session-brief", "--concept", "Query planning")
         check("render: unclassified has no label (not a zero)",
               out["bloomLevel"] == 0 and out["bloomLabel"] is None
               and out["bloomOutcome"] == "nothing observed yet", out)
         out = run(proj, "gate-check", "--prior-module", "Module A")
         bt = [p for p in out["prerequisites"] if p["name"] == "B-tree indexes"][0]
-        check("render: gate rows carry label", bt["bloomLabel"] == "Apply", bt)
+        check("render: gate rows carry label", bt["bloomLabel"] == "Analyze", bt)
         out = run(proj, "snapshot")
         scale = out.get("bloomScale", [])
         check("render: snapshot ships the 6-rung legend",

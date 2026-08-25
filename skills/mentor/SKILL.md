@@ -58,7 +58,7 @@ Listen carefully. If "I do not know": "Not knowing is the starting point of ever
 
 Map their position against their goals:
 
-- **Strong foundation:** Topics at Apply or above — name each as `**Label** — outcome clause`
+- **Strong foundation:** Topics at Apply or above — name each by its outcome clause (what they can do with it), not its rung
 - **Growing:** Topics at Remember/Understand — same rendering; the clause says what they can already do
 - **New territory:** Topics needed for goal but not yet started
 

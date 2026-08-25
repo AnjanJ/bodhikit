@@ -53,7 +53,7 @@ Present the assessment results to the learner:
 
 | Sub-topic | Where you are |
 |-----------|---------------|
-| [name] | **[Label]** — [outcome clause] |
+| [name] | [outcome clause — what they can do] |
 
 ### What You Know Well
 [Concepts at Apply or above — specific, genuine acknowledgment]
@@ -68,7 +68,7 @@ Present the assessment results to the learner:
 [1-3 sentences on where to start, based on ZPD analysis]
 ```
 
-Render every level as `**Label** — outcome clause` from the `blooms-taxonomy` KB *Learner-Facing Rendering* table; the agent's numeric levels are for the tracking write, not for the learner.
+Render every level as its outcome clause alone (`bloomOutcome` wording from the `blooms-taxonomy` KB *Learner-Facing Rendering* table) — no numbers, and no rung names here: an assessment is a starting position, not a crossing. The agent's numeric levels are for the tracking write, not for the learner.
 
 ---
 

@@ -47,19 +47,20 @@ SESSION_TYPES = {
 CONFIDENCE_VALUES = {"sure", "mostly", "guessing"}
 
 # Learner-facing rendering of a Bloom level (blooms-taxonomy KB, canonical).
-# The number is an instructor-facing instrument. A learner reads the LABEL (a
-# named rung is motivating) together with the OUTCOME clause (which is what
-# makes the label mean something). Every emitter that returns a bloomLevel
-# also returns bloomLabel/bloomOutcome, so skills render and never translate.
+# The number is an instructor-facing instrument. A learner reads the OUTCOME
+# clause on its own; the LABEL is spoken only at a rung-crossing
+# (record-review's crossedLevel) and in /progress's legend. Every emitter that
+# returns a bloomLevel also returns bloomLabel/bloomOutcome, so skills render
+# and never translate.
 BLOOM_LABELS = {0: None, 1: "Remember", 2: "Understand", 3: "Apply",
                 4: "Analyze", 5: "Evaluate", 6: "Create"}
 BLOOM_OUTCOMES = {
     0: "nothing observed yet",
     1: "you can recall the terms and what they refer to",
     2: "you can explain what it does in your own words",
-    3: "you can use it in working code with some guidance",
-    4: "you can debug it and work with it independently",
-    5: "you can judge between approaches and defend a design choice",
+    3: "you can apply it in working code with some guidance",
+    4: "you can reason about why it behaves as it does and debug it on your own",
+    5: "you can weigh approaches and defend a design choice",
     6: "you can design something new with it and teach it",
 }
 
@@ -469,6 +470,7 @@ def apply_review(concept, result, tested_bloom, confidence=None, note=None,
             # for /teach's bump-profile totalConceptsLearned duty. Executors
             # previously re-derived it ("if unsure, scan progress.md").
             "crossedBloom3": old_bloom < 3 <= new_bloom,
+            "crossedLevel": new_bloom > old_bloom,   # the one moment the label is spoken
             "consecutiveCorrectAtL4Plus": concept.get("consecutiveCorrectAtL4Plus", 0),
             "nextReview": concept["nextReview"]}
 

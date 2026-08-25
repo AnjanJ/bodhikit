@@ -94,7 +94,7 @@ The trajectory report's "Notes for the Parent Skill" section names a suggested f
 Present a comprehensive report including:
 
 - **Journey Summary:** topic, duration, sessions, streak, modules completed (%), exercises, quizzes
-- **Growth Map:** table of topic areas with starting and current position as labels (`Understand → Apply`), each current label with its outcome clause per the `blooms-taxonomy` KB rendering rule, plus confidence (H/M/L). No raw numbers here — Phase 2.5's prediction comparison is the one place the scale is shown
+- **Growth Map:** table of topic areas with starting and current position as outcome clauses per the `blooms-taxonomy` KB rendering rule, plus confidence (H/M/L). Where the position moved, that row is a crossing and may name the rungs (`Understand → Apply`); an unmoved row shows the clause only. No raw numbers here — Phase 2.5's prediction comparison is the one place the scale is shown
 - **Where You Shine:** 2-3 strengths with evidence
 - **Active Growth Areas:** 2-3 areas with positive trajectory
 - **Areas Needing Attention:** 1-2 areas needing focus (framed as opportunities)

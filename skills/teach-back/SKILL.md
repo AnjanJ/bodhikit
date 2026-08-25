@@ -66,7 +66,7 @@ A few topics from your journey stand out as worth writing about. Not because you
 know them best — because you wrestled with them and won. The posts that help
 the next learner most are the ones written by someone who remembers being lost.
 
-1. **<topic A>** — started at <Label X>, now <Label Y>: <outcome clause for Y>.
+1. **<topic A>** — started where <outcome clause for X>; now **<Label Y>** — <outcome clause for Y> (a movement, so the rung is named).
    Slipped <N> times in spaced review across <M> sessions. Your reflection on
    <date> named this as "<short quote from progress.md>". Now solid — it has
    survived the long-interval reviews.

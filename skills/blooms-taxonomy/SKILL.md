@@ -20,21 +20,21 @@ user-invocable: false
 
 ## Learner-Facing Rendering (canonical — every skill, not just `/progress`)
 
-The number is an instructor-facing instrument. A learner reads the **label** together with its **outcome clause**, always as a pair: the label is kept because a named rung is motivating ("you are at Apply"); the clause is kept because it is what makes the label mean something ("you can use it in working code with some guidance"). One without the other is either a grade or a platitude.
+The number is an instructor-facing instrument and so, by default, is the label. A learner reads the **outcome clause** — what they can do, phrased as application and reasoning — on its own: "you can apply it in working code with some guidance" is a position with a next step implied; "**Apply**" is a grade. The rung's name is spoken in exactly two places: (a) at the moment a learner **crosses** a rung (`record-review` reports `crossedLevel: true`; `/progress`'s growth line names a movement), because a named rung earned just now motivates, and (b) the `/progress` full dashboard's one-line legend (`bloomScale`), so the words mean something when they do appear. Everywhere else: the clause alone.
 
 | Level | Label | Outcome clause (second person) |
 |---|---|---|
 | 0 | — | nothing observed yet (not rendered as a level — see *Unclassified is not a zero*) |
 | 1 | **Remember** | you can recall the terms and what they refer to |
 | 2 | **Understand** | you can explain what it does in your own words |
-| 3 | **Apply** | you can use it in working code with some guidance |
-| 4 | **Analyze** | you can debug it and work with it independently |
-| 5 | **Evaluate** | you can judge between approaches and defend a design choice |
+| 3 | **Apply** | you can apply it in working code with some guidance |
+| 4 | **Analyze** | you can reason about why it behaves as it does and debug it on your own |
+| 5 | **Evaluate** | you can weigh approaches and defend a design choice |
 | 6 | **Create** | you can design something new with it and teach it |
 
-Rendering rule: `**Label** — outcome clause`, e.g. `**Apply** — you can use it in working code with some guidance`. Movement reads as labels: "Ownership went from Understand to Apply", never "2 → 3". `bodhi-state` returns `bloomLabel` and `bloomOutcome` next to every `bloomLevel` it emits (`record-review`, `session-brief`, `gate-check`, and a `bloomScale` legend in `snapshot`) — render those fields; do not maintain a translation table in a skill.
+Rendering rule: the clause alone — `you can apply it in working code with some guidance` — from `bloomOutcome`. At a crossing, the label joins it: "That moves you to **Apply** — you can apply it in working code with some guidance." Movement reads as words, never "2 → 3". `bodhi-state` returns `bloomLabel` and `bloomOutcome` next to every `bloomLevel` it emits (`record-review`, `session-brief`, `gate-check`, and a `bloomScale` legend in `snapshot`) — render those fields; do not maintain a translation table in a skill.
 
-Where a bare number is still allowed: (1) `/evaluate`'s self-prediction question, because `predictionDelta` needs learner and tutor on one numeric scale — anchor each number with its clause in the same breath; (2) the **Bloom adjustments** line of a `progress.md` entry, written as `Label (N)` so the prose can be checked against the tracking JSON; (3) script invocations (`--tested-bloom N`), which the learner never sees.
+Where a bare number is still allowed (three sanctioned exceptions): (1) `/evaluate`'s self-prediction question, because `predictionDelta` needs learner and tutor on one numeric scale — anchor each number with its clause in the same breath; (2) the **Bloom adjustments** line of a `progress.md` entry, written as `Label (N)` so the prose can be checked against the tracking JSON; (3) script invocations (`--tested-bloom N`), which the learner never sees.
 
 Concept *tiers* (below) are a separate, coarser vocabulary for module rollups — *Solid / Working / Introduced* summarize a whole module; the labels above describe one concept.
 

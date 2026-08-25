@@ -125,8 +125,9 @@ def assert_forget(project):
 
 def assert_quiz(project):
     sr = load(project, ".bodhi", "spaced-review.json")
+    today = datetime.date.today().isoformat()
     reviewed = [c for c in sr["concepts"]
-                if any(h.get("date", "") >= "2026-06" for h in c.get("reviewHistory", []))]
+                if any(h.get("date", "") == today for h in c.get("reviewHistory", []))]
     if not reviewed:
         fail("no reviewHistory entries written — the 1.10.11 'beautiful table, zero writes' defect")
     ok(f"{len(reviewed)} concept(s) carry fresh reviewHistory entries")
@@ -390,11 +391,14 @@ def assert_teach_pretest(project, transcript):
     sr = load(project, ".bodhi", "spaced-review.json")
     c = next((c for c in sr["concepts"]
               if c["name"].strip().lower() == "write-ahead logging"), None)
-    if c is not None:
-        for h in todays_entries(c):
-            if h.get("note") and "pretest" in str(h.get("note")).lower():
-                fail("pretest answer was recorded into reviewHistory — "
-                     "it is priming, never assessment")
+    if c is None:
+        fail("'Write-ahead logging' was never tracked — the understanding-only "
+             "session recorded nothing (record-review + touch-state are duties "
+             "of that path too)")
+    for h in todays_entries(c):
+        if h.get("note") and "pretest" in str(h.get("note")).lower():
+            fail("pretest answer was recorded into reviewHistory — "
+                 "it is priming, never assessment")
     ok("pretest not graded into history")
 
 
@@ -414,11 +418,13 @@ def assert_teach_hint_discipline(project, transcript):
     sr = load(project, ".bodhi", "spaced-review.json")
     c = next((c for c in sr["concepts"]
               if c["name"].strip().lower() == "transaction isolation levels"), None)
-    if c is not None:
-        for h in todays_entries(c):
-            if h.get("result") == "correct" and not h.get("retry"):
-                fail("a 'correct' review was recorded for a learner who never "
-                     "got the exercise working — grading must follow evidence")
+    if c is None:
+        fail("'Transaction isolation levels' was never tracked — a failed "
+             "session still records its retention outcome (incorrect/partial)")
+    for h in todays_entries(c):
+        if h.get("result") == "correct" and not h.get("retry"):
+            fail("a 'correct' review was recorded for a learner who never "
+                 "got the exercise working — grading must follow evidence")
     ok("no unearned 'correct' recorded")
 
 
@@ -426,6 +432,30 @@ KB_LOAD_RE = re.compile(
     r'\[tool_use Skill \{[^\]]*"skill":\s*"(?:bodhikit:)?'
     r'(state-ops|teaching-personality|spaced-repetition|blooms-taxonomy|'
     r'feynman-technique|metacognition|assessment-framework)"')
+
+
+def assistant_prose(transcript_path):
+    """Assistant TEXT blocks only — what the learner reads — without the
+    tool_use renderings (which legitimately carry --tested-bloom N)."""
+    texts = []
+    with open(transcript_path) as f:
+        for line in f:
+            try:
+                ev = json.loads(line.strip() or "{}")
+            except json.JSONDecodeError:
+                continue
+            if ev.get("type") == "assistant":
+                for block in ev.get("message", {}).get("content", []):
+                    if isinstance(block, dict) and block.get("type") == "text":
+                        texts.append(block.get("text", ""))
+            elif ev.get("type") == "result" and isinstance(ev.get("result"), str):
+                texts.append(ev["result"])
+            elif ev.get("type") == "delta" and isinstance(ev.get("text"), str):
+                texts.append(ev["text"])
+    return "\n".join(texts)
+
+
+BARE_LEVEL_RE = re.compile(r"\b(Bloom(?:'s)?(?: level)?|Level|Box)\s*[0-6]\b")
 
 
 def assert_kb_load(project, transcript):
@@ -448,6 +478,13 @@ def assert_kb_load(project, transcript):
         fail("a Skill call for a bodhikit KB returned 'Unknown skill' — the KB "
              "is not registered under skills/")
     ok("no 'Unknown skill' responses for KB loads")
+    # Learner-facing rendering (1.18.0): outcome clauses, never a bare number.
+    prose = assistant_prose(transcript)
+    m = BARE_LEVEL_RE.search(prose)
+    if m:
+        fail(f"learner-facing text quotes a bare level/box ({m.group(0)!r}) — "
+             "render the bloomOutcome clause (blooms-taxonomy KB)")
+    ok("no bare Bloom/Box numbers in learner-facing text")
 
 
 def assert_continue_discovery(project, transcript):

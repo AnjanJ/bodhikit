@@ -103,7 +103,7 @@ Next, the **skill-assessor agent** takes over for 8–10 adaptive questions. It 
 > Error handling (Result/?): **Remember** — you can recall the terms and what they refer to.
 > Async: **Understand** — you can explain what it does in your own words (carried over from Python).
 > Tokio: nothing observed yet.
-> Testing: **Apply** — you can use it in working code with some guidance (transferred from Python).
+> Testing: you can apply it in working code with some guidance (transferred from Python).
 
 BodhiKit uses this to generate a **personalized learning plan**: 3 phases over ~10 weeks, with modules calibrated to Priya's starting points. Phase 0 (Week 1–2): ownership, borrowing, lifetimes — the hard foundation. Phase 1 (Week 3–6): traits, generics, error handling, modules. Phase 2 (Week 7–10): async runtime, tokio, the TCP server capstone project. The plan is written to `learningWithBodhi/rust-network-services/.bodhi/plan/README.md` plus per-phase files.
 
@@ -421,7 +421,7 @@ These three skills let you see what you know, what you have planned, and where y
 
 #### `/bodhikit:progress [quick|all|project-name]`
 
-**What it does.** Three views on the same question, at three depths. **`quick`**: a flourish-free 3-line check-in (project, current module + completion, streak, concepts due today) — this is what `/continue` shows first. **No argument** (or a project name): the full dashboard — module completion with mastery %, a per-module tier (**Solid** / **Working** / **Introduced**), per-concept labels with their outcome clauses (e.g. **Apply** — you can use it in working code with some guidance), spaced-review retention by box, confidence calibration once you have tagged quiz answers, and a growth-trajectory closing. **`all`**: a one-line-per-project table across active, stale, and dormant tracks with health flags (unmigrated files, broken JSON, incomplete layouts).
+**What it does.** Three views on the same question, at three depths. **`quick`**: a flourish-free 3-line check-in (project, current module + completion, streak, concepts due today) — this is what `/continue` shows first. **No argument** (or a project name): the full dashboard — module completion with mastery %, a per-module tier (**Solid** / **Working** / **Introduced**), per-concept positions as outcome clauses (e.g. *you can apply it in working code with some guidance*) with a one-line legend of the rung names, spaced-review retention by box, confidence calibration once you have tagged quiz answers, and a growth-trajectory closing. **`all`**: a one-line-per-project table across active, stale, and dormant tracks with health flags (unmigrated files, broken JSON, incomplete layouts).
 
 **When to use.** `quick` when you want "where am I?" without committing to a session. The dashboard weekly or bi-weekly to take stock, or before deciding whether to push forward or shore up foundations. `all` when you run multiple projects and want the portfolio view.
 
@@ -565,7 +565,7 @@ These three go beyond the routine when you need depth, materials, or a code-leve
 ```
 /bodhikit:practice error handling
 ```
-> "Write a function `parse_config(path: &str) -> Result<Config, ConfigError>` that handles file-not-found, invalid TOML, and missing-required-field cases distinctly. No starter code — on error handling you are at **Apply**: you can use it in working code with some guidance, and this time the guidance is the test file. Tests are in `exercises/error-handling/tests.rs`. When you have a working version, say so and I will look at it."
+> "Write a function `parse_config(path: &str) -> Result<Config, ConfigError>` that handles file-not-found, invalid TOML, and missing-required-field cases distinctly. No starter code — on error handling you can apply it in working code with some guidance, and this time the guidance is the test file. Tests are in `exercises/error-handling/tests.rs`. When you have a working version, say so and I will look at it."
 
 **Pedagogy:** [Deliberate Practice](#5-deliberate-practice-ericsson), [Constructivism](#9-constructivism--spiral-curriculum-piaget-bruner-papert), [Bloom](#1-blooms-taxonomy) (calibration).
 
@@ -808,19 +808,19 @@ If you are following a book or course, BodhiKit can:
 
 ### Bloom's Taxonomy Levels
 
-BodhiKit tracks your skill level per concept using Bloom's Taxonomy, and always shows it to you as a **label plus an outcome clause** — never a bare number:
+BodhiKit tracks your skill level per concept using Bloom's Taxonomy, and shows it to you as an **outcome clause** — what you can do, in terms of application and reasoning — never a bare number. The rung's name is spoken only when you have just crossed it ("That moves you to **Apply** — …") and in `/progress`'s one-line legend:
 
 | Label | What it means |
 |-------|---------------|
 | **Remember** | you can recall the terms and what they refer to |
 | **Understand** | you can explain what it does in your own words |
-| **Apply** | you can use it in working code with some guidance |
-| **Analyze** | you can debug it and work with it independently |
-| **Evaluate** | you can judge between approaches and defend a design choice |
+| **Apply** | you can apply it in working code with some guidance |
+| **Analyze** | you can reason about why it behaves as it does and debug it on your own |
+| **Evaluate** | you can weigh approaches and defend a design choice |
 | **Create** | you can design something new with it and teach it |
 | *(nothing observed yet)* | the concept has not been assessed or taught — not rendered as a level |
 
-The labels are kept because a named rung is motivating; the outcome clause is what makes the label mean something. Underneath, each rung is a number from 1 to 6 — an instructor-facing instrument that BodhiKit does not quote to you, except in `/evaluate`'s self-prediction question, where you and the tutor need a shared scale. Module tiers (**Solid** / **Working** / **Introduced**) shown by `/progress` are a separate, coarser summary of how a whole module's concepts are doing.
+The clause is what you see day to day; the label appears when it motivates — at the moment you earn it — and is otherwise a grade, so it stays out of the way. Underneath, each rung is a number from 1 to 6 — an instructor-facing instrument that BodhiKit does not quote to you, except in `/evaluate`'s self-prediction question, where you and the tutor need a shared scale. Module tiers (**Solid** / **Working** / **Introduced**) shown by `/progress` are a separate, coarser summary of how a whole module's concepts are doing.
 
 ### Mastery Criteria
 
