@@ -32,7 +32,7 @@ Open with: "Let us see what has taken root. This is not a test — it is a conve
 
 ---
 
-The `due` output's `box`, `bloomLevel` and `neverTaught` fields are for choosing and ordering questions — never voiced. To the learner a due concept is "due today" or "overdue since <date>", never a box number (`teaching-personality` KB *Speaking About Levels*).
+The `due` output is already in review order (`priority` 1 first) and carries no box or level numbers by design; to the learner a due concept is "due today" or "overdue since <dueSince>" (`teaching-personality` KB *Speaking About Levels*). Question levels come from each concept's `bloomOutcome`, not from a number.
 
 ## Phase 2: Adaptive Questions
 

@@ -1755,6 +1755,27 @@ def t_revision_brief():
         run(proj, "revision-brief")
         check("brief: read-only (no lock file created)", not os.path.exists(lock))
 
+
+def t_due_shape():
+    """`due` is the surface skills narrate from: it carries dueSince /
+    overdueDays / bloomOutcome / priority and never a box or Bloom number
+    (1.18.0 — a Fable run read box: 1 straight into learner-facing text)."""
+    with tempfile.TemporaryDirectory() as root:
+        sr = json.loads(json.dumps(V2_SR))
+        proj = make_project(root, spaced_review=sr)
+        run(proj, "migrate-spaced-review")
+        out = run(proj, "due")
+        rows = out["concepts"]
+        check("due: rows carry no box/bloomLevel numbers",
+              rows and all("box" not in r and "bloomLevel" not in r and "_sort" not in r for r in rows), rows)
+        check("due: priority is the rank in review order",
+              [r["priority"] for r in rows] == list(range(1, len(rows) + 1)), rows)
+        check("due: box-1 miss ranks before the box-3 concept",
+              rows[0]["name"] == "Query planning", rows)
+        check("due: dueSince + overdueDays + bloomOutcome present",
+              all(r["dueSince"] and isinstance(r["overdueDays"], int)
+                  and r["bloomOutcome"] for r in rows), rows)
+
 def main():
     for t in (t_migrate, t_record_review, t_sessions_and_forget,
               t_touch_state_and_profile, t_gate_check,
@@ -1773,7 +1794,8 @@ def main():
               t_bloom_render, t_gate_evidence,
               t_gate_evidence_reset, t_validation_on_load,
               t_write_on_v2_backs_up, t_script_hygiene,
-              t_mastery_snapshot_agree, t_revision_brief):
+              t_mastery_snapshot_agree, t_revision_brief,
+              t_due_shape):
         print(f"-- {t.__name__}")
         t()
     print(f"\n{PASS} passed, {FAIL} failed")

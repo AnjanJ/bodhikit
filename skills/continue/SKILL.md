@@ -76,7 +76,7 @@ Present a warm, brief recap:
 
 ### If concepts are due for spaced review:
 
-The `due` output's `box` and `bloomLevel` are for routing, never voiced — a due concept is "due today" or "overdue since <date>" to the learner, never a box number (`teaching-personality` KB *Speaking About Levels*). The `due` output (Phase 3) tags each concept `neverTaught` — true when no review ever came from a `/teach` session (the script computes it; do not re-derive it from `spaced-review.json`). A concept `/learn` seeded from the assessment, or one only ever quizzed, has a review schedule but was never taught — **quizzing it tests nothing, and reviewing an untaught concept is not spaced repetition** (there is nothing yet to space). Split the due batch on this flag:
+To the learner a due concept is "due today" or "overdue since <dueSince>" — the `due` output carries no box or level numbers by design (`teaching-personality` KB *Speaking About Levels*). The `due` output (Phase 3) tags each concept `neverTaught` — true when no review ever came from a `/teach` session (the script computes it; do not re-derive it from `spaced-review.json`). A concept `/learn` seeded from the assessment, or one only ever quizzed, has a review schedule but was never taught — **quizzing it tests nothing, and reviewing an untaught concept is not spaced repetition** (there is nothing yet to space). Split the due batch on this flag:
 
 **Genuinely-taught concepts due (`neverTaught: false`)** — these are real spaced review. **Auto-invoke `/quiz current --invoked-from=continue`** for this sub-batch — `/quiz` is the canonical review surface (confidence tags, successive relearning, per-concept question levels, session recording all live there; a hand-rolled inline review would be a second-class copy missing all four). Keep it brief: ask `/quiz` for the due concepts only, not a full 5-7 question mix, when fewer than 3 are due. Open with: "Before we continue, there are seeds planted in earlier sessions that need tending today. Let us spend a few minutes reviewing [N] concepts."
 
@@ -84,7 +84,7 @@ The `due` output's `box` and `bloomLevel` are for routing, never voiced — a du
 
 > "You also have [neverTaughtCount] concept(s) seeded from your assessment but not yet taught: `<concept>` (and N others). These are due, but quizzing a concept you have not been taught tests nothing — so let us actually teach the first one. Shall we start with `<concept>`?"
 
-On agreement, **auto-invoke `/teach --invoked-from=continue <concept>`** (pick the lowest-box, earliest-due never-taught concept — the top of the sorted due list among `neverTaught: true`). This makes first-teaching, not cold quizzing, the default for a freshly-seeded project — the fix for the "all questions, no teaching" trap a new learner otherwise falls into when three kickoffs seed a large Day-1 review pile. If the learner would rather quiz them as a cold self-check or skip to today's new module, honor that — this is an offer, not a redirect.
+On agreement, **auto-invoke `/teach --invoked-from=continue <concept>`** (the lowest `priority` among `neverTaught: true` — the list is already in review order). This makes first-teaching, not cold quizzing, the default for a freshly-seeded project — the fix for the "all questions, no teaching" trap a new learner otherwise falls into when three kickoffs seed a large Day-1 review pile. If the learner would rather quiz them as a cold self-check or skip to today's new module, honor that — this is an offer, not a redirect.
 
 ### After review (or if no review needed):
 
@@ -103,7 +103,7 @@ What feels right?"
 
 ### If the learner chooses option 2 (practice):
 
-**Auto-invoke `/practice --invoked-from=continue <topic>`** — pass the most recent topic positionally; if a Box-1 concept for the current module exists, pass THAT (preserving practice's highest-leverage targeting, which its skipped discovery phase would otherwise have done).
+**Auto-invoke `/practice --invoked-from=continue <topic>`** — pass the most recent topic positionally; if the `due` list has a concept from the current module, pass the lowest-`priority` one (preserving practice's highest-leverage targeting, which its skipped discovery phase would otherwise have done).
 
 ---
 

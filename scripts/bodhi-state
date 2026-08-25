@@ -964,12 +964,20 @@ def cmd_due(args):
             # pretest-vs-retrieval purpose).
             never_taught = not any(h.get("source") == "teach"
                                    for h in c.get("reviewHistory", []))
+            # The due list is the surface skills narrate from, so it carries
+            # the words a learner may hear (dueSince / overdueDays / the
+            # outcome clause) and NOT the box or Bloom number — 1/2 Fable
+            # runs read "box: 1" straight into "Query planning — Box 1".
+            # Ordering is by box then date; `priority` is the rank.
             due.append({"name": c["name"], "module": c.get("module", ""),
-                        "box": c.get("box", 1), "nextReview": raw,
-                        "bloomLevel": c.get("bloomLevel", 0),
+                        "dueSince": raw, "overdueDays": (t - nr).days,
                         "neverTaught": never_taught,
-                        "question": c.get("question", "")})
-    due.sort(key=lambda d: (d["box"], d["nextReview"]))
+                        "bloomOutcome": bloom_render(c.get("bloomLevel", 0))["bloomOutcome"],
+                        "question": c.get("question", ""),
+                        "_sort": (c.get("box", 1), raw)})
+    due.sort(key=lambda d: d.pop("_sort"))
+    for i, d in enumerate(due, 1):
+        d["priority"] = i
     out = {"dueToday": len(due),
            "neverTaughtCount": sum(1 for d in due if d["neverTaught"]),
            "concepts": due}
