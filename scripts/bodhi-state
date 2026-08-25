@@ -38,7 +38,7 @@ except ImportError:  # pragma: no cover
 BOX_INTERVALS = {1: 1, 2: 3, 3: 7, 4: 14, 5: 30}
 MAX_BOX = 5
 
-# Canonical sessionHistory[].type vocabulary (state-schema KB, 1.10.13).
+# Canonical sessionHistory[].type vocabulary (state-ops KB).
 SESSION_TYPES = {
     "spaced-review", "quiz", "targeted-reteach", "diagnostic-after-gap",
     "learner-forget", "learner-park", "pair", "practice", "evaluate", "other",
@@ -335,6 +335,17 @@ def validate_spaced_review(data, path):
         die(f"{path}: sessionHistory is not a list — run `bodhi-state verify`")
 
 
+def note_activity(project, text):
+    """Point state.json.lastActivity at what just happened (forget, park).
+    No-op when the project has no state.json yet."""
+    sp = state_path(project)
+    if not os.path.exists(sp):
+        return
+    state = load_state(project)[1]
+    state["lastActivity"] = text[:LAST_ACTIVITY_MAX]
+    write_json(sp, state)
+
+
 def load_state(project):
     """state.json with the fields the script branches on type-checked; the
     drift patterns `normalize` repairs (dict currentModule, nested session
@@ -612,20 +623,15 @@ def cmd_forget(args):
         entry["notes"] = args.note
     data.setdefault("sessionHistory", []).append(entry)
     write_spaced_review(path, data)
-    # lastActivity pointer in state.json
-    sp = state_path(args.project)
-    if os.path.exists(sp):
-        state = load_state(args.project)[1]
-        state["lastActivity"] = (args.activity or
-                                 f"Demoted {len(names)} concept(s): {', '.join(names)}")[:LAST_ACTIVITY_MAX]
-        write_json(sp, state)
+    note_activity(args.project, args.activity or
+                  f"Demoted {len(names)} concept(s): {', '.join(names)}")
     emit({"action": "demoted", "concepts": names, "boxChanges": box_changes})
 
 
 def cmd_park(args):
     """Take a concept out of review rotation, or return it (--resume).
 
-    /forget --park (1.16.0, honest-review #6): a working learner who has
+    /forget --park (1.16.0): a working learner who has
     consciously deprioritized a concept needs "stop scheduling it", not
     "review it tomorrow, harder" — otherwise review rot accumulates on
     concepts they no longer maintain and the due pile stops being trusted.
@@ -662,13 +668,8 @@ def cmd_park(args):
         entry["notes"] = args.note
     data.setdefault("sessionHistory", []).append(entry)
     write_spaced_review(path, data)
-    sp = state_path(args.project)
-    if os.path.exists(sp):
-        state = load_state(args.project)[1]
-        verb = "Resumed" if args.resume else "Parked"
-        state["lastActivity"] = (f"{verb} {len(names)} concept(s): "
-                                 f"{', '.join(names)}")[:LAST_ACTIVITY_MAX]
-        write_json(sp, state)
+    verb = "Resumed" if args.resume else "Parked"
+    note_activity(args.project, f"{verb} {len(names)} concept(s): {', '.join(names)}")
     emit({"action": "resumed" if args.resume else "parked",
           "concepts": changed})
 
@@ -774,7 +775,7 @@ def cmd_bump_profile(args):
 # --- Cross-project profile-list ownership (1.16.0) --------------------------
 # Until 1.15.x the .bodhi-profile.projects.json list was "the one mutation the
 # script does not own" — /learn and /evaluate hand-edited it, guarded only by
-# verify's entry-shape backstop (P1). These subcommands close that last
+# verify's entry-shape backstop. These subcommands close that last
 # hand-edit hole: the script constructs schema-complete entries, the skills
 # supply only the pedagogical values.
 
@@ -999,10 +1000,8 @@ def concept_tier(c):
     learner-facing words (Solid/Working/Introduced) are /progress's rendering
     of these keys, not separate logic.
 
-    Implements the KB's `familiar` and `introduced` tiers, which were prose-only
-    until 1.14.x: /progress previously inferred a single tier per module from
-    two booleans, so a module of near-mastered concepts and one of freshly
-    introduced concepts rendered identically (follow-up F-1).
+    Implements the KB's `familiar` and `introduced` tiers in code so /progress
+    renders a computed tier instead of inferring one from two booleans.
     """
     if c.get("bloomLevel", 0) <= 0:
         return "unclassified"
@@ -1030,49 +1029,81 @@ def tally_module(m, c):
     m["tiers"][concept_tier(c)] += 1
 
 
-def cmd_mastery(args):
-    _, data = load_spaced_review(args.project)
-    t = today()
+def finalize_module_rows(modules):
+    """masteryPct per module; an all-unclassified module is not computable
+    (None), never 0% — legacy concepts have no opinion, not a bad one."""
+    for m in modules.values():
+        m["masteryPct"] = (None if m["classified"] == 0
+                           else round(100 * m["mastered"] / m["concepts"]))
+
+
+def retention_tier(b):
+    """spaced-repetition KB 3-tier rollup: Box 4-5 strong, 2-3 building,
+    1 needs_review. The one home for these thresholds (lint pins them)."""
+    if isinstance(b, int) and b >= 4:
+        return "strong"
+    if isinstance(b, int) and b >= 2:
+        return "building"
+    return "needs_review"
+
+
+def blocked_on_feynman(concepts):
+    """is_mastered minus its explain-back conjunct: quiz-only learners hit
+    every other criterion, and /progress names the one step left."""
+    return [c["name"] for c in concepts
+            if not c.get("feynmanPassed", False)
+            and c.get("bloomLevel", 0) >= 4
+            and c.get("consecutiveCorrectAtL4Plus", 0) >= 3
+            and c.get("box", 1) >= 4]
+
+
+def review_rollup(concepts, t):
+    """The per-concept scan shared by `mastery` and `snapshot`: module
+    tallies, retention tiers, due windows, box distribution. Parked concepts
+    keep their module/mastery standing but leave the retention and due
+    surfaces — a parked concept must not nag as "needs review"."""
     modules = {}
     rollup = {"strong": [], "building": [], "needs_review": []}
-    due_today, due_week = [], []
-    parked = []
-    for c in data.get("concepts", []):
+    due_today, due_week, parked = [], [], []
+    boxes = {str(b): 0 for b in range(1, MAX_BOX + 1)}
+    overdue10 = unparseable = 0
+    for c in concepts:
         tally_module(modules.setdefault(c.get("module", "(none)"),
                                         new_module_row()), c)
         if c.get("parked") is True:
-            # Out of rotation by learner choice: keeps its module/mastery
-            # standing but is excluded from the retention/due surfaces —
-            # a parked concept must not nag as "needs review".
             parked.append(c["name"])
             continue
-        box = c.get("box", 1)
-        tier = "strong" if box >= 4 else ("building" if box >= 2 else "needs_review")
-        rollup[tier].append(c["name"])
+        b = c.get("box", 1)
+        boxes[str(b)] += 1
+        rollup[retention_tier(b)].append(c["name"])
         nr = parse_date(c.get("nextReview"))
-        if nr:
-            if nr <= t:
-                due_today.append(c["name"])
-            elif nr <= t + datetime.timedelta(days=7):
-                due_week.append(c["name"])
-    for m in modules.values():
-        # Legacy display rule (1.10.7): all-bloomLevel:0 module -> not computable.
-        m["masteryPct"] = (None if m["classified"] == 0
-                           else round(100 * m["mastered"] / m["concepts"]))
-    # Quiz-only learners hit every criterion except the /teach-owned explain-back
-    # gate; name the blockage so /progress can tell them the one step left.
-    blocked_on_feynman = [
-        c["name"] for c in data.get("concepts", [])
-        if not c.get("feynmanPassed", False)
-        and c.get("bloomLevel", 0) >= 4
-        and c.get("consecutiveCorrectAtL4Plus", 0) >= 3
-        and c.get("box", 1) >= 4
-    ]
-    out = {"modules": modules, "retentionRollup": {k: len(v) for k, v in rollup.items()},
-           "retentionConcepts": rollup, "dueToday": due_today, "dueThisWeek": due_week,
-           "blockedOnFeynman": blocked_on_feynman}
-    if parked:
-        out["parked"] = parked
+        if nr is None:
+            if c.get("nextReview") is not None:
+                unparseable += 1
+            continue
+        if nr <= t:
+            due_today.append(c["name"])
+            if (t - nr).days >= 10:
+                overdue10 += 1
+        elif nr <= t + datetime.timedelta(days=7):
+            due_week.append(c["name"])
+    finalize_module_rows(modules)
+    return {"modules": modules, "rollup": rollup, "dueToday": due_today,
+            "dueThisWeek": due_week, "parked": parked, "boxes": boxes,
+            "overdue10": overdue10, "unparseable": unparseable}
+
+
+def cmd_mastery(args):
+    _, data = load_spaced_review(args.project)
+    concepts = data.get("concepts", [])
+    r = review_rollup(concepts, today())
+    out = {"modules": r["modules"],
+           "retentionRollup": {k: len(v) for k, v in r["rollup"].items()},
+           "retentionConcepts": r["rollup"], "dueToday": r["dueToday"],
+           "dueThisWeek": r["dueThisWeek"],
+           "blockedOnFeynman": blocked_on_feynman(concepts)}
+    if r["parked"]:
+        out["parked"] = r["parked"]
     emit(out)
 
 
@@ -1333,57 +1364,10 @@ def cmd_snapshot(args):
     last_date = parse_date(dates[-1]) if dates else None
 
     concepts = data.get("concepts", [])
-    boxes = {str(b): 0 for b in range(1, MAX_BOX + 1)}
-    rollup = {"strong": [], "building": [], "needs_review": []}
-    due_today, due_week, overdue10 = [], [], 0
-    unparseable = parked = 0
-    mastered = feynman = classified = 0
-    modules = {}
-    for c in concepts:
-        if is_mastered(c):
-            mastered += 1
-        if c.get("feynmanPassed") is True:
-            feynman += 1
-        if c.get("bloomLevel", 0) > 0:
-            classified += 1
-        tally_module(modules.setdefault(c.get("module", "(none)"),
-                                        new_module_row()), c)
-        if c.get("parked") is True:
-            # Same rule as cmd_mastery: parked keeps its mastery/module
-            # standing but leaves the retention and due surfaces.
-            parked += 1
-            continue
-        b = c.get("box", 1)
-        if isinstance(b, int) and 1 <= b <= MAX_BOX:
-            boxes[str(b)] += 1
-        tier = ("strong" if isinstance(b, int) and b >= 4
-                else ("building" if isinstance(b, int) and b >= 2 else "needs_review"))
-        rollup[tier].append(c.get("name", "(unnamed)"))
-        nr = parse_date(c.get("nextReview"))
-        if nr is None:
-            if c.get("nextReview") is not None:
-                unparseable += 1
-            continue
-        if nr <= t:
-            due_today.append(c["name"])
-            if (t - nr).days >= 10:
-                overdue10 += 1
-        elif nr <= t + datetime.timedelta(days=7):
-            due_week.append(c["name"])
-    for m in modules.values():
-        # Legacy display rule (1.10.7): all-bloomLevel:0 module -> not computable.
-        m["masteryPct"] = (None if m["classified"] == 0
-                           else round(100 * m["mastered"] / m["concepts"]))
-
-    # Quiz-only learners hit every criterion except the /teach-owned
-    # explain-back gate; name the blockage (same rule as cmd_mastery).
-    blocked_on_feynman = [
-        c["name"] for c in concepts
-        if not c.get("feynmanPassed", False)
-        and c.get("bloomLevel", 0) >= 4
-        and c.get("consecutiveCorrectAtL4Plus", 0) >= 3
-        and c.get("box", 1) >= 4
-    ]
+    r = review_rollup(concepts, t)
+    mastered = sum(1 for c in concepts if is_mastered(c))
+    feynman = sum(1 for c in concepts if c.get("feynmanPassed") is True)
+    classified = sum(1 for c in concepts if c.get("bloomLevel", 0) > 0)
 
     calibration = calibration_summary(data)
     calibration.pop("overconfidentEvents", None)
@@ -1412,21 +1396,21 @@ def cmd_snapshot(args):
         },
         "review": {
             "concepts": len(concepts),
-            "dueToday": len(due_today), "dueTodayConcepts": due_today,
-            "dueThisWeek": len(due_week), "dueThisWeekConcepts": due_week,
-            "overdue10dPlus": overdue10,
-            "boxDistribution": boxes,
-            "retentionRollup": {k: len(v) for k, v in rollup.items()},
-            "retentionConcepts": rollup,
-            "unparseableDates": unparseable,
-            "parked": parked,
+            "dueToday": len(r["dueToday"]), "dueTodayConcepts": r["dueToday"],
+            "dueThisWeek": len(r["dueThisWeek"]), "dueThisWeekConcepts": r["dueThisWeek"],
+            "overdue10dPlus": r["overdue10"],
+            "boxDistribution": r["boxes"],
+            "retentionRollup": {k: len(v) for k, v in r["rollup"].items()},
+            "retentionConcepts": r["rollup"],
+            "unparseableDates": r["unparseable"],
+            "parked": len(r["parked"]),
         },
         "mastery": {
             "mastered": mastered,
             "feynmanPassed": feynman,
             "classified": classified,
-            "modules": modules,
-            "blockedOnFeynman": blocked_on_feynman,
+            "modules": r["modules"],
+            "blockedOnFeynman": blocked_on_feynman(concepts),
         },
         "calibration": calibration,
         "bloomScale": bloom_scale(),

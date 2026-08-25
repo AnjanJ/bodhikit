@@ -1672,6 +1672,31 @@ def t_script_hygiene():
         la = read_state(proj)["lastActivity"]
         check("hygiene: forget lastActivity within LAST_ACTIVITY_MAX", len(la) <= 120, la)
 
+
+def t_mastery_snapshot_agree():
+    """`mastery` and `snapshot.mastery/review` are one computation
+    (review_rollup); they must agree on every shared key (1.18.0)."""
+    with tempfile.TemporaryDirectory() as root:
+        sr = json.loads(json.dumps(V2_SR))
+        proj = make_project(root, spaced_review=sr)
+        run(proj, "migrate-spaced-review")
+        run(proj, "add-concept", "--concept", "Window functions", "--module", "Module B")
+        for _ in range(3):
+            run(proj, "record-review", "--concept", "Window functions",
+                "--result", "correct", "--tested-bloom", "4")
+        run(proj, "park", "--concept", "Query planning")
+        m = run(proj, "mastery")
+        snap = run(proj, "snapshot")
+        check("agree: modules", m["modules"] == snap["mastery"]["modules"])
+        check("agree: retentionRollup", m["retentionRollup"] == snap["review"]["retentionRollup"])
+        check("agree: retentionConcepts", m["retentionConcepts"] == snap["review"]["retentionConcepts"])
+        check("agree: dueToday", m["dueToday"] == snap["review"]["dueTodayConcepts"])
+        check("agree: dueThisWeek", m["dueThisWeek"] == snap["review"]["dueThisWeekConcepts"])
+        check("agree: blockedOnFeynman", m["blockedOnFeynman"] == snap["mastery"]["blockedOnFeynman"])
+        check("agree: parked", len(m.get("parked", [])) == snap["review"]["parked"] == 1, (m.get("parked"), snap["review"]["parked"]))
+        check("agree: boxDistribution excludes parked",
+              sum(snap["review"]["boxDistribution"].values()) == 2, snap["review"]["boxDistribution"])
+
 def main():
     for t in (t_migrate, t_record_review, t_sessions_and_forget,
               t_touch_state_and_profile, t_gate_check,
@@ -1689,7 +1714,8 @@ def main():
               t_profile_project_lifecycle, t_profile_patterns, t_park,
               t_bloom_render, t_gate_evidence,
               t_gate_evidence_reset, t_validation_on_load,
-              t_write_on_v2_backs_up, t_script_hygiene):
+              t_write_on_v2_backs_up, t_script_hygiene,
+              t_mastery_snapshot_agree):
         print(f"-- {t.__name__}")
         t()
     print(f"\n{PASS} passed, {FAIL} failed")
