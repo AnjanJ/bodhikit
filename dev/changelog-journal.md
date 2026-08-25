@@ -58,7 +58,10 @@ A learner has nothing to re-read after a session except the conversation. New: o
 ### Issue 12 — drift
 This entry and the missing 1.17.0 one; blogpost archived; CLAUDE.md corrected on what the runtime loads.
 
-Deterministic tests: 231 → 277 (+15 hook tests). Decision recorded: no SQLite — markdown/JSON stay; validation on load gets the benefit at a fraction of the cost; revisit only with a second real user and a query JSON cannot answer.
+### First Fable run of the suite (the release gate)
+Seven scenarios, two of which had never run live. teach-pretest, grade-understand-band, learn-scaffold, plan-regenerate, evaluate: PASS. Three lessons from the two new detectors: (1) the "hint turn shows its artifact" check matched the word *hint* inside the closing recap the harness asks for — anchored to a line-initial `Hint N`; (2) the bare-number check found a **real** miss — with the personality KB loaded and a site-level reminder in `/quiz`, Fable still read `box: 1` from the `due` output into "Query planning — Box 1" (1 of 2 samples). Louder prose was not the fix; `due` now carries `priority`/`dueSince`/`overdueDays`/`bloomOutcome` and no box or level number at all — clean in every sample since; (3) the harness now labels a transcript cut off by the claude.ai usage limit INCONCLUSIVE instead of FAIL (the first lifecycle attempt was). Recap sections (`## Recap`, `**Recap of what was written**`) are excluded from learner-facing prose in the transcript detectors.
+
+Deterministic tests: 231 → 290 (+19 hook tests). Decision recorded: no SQLite — markdown/JSON stay; validation on load gets the benefit at a fraction of the cost; revisit only with a second real user and a query JSON cannot answer.
 
 ## [1.17.0] - 2026-08-21
 

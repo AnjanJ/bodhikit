@@ -494,7 +494,9 @@ KB_LOAD_RE = re.compile(
     r'feynman-technique|metacognition|assessment-framework)"')
 
 
-RECAP_RE = re.compile(r"^#{1,4}\s*(Recap|Harness recap|Writes completed)\b.*$", re.M | re.I)
+# The harness asks for a closing recap of the writes; it may arrive as a
+# heading ("## Recap") or a bold lead ("**Recap of what was written**").
+RECAP_RE = re.compile(r"^(?:#{1,4}\s*|\*\*)(Recap|Harness recap|Writes completed)\b.*$", re.M | re.I)
 
 
 def assistant_prose(transcript_path):

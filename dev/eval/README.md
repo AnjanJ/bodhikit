@@ -112,13 +112,14 @@ a test. The run header prints the model; a pass certifies that executor only.
 
 | Scenario | Group | Last live pass |
 |---|---|---|
-| migrate, forget, quiz, reflect | executor-discipline | 1.14.0 sweep (sonnet-5) |
+| migrate, forget, quiz, reflect | executor-discipline | 1.14.0 sweep (sonnet-5). Not yet re-run since the 1.18.0 revision-sheet assertion was added to quiz/reflect |
 | grade-jargon, grade-genuine, grade-apply-band, grade-pushback, grade-misconception | grading | 1.14.0 sweep (sonnet-5); noise measured 3/3 vs 1/3 on the same tree |
-| grade-understand-band | grading | **never run** (added 1.17.0) |
-| teach-pretest, teach-hint-discipline | fidelity | 1.14.0 sweep (sonnet-5) |
+| grade-understand-band | grading | 1.18.0, first live run, PASS (fable-5): tested-bloom 2, gate threshold not crossed |
+| teach-pretest | fidelity | 1.18.0 PASS (fable-5) |
+| teach-hint-discipline | fidelity | 1.18.0 PASS (fable-5) after the "hint turn shows its artifact" detector was anchored to line-initial `Hint N` (first sample matched the word in the closing recap) |
 | continue-discovery | discovery | 1.14.1 (sonnet-5) |
-| kb-load | fidelity | 1.18.0, first run (sonnet-5) — the KB-loading regression guard |
-| learn-scaffold, plan-regenerate, evaluate | lifecycle | **never run live** (validated offline in 1.16.0) |
+| kb-load | fidelity | 1.18.0 (sonnet-5 first pass; then fable-5 ×4): KB always loaded. The bare-number detector caught one **real** miss ("Query planning — Box 1", read off the `due` output) — fixed by removing box/level numbers from `due` itself — and two recap false positives (now excluded). Learner-facing text clean in every sample after the reshape |
+| learn-scaffold, plan-regenerate, evaluate | lifecycle | 1.18.0, first live runs, all PASS (fable-5). The first attempt at plan-regenerate/evaluate was cut off by the claude.ai usage limit — now labelled INCONCLUSIVE, not FAIL |
 
 Update the row when you run a scenario. `BODHI_EVAL_RUNS=N` sweeps report a
 rate; a single pass on a grading scenario is one sample.
