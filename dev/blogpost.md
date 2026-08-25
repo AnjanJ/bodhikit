@@ -6,6 +6,9 @@ canonical_url: https://codeberg.org/AnjanJ/bodhikit
 cover_image:
 ---
 
+> **Archived 2026-08-25.** This is the 1.5.0-era blog post kept for the record. Its counts (17 skills, 3 agents, 15 KBs), the `/explain` and `/status` skills, the "auto-invoked" partner skills, and the Codeberg canonical URL are all stale — see README.md and CHANGELOG.md for the current plugin.
+
+
 ## The Problem With AI and Learning
 
 AI tools are incredible at writing code. But writing code for you and teaching you to write code are two fundamentally different things.

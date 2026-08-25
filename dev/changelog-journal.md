@@ -8,6 +8,59 @@ This is the full, unabridged, patch-by-patch changelog kept for the maintainer �
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [1.18.0] - 2026-08-25
+
+The "it never loaded" release. A full external review (commit history, journal, script, lint, evals) plus one live probe found that the plugin's central mechanism had never been wired: Claude Code registers skills from `skills/` only, so the twenty knowledge bases in `knowledge/` were never loadable and every "Reference the `X` KB" pointed at nothing. Twelve issues fixed in order, one commit each.
+
+### Probes (recorded so nobody has to re-derive them)
+- `Skill(bodhikit:teaching-personality)` and `Skill(bodhikit:state-ops)` → *Unknown skill* with 1.17.0 installed.
+- A `user-invocable: false` skill under a plugin's `skills/` **is** registered, hidden from `/`, and loads through the Skill tool (temp-plugin probe, magic-word round-trip).
+- A plugin `rules/` directory is **not** loaded: the same path-scoped rule reached the model from `.claude/rules/` and not from the plugin, with a matching file read in both runs.
+- Agent frontmatter `skills:` preloads plugin skills by bare name (subagent probe knew the magic word).
+- The real tree after the move: `Skill(bodhikit:spaced-repetition)` loads; a session started inside `learningWithBodhi/` receives the rule via the SessionStart hook; the new `kb-load` eval passed first run.
+
+### Issue 1 — knowledge bases become skills
+`knowledge/<kb>` → `skills/<kb>` (names unchanged, ~280 references stand). Every user skill opens with the *Knowledge bases are skills* sentence mapping `` `name` KB `` → `Skill(bodhikit:name)` at the referencing phase. Agents preload the KBs they name via `skills:`. `rules/learning-project.md` is delivered by a SessionStart hook (`scripts/bodhi-session-context.py`, fail-open). `/teach`'s gate handling moved to `references/prerequisite-gate.md` to stay under budget. Lint splits `USER_SKILLS`/`KB_SKILLS` by frontmatter and adds four structural rules. bodhi-cli's resolver accepts both layouts. Cost: +20 skill descriptions in every session's listing (~1–1.5 K tokens) — the price of the KBs existing.
+
+### Issue 2 — gate evidence counts only since the last miss
+`evidence_at_3_plus` summed every historical level-3+ correct: two old corrects kept a prerequisite `satisfied` through three straight misses and through `/forget` (which also refreshed `lastReviewed`). Reset at the most recent `incorrect`; deferred entries skipped on both gate paths. Tests on both sides of the bound.
+
+### Issue 3 — validation on the load path
+`load_spaced_review` / `load_state` / `load_profile_projects` type-check the fields the script computes on and die naming the repair; `verify` reports structural drift instead of raising; `parse_date` accepts only dates/date-times.
+
+### Issue 4 — pre-v3 backup before the first v3 write
+Any mutating write on a v1/v2 file used to upgrade it silently; `migrate` then said noop and the promised backup never existed. `write_spaced_review` backs up first and reports `migratedFromVersion`.
+
+### Issue 5 — hygiene
+Read-only subcommands take a shared lock and never create the lock file; `LAST_ACTIVITY_MAX` everywhere; `defer --days ≤ 0` errors; `record-review` flags `newModule`.
+
+### Issue 6 — Stop hook
+Time-boxed, pruned walk (an `os.walk` from `$HOME` took 18.7 s of a 30 s budget and failed open); configured roots (per-repo `projectRoot`, global `searchPaths`) verified; block reason never blank. First hook tests.
+
+### Issue 7 — one rollup
+`mastery` and `snapshot` share `review_rollup`; agreement test; finding IDs out of shipped comments.
+
+### Issue 8 — lint policy is true
+A–D structural/conditional; E phrase pins with retirement conditions (56–59); 26, 34, 17's offer/pretest greps deleted. 893 lines.
+
+### Issue 9 — evals certify the executor in use
+Default model `claude-fable-5` (printed in the header); nudge resumes by session id; vacuous passes closed; README run table names the four never-run scenarios.
+
+### Issue 10 — outcome-first rendering (learner feedback)
+Clause alone by default, phrased as application/reasoning; the rung's name only at a crossing (`record-review` → `crossedLevel`) and in `/progress`'s legend.
+
+### Issue 11 — what you discuss is on screen (learner feedback)
+Canonical voice rule; code/question/answer reproduced in the same message; `**Where:**` + fenced quote in the code-reviewer template; hint turns must show the artifact (eval).
+
+### Issue 12 — drift
+This entry and the missing 1.17.0 one; blogpost archived; CLAUDE.md corrected on what the runtime loads.
+
+Deterministic tests: 231 → 277 (+15 hook tests). Decision recorded: no SQLite — markdown/JSON stay; validation on load gets the benefit at a fraction of the cost; revisit only with a second real user and a query JSON cannot answer.
+
+## [1.17.0] - 2026-08-21
+
+(Entry reconstructed in 1.18.0 — the release shipped without its journal entry.) The self-review release: learner-facing Bloom rendering as `**Label** — outcome clause` with `bloomLabel`/`bloomOutcome` emitted by the script and a `bloomScale` legend in `snapshot`; the prerequisite gate requires two level-3+ observations (`stale-reconfirm`, `reason: single-evidence`); eleven KB-name-grep lint rules removed and the admission policy stated; `dev/outcomes.py` publishes the maintainer's anonymized data; README onboarding + Feedback section; bug/feedback issue templates; CHANGELOG collapsed to reader-facing notes with this journal as the record. 220 → 231 deterministic tests.
+
 ## [1.16.0] - 2026-08-15
 
 The ownership release — the remaining structural items from the August analysis campaign. The through-line: every gap where the model was still doing work the script should own (a hand-edited JSON list, an assessment tally, a guessed prerequisite module) moves into `bodhi-state`, and the three skills most able to regress silently get harness coverage.
