@@ -104,7 +104,7 @@ Update tracking per the `state-ops` KB write path:
 
 4. **Append the reflection entry to `.bodhi/progress.md` with the Write tool**: `## YYYY-MM-DD — Session N (Reflection)`, the Q1/Q2/Q3/Q4 responses, Bloom adjustments, concepts flagged for demotion. This is the canonical narrative; `lastActivity` is just the pointer. Existing content preserved verbatim below.
 
-5. **Write today's revision sheet** — the learner's take-home, readable tomorrow without the conversation. Read `references/revision-sheet.md` in this skill's directory (`${CLAUDE_PLUGIN_ROOT}/skills/reflect/references/revision-sheet.md`) and follow it: `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> revision-brief` names the file (`revision/YYYY-MM-DD-<concept>.md`) and today's concepts; the Q1 slip and the Q3 explanations are its raw material. One sheet per day — append if one exists. The Stop hook will not let a session that studied something end without it.
+5. **Write today's revision sheet** — the learner's take-home, readable tomorrow without the conversation. Read `references/revision-sheet.md` in this skill's directory (`${CLAUDE_PLUGIN_ROOT}/skills/reflect/references/revision-sheet.md`) and follow it: `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> revision-brief` names the file (`revision/YYYY-MM-DD-<concept>.md`) and today's concepts; the Q1 slip and the Q3 explanations are its raw material. One sheet per day — append if one exists. The Stop hook will not let this session end without it once its bookkeeping (`touch-state`) has run.
 
 **Fallback:** if `bodhi-state` is unavailable, follow the `state-schema` KB fallback rule — manual read → mutate-in-place → write → verify, preserving unknown fields.
 

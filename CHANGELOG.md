@@ -2,6 +2,10 @@
 
 Notable changes to BodhiKit, summarized for readers. Patch-level development notes live in `dev/changelog-journal.md`.
 
+## [1.18.1] - 2026-08-25
+
+- **Revision-sheet enforcement is scoped to the session that studied.** 1.18.0's Stop hook asked for sheets from any project studied today — including ones other sessions studied — and asked at the end of every turn, so a `/continue` menu got blocked with two sheets it had no context to write. The hook now reads its own session transcript and requires a sheet only for a project this session closed (`touch-state` ran here); without a transcript it never blocks for sheets. Update the plugin and restart.
+
 ## [1.18.0] - 2026-08-25
 
 The knowledge bases load now. Claude Code registers plugin skills from `skills/` only; from 1.0 through 1.17 the twenty knowledge bases lived in `knowledge/`, a directory the runtime never scans, so every "Reference the `X` KB" pointed at something the model could not load — the persona, the pedagogy, and the state-ops write contract reached it only if it went looking. A plugin `rules/` directory is not loaded either. Both verified with headless probes; both fixed.

@@ -8,6 +8,10 @@ This is the full, unabridged, patch-by-patch changelog kept for the maintainer �
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [1.18.1] - 2026-08-25
+
+Caught in the maintainer's first real `/continue` after updating: the Stop event fires at the end of **every assistant turn**, not at session end, and `find_projects` + `revision-brief` saw projects other sessions had studied today — so the `/continue` menu turn was blocked with two revision sheets to write from sessions this one never saw. Fix: the hook parses `transcript_path` (the session's own JSONL) for Bash `bodhi-state --project <p> …` calls and requires a sheet only for a project whose closing bookkeeping (`touch-state`) ran in this session; a review alone (mid-lesson) does not trigger it, another project's writes do not, and no transcript means no sheet blocks (fail-open). Four new hook checks. The schema-verify half of the hook keeps its 1.11 semantics.
+
 ## [1.18.0] - 2026-08-25
 
 The "it never loaded" release. A full external review (commit history, journal, script, lint, evals) plus one live probe found that the plugin's central mechanism had never been wired: Claude Code registers skills from `skills/` only, so the twenty knowledge bases in `knowledge/` were never loadable and every "Reference the `X` KB" pointed at nothing. Twelve issues fixed in order, one commit each.

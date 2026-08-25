@@ -1,6 +1,6 @@
 # Revision sheet — written at the end of every study session
 
-Loaded on demand by the skill that closes the session (`/reflect` Phase 4; or `/continue`, `/teach`, `/quiz`, `/practice` when no `/reflect` follows). The sheet is the learner's take-home: something they can read tomorrow, on a phone, without the conversation. One sheet per project per day; the Stop hook will not let a session that studied something end without it.
+Loaded on demand by the skill that closes the session (`/reflect` Phase 4; or `/continue`, `/teach`, `/quiz`, `/practice` when no `/reflect` follows). The sheet is the learner's take-home: something they can read tomorrow, on a phone, without the conversation. One sheet per project per day; the Stop hook will not let a session end without it once this session has closed the project's bookkeeping (`touch-state`).
 
 ## Where and what to write
 

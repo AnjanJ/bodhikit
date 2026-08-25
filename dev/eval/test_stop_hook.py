@@ -145,9 +145,21 @@ def t_failure_reasons():
 
 
 
+def write_transcript(root, commands, cwd):
+    """A minimal session transcript: one Bash tool_use per command."""
+    path = os.path.join(root, "transcript.jsonl")
+    with open(path, "w") as f:
+        for cmd in commands:
+            f.write(json.dumps({"type": "assistant", "cwd": cwd, "message": {"content": [
+                {"type": "tool_use", "name": "Bash", "input": {"command": cmd}}]}}) + "\n")
+    return path
+
+
 def t_revision_sheet_required():
-    """A project studied today must have today's revision sheet before the
-    session can stop (1.18.0)."""
+    """A project THIS SESSION closed (transcript shows touch-state) must have
+    today's revision sheet before the session can stop (1.18.1: scoped by
+    transcript — the Stop event fires every turn, and other sessions may
+    have studied the same project today)."""
     import datetime
     today = datetime.date.today().isoformat()
     with tempfile.TemporaryDirectory() as root:
@@ -158,22 +170,36 @@ def t_revision_sheet_required():
              "reviewHistory": [{"date": today, "result": "correct",
                                 "bloomLevel": 3, "source": "teach"}]}]}
         proj = make_project(root, "sql", studied)
+        # no transcript: another session's study is never this one's to write
         out = run_hook({"cwd": root})
+        check("sheet: without a transcript the stop is silent", out == "", out[:120])
+        # this session only recorded a review (mid-session): not yet
+        tp = write_transcript(root, [f'"$R/scripts/bodhi-state" --project "{proj}" record-review --concept Joins --result correct --tested-bloom 3'], root)
+        out = run_hook({"cwd": root, "transcript_path": tp})
+        check("sheet: a review without touch-state does not block (mid-session)", out == "", out[:120])
+        # another project's closing write: not this project's sheet
+        tp = write_transcript(root, [f'"$R/scripts/bodhi-state" --project "{os.path.join(root, "learningWithBodhi", "other")}" touch-state --activity x'], root)
+        out = run_hook({"cwd": root, "transcript_path": tp})
+        check("sheet: touch-state on another project does not block this one", out == "", out[:120])
+        # this session closed this project (relative --project resolved against cwd)
+        tp = write_transcript(root, ['"$R/scripts/bodhi-state" --project learningWithBodhi/sql touch-state --activity "done"'], root)
+        out = run_hook({"cwd": root, "transcript_path": tp})
         d = json.loads(out) if out else {}
-        check("sheet: studied today + no sheet blocks the stop",
+        check("sheet: this session's touch-state + no sheet blocks the stop",
               d.get("decision") == "block" and "revision sheet" in d.get("reason", ""), out[:120])
         check("sheet: reason names the file and the concept",
               f"revision/{today}-joins.md" in d.get("reason", "") and "Joins" in d.get("reason", ""), d)
         os.makedirs(os.path.join(proj, "revision"))
         with open(os.path.join(proj, "revision", f"{today}-joins.md"), "w") as f:
             f.write("# Revision — Joins\n")
-        out = run_hook({"cwd": root})
+        out = run_hook({"cwd": root, "transcript_path": tp})
         check("sheet: with today's sheet the stop is silent", out == "", out)
         # nothing studied today (old review only): no sheet required
         studied["concepts"][0]["reviewHistory"][0]["date"] = "2026-01-01"
         proj2 = make_project(root, "rust", studied)
         os.utime(os.path.join(proj2, ".bodhi", "state.json"), None)
-        out = run_hook({"cwd": os.path.join(root, "learningWithBodhi", "rust")})
+        tp = write_transcript(root, [f'"$R/scripts/bodhi-state" --project "{proj2}" touch-state --activity x'], root)
+        out = run_hook({"cwd": os.path.join(root, "learningWithBodhi", "rust"), "transcript_path": tp})
         check("sheet: a project with no study today needs no sheet", out == "", out)
 
 def main():

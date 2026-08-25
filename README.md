@@ -1,6 +1,6 @@
 # BodhiKit
 
-[![Version](https://img.shields.io/badge/version-1.18.0-blue)](./CHANGELOG.md) [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow?logo=buymeacoffee)](https://buymeacoffee.com/anjanj) [![Sponsor](https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ea4aaa?logo=githubsponsors)](https://github.com/sponsors/AnjanJ)
+[![Version](https://img.shields.io/badge/version-1.18.1-blue)](./CHANGELOG.md) [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow?logo=buymeacoffee)](https://buymeacoffee.com/anjanj) [![Sponsor](https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ea4aaa?logo=githubsponsors)](https://github.com/sponsors/AnjanJ)
 
 **Research-informed interactive coding tutor for Claude Code.**
 
@@ -153,7 +153,7 @@ BodhiKit currently has a very small number of real learners. If you try it, your
 
 ## Knowledge Bases (20)
 
-Each learning methodology lives in its own focused knowledge base, loaded only when needed (progressive disclosure). Since 1.18.0 they ship as model-only skills (`skills/<kb>/SKILL.md`, `user-invocable: false`) — hidden from the `/` menu, loaded through the Skill tool at the phase that needs them:
+Each learning methodology lives in its own focused knowledge base, loaded only when needed (progressive disclosure). Since 1.18.1 they ship as model-only skills (`skills/<kb>/SKILL.md`, `user-invocable: false`) — hidden from the `/` menu, loaded through the Skill tool at the phase that needs them:
 
 | Knowledge Base | Purpose |
 |---------------|---------|

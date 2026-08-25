@@ -7,10 +7,18 @@ touched — under the working directory or under the per-repo
 Global `~/.bodhikit/config.json` searchPaths are deliberately not walked: a
 project studied in another terminal must not block an unrelated session's
 stop with a repair or a revision sheet it has no context to write.
-If a file is structurally broken, or a project was studied today and has no
-revision sheet for today (the learner's take-home; see
-skills/reflect/references/revision-sheet.md), the hook blocks the stop once
-and tells Claude what to write or fix.
+If a file is structurally broken, or THIS SESSION studied a project (its
+transcript shows bodhi-state `touch-state` — the closing bookkeeping every
+study skill performs) and the project has no revision sheet for today (the
+learner's take-home; see skills/reflect/references/revision-sheet.md), the
+hook blocks the stop once and tells Claude what to write or fix.
+
+The Stop event fires at the end of EVERY assistant turn, not at "session
+end", and other sessions may have studied the same projects earlier today.
+So the sheet requirement is scoped by the session transcript: a project this
+session never wrote to is never this session's to summarise (1.18.1 — the
+first release blocked a /continue menu turn with two sheets from other
+sessions).
 
 Fail-open by design: any unexpected error exits 0 (never trap the user in a
 loop), `stop_hook_active` short-circuits re-entry, and the project search is
@@ -20,6 +28,7 @@ directory cannot push the hook past its timeout.
 
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -96,6 +105,50 @@ def recently_touched(project):
     return False
 
 
+MUTATING = ("record-review", "record-session", "add-concept", "set-feynman",
+            "forget", "park", "defer", "touch-state")
+
+
+def session_writes(transcript_path):
+    """Which projects THIS session wrote to, from its transcript: every Bash
+    tool_use whose command runs bodhi-state with --project. Returns
+    {abs_project_path: {"touch": bool, "study": bool}}. Unreadable or
+    absent transcript -> {} (fail-open: never block on another session's
+    behalf)."""
+    out = {}
+    if not transcript_path or not os.path.exists(transcript_path):
+        return out
+    arg_re = re.compile(r"""--project\s+(?:"([^"]+)"|'([^']+)'|(\S+))""")
+    try:
+        with open(transcript_path, encoding="utf-8", errors="replace") as f:
+            for line in f:
+                if "bodhi-state" not in line or "tool_use" not in line:
+                    continue
+                try:
+                    rec = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                cwd = rec.get("cwd") or ""
+                for block in rec.get("message", {}).get("content", []) or []:
+                    if not isinstance(block, dict) or block.get("type") != "tool_use":
+                        continue
+                    cmd = str((block.get("input") or {}).get("command", ""))
+                    if "bodhi-state" not in cmd:
+                        continue
+                    for m in arg_re.finditer(cmd):
+                        raw = next(g for g in m.groups() if g)
+                        path = os.path.abspath(os.path.join(cwd, os.path.expanduser(raw)))
+                        entry = out.setdefault(path, {"touch": False, "study": False})
+                        tail = cmd[m.end():]
+                        if re.search(r"\btouch-state\b", tail):
+                            entry["touch"] = True
+                        if any(re.search(r"\b%s\b" % re.escape(s), tail) for s in MUTATING):
+                            entry["study"] = True
+    except OSError:
+        return {}
+    return out
+
+
 def failure_reasons(stdout, stderr):
     """Turn a non-zero `verify` into human-readable lines. `verify` prints
     {"ok": false, "errors": [...]}; a `die` prints {"ok": false, "error": ...};
@@ -129,6 +182,7 @@ def main():
     script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bodhi-state")
     if not os.path.exists(script):
         return
+    wrote = session_writes(payload.get("transcript_path"))
 
     failures, missing_sheets = [], []
     for project in find_projects(configured_roots(cwd)):
@@ -144,8 +198,13 @@ def main():
             failures.append((project, failure_reasons(r.stdout, r.stderr)))
             continue
         # A session that studied something ends with a revision sheet — the
-        # learner's take-home. revision-brief says whether anything was
-        # studied today and whether today's sheet exists.
+        # learner's take-home. Only projects THIS session closed (its
+        # transcript shows touch-state for them) are this session's to
+        # summarise; revision-brief confirms a study event and whether
+        # today's sheet exists.
+        mine = wrote.get(os.path.abspath(project), {})
+        if not mine.get("touch"):
+            continue
         try:
             b = subprocess.run(
                 [sys.executable, script, "--project", project, "revision-brief"],
@@ -172,7 +231,7 @@ def main():
         lines = [f"{project}: write {path}  (studied today: {', '.join(n for n in names if n)})"
                  for project, path, names in missing_sheets]
         reasons.append(
-            "Today's revision sheet is missing for a project this session studied:\n"
+            "This session studied a project and has not written today's revision sheet:\n"
             + "\n".join(lines) +
             "\nWrite it now from this session, following "
             "skills/reflect/references/revision-sheet.md in the BodhiKit plugin "
