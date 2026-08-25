@@ -204,18 +204,27 @@ def write_json(path, obj):
 _LOCK_HANDLES = []  # held until process exit
 
 
-def acquire_lock(directory):
-    """Exclusive per-directory lock spanning the whole read-mutate-write run.
+def acquire_lock(directory, shared=False):
+    """Per-directory lock spanning the whole read-mutate-write run.
 
-    Prevents the two-terminal lost-update race. POSIX-only; on platforms
-    without fcntl the script still works, just without the guard.
+    Writers take it exclusive (prevents the two-terminal lost-update race).
+    Read-only subcommands take it shared, and only if a writer has already
+    created the lock file — a read must never leave a .bodhi-state.lock
+    behind that makes a merely-inspected project look touched. POSIX-only;
+    on platforms without fcntl the script still works, just without the guard.
     """
     if fcntl is None:
         return
     lock_path = os.path.join(directory, ".bodhi-state.lock")
     try:
-        handle = open(lock_path, "a")
-        fcntl.flock(handle, fcntl.LOCK_EX)
+        if shared:
+            if not os.path.exists(lock_path):
+                return
+            handle = open(lock_path, "r")
+            fcntl.flock(handle, fcntl.LOCK_SH)
+        else:
+            handle = open(lock_path, "a")
+            fcntl.flock(handle, fcntl.LOCK_EX)
         _LOCK_HANDLES.append(handle)
     except OSError:
         pass  # locking is best-effort; never block the actual work on it
@@ -473,9 +482,21 @@ def cmd_record_review(args):
     path, data = load_spaced_review(args.project, create=True)
     concept = find_concept(data, args.concept)
     created = False
+    new_module = False
     if concept is None:
         if not args.module:
             die(f"concept {args.concept!r} not tracked; pass --module to auto-create it")
+        known = {str(c.get("module", "")).strip().lower()
+                 for c in data.get("concepts", [])}
+        sp = state_path(args.project)
+        if os.path.exists(sp):
+            st = load_state(args.project)[1]
+            known |= {str(st.get(k) or "").strip().lower()
+                      for k in ("currentModule", "previousModule")}
+        # A module name nothing else has seen is usually a typo of one that
+        # exists; the write still happens (the skill's judgment stands), the
+        # flag lets it notice.
+        new_module = args.module.strip().lower() not in known
         concept = new_concept(args.concept, args.module, args.question or "")
         data.setdefault("concepts", []).append(concept)
         created = True
@@ -485,6 +506,8 @@ def cmd_record_review(args):
     data["lastReviewCheck"] = now_iso()
     write_spaced_review(path, data)
     change["created"] = created
+    if created:
+        change["newModule"] = new_module
     emit(change)
 
 
@@ -594,7 +617,7 @@ def cmd_forget(args):
     if os.path.exists(sp):
         state = load_state(args.project)[1]
         state["lastActivity"] = (args.activity or
-                                 f"Demoted {len(names)} concept(s): {', '.join(names)}")[:120]
+                                 f"Demoted {len(names)} concept(s): {', '.join(names)}")[:LAST_ACTIVITY_MAX]
         write_json(sp, state)
     emit({"action": "demoted", "concepts": names, "boxChanges": box_changes})
 
@@ -660,7 +683,9 @@ def cmd_defer(args):
     names = [n for n in (args.concept or []) if n]
     if not names:
         die("no concepts given (use --concept, repeatable)")
-    days = args.days if args.days and args.days > 0 else 1
+    days = args.days if args.days is not None else 1
+    if days <= 0:
+        die(f"--days must be a positive number of days (got {days})")
     path, data = load_spaced_review(args.project)
     missing = [n for n in names if find_concept(data, n) is None]
     if missing:
@@ -1665,7 +1690,7 @@ def cmd_normalize(args):
                     s = v.get("name") or v.get("id") or v.get("result") or json.dumps(v)
                 else:
                     s = str(v)
-                state[key] = str(s)[:120]
+                state[key] = str(s)[:LAST_ACTIVITY_MAX]
                 changes.append(f"stringified {key} (original kept in {legacy_key})")
                 state_changes += 1
         # Scalar-but-wrong-type currentModule (int module numbers in the wild):
@@ -1678,7 +1703,7 @@ def cmd_normalize(args):
                 if "currentModuleLegacy" not in state:
                     state["currentModuleLegacy"] = cm
                 state["currentModule"] = (cm.get("name") or cm.get("id") or
-                                          json.dumps(cm))[:120] if isinstance(cm, dict) else str(cm)[:120]
+                                          json.dumps(cm))[:LAST_ACTIVITY_MAX] if isinstance(cm, dict) else str(cm)[:LAST_ACTIVITY_MAX]
             changes.append("stringified currentModule")
             state_changes += 1
         for plural, singular in (("initialBloomLevels", "initialBloomLevel"),
@@ -1935,6 +1960,10 @@ def cmd_verify(args):
 
 # --- CLI --------------------------------------------------------------------
 
+READ_ONLY_COMMANDS = {cmd_due, cmd_mastery, cmd_calibration, cmd_retention,
+                      cmd_export_anonymized, cmd_session_brief, cmd_snapshot,
+                      cmd_gate_check, cmd_verify}
+
 def main():
     p = argparse.ArgumentParser(prog="bodhi-state", description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -2111,12 +2140,13 @@ def main():
     # One exclusive lock per project for the whole read-mutate-write run —
     # closes the two-terminal lost-update race (1.11.1). Profile writes lock
     # the profile's directory too.
+    shared = args.fn in READ_ONLY_COMMANDS
     bdir = os.path.join(args.project, ".bodhi")
     if os.path.isdir(bdir):
-        acquire_lock(bdir)
+        acquire_lock(bdir, shared=shared)
     profile = find_profile(args.project)
     if profile:
-        acquire_lock(os.path.dirname(profile))
+        acquire_lock(os.path.dirname(profile), shared=shared)
     args.fn(args)
 
 

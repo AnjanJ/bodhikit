@@ -1628,6 +1628,50 @@ def t_write_on_v2_backs_up():
         check("v2 write: migrate afterwards is an honest noop",
               out["action"] == "noop" and os.path.exists(backup), out)
 
+
+def t_script_hygiene():
+    """1.18.0 small contracts: read-only subcommands never create the lock
+    file; defer rejects a non-positive --days; a review that auto-creates a
+    concept under a module nothing has seen flags it."""
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review=json.loads(json.dumps(V2_SR)))
+        run(proj, "migrate-spaced-review")
+        lock = os.path.join(proj, ".bodhi", ".bodhi-state.lock")
+        if os.path.exists(lock):
+            os.unlink(lock)
+        for argv in (("due",), ("mastery",), ("snapshot",), ("verify",),
+                     ("session-brief", "--concept", "B-tree indexes"),
+                     ("gate-check", "--prior-module", "Module A")):
+            run(proj, *argv)
+        check("hygiene: read-only subcommands leave no lock file behind",
+              not os.path.exists(lock))
+        run(proj, "record-session", "--type", "quiz", "--data", "{}")
+        check("hygiene: a writer creates the lock file", os.path.exists(lock))
+        out = run(proj, "defer", "--concept", "B-tree indexes", "--days", "-5",
+                  expect_fail=True)
+        check("hygiene: defer --days -5 is an error, not +1",
+              out.get("ok") is False and "--days" in out.get("error", ""), out)
+        out = run(proj, "defer", "--concept", "B-tree indexes", "--days", "0",
+                  expect_fail=True)
+        check("hygiene: defer --days 0 is an error", out.get("ok") is False, out)
+        out = run(proj, "record-review", "--concept", "Window functions",
+                  "--result", "correct", "--tested-bloom", "2",
+                  "--module", "Module A")
+        check("hygiene: auto-create under a known module is not flagged",
+              out["created"] is True and out["newModule"] is False, out)
+        out = run(proj, "record-review", "--concept", "CTEs",
+                  "--result", "correct", "--tested-bloom", "2",
+                  "--module", "Modul A")
+        check("hygiene: auto-create under an unseen module is flagged",
+              out["created"] is True and out["newModule"] is True, out)
+        out = run(proj, "record-review", "--concept", "CTEs",
+                  "--result", "correct", "--tested-bloom", "2")
+        check("hygiene: an existing concept carries no newModule flag",
+              "newModule" not in out, out)
+        out = run(proj, "forget", "--concept", "CTEs")
+        la = read_state(proj)["lastActivity"]
+        check("hygiene: forget lastActivity within LAST_ACTIVITY_MAX", len(la) <= 120, la)
+
 def main():
     for t in (t_migrate, t_record_review, t_sessions_and_forget,
               t_touch_state_and_profile, t_gate_check,
@@ -1645,7 +1689,7 @@ def main():
               t_profile_project_lifecycle, t_profile_patterns, t_park,
               t_bloom_render, t_gate_evidence,
               t_gate_evidence_reset, t_validation_on_load,
-              t_write_on_v2_backs_up):
+              t_write_on_v2_backs_up, t_script_hygiene):
         print(f"-- {t.__name__}")
         t()
     print(f"\n{PASS} passed, {FAIL} failed")
