@@ -111,6 +111,14 @@ for f in $USER_SKILLS; do
     fi
   fi
 done
+# code-reviewer's finding template is consumed verbatim by /review, /teach
+# and /practice; the learner must be able to see the lines a finding is about
+# (teaching-personality KB, What You Discuss Is On Screen — 1.18.0).
+if [ -f agents/code-reviewer.md ]; then
+  if ! grep -q '^\*\*Where:\*\*' agents/code-reviewer.md; then
+    err "agents/code-reviewer.md finding template lacks the **Where:** path:line field"
+  fi
+fi
 # ---------------------------------------------------------------------------
 # 7. Agent frontmatter contract
 # ---------------------------------------------------------------------------

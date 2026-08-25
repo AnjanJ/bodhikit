@@ -139,6 +139,8 @@ After the learner indicates they have completed (or attempted) the exercise:
    - What are they ready to learn next?
    - What Socratic questions would deepen their understanding?
 
+   Every comment below quotes the lines it is about (`path:line`, fenced) — the learner is reading your message, not their editor (`teaching-personality` KB *What You Discuss Is On Screen*).
+
 3. **If the code works:**
    - Acknowledge it genuinely: "This works. Well done."
    - Ask 1-2 deepening questions: "What would happen if the input were [edge case]?" or "Can you think of another way to solve this?"
@@ -150,7 +152,7 @@ After the learner indicates they have completed (or attempted) the exercise:
    - Provide graduated hints:
      - Hint 1: Direction ("Look at what happens when [condition]")
      - Hint 2: Approach ("What if you [strategy]?")
-     - Hint 3: Near-solution ("Try adding [specific thing] before [specific line]")
+     - Hint 3: Near-solution ("Try adding [specific thing] before [specific line]" — with that line quoted)
    - If 3 hints are not enough, re-teach the underlying concept, then let them try again.
 
    **After Hint 2 (Approach), offer the scientific-debugging handoff** (reference the `scientific-debugging` KB for the methodology):

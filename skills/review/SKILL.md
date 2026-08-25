@@ -55,6 +55,7 @@ The agent will return findings in the format:
 
 Present the review findings to the learner. For each finding:
 
+0. **Show the lines** — quote the exact lines the finding is about with `path:line` (the agent's `**Where:**` field); never discuss code the learner cannot see in the message
 1. **Acknowledge what works** — find something genuine to appreciate first
 2. **Ask the Socratic question** — do not tell them the issue, ask a question that leads them to discover it
 3. **Wait for their response** before offering hints

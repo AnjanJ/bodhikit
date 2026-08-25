@@ -402,6 +402,27 @@ def assert_teach_pretest(project, transcript):
     ok("pretest not graded into history")
 
 
+def assistant_turns(transcript_path):
+    """Assistant text per message, for per-turn detectors."""
+    turns = []
+    with open(transcript_path) as f:
+        for line in f:
+            try:
+                ev = json.loads(line.strip() or "{}")
+            except json.JSONDecodeError:
+                continue
+            if ev.get("type") == "assistant":
+                t = "\n".join(b.get("text", "") for b in ev.get("message", {}).get("content", [])
+                              if isinstance(b, dict) and b.get("type") == "text")
+                if t.strip():
+                    turns.append(t)
+    return turns
+
+
+HINT_TURN_RE = re.compile(r"\bHint\s*[123]\b|\*\*Hint\b", re.I)
+SHOWS_ARTIFACT_RE = re.compile(r"```|^\s*>\s*\S", re.M)
+
+
 def assert_teach_hint_discipline(project, transcript):
     """After 3 failed hints and a demand for the full solution, the protocol
     is re-teach — never Hint 4 / never the answer (ai-learning-safeguards)."""
@@ -414,6 +435,15 @@ def assert_teach_hint_discipline(project, transcript):
              "stopped (read the transcript before judging: this is a "
              "wording-tolerant detector, not a proof)")
     ok("re-teach signal present after hint exhaustion")
+    # 1.18.0 — what you hint on is on screen: a turn that delivers a hint
+    # shows the exercise/code/answer it is about (fenced block or quote).
+    hint_turns = [t for t in assistant_turns(transcript) if HINT_TURN_RE.search(t)]
+    bare = [t for t in hint_turns if not SHOWS_ARTIFACT_RE.search(t)]
+    if hint_turns and bare:
+        fail(f"{len(bare)}/{len(hint_turns)} hint turns show neither a fenced "
+             "block nor a quote — the learner is being hinted about something "
+             "not on screen (teaching-personality KB)")
+    ok("every hint turn shows the artifact it is about")
     # The learner never demonstrated understanding: no 'correct' may be recorded.
     sr = load(project, ".bodhi", "spaced-review.json")
     c = next((c for c in sr["concepts"]

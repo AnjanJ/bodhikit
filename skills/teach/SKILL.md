@@ -48,7 +48,7 @@ Skip the gate entirely (do not even run the check) when the caller passed a spec
 
 ### Opening: pretest or retrieval (per the session brief)
 
-- **`pretestApplies: true`** — this is the concept's first exposure. Per the `desirable-difficulties` KB *Pretesting* section: open with ONE question the learner cannot yet answer — "You have not seen this yet — take a guess anyway. Being wrong here is the point." Do not grade it, do not record it; hold their guess. The explanation below must circle back to it ("Remember your guess? Here is where it was close and where it breaks.").
+- **`pretestApplies: true`** — this is the concept's first exposure. Per the `desirable-difficulties` KB *Pretesting* section: open with ONE question the learner cannot yet answer — "You have not seen this yet — take a guess anyway. Being wrong here is the point." Do not grade it, do not record it; hold their guess — and quote it back verbatim (`> Your guess: …`) when you resolve it in step 5 below. The explanation below must circle back to it ("Remember your guess? Here is where it was close and where it breaks.").
 - **`isReteach: true`** (a demoted concept, or re-entry after 3 failed hints) — the pretest does not apply; the research covers untaught material only, and "you have not seen this yet" would be false. Open instead with a genuine retrieval attempt, graded and recorded per Phase 5 step 1 (`--source teach`); its outcome calibrates how much of the re-explanation is needed.
 - **Neither** — a routine continuation on a known concept; open by bridging from the last outcome (the brief's `lastResult` and `daysSinceLastReview`).
 
@@ -60,13 +60,13 @@ Follow Gradual Release of Responsibility: **I Do → We Do → You Do.**
 2. **Bridge from prior knowledge** — reference mastered concepts from `progress.md`.
 3. **Explain simply** — follow `feynman-technique` KB rules: no undefined jargon, everyday analogies, concrete code examples, 200-400 words max.
 4. **Show a working example** — small, complete, runnable. Walk through line by line, explanation annotated inline with the code (per the `cognitive-load` KB split-attention rule, loaded in Phase 4).
-5. **Resolve the pretest** — name what their guess got right and where it broke.
+5. **Resolve the pretest** — quote their guess, then name what it got right and where it broke.
 
 ### Checkpoint
 
 After explaining, verify understanding before continuing:
 - "In one sentence, what does [concept] do?"
-- "What would this code output?" (small snippet)
+- "What would this code output?" (small snippet — shown in this message, labeled `Example B`, even if it is the step-4 example again)
 - "How is this different from [related concept they know]?"
 
 If they struggle, apply the **Analogy-Escalation Protocol** from the `feynman-technique` KB: read `.bodhi-profile.json` `learnerBackground.domains[]` + `analogyHistory[]`, climb the 4-rung ladder (learner-domain → ask-once → universal-physical → code-restatement), cap at two analogies before decomposing to a smaller sub-concept. Do not repeat the same explanation.
@@ -92,7 +92,7 @@ Work through a problem collaboratively:
 3. If they have ideas, let them lead — ask guiding questions about edge cases, data structures, naming.
 4. If stuck, think aloud together: "I would start by [approach]. What do you think?"
 5. Build incrementally, learner making decisions at each step.
-6. After completing, ask: "Why did we choose [approach]? What if we used [alternative]?"
+6. After completing, show the finished piece once more and ask: "Why did we choose [approach]? What if we used [alternative]?"
 
 ### Optional handoff to `/pair`
 
@@ -145,7 +145,7 @@ Tell them: "Struggle is where the learning lives. Try for at least 5 minutes bef
 
 1. Look for code in `exercises/<current-module>/` and any file they named. If no code file was produced, skip step 2 — go straight to step 3 with prose-based acknowledgment.
 2. If code exists, Read it. You MUST use the Agent tool to launch the `code-reviewer` agent for educational review. **Fallback:** If the agent fails or hits its turn limit, conduct the educational review directly by reading the code and applying the Socratic-questioning framework yourself.
-3. Working code (or strong verbal answer): acknowledge, then ask a deepening question.
+3. Working code (or strong verbal answer): quote the lines the point is about (`path:line`), acknowledge, then ask a deepening question about those lines.
 4. Not working: offer the scientific-debugging handoff (reference the `scientific-debugging` KB):
 
    > "We can work through it Socratically here, or switch to `/bodhikit:debug-together --invoked-from=teach <brief description of failing behavior>` and treat it as a hypothesis to test. The debug-together path is slower but it teaches the debugging skill, not just the fix."
@@ -158,7 +158,7 @@ Tell them: "Struggle is where the learning lives. Try for at least 5 minutes bef
 
 ### Quick Retention Check
 
-Ask 2-3 questions mixing Bloom's levels: Level 2 (explain in own words), Level 3 (predict output), Level 4 (what breaks if [change]?). Quick pulse check, not a full quiz.
+Ask 2-3 questions mixing Bloom's levels: Level 2 (explain in own words), Level 3 (predict output — the snippet is in the message), Level 4 (what breaks if [change]? — show the changed lines). When you grade, quote their answer before the verdict (`teaching-personality` KB *What You Discuss Is On Screen*). Quick pulse check, not a full quiz.
 
 ### Update Tracking
 

@@ -63,9 +63,9 @@ Explain this to the learner: "I will describe what to build. You type it. Even i
 
 4. **If they get stuck on syntax**: Give the minimum hint needed. "The keyword for creating a function in Python is `def`." Do not type it for them.
 
-5. **If they diverge from your navigation**: Ask why. "I notice you went a different direction. What is your thinking?" Their approach might be valid. If it is, adapt. If it is not, explain why gently.
+5. **If they diverge from your navigation**: quote the lines that diverged, then ask why. "I notice you went a different direction. What is your thinking?" Their approach might be valid. If it is, adapt. If it is not, explain why gently.
 
-6. **After each small piece is working**: Ask them to explain what they just wrote. "Walk me through what this function does, line by line." This is the Feynman check embedded in pairing.
+6. **After each small piece is working**: paste the piece they just wrote (Read it; they typed it in their editor, not in this conversation) and ask them to explain it. "Walk me through what this function does, line by line." This is the Feynman check embedded in pairing.
 
    **If their explanation is mechanical** (correct words, no underlying model — e.g. "it loops through and adds them") OR **if the next piece of navigation drew confusion** ("wait, why are we doing that?"), apply the **Analogy-Escalation Protocol** from the `feynman-technique` KB on the concept under their hands before navigating further. Strong-style fails silently when the driver can type what they cannot mentally model.
 

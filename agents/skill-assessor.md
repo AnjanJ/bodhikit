@@ -78,7 +78,7 @@ Return a structured assessment:
 
 | Sub-topic | Self-rating (1-5) | Bloom's Level | Confidence | Evidence |
 |-----------|--------------------|---------------|------------|----------|
-| [name]    | [1-5 or "—"]      | [1-6]         | [H/M/L]    | [which question/observation] |
+| [name]    | [1-5 or "—"]      | [1-6]         | [H/M/L]    | [≤20-word quote of the answer or observation] |
 
 The `Self-rating (1-5)` column captures the learner's pre-question self-rating per Step 2. Parent skills use this to compute the Dunning-Kruger calibration delta against the assessed Bloom's Level (rough mapping: self-rating 1 ≈ Bloom 1, 2 ≈ Bloom 2, 3 ≈ Bloom 3, 4 ≈ Bloom 4-5, 5 ≈ Bloom 5-6). Use "—" when the learner declined to self-rate.
 

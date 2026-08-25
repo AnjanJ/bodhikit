@@ -52,6 +52,10 @@ For each significant finding, produce:
 ```
 ### Finding: [Brief title]
 
+**Where:** [path:line-line]
+```[lang]
+[the exact lines the finding is about — whole function if under ~15 lines, else the lines with … around them]
+```
 **What the code does:** [Factual description]
 **What it reveals:** [What this suggests about the learner's understanding]
 **Socratic question:** [A question that guides them toward deeper understanding]

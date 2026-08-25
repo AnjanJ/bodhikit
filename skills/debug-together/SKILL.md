@@ -48,7 +48,7 @@ Ask: (1) What did you expect? (2) What actually happened? (3) Can you show the e
 
 If "it just does not work" — guide them to be precise about symptoms (error message? wrong output? crash?).
 
-If they have an error message — read it together word by word. Extract file, line number, error type, message. Ask what the error type usually means.
+If they have an error message — paste it into your message as `The error:` and read it together word by word. Extract file, line number, error type, message. Ask what the error type usually means.
 
 **Do NOT look at the code yet.** Understand symptoms first.
 
@@ -76,7 +76,7 @@ If the learner skips the error message, redirect: "Before we look at the code, r
 
 Probe types: (1) **Print/log with purpose** — placed to test the hypothesis, each with clear expected outcome. (2) **Debugger breakpoints** at strategic locations. (3) **Assertion checks** at suspected infection points.
 
-If probe confirms hypothesis: "Your theory was right. Now let us narrow further."
+Show the probe's actual output beside the expected one. If probe confirms hypothesis: "Your theory was right. Now let us narrow further."
 If probe contradicts: "We eliminated one possibility. That is progress. Next theory?"
 
 If learner scatters random prints: "Each probe should test a specific question. Before adding a print, tell me: what do you expect to see?"
@@ -89,7 +89,7 @@ If the bug's location is still unknown, use binary search debugging.
 
 **The Wolf Fence Metaphor:** A wolf hides in a forest. Build a fence across the middle, wait for the howl. Now you know which half. Keep halving until found.
 
-**Application:** Check data at the halfway point. Correct? Bug is in the second half. Incorrect? First half. Each step halves the search space.
+**Application:** Check data at the halfway point — print the value you are checking and the value you expected. Correct? Bug is in the second half. Incorrect? First half. Each step halves the search space.
 
 For git users, introduce `git bisect` for automated binary search through commit history.
 
