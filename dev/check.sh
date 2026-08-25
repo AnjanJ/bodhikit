@@ -195,6 +195,19 @@ if [ -f hooks/hooks.json ]; then
   if ! grep -q 'SessionStart' hooks/hooks.json || [ ! -f scripts/bodhi-session-context.py ]; then
     err "hooks/hooks.json must register the SessionStart hook (scripts/bodhi-session-context.py) — plugins do not load rules/ (1.18.0)"
   fi
+  # The revision sheet is enforced at stop time (1.18.0): the hook must ask
+  # revision-brief, and every session-closing skill must point at the template.
+  if ! grep -q 'revision-brief' scripts/bodhi-stop-hook.py; then
+    err "scripts/bodhi-stop-hook.py does not check revision-brief — the revision sheet is not enforced"
+  fi
+  if [ ! -f skills/reflect/references/revision-sheet.md ]; then
+    err "skills/reflect/references/revision-sheet.md missing (1.18.0 revision sheet template)"
+  fi
+  for s_ in reflect continue teach quiz practice; do
+    if ! grep -q 'references/revision-sheet.md' "skills/$s_/SKILL.md"; then
+      err "skills/$s_/SKILL.md closes sessions but never points at references/revision-sheet.md"
+    fi
+  done
 else
   err "hooks/hooks.json missing (1.11.0 Stop-hook safety net)"
 fi

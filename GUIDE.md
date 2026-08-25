@@ -325,6 +325,10 @@ Why this matters: research shows learners who reflect on their learning process 
 
 ---
 
+### Your revision sheet
+
+Every day you study, BodhiKit leaves a take-home in your project: `revision/YYYY-MM-DD-<concept>.md`. It is written for you to read tomorrow — on a phone, without the conversation — and holds the key idea in plain words, the example we actually worked through, where you slipped (quoted, not paraphrased), two self-test prompts with the answers at the bottom, when each concept comes back for review, and free links drawn from `/bodhikit:resources`. `/reflect` writes it; if you close the session without reflecting, the Stop hook holds the door until it is written. Annotate it freely — it is your file.
+
 ## Skills Reference
 
 Eighteen user-invocable skills, grouped by what they do for you. Each entry follows the same five-field structure: **What it does · When to use · When NOT to use · Pairs well with · Example**. The journey arc above shows them in context; this reference is the manual you reach for when you have a specific need.

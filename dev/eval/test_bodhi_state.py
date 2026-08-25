@@ -1707,6 +1707,54 @@ def t_mastery_snapshot_agree():
         check("agree: boxDistribution excludes parked",
               sum(snap["review"]["boxDistribution"].values()) == 2, snap["review"]["boxDistribution"])
 
+
+def t_revision_brief():
+    """revision-brief: today's studied concepts, the sheet to write, and
+    whether one exists (1.18.0). Seeding and assessing write no review, so
+    those days need no sheet."""
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review=json.loads(json.dumps(V2_SR)))
+        run(proj, "migrate-spaced-review")
+        out = run(proj, "revision-brief")
+        check("brief: nothing studied today -> sessionToday false",
+              out["sessionToday"] is False and out["concepts"] == [], out)
+        run(proj, "add-concept", "--concept", "Window functions", "--module", "Module B")
+        out = run(proj, "revision-brief")
+        check("brief: a concept introduced today counts as studied",
+              out["sessionToday"] is True
+              and [c["name"] for c in out["concepts"]] == ["Window functions"], out)
+        run(proj, "record-review", "--concept", "B-tree indexes",
+            "--result", "partial", "--tested-bloom", "3", "--source", "quiz")
+        run(proj, "record-review", "--concept", "Query planning",
+            "--result", "correct", "--tested-bloom", "3", "--source", "teach")
+        run(proj, "defer", "--concept", "Window functions", "--days", "2")
+        out = run(proj, "revision-brief")
+        names = [c["name"] for c in out["concepts"]]
+        check("brief: taught concept sorts first and names the file",
+              names[0] == "Query planning"
+              and out["suggestedFile"] == f"revision/{TODAY.isoformat()}-query-planning.md", out)
+        qp = out["concepts"][0]
+        check("brief: rows carry results, source, outcome clause, next review",
+              qp["resultsToday"] == ["correct"] and qp["sourcesToday"] == ["teach"]
+              and qp["bloomOutcome"].startswith("you can") and qp["nextReview"], qp)
+        check("brief: a deferral is not a study event",
+              "Window functions" in names and
+              next(c for c in out["concepts"] if c["name"] == "Window functions")["resultsToday"] == [],
+              out)
+        check("brief: no sheet yet", out["existing"] == [], out)
+        os.makedirs(os.path.join(proj, "revision"))
+        with open(os.path.join(proj, "revision", f"{TODAY.isoformat()}-query-planning.md"), "w") as f:
+            f.write("# Revision\n")
+        out = run(proj, "revision-brief")
+        check("brief: today's sheet is reported for appending",
+              out["existing"] == [f"revision/{TODAY.isoformat()}-query-planning.md"], out)
+        check("brief: slugify", run(proj, "revision-brief")["suggestedFile"].endswith("-query-planning.md"))
+        lock = os.path.join(proj, ".bodhi", ".bodhi-state.lock")
+        if os.path.exists(lock):
+            os.unlink(lock)
+        run(proj, "revision-brief")
+        check("brief: read-only (no lock file created)", not os.path.exists(lock))
+
 def main():
     for t in (t_migrate, t_record_review, t_sessions_and_forget,
               t_touch_state_and_profile, t_gate_check,
@@ -1725,7 +1773,7 @@ def main():
               t_bloom_render, t_gate_evidence,
               t_gate_evidence_reset, t_validation_on_load,
               t_write_on_v2_backs_up, t_script_hygiene,
-              t_mastery_snapshot_agree):
+              t_mastery_snapshot_agree, t_revision_brief):
         print(f"-- {t.__name__}")
         t()
     print(f"\n{PASS} passed, {FAIL} failed")

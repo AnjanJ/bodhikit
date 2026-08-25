@@ -208,6 +208,7 @@ learningWithBodhi/
     │   └── resources.md           # Curated resources
     ├── exercises/                 # Hands-on exercises
     ├── projects/                  # Larger project work
+    ├── revision/                  # One take-home sheet per study day (written for you at session end)
     └── notes/                     # Your personal notes
 ```
 
@@ -331,7 +332,7 @@ Fencing the weak claims is what lets you trust the strong ones.
 The 1.10.x release line proved a structural lesson: a spec being *correct* is not the same as a spec being *binding* on an LLM executor. 1.11.0 closes that class of bug at the architecture level instead of patching instances:
 
 - **`scripts/bodhi-state`** — a dependency-free Python CLI that performs every tracking-JSON mutation: Leitner box math, the Bloom ratchet, counter rules, `sessionHistory` vocabulary enforcement, the prerequisite-gate verdict, the mastery formula, migration with backup + verification. Skills decide *what happened* (the pedagogical judgment); the script decides *what the file looks like*. Unknown learner fields are preserved in code, atomically.
-- **Two hooks** (`hooks/hooks.json`): a SessionStart hook that injects the learning-project rule when a session starts inside a learning project (plugins cannot ship path-scoped rules), and a Stop hook that runs `bodhi-state verify` on touched projects before a session ends — broken tracking state blocks the stop once with a repair instruction instead of silently persisting.
+- **Two hooks** (`hooks/hooks.json`): a SessionStart hook that injects the learning-project rule when a session starts inside a learning project (plugins cannot ship path-scoped rules), and a Stop hook that runs `bodhi-state verify` on touched projects before a session ends — broken tracking state blocks the stop once with a repair instruction instead of silently persisting, and a day that studied something does not end without its revision sheet (`revision/YYYY-MM-DD-<concept>.md`: the key idea in plain words, the worked example, where you slipped, two self-test prompts with answers, next review dates, free links from your saved resources).
 - **A three-layer test harness** (`dev/eval/`): a free deterministic suite covering every script contract (run by `dev/check.sh` on every change); headless LLM evals that run real skills against fixture projects and assert on the resulting *file state* — the automated successor to the manual dogfood passes of the 1.10.x line; and (1.12.0) **grading-calibration evals** — scripted learner answers of controlled quality asserted against honest grading bands (a jargon parrot must not pass the Feynman gate; missing trade-offs must cap tested-bloom at 4) — plus transcript-fidelity checks on the teaching protocol itself (pretest fires on first exposure, no fourth hint, ever). The deterministic layer makes the file mechanics trustworthy; the grading layer measures the judgment feeding them, and doubles as the model-drift detector.
 
 ## Learn More

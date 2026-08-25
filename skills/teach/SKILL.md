@@ -193,7 +193,7 @@ The session is invisible to every future skill until these land. Per the `state-
 ### Transition
 
 If continuing: announce next concept, ask if they want to proceed.
-If stopping: summarize what was covered, suggest `/reflect` for end-of-session reflection.
+If stopping: summarize what was covered, suggest `/reflect` for end-of-session reflection. If the learner declines `/reflect` (or was not chained from `/continue`, which closes the session itself), write today's **revision sheet** per `references/revision-sheet.md` in the `/reflect` skill directory (`${CLAUDE_PLUGIN_ROOT}/skills/reflect/references/revision-sheet.md`): run `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> revision-brief` and write (or append to) the file it names. A session that studied something does not end without one — the Stop hook checks.
 
 ---
 

@@ -63,6 +63,7 @@ The plugin's audience is currently one real learner. No new skills, KBs, taxonom
 ## Runtime artifacts (created in user projects, never in this repo)
 
 - `learningWithBodhi/<project>/.bodhi/{state.json,plan.md,progress.md,spaced-review.json,assessment.md,resources.md}`
+- `learningWithBodhi/<project>/revision/YYYY-MM-DD-<concept>.md` — the learner's take-home sheet, one per study day, written by the closing skill per `skills/reflect/references/revision-sheet.md` and required by the Stop hook (`bodhi-state revision-brief` supplies the facts)
 - `learningWithBodhi/.bodhi-profile.json`
 - `~/.bodhikit/config.json` (optional, discovery overrides)
 

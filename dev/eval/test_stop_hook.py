@@ -28,9 +28,13 @@ def check(name, cond, detail=""):
 
 
 def run_hook(payload, env=None):
+    """HOME is sandboxed by default so the contributor's real ~/.bodhikit
+    config and learning projects never leak into a test."""
+    if env is None:
+        env = os.environ.copy()
+        env["HOME"] = tempfile.mkdtemp(prefix="bodhi-hook-home-")
     r = subprocess.run([sys.executable, HOOK], input=json.dumps(payload),
-                       capture_output=True, text=True, timeout=60,
-                       env=env or os.environ.copy())
+                       capture_output=True, text=True, timeout=60, env=env)
     assert r.returncode == 0, f"hook must always exit 0: {r.stderr}"
     return r.stdout.strip()
 
@@ -80,8 +84,9 @@ def t_reentry_and_stale():
 
 
 def t_configured_roots():
-    """Projects reachable only through ~/.bodhikit/config.json searchPaths
-    or a per-repo .bodhikit/config.json projectRoot are verified too."""
+    """A per-repo .bodhikit/config.json projectRoot is verified; the global
+    ~/.bodhikit/config.json searchPaths are NOT (a project studied in another
+    terminal must not block this session's stop)."""
     with tempfile.TemporaryDirectory() as root:
         home = os.path.join(root, "home")
         elsewhere = os.path.join(root, "elsewhere")
@@ -94,8 +99,8 @@ def t_configured_roots():
         env = os.environ.copy()
         env["HOME"] = home
         out = run_hook({"cwd": cwd}, env=env)
-        check("hook: global searchPaths root is verified",
-              proj in (json.loads(out).get("reason", "") if out else ""), out[:120])
+        check("hook: global searchPaths are not walked (session-scoped)",
+              out == "", out[:120])
         # per-repo projectRoot
         os.makedirs(os.path.join(cwd, ".bodhikit"))
         with open(os.path.join(cwd, ".bodhikit", "config.json"), "w") as f:
@@ -139,9 +144,41 @@ def t_failure_reasons():
           mod.failure_reasons("", "") == ["verify failed without output"])
 
 
+
+def t_revision_sheet_required():
+    """A project studied today must have today's revision sheet before the
+    session can stop (1.18.0)."""
+    import datetime
+    today = datetime.date.today().isoformat()
+    with tempfile.TemporaryDirectory() as root:
+        studied = {"version": 3, "sessionHistory": [], "concepts": [
+            {"name": "Joins", "module": "A", "box": 2, "bloomLevel": 3,
+             "feynmanPassed": False, "consecutiveCorrectAtL4Plus": 0,
+             "nextReview": today, "lastReviewed": today,
+             "reviewHistory": [{"date": today, "result": "correct",
+                                "bloomLevel": 3, "source": "teach"}]}]}
+        proj = make_project(root, "sql", studied)
+        out = run_hook({"cwd": root})
+        d = json.loads(out) if out else {}
+        check("sheet: studied today + no sheet blocks the stop",
+              d.get("decision") == "block" and "revision sheet" in d.get("reason", ""), out[:120])
+        check("sheet: reason names the file and the concept",
+              f"revision/{today}-joins.md" in d.get("reason", "") and "Joins" in d.get("reason", ""), d)
+        os.makedirs(os.path.join(proj, "revision"))
+        with open(os.path.join(proj, "revision", f"{today}-joins.md"), "w") as f:
+            f.write("# Revision — Joins\n")
+        out = run_hook({"cwd": root})
+        check("sheet: with today's sheet the stop is silent", out == "", out)
+        # nothing studied today (old review only): no sheet required
+        studied["concepts"][0]["reviewHistory"][0]["date"] = "2026-01-01"
+        proj2 = make_project(root, "rust", studied)
+        os.utime(os.path.join(proj2, ".bodhi", "state.json"), None)
+        out = run_hook({"cwd": os.path.join(root, "learningWithBodhi", "rust")})
+        check("sheet: a project with no study today needs no sheet", out == "", out)
+
 def main():
     for t in (t_block_on_broken, t_reentry_and_stale, t_configured_roots,
-              t_bounded_search, t_failure_reasons):
+              t_bounded_search, t_failure_reasons, t_revision_sheet_required):
         t()
     print(f"\n{PASS} passed, {FAIL} failed")
     sys.exit(1 if FAIL else 0)

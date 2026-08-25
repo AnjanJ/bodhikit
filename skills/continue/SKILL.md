@@ -130,9 +130,11 @@ After reflection (or if the learner declines reflection), update tracking per th
 
 **Fallback:** if `bodhi-state` is unavailable, follow the `state-schema` KB fallback rule — manual read → mutate-in-place → write → verify, preserving unknown fields.
 
-4. Close warmly: "Good work today. [Specific mention of what they accomplished]. Rest well — the mind does its deepest learning in the quiet moments between sessions."
+4. **Revision sheet** — if `/reflect` did not run (it writes the sheet itself), write today's **revision sheet** per `references/revision-sheet.md` in the `/reflect` skill directory (`${CLAUDE_PLUGIN_ROOT}/skills/reflect/references/revision-sheet.md`): run `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> revision-brief` and write (or append to) the file it names. A session that studied something does not end without one — the Stop hook checks.
 
-5. **Optionally invoke `/housekeep`** if this was a long session OR `progress.md` now carries 3+ live session entries. `/housekeep` rotates older entries into `progress/archive/` and writes the summary line. Skipping is fine — `/housekeep` is idempotent and the learner can run it later.
+5. Close warmly: "Good work today. [Specific mention of what they accomplished]. Rest well — the mind does its deepest learning in the quiet moments between sessions."
+
+6. **Optionally invoke `/housekeep`** if this was a long session OR `progress.md` now carries 3+ live session entries. `/housekeep` rotates older entries into `progress/archive/` and writes the summary line. Skipping is fine — `/housekeep` is idempotent and the learner can run it later.
 
 ---
 

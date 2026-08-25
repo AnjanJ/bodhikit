@@ -13,6 +13,7 @@ The knowledge bases load now. Claude Code registers plugin skills from `skills/`
 - **Gate honesty.** Apply-rung evidence counts only since your last miss — two old corrects no longer keep a prerequisite "satisfied" through three misses or a `/forget`.
 - **State layer hardening.** Drift `verify` flags now fails every subcommand the same clean way instead of tracebacking in some; a v1/v2 file is backed up before its first v3 write; read-only commands never leave a lock file; one rollup behind `mastery` and `snapshot`; the Stop hook is time-boxed and covers configured project roots.
 - **Tooling honesty.** Lint sections A–D are structural/conditional only, with the remaining phrase pins in E each naming the eval that retires them; evals default to the model the maintainer actually runs and print it; the eval README says which scenarios have never run. 277 deterministic tests (+15 for the Stop hook).
+- **A revision sheet at the end of every study day.** `revision/YYYY-MM-DD-<concept>.md` in your project: the key idea in plain words, the example we worked through, where you slipped, two self-test prompts with answers at the bottom, when each concept comes back, and free links from your saved resources (never an invented URL). `/reflect` writes it; if you just leave, the Stop hook will not end the session until it exists.
 - No tracking-file migration is needed. Update the plugin and restart Claude Code so the KB skills and the SessionStart hook register.
 
 ## [1.17.0] - 2026-08-21

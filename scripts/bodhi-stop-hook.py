@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
 """Stop hook: schema safety net for BodhiKit tracking files.
 
-Runs `bodhi-state verify` on any learning project the session could have
-touched — under the working directory, under the per-repo
-`.bodhikit/config.json` projectRoot, and under the global
-`~/.bodhikit/config.json` searchPaths — whose tracking files changed recently.
-If a file is structurally broken, the hook blocks the stop once and tells
-Claude what to fix.
+Runs `bodhi-state verify` on any learning project THIS session could have
+touched — under the working directory or under the per-repo
+`.bodhikit/config.json` projectRoot — whose tracking files changed recently.
+Global `~/.bodhikit/config.json` searchPaths are deliberately not walked: a
+project studied in another terminal must not block an unrelated session's
+stop with a repair or a revision sheet it has no context to write.
+If a file is structurally broken, or a project was studied today and has no
+revision sheet for today (the learner's take-home; see
+skills/reflect/references/revision-sheet.md), the hook blocks the stop once
+and tells Claude what to write or fix.
 
 Fail-open by design: any unexpected error exits 0 (never trap the user in a
 loop), `stop_hook_active` short-circuits re-entry, and the project search is
@@ -56,8 +60,9 @@ def find_projects(roots, budget=SEARCH_BUDGET_SECONDS):
 
 
 def configured_roots(cwd):
-    """Roots beyond cwd: the per-repo projectRoot (walking up 3 parents) and
-    the global searchPaths, per the state-ops KB discovery procedure."""
+    """cwd plus the per-repo projectRoot (walking up 3 parents), per the
+    state-ops KB discovery procedure. Session-scoped by design (see module
+    docstring) — never the global searchPaths."""
     roots = [cwd]
     d = os.path.abspath(cwd)
     for _ in range(4):
@@ -75,16 +80,6 @@ def configured_roots(cwd):
         if parent == d:
             break
         d = parent
-    gcfg = os.path.join(os.path.expanduser("~"), ".bodhikit", "config.json")
-    if os.path.exists(gcfg):
-        try:
-            with open(gcfg, encoding="utf-8") as f:
-                paths = json.load(f).get("searchPaths", [])
-            for p in paths if isinstance(paths, list) else []:
-                if isinstance(p, str) and p:
-                    roots.append(cwd if p == "$PWD" else p)
-        except (OSError, ValueError):
-            pass
     return roots
 
 
@@ -135,7 +130,7 @@ def main():
     if not os.path.exists(script):
         return
 
-    failures = []
+    failures, missing_sheets = [], []
     for project in find_projects(configured_roots(cwd)):
         if not recently_touched(project):
             continue
@@ -147,21 +142,47 @@ def main():
             continue
         if r.returncode != 0:
             failures.append((project, failure_reasons(r.stdout, r.stderr)))
+            continue
+        # A session that studied something ends with a revision sheet — the
+        # learner's take-home. revision-brief says whether anything was
+        # studied today and whether today's sheet exists.
+        try:
+            b = subprocess.run(
+                [sys.executable, script, "--project", project, "revision-brief"],
+                capture_output=True, text=True, timeout=10)
+            brief = json.loads(b.stdout) if b.returncode == 0 else {}
+        except (subprocess.SubprocessError, OSError, ValueError):
+            brief = {}
+        if brief.get("sessionToday") and not brief.get("existing"):
+            missing_sheets.append((project, brief.get("suggestedFile", "revision/<today>.md"),
+                                   [c.get("name") for c in brief.get("concepts", [])][:6]))
 
+    reasons = []
     if failures:
         lines = [f"{project}: " + "; ".join(errors[:5]) for project, errors in failures]
-        print(json.dumps({
-            "decision": "block",
-            "reason": (
-                "BodhiKit tracking files failed schema verification after this "
-                "session's writes:\n" + "\n".join(lines) +
-                "\nRepair them before stopping — prefer re-running the write "
-                "through scripts/bodhi-state (record-review / record-session / "
-                "touch-state) rather than hand-editing JSON. Structural drift: "
-                "`bodhi-state normalize`. A file at v2: "
-                "`bodhi-state migrate-spaced-review`."
-            ),
-        }))
+        reasons.append(
+            "BodhiKit tracking files failed schema verification after this "
+            "session's writes:\n" + "\n".join(lines) +
+            "\nRepair them before stopping — prefer re-running the write "
+            "through scripts/bodhi-state (record-review / record-session / "
+            "touch-state) rather than hand-editing JSON. Structural drift: "
+            "`bodhi-state normalize`. A file at v2: "
+            "`bodhi-state migrate-spaced-review`.")
+    if missing_sheets:
+        lines = [f"{project}: write {path}  (studied today: {', '.join(n for n in names if n)})"
+                 for project, path, names in missing_sheets]
+        reasons.append(
+            "Today's revision sheet is missing for a project this session studied:\n"
+            + "\n".join(lines) +
+            "\nWrite it now from this session, following "
+            "skills/reflect/references/revision-sheet.md in the BodhiKit plugin "
+            "(run `bodhi-state --project <project> revision-brief` for the "
+            "concepts, results and next-review dates; outcome clauses, the worked "
+            "example, where the learner slipped, two self-test prompts with "
+            "answers, next reviews, free links only from .bodhi/resources.md or "
+            "official docs). Then stop.")
+    if reasons:
+        print(json.dumps({"decision": "block", "reason": "\n\n".join(reasons)}))
 
 
 if __name__ == "__main__":

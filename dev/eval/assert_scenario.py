@@ -123,6 +123,32 @@ def assert_forget(project):
     ok("learner-forget session entry present")
 
 
+def assert_revision_sheet(project, must_mention=()):
+    """A studied day leaves revision/<today>-*.md (1.18.0). Checks existence,
+    the section skeleton, and that the concepts studied are named."""
+    today = datetime.date.today().isoformat()
+    rev = os.path.join(project, "revision")
+    files = sorted(f for f in (os.listdir(rev) if os.path.isdir(rev) else [])
+                   if f.startswith(today) and f.endswith(".md"))
+    if not files:
+        fail(f"no revision/{today}-*.md written — the session studied something and "
+             "left no take-home (references/revision-sheet.md)")
+    ok(f"revision sheet present: {files[0]}")
+    with open(os.path.join(rev, files[0])) as f:
+        text = f.read()
+    for heading in ("## What we covered", "## Try it yourself", "## Next review", "## Answers"):
+        if heading not in text:
+            fail(f"revision sheet lacks the '{heading}' section")
+    ok("revision sheet has the template's sections")
+    low = text.lower()
+    for name in must_mention:
+        if name.lower() not in low:
+            fail(f"revision sheet never names {name!r}, which was studied today")
+    if re.search(r"\b(Bloom(?:'s)?(?: level)?|Box)\s*[0-6]\b", text):
+        fail("revision sheet quotes a bare Bloom/Box number — outcome clauses only")
+    ok("revision sheet names today's concepts, no bare levels")
+
+
 def assert_quiz(project):
     sr = load(project, ".bodhi", "spaced-review.json")
     today = datetime.date.today().isoformat()
@@ -139,6 +165,7 @@ def assert_quiz(project):
     if "lastSessionSummary" in state or "bloomResetNote" in state:
         fail("v1 narrative fields reintroduced into state.json")
     ok("state.json still v2-clean")
+    assert_revision_sheet(project, must_mention=[c["name"] for c in reviewed][:2])
 
 
 def assert_reflect(project):
@@ -172,6 +199,7 @@ def assert_reflect(project):
     if sessions != 7:
         fail(f"profile totalSessions is {sessions}, expected 7 (auto-bump exactly once)")
     ok("profile session counter bumped exactly once")
+    assert_revision_sheet(project, must_mention=["B-tree", "Normalization"])
 
 
 # --- Grading-calibration scenarios (1.12.0) ---------------------------------

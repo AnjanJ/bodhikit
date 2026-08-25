@@ -96,6 +96,8 @@ After each answer, quote the question and their answer (`> Q2: … / > You: …`
 
 ## Phase 3: Record and Report
 
+(At the end of this phase: if this quiz is the last thing in the session — not chained from `/continue`, no `/reflect` to follow — write today's **revision sheet** per `references/revision-sheet.md` in the `/reflect` skill directory (`${CLAUDE_PLUGIN_ROOT}/skills/reflect/references/revision-sheet.md`): run `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> revision-brief` and write (or append to) the file it names. A session that studied something does not end without one — the Stop hook checks.)
+
 **For this phase, reference the `spaced-repetition` KB for the update rules — implemented in code by `bodhi-state`, so your job is judgment, the script's job is the file.**
 
 The writes are the product of the quiz; the results table is the receipt. Per the `state-ops` KB write path:

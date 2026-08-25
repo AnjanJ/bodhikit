@@ -129,6 +129,8 @@ The README should include:
 
 ## Phase 3: Review Loop
 
+(When the exercise is resolved and the session is ending — not chained from `/continue`, no `/reflect` to follow — write today's **revision sheet** per `references/revision-sheet.md` in the `/reflect` skill directory (`${CLAUDE_PLUGIN_ROOT}/skills/reflect/references/revision-sheet.md`): run `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> revision-brief` and write (or append to) the file it names. A session that studied something does not end without one — the Stop hook checks.)
+
 After the learner indicates they have completed (or attempted) the exercise:
 
 1. **Read their code** using the Read tool. **If no code file exists** (learner attempted verbally, gave up, or this was a thought-experiment exercise), skip the agent invocation — go to step 3 with prose-based engagement instead. Otherwise: You MUST use the Agent tool to launch the `code-reviewer` agent to perform an educational review of the code. **Fallback:** If the agent fails, conduct the educational review directly by analyzing the code yourself.

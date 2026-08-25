@@ -44,6 +44,7 @@ If `CLAUDE_PLUGIN_ROOT` is not set in the Bash environment, locate the script on
 | `profile-update-patterns` | Counts the project's `assessment-history.json` per sub-topic: 3+ entries at Bloom <3 appends to `patterns.persistentChallenges`, 3+ at Bloom 4+ to `patterns.consistentStrengths` (append-only, deduplicated). The counting is the script's; the skill never tallies assessments in prose |
 | `due [--limit N]` / `mastery` / `calibration` | Read-side rollups: due concepts — each tagged `neverTaught` (no review ever came from `--source teach`; a `/learn`-seeded or quiz-only concept) plus a `neverTaughtCount` rollup, so `/continue` routes never-taught-but-due concepts to `/teach` not `/quiz` (reviewing an untaught concept is not spaced repetition) — plus `unparseableDates` for schedule-broken entries (never silently skipped); canonical mastery % + `blockedOnFeynman`; retention tiers; confidence calibration |
 | `retention` / `export-anonymized` | Read-side outcome analytics: retention-at-review rates by spacing gap and by `boxBefore`, and a shareable anonymized stats export (counts and rates only) |
+| `revision-brief` | Read-side facts for today's revision sheet (1.18.0): concepts with a non-deferred review dated today (or introduced today) with results, sources, outcome clause, next review; `sessionToday`; `suggestedFile` (`revision/<date>-<slug>.md`); `existing` sheets for today (append, never duplicate). The Stop hook reads it |
 | `session-brief --concept N` | Read-side branch detection for `/teach` (1.14.0): `firstExposure`/`pretestApplies` (pretest vs graded retrieval open), `isReteach` (targeted-reteach duty), box/bloom/Feynman position, `dueForReview`. Trust the brief over hand-reading tracking files |
 | `snapshot` | Read-side single-call dashboard for `/progress` (1.14.0): position + Bloom maps (`project`), session cadence (`cadence`), due lists + box distribution + 3-tier retention rollup (`review`), per-module mastery + `blockedOnFeynman` (`mastery`), confidence calibration (`calibration`) |
 | `gate-check [--module M] [--prereqs "A,B"] [--prior-module M]` | Prerequisite Bloom gate verdict (see below) |
@@ -54,7 +55,7 @@ The script preserves unknown fields by mutating parsed JSON in place, writes ato
 
 **Fallback (script unavailable):** only after BOTH the `${CLAUDE_PLUGIN_ROOT}` path and the `find ~/.claude/plugins` lookup come up empty, say so plainly, then load the `state-schema` KB and perform the minimal write by hand per its *Fallback discipline* — read → mutate the parsed JSON in place → write → verify, preserving every unknown field.
 
-**Markdown surfaces** (`progress.md`, `assessments/latest.md`, plan files, `resources.md`) are still written with the Write tool directly: compose the new entry at the top, preserve all existing content verbatim below it.
+**Markdown surfaces** (`progress.md`, `assessments/latest.md`, plan files, `resources.md`, and the learner-facing `revision/` sheets) are still written with the Write tool directly: compose the new entry at the top, preserve all existing content verbatim below it.
 
 ## Project Discovery Config
 
@@ -96,6 +97,7 @@ Two layers. Per-project overrides global.
 | Resources | Whole MD | `resources.md` | none |
 | Assessment history | Append-only JSON | `assessment-history.json` | none |
 | Teach-backs (capstone) | Per-post MD files | `teach-backs/<YYYY-MM-DD>-<slug>.md` | none |
+| Revision sheets | Per-day MD files (learner take-home, outside `.bodhi/`) | `revision/<YYYY-MM-DD>-<concept>.md` — written at session end per `/reflect`'s `references/revision-sheet.md`; `revision-brief` names the file; the Stop hook requires it on a day that studied something | none |
 
 Live-doc mechanics (summary growth, collapse, archive naming) live in the `state-lifecycle` KB. Skills load the live doc + current plan phase by default; `/plan` and `/evaluate` may load all phase files. Skills that read archive content MUST announce the read in their turn output.
 

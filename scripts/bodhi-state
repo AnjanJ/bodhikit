@@ -1343,6 +1343,63 @@ def cmd_session_brief(args):
     })
 
 
+def slugify(text, limit=40):
+    """kebab-case for a file name: 'B-tree indexes' -> 'b-tree-indexes'."""
+    out = re.sub(r"[^a-z0-9]+", "-", str(text).lower()).strip("-")
+    return out[:limit].rstrip("-") or "session"
+
+
+def cmd_revision_brief(args):
+    """What today's revision sheet is about (1.18.0). Read-only.
+
+    The sheet is the learner's take-home; the model writes the prose, this
+    reports the facts: every concept with a non-deferred review dated today
+    (what was actually studied — seeding via /learn or an /assess writes no
+    review, so those days need no sheet), the file name to write, and any
+    sheet already written today (append, never duplicate). The Stop hook
+    reads `sessionToday` and `existing` to refuse a stop without a sheet."""
+    t = iso(today())
+    sp = state_path(args.project)
+    state = load_state(args.project)[1] if os.path.exists(sp) else {}
+    _, data = load_spaced_review(args.project, create=True)
+    studied = []
+    for c in data.get("concepts", []):
+        todays = [h for h in c.get("reviewHistory", [])
+                  if not h.get("deferred") and h.get("date") == t]
+        if not todays and c.get("introduced") != t:
+            continue
+        studied.append({
+            "name": c["name"], "module": c.get("module", ""),
+            "resultsToday": [h.get("result") for h in todays],
+            "sourcesToday": sorted({h.get("source") for h in todays if h.get("source")}),
+            "box": c.get("box", 1), "nextReview": c.get("nextReview"),
+            "bloomLevel": c.get("bloomLevel", 0),
+            **bloom_render(c.get("bloomLevel", 0)),
+            "question": c.get("question", ""),
+            "feynmanPassed": c.get("feynmanPassed", False),
+        })
+    # the sheet is named after the taught concept when there is one
+    studied.sort(key=lambda d: (0 if "teach" in d["sourcesToday"] else 1,
+                                -len(d["resultsToday"]), d["name"].lower()))
+    rev_dir = os.path.join(args.project, "revision")
+    existing = sorted(f for f in (os.listdir(rev_dir) if os.path.isdir(rev_dir) else [])
+                      if f.startswith(t) and f.endswith(".md"))
+    if studied:
+        slug = slugify(studied[0]["name"] if len(studied) == 1 or "teach" in studied[0]["sourcesToday"]
+                       else (studied[0]["module"] or studied[0]["name"]))
+    else:
+        slug = "session"
+    emit({"date": t, "project": os.path.basename(os.path.abspath(args.project)),
+          "module": state.get("currentModule"),
+          "session": state.get("totalSessions"),
+          "sessionToday": bool(studied),
+          "concepts": studied,
+          "suggestedFile": os.path.join("revision", f"{t}-{slug}.md"),
+          "existing": [os.path.join("revision", f) for f in existing],
+          "resourcesFile": ".bodhi/resources.md"
+                           if os.path.exists(os.path.join(args.project, ".bodhi", "resources.md")) else None})
+
+
 def cmd_snapshot(args):
     """Single-call dashboard rollup for /progress (1.14.0). Read-only.
 
@@ -1948,7 +2005,7 @@ def cmd_verify(args):
 
 READ_ONLY_COMMANDS = {cmd_due, cmd_mastery, cmd_calibration, cmd_retention,
                       cmd_export_anonymized, cmd_session_brief, cmd_snapshot,
-                      cmd_gate_check, cmd_verify}
+                      cmd_gate_check, cmd_verify, cmd_revision_brief}
 
 def main():
     p = argparse.ArgumentParser(prog="bodhi-state", description=__doc__,
@@ -2107,6 +2164,10 @@ def main():
     s = sub.add_parser("snapshot",
                        help="single-call dashboard rollup for /progress: position, cadence, due, mastery, calibration (read-only)")
     s.set_defaults(fn=cmd_snapshot)
+
+    s = sub.add_parser("revision-brief",
+                       help="today's studied concepts + the revision sheet file to write (read-only)")
+    s.set_defaults(fn=cmd_revision_brief)
 
     s = sub.add_parser("gate-check", help="prerequisite Bloom gate verdict for /teach Phase 1")
     s.add_argument("--module", default=None, help="module to gate (default: state.json currentModule)")

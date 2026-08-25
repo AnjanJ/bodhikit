@@ -52,6 +52,9 @@ Clause alone by default, phrased as application/reasoning; the rung's name only 
 ### Issue 11 — what you discuss is on screen (learner feedback)
 Canonical voice rule; code/question/answer reproduced in the same message; `**Where:**` + fenced quote in the code-reviewer template; hint turns must show the artifact (eval).
 
+### Issue 13 — revision sheets (maintainer request, freeze-exempt: hit in real use)
+A learner has nothing to re-read after a session except the conversation. New: one take-home per study day at `revision/YYYY-MM-DD-<concept>.md` — key idea in plain words, the worked example, where they slipped, two self-test prompts + answers, next review dates as outcome clauses, free links only from `resources.md` or official docs. Template in `skills/reflect/references/revision-sheet.md` (phase-loaded; no new KB). `/reflect` Phase 4 writes it; `/continue`, `/teach`, `/quiz`, `/practice` point at the template when they close a session. `bodhi-state revision-brief` (read-only) supplies today's studied concepts (non-deferred review dated today, or introduced today — seeding and assessing need no sheet), the file name, and any existing sheet. The Stop hook requires the sheet on a day that studied something — the executor-discipline answer, same pattern as the schema check. Doing this surfaced a flaw in Issue 6: walking the global `searchPaths` lets a project studied in another terminal block an unrelated session's stop, which has no context to write the sheet; the hook is now session-scoped (cwd subtree + per-repo `projectRoot`). Hook tests sandbox HOME.
+
 ### Issue 12 — drift
 This entry and the missing 1.17.0 one; blogpost archived; CLAUDE.md corrected on what the runtime loads.
 
