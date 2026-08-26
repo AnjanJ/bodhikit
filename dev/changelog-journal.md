@@ -34,6 +34,9 @@ A second external review pass (commit history, journal, script, lint, skills, ev
 ### Docs
 - README leads with what the plugin is and links the outcome data from the TL;DR; "How it achieves excellence" → "How it works". GUIDE labels Priya as a composite.
 
+### Live sweep (2026-08-26, fable-5)
+Executor-discipline 4/4 (first live run of the 1.18.0 revision-sheet assertions). Grading at `BODHI_EVAL_RUNS=3`: apply-band 3/3 at level 3, genuine 3/3 at level 5, understand-band 3/3 at level 2, jargon 3/3 `partial` at 1 with the box held — 16/16, no variance in any recorded level. The rubric's exact targets, both sides of the bound, on scripts that no longer carry the verdict. `grade-pushback`, `grade-misconception`, fidelity and lifecycle were not re-run; run them before the next tag.
+
 ### Not fixed in code
 The usage gap. The plugin's next release should be preceded by real sessions, not another review.
 

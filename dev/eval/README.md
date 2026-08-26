@@ -41,7 +41,7 @@ are the highest-write-count skills and ran on the honor system before 1.16.0.
 Interactive teaching skills (`/teach`, `/pair`, `/continue`) still warrant a
 manual dogfood pass on real learning data when their write paths change.
 
-The grading group includes `grade-understand-band` (1.17.0): an accurate own-words explanation with an honest inability to write or choose an index must land at Bloom 1-2, never 3 — the 2-vs-3 line is the prerequisite gate's input and was previously untested on the low side. It has NOT yet been run against a live model; the first `grading` sweep after 1.17.0 should read its recorded levels alongside `grade-apply-band`.
+The grading group includes `grade-understand-band` (1.17.0): an accurate own-words explanation with an honest inability to write or choose an index must land at Bloom 1-2, never 3 — the 2-vs-3 line is the prerequisite gate's input. Read its recorded levels alongside `grade-apply-band` and `grade-genuine`: the three together are the rubric's low side, target, and top.
 
 ## Layer 3: grading-calibration + transcript-fidelity evals (1.12.0)
 
@@ -112,9 +112,10 @@ a test. The run header prints the model; a pass certifies that executor only.
 
 | Scenario | Group | Last live pass |
 |---|---|---|
-| migrate, forget, quiz, reflect | executor-discipline | 1.14.0 sweep (sonnet-5). Not yet re-run since the 1.18.0 revision-sheet assertion was added to quiz/reflect |
-| grade-jargon, grade-genuine, grade-apply-band, grade-pushback, grade-misconception | grading | 1.14.0 sweep (sonnet-5); noise measured 3/3 vs 1/3 on the same tree |
-| grade-understand-band | grading | 1.18.0, first live run, PASS (fable-5): tested-bloom 2, gate threshold not crossed |
+| migrate, forget, quiz, reflect | executor-discipline | 2026-08-26, all PASS (fable-5), first live run of the 1.18.0 revision-sheet assertions on quiz/reflect |
+| grade-apply-band, grade-genuine, grade-jargon | grading | 2026-08-26, `BODHI_EVAL_RUNS=3` each, 9/9 PASS (fable-5) on the rubric rewrite with de-labelled learner scripts. Recorded levels had **no variance**: apply-band 3/3/3, genuine 5/5/5, jargon `partial` at 1 with the box held ×3. (The 1.14.0 sonnet-5 sweep had measured 3/3 vs 1/3 on the same tree.) |
+| grade-pushback, grade-misconception | grading | 1.14.0 sweep (sonnet-5). Not re-run since the rubric rewrite — run before the next tag |
+| grade-understand-band | grading | 2026-08-26, `BODHI_EVAL_RUNS=3`, 3/3 PASS (fable-5): tested-bloom 2/2/2, gate threshold not crossed (1.18.0 first run: 2) |
 | teach-pretest | fidelity | 1.18.0 PASS (fable-5) |
 | teach-hint-discipline | fidelity | 1.18.0 PASS (fable-5) after the "hint turn shows its artifact" detector was anchored to line-initial `Hint N` (first sample matched the word in the closing recap) |
 | continue-discovery | discovery | 1.14.1 (sonnet-5) |
