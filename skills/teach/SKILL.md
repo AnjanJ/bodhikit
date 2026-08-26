@@ -34,11 +34,11 @@ Once the concept is identified, run:
 "${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> session-brief --concept "<concept>"
 ```
 
-The brief settles in code the branches this skill previously asked you to re-derive from tracking files: `firstExposure`/`pretestApplies` decides how Phase 2 opens; `isReteach` decides Phase 5's targeted-reteach entry; `box`/`bloomLevel`/`feynmanPassed`/`daysSinceLastReview` calibrate depth. Trust the brief over your own reading of the tracking files.
+The brief decides the branches: `firstExposure`/`pretestApplies` — how Phase 2 opens; `isReteach` — Phase 5's targeted-reteach entry; `box`/`bloomLevel`/`feynmanPassed`/`daysSinceLastReview` — depth. Trust the brief over your own reading of the tracking files.
 
 ### Prerequisite Bloom Gate (module-start boundaries only)
 
-Skip the gate entirely (do not even run the check) when the caller passed a specific concept via `--invoked-from=`, or the learner passed an explicit topic in `$ARGUMENTS` — an explicit request overrides the gate. Otherwise read `references/prerequisite-gate.md` in this skill's directory (`${CLAUDE_PLUGIN_ROOT}/skills/teach/references/prerequisite-gate.md`) and follow it: it runs `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> gate-check`, and turns the verdict into either nothing, one reconfirm question, or an **offer** the learner decides on — never an auto-block. The canonical gate logic lives in the `state-ops` KB *Prerequisite gate* section; do not re-derive it in prose.
+Skip the gate entirely (do not even run the check) when the caller passed a specific concept via `--invoked-from=`, or the learner passed an explicit topic in `$ARGUMENTS` — an explicit request overrides the gate. Otherwise read `references/prerequisite-gate.md` in this skill's directory (`${CLAUDE_PLUGIN_ROOT}/skills/teach/references/prerequisite-gate.md`) and follow it: it runs `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> gate-check`, and turns the verdict into either nothing, one reconfirm question, or an **offer** the learner decides on — never an auto-block. The gate logic is the `state-ops` KB *Prerequisite gate* section.
 
 ---
 
@@ -164,16 +164,16 @@ Ask 2-3 questions mixing Bloom's levels: Level 2 (explain in own words), Level 3
 
 The session is invisible to every future skill until these land. Per the `state-ops` KB write path (judgment is yours; the file mechanics are the script's):
 
-1. **Record the retention outcome** — apply the `spaced-repetition` KB judgment rules: demonstrated understanding = correct; **struggled-but-got-there = correct** (the KB defines no partial-demote rule; punishing productive struggle is the failure mode). **But a recitation is not a struggle:** if the learner could not re-express the content a second way — same words back when asked to rephrase, no analogy, no fresh case — the `feynman-technique` KB ladder routes it to `partial`, not `correct` (capping `--tested-bloom` alone does not do it; `correct` at Bloom 1 still promotes the box, spacing out exactly the retrieval that just failed). **Narrow exception:** a learner who restated the mechanics in their own words and then honestly hit a ceiling ("I do not know the trade-offs") is *correct* at the rung they reached — that is calibration plus demonstrated application, not parroting:
+1. **Record the retention outcome** — result and level come from the `feynman-technique` KB *Grading the Explain-Back* rubric, applied to the final explanation of the retention check: five checks in order (owned? → misconception survived? → highest row reached → an admitted gap caps at the row below → record). The `spaced-repetition` KB judgment rules carry the rest — struggled-but-got-there is `correct`.
 
    ```
    "${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> record-review \
      --concept "<taught concept>" --result correct|incorrect|partial \
-     --tested-bloom <level the retention check demonstrated> \
+     --tested-bloom <row the final explanation reached> \
      --module "<current module>" --source teach
    ```
 
-   (`--module` auto-creates the concept if this was its first session.) `--tested-bloom` is what the answer reached, not what the learner claims it reached — `blooms-taxonomy` KB; the level ratchets and feeds the prerequisite gate. Record the HIGHEST rung the answer reached (trade-offs = 4-5). Working usage floors it at 3 — a floor prevents scoring lower, it never argues for landing at 3; an admitted gap caps, never lowers the floor. Tell the learner where they stand as the output's `bloomOutcome` clause; only if it reports `crossedLevel: true` name the rung too ("That moves you to **<bloomLabel>** — <bloomOutcome>") — per the `blooms-taxonomy` KB rendering rule, a crossing is the one moment the label is spoken. If the retention-check explanation also met the Feynman bar: `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> set-feynman --concept "<concept>"`.
+   (`--module` auto-creates the concept if this was its first session.) `--tested-bloom` is the row the answer reached, not the row the learner claims for it (`blooms-taxonomy` KB); it ratchets and feeds the prerequisite gate. Tell the learner where they stand as the output's `bloomOutcome` clause; only if it reports `crossedLevel: true` name the rung too ("That moves you to **<bloomLabel>** — <bloomOutcome>") — the `blooms-taxonomy` KB rendering rule. Under the rubric's check-5 condition: `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> set-feynman --concept "<concept>"`.
 
 2. **If the session brief said `isReteach: true`**, also: `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> record-session --type targeted-reteach --data '{"notes": "<which gap>"}'`.
 
@@ -184,7 +184,7 @@ The session is invisible to every future skill until these land. Per the `state-
      --activity "<one line>" [--module "<next module>" --module-index N] [--completion N]
    ```
 
-4. **Profile counter** — only if the `record-review` output reports `crossedBloom3: true` (the script computes the first-crossing in code; do not re-derive it from `progress.md`): `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> bump-profile --counter totalConceptsLearned`.
+4. **Profile counter** — only if the `record-review` output reports `crossedBloom3: true`: `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> bump-profile --counter totalConceptsLearned`.
 
 5. **Append the session entry to `.bodhi/progress.md` with the Write tool**: `## YYYY-MM-DD — Session N — <concept>`, then **Phases covered** (I-Do / We-Do / You-Do), **Outcomes**, **Bloom adjustments** (`Label (N)` from the script output, so prose and state agree), **Next**. Existing content preserved verbatim below.
 
