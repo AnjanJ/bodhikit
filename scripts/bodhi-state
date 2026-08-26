@@ -185,11 +185,24 @@ def load_json(path, expect=dict):
 
 
 def write_json(path, obj):
-    """Atomic write: unique temp file in the same directory, then rename."""
+    """Atomic write: unique temp file in the same directory, then rename.
+    The temp file takes the target's existing mode (or the umask default
+    for a new file) — mkstemp creates 0600 and the rename would otherwise
+    carry that over, making the learner's tracking files owner-only."""
     fd, tmp = tempfile.mkstemp(dir=os.path.dirname(os.path.abspath(path)),
                                prefix=os.path.basename(path) + ".",
                                suffix=".tmp")
     try:
+        try:
+            mode = os.stat(path).st_mode & 0o777
+        except OSError:
+            umask = os.umask(0)
+            os.umask(umask)
+            mode = 0o666 & ~umask
+        try:
+            os.chmod(tmp, mode)
+        except OSError:
+            pass  # a filesystem without modes: keep going, the write matters more
         with os.fdopen(fd, "w", encoding="utf-8") as f:
             json.dump(obj, f, indent=2, ensure_ascii=False)
             f.write("\n")

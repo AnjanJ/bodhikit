@@ -1614,6 +1614,40 @@ def t_validation_on_load():
               out.get("ok") is False and "activeProjects[0]" in out.get("error", ""), out)
 
 
+def t_write_keeps_file_mode():
+    """The atomic write (mkstemp + os.replace) must not chmod the learner's
+    tracking files to owner-only (1.18.x): mkstemp creates 0600 and the
+    rename carried that mode over, so the first script write silently made
+    a synced or shared project unreadable to everyone else."""
+    import stat
+    with tempfile.TemporaryDirectory() as root:
+        sr = json.loads(json.dumps(V2_SR))
+        proj = make_project(root, spaced_review=sr)
+        srp = os.path.join(proj, ".bodhi", "spaced-review.json")
+        sp = os.path.join(proj, ".bodhi", "state.json")
+        os.chmod(srp, 0o664)
+        os.chmod(sp, 0o644)
+        run(proj, "record-review", "--concept", "B-tree indexes",
+            "--result", "correct", "--tested-bloom", "3")
+        run(proj, "touch-state", "--activity", "mode check")
+        check("write: existing 0664 spaced-review.json keeps its mode",
+              stat.S_IMODE(os.stat(srp).st_mode) == 0o664,
+              oct(stat.S_IMODE(os.stat(srp).st_mode)))
+        check("write: existing 0644 state.json keeps its mode",
+              stat.S_IMODE(os.stat(sp).st_mode) == 0o644,
+              oct(stat.S_IMODE(os.stat(sp).st_mode)))
+        # a file the script creates gets the umask default, not mkstemp's 0600
+        old = os.umask(0o022)
+        try:
+            os.remove(srp)
+            run(proj, "add-concept", "--concept", "Fresh", "--module", "Module A")
+            check("write: a created file is not owner-only",
+                  stat.S_IMODE(os.stat(srp).st_mode) == 0o644,
+                  oct(stat.S_IMODE(os.stat(srp).st_mode)))
+        finally:
+            os.umask(old)
+
+
 def t_shape_rules_agree():
     """One shape table behind load-time validation and `verify` (1.18.x):
     a value must not pass the Stop hook's `verify` and then kill every other
@@ -1892,6 +1926,7 @@ def main():
               t_profile_project_lifecycle, t_profile_patterns, t_park,
               t_bloom_render, t_gate_evidence,
               t_gate_evidence_reset, t_validation_on_load, t_shape_rules_agree,
+              t_write_keeps_file_mode,
               t_write_on_v2_backs_up, t_script_hygiene,
               t_mastery_snapshot_agree, t_revision_brief,
               t_due_shape):
