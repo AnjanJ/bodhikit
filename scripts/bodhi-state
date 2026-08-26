@@ -467,10 +467,10 @@ def validate_spaced_review(data, path):
 def note_activity(project, text):
     """Point state.json.lastActivity at what just happened (forget, park).
     No-op when the project has no state.json yet."""
-    sp = state_path(project)
-    if not os.path.exists(sp):
+    state = state_if_present(project)
+    if state is None:
         return
-    state = load_state(project)[1]
+    sp = state_path(project)
     state["lastActivity"] = text[:LAST_ACTIVITY_MAX]
     write_json(sp, state)
 
@@ -489,6 +489,34 @@ def load_state(project):
     if not isinstance(state.get("sessionDates", []), list):
         die(f"{sp}: sessionDates is not a list — run `bodhi-state normalize`")
     return sp, state
+
+
+def require_state(project):
+    """state.json for the subcommands that cannot run without it."""
+    sp = state_path(project)
+    if not os.path.exists(sp):
+        die(f"{sp} does not exist")
+    return sp, load_state(project)[1]
+
+
+def state_if_present(project, default=None):
+    """state.json for the subcommands that degrade gracefully without it."""
+    return load_state(project)[1] if os.path.exists(state_path(project)) else default
+
+
+def resolve_concepts(data, names, hint=""):
+    """The shared preamble of forget/park/defer: no names or an untracked
+    name dies; otherwise the concept dicts, in the order given, each
+    looked up once."""
+    names = [n for n in names if n]
+    if not names:
+        die("no concepts given (use --concept, repeatable" + hint + ")")
+    found = [(n, find_concept(data, n)) for n in names]
+    missing = [n for n, c in found if c is None]
+    if missing:
+        die(f"not tracked: {', '.join(missing)} — resolve names first "
+            f"(or add-concept them)")
+    return [c for _, c in found]
 
 
 def find_concept(data, name):
@@ -631,9 +659,8 @@ def cmd_record_review(args):
             die(f"concept {args.concept!r} not tracked; pass --module to auto-create it")
         known = {str(c.get("module", "")).strip().lower()
                  for c in data.get("concepts", [])}
-        sp = state_path(args.project)
-        if os.path.exists(sp):
-            st = load_state(args.project)[1]
+        st = state_if_present(args.project)
+        if st is not None:
             known |= {str(st.get(k) or "").strip().lower()
                       for k in ("currentModule", "previousModule")}
         # A module name nothing else has seen is usually a typo of one that
@@ -726,18 +753,12 @@ def cmd_forget(args):
     names = list(args.concept or [])
     if args.concepts:
         names.extend(n.strip() for n in args.concepts.split(",") if n.strip())
-    names = [n for n in names if n]
-    if not names:
-        die("no concepts given (use --concept, repeatable, or --concepts \"a, b\")")
     path, data = load_spaced_review(args.project)
-    missing = [n for n in names if find_concept(data, n) is None]
-    if missing:
-        die(f"not tracked: {', '.join(missing)} — resolve names first "
-            f"(or add-concept them)")
+    concepts = resolve_concepts(data, names, ', or --concepts "a, b"')
+    names = [c["name"] for c in concepts]
     t = today()
     box_changes = {}
-    for n in names:
-        c = find_concept(data, n)
+    for c in concepts:
         box_changes[c["name"]] = f"{c.get('box', 1)} -> 1"
         c["box"] = 1
         c["nextReview"] = iso(t + datetime.timedelta(days=1))
@@ -749,7 +770,7 @@ def cmd_forget(args):
         c["lastReviewed"] = iso(t)
         c["lastResult"] = "learner-initiated demote"
     entry = {"date": iso(t), "type": "learner-forget",
-             "conceptsDemoted": [find_concept(data, n)["name"] for n in names],
+             "conceptsDemoted": names,
              "boxChanges": box_changes}
     if args.note:
         entry["notes"] = args.note
@@ -771,17 +792,12 @@ def cmd_park(args):
     feynmanPassed, and history all stand. --resume re-enters rotation with a
     review tomorrow and the box preserved.
     """
-    names = [n for n in (args.concept or []) if n]
-    if not names:
-        die("no concepts given (use --concept, repeatable)")
     path, data = load_spaced_review(args.project)
-    missing = [n for n in names if find_concept(data, n) is None]
-    if missing:
-        die(f"not tracked: {', '.join(missing)}")
+    concepts = resolve_concepts(data, args.concept or [])
+    names = [c["name"] for c in concepts]
     t = today()
     changed = {}
-    for n in names:
-        c = find_concept(data, n)
+    for c in concepts:
         if args.resume:
             if not c.get("parked"):
                 die(f"{c['name']!r} is not parked — nothing to resume")
@@ -795,7 +811,7 @@ def cmd_park(args):
         changed[c["name"]] = c["nextReview"]
     key = "conceptsResumed" if args.resume else "conceptsParked"
     entry = {"date": iso(t), "type": "learner-park",
-             key: [find_concept(data, n)["name"] for n in names]}
+             key: names}
     if args.note:
         entry["notes"] = args.note
     data.setdefault("sessionHistory", []).append(entry)
@@ -813,20 +829,14 @@ def cmd_defer(args):
     result: "skipped" and rolled nextReview by hand. Deferral is scheduling,
     never an outcome: box, bloom, counters, and lastReviewed stay untouched.
     """
-    names = [n for n in (args.concept or []) if n]
-    if not names:
-        die("no concepts given (use --concept, repeatable)")
     days = args.days if args.days is not None else 1
     if days <= 0:
         die(f"--days must be a positive number of days (got {days})")
     path, data = load_spaced_review(args.project)
-    missing = [n for n in names if find_concept(data, n) is None]
-    if missing:
-        die(f"not tracked: {', '.join(missing)}")
+    concepts = resolve_concepts(data, args.concept or [])
     t = today()
     rolled = {}
-    for n in names:
-        c = find_concept(data, n)
+    for c in concepts:
         c["nextReview"] = iso(t + datetime.timedelta(days=days))
         entry = {"date": iso(t), "deferred": True, "days": days}
         if args.note:
@@ -838,10 +848,7 @@ def cmd_defer(args):
 
 
 def cmd_touch_state(args):
-    sp = state_path(args.project)
-    if not os.path.exists(sp):
-        die(f"{sp} does not exist")
-    state = load_state(args.project)[1]
+    sp, state = require_state(args.project)
     t = iso(today())
     dates = state.setdefault("sessionDates", [])
     if not isinstance(dates, list):
@@ -1420,9 +1427,8 @@ def cmd_export_anonymized(args):
         "retention": retention_summary(data),
         "calibration": calibration,
     }
-    sp = state_path(args.project)
-    if os.path.exists(sp):
-        state = load_state(args.project)[1]
+    state = state_if_present(args.project)
+    if state is not None:
         created = parse_date(state.get("createdAt"))
         out["project"] = {
             "totalSessions": state.get("totalSessions", 0),
@@ -1440,8 +1446,7 @@ def cmd_session_brief(args):
     predicates; executors were re-deriving them from prose — the same
     judgment-tree residue class 1.11.0 closed for writes. Read-only.
     """
-    sp = state_path(args.project)
-    state = load_state(args.project)[1] if os.path.exists(sp) else {}
+    state = state_if_present(args.project, {})
     _, data = load_spaced_review(args.project, create=True)
     t = today()
     c = find_concept(data, args.concept)
@@ -1497,8 +1502,7 @@ def cmd_revision_brief(args):
     sheet already written today (append, never duplicate). The Stop hook
     reads `sessionToday` and `existing` to refuse a stop without a sheet."""
     t = iso(today())
-    sp = state_path(args.project)
-    state = load_state(args.project)[1] if os.path.exists(sp) else {}
+    state = state_if_present(args.project, {})
     _, data = load_spaced_review(args.project, create=True)
     studied = []
     for c in data.get("concepts", []):
@@ -1546,10 +1550,7 @@ def cmd_snapshot(args):
     live progress.md — its context cost stays O(1) in session count instead
     of growing with the tracking files.
     """
-    sp = state_path(args.project)
-    if not os.path.exists(sp):
-        die(f"{sp} does not exist")
-    state = load_state(args.project)[1]
+    sp, state = require_state(args.project)
     _, data = load_spaced_review(args.project, create=True)
     t = today()
 
@@ -1672,10 +1673,7 @@ def gate_status(c, t):
 
 
 def cmd_gate_check(args):
-    sp = state_path(args.project)
-    if not os.path.exists(sp):
-        die(f"{sp} does not exist")
-    state = load_state(args.project)[1]
+    sp, state = require_state(args.project)
     current = args.module or state.get("currentModule", "")
     if not str(current).strip():
         emit({"fires": False,
