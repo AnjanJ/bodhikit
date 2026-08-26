@@ -21,6 +21,10 @@ import tempfile
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 SCRIPT = os.path.join(REPO, "scripts", "bodhi-state")
 TODAY = datetime.date.today()
+# Pin the script's clock to the suite's: the 12 s run used to race midnight
+# against its own date.today(). Individual tests override this per call for
+# date travel (see t_date_travel).
+os.environ["BODHI_TODAY"] = TODAY.isoformat()
 
 PASS = 0
 FAIL = 0
@@ -36,9 +40,11 @@ def check(name, cond, detail=""):
         print(f"FAIL  {name}  {detail}")
 
 
-def run(project, *argv, expect_fail=False):
+def run(project, *argv, expect_fail=False, on=None):
+    """`on` = an ISO date to run the command as if it were that day."""
+    env = dict(os.environ, BODHI_TODAY=on) if on else None
     r = subprocess.run([sys.executable, SCRIPT, "--project", project, *argv],
-                       capture_output=True, text=True)
+                       capture_output=True, text=True, env=env)
     if not expect_fail and r.returncode != 0:
         raise AssertionError(f"bodhi-state {' '.join(argv)} failed:\n{r.stdout}\n{r.stderr}")
     if expect_fail and r.returncode == 0:
@@ -1648,6 +1654,51 @@ def t_write_keeps_file_mode():
             os.umask(old)
 
 
+def t_date_travel():
+    """BODHI_TODAY pins the script's clock, which makes the Leitner schedule
+    testable past same-day for the first time: a promotion sets nextReview
+    at the box's interval, `due` stays quiet until that day and lists the
+    concept from it, and the streak counts consecutive pinned days."""
+    with tempfile.TemporaryDirectory() as root:
+        sr = json.loads(json.dumps(V2_SR))
+        proj = make_project(root, spaced_review=sr)
+        # Box 3 -> 4 on 2026-01-01: next review in 14 days (BOX_INTERVALS[4])
+        out = run(proj, "record-review", "--concept", "B-tree indexes",
+                  "--result", "correct", "--tested-bloom", "4", on="2026-01-01")
+        check("travel: promotion recorded on the pinned day",
+              out.get("box") == "3 -> 4", out)
+        c = next(x for x in read_sr(proj)["concepts"] if x["name"] == "B-tree indexes")
+        check("travel: nextReview is the box-4 interval from the pinned day",
+              c["nextReview"] == "2026-01-15" and c["lastReviewed"] == "2026-01-01", c)
+        check("travel: history entry carries the pinned date",
+              c["reviewHistory"][-1]["date"] == "2026-01-01", c["reviewHistory"][-1])
+        names = lambda o: [d["name"] for d in o.get("concepts", [])]
+        check("travel: not due the day before the interval ends",
+              "B-tree indexes" not in names(run(proj, "due", on="2026-01-14")))
+        check("travel: due on the interval day",
+              "B-tree indexes" in names(run(proj, "due", on="2026-01-15")))
+        check("travel: overdue after it",
+              "B-tree indexes" in names(run(proj, "due", on="2026-02-01")))
+        # a miss on the due day demotes and reschedules at the box-1 interval
+        out = run(proj, "record-review", "--concept", "B-tree indexes",
+                  "--result", "incorrect", "--tested-bloom", "3", on="2026-01-15")
+        c = next(x for x in read_sr(proj)["concepts"] if x["name"] == "B-tree indexes")
+        check("travel: a miss lands at box 1, review the next day",
+              c["box"] == 1 and c["nextReview"] == "2026-01-16", c)
+        # streak: consecutive pinned days count, a gap resets
+        for day in ("2026-03-01", "2026-03-02", "2026-03-03"):
+            run(proj, "touch-state", "--activity", "x", on=day)
+        check("travel: three consecutive days -> streak 3",
+              read_state(proj)["currentStreak"] == 3, read_state(proj))
+        run(proj, "touch-state", "--activity", "x", on="2026-03-10")
+        check("travel: a gap resets the streak to 1",
+              read_state(proj)["currentStreak"] == 1, read_state(proj))
+        # a malformed pin fails loudly, never shifts dates silently
+        out = run(proj, "due", on="yesterday", expect_fail=True)
+        check("travel: malformed BODHI_TODAY fails cleanly",
+              out.get("ok") is False and "BODHI_TODAY" in out.get("error", ""), out)
+
+
 def t_shape_rules_agree():
     """One shape table behind load-time validation and `verify` (1.18.x):
     a value must not pass the Stop hook's `verify` and then kill every other
@@ -1926,12 +1977,18 @@ def main():
               t_profile_project_lifecycle, t_profile_patterns, t_park,
               t_bloom_render, t_gate_evidence,
               t_gate_evidence_reset, t_validation_on_load, t_shape_rules_agree,
-              t_write_keeps_file_mode,
+              t_write_keeps_file_mode, t_date_travel,
               t_write_on_v2_backs_up, t_script_hygiene,
               t_mastery_snapshot_agree, t_revision_brief,
               t_due_shape):
         print(f"-- {t.__name__}")
-        t()
+        try:
+            t()
+        except Exception as e:  # one crashed test must not hide the summary
+            global FAIL
+            FAIL += 1
+            print(f"FAIL  {t.__name__} crashed: {type(e).__name__}: "
+                  f"{str(e).strip().splitlines()[0] if str(e).strip() else ''}")
     print(f"\n{PASS} passed, {FAIL} failed")
     sys.exit(1 if FAIL else 0)
 

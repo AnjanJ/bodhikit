@@ -12,6 +12,9 @@ import tempfile
 import time
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+# Pin the script's clock to this suite's (the hook spawns bodhi-state).
+os.environ["BODHI_TODAY"] = __import__("datetime").date.today().isoformat()
+
 HOOK = os.path.join(REPO, "scripts", "bodhi-stop-hook.py")
 PASS = 0
 FAIL = 0

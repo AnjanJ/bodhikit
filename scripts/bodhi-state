@@ -120,8 +120,23 @@ PATTERNS_MIN_ASSESSMENTS = 3
 
 # --- Helpers ---------------------------------------------------------------
 
+def _today_override():
+    """BODHI_TODAY=YYYY-MM-DD pins the script's clock. For the test suite
+    (which otherwise races midnight against its own `date.today()`) and for
+    date-travel checks of the Leitner schedule. Never set in a real
+    session; a malformed value fails loudly rather than silently shifting
+    every review date."""
+    raw = os.environ.get("BODHI_TODAY")
+    if not raw:
+        return None
+    try:
+        return datetime.date.fromisoformat(raw.strip())
+    except ValueError:
+        die(f"BODHI_TODAY {raw!r} is not an ISO date (YYYY-MM-DD)")
+
+
 def today():
-    return datetime.date.today()
+    return _today_override() or datetime.date.today()
 
 
 def iso(d):
@@ -129,7 +144,11 @@ def iso(d):
 
 
 def now_iso():
-    return datetime.datetime.now().replace(microsecond=0).isoformat()
+    now = datetime.datetime.now().replace(microsecond=0)
+    pinned = _today_override()
+    if pinned:
+        now = datetime.datetime.combine(pinned, now.time())
+    return now.isoformat()
 
 
 _DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}($|T)")
