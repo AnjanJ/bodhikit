@@ -134,7 +134,7 @@ Run for **every** project, regardless of marker state or anything concluded earl
 "${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> migrate-spaced-review
 ```
 
-The script performs the entire transform: backs up the pre-v3 file to `.bodhi/.pre-1.10-backup/` (never overwriting an existing backup), adds the three v3 per-concept fields in place while preserving every non-canonical learner field (`precisionGap`, prose annotations, `habitObservations`, ...), verifies no field was lost against the backup, writes `.bodhi/.migration-1.10.md`, and reports `{concepts, fieldsAdded, backup, marker}` for the Phase 5h digest — or `{action: "noop"}` when the file is already at v3.
+The script performs the entire transform: backs up the pre-v3 file to `.bodhi/.pre-1.10-backup/` (never overwriting an existing backup), adds the three v3 per-concept fields in place while preserving every non-canonical learner field (`precisionGap`, prose annotations, `habitObservations`, ...), verifies no field was lost against the backup, writes `.bodhi/.migration-1.10.md`, and reports `{concepts, fieldsAdded, backup, marker}` for the Phase 5h digest — or `{action: "noop"}` when the file is already at v3. (Any earlier `bodhi-state` write on a v1/v2 file performs this same upgrade — backup, fields, marker — so a noop here is genuine, not a half-upgraded file.)
 
 **Fallback (script unavailable):** perform the transform manually per the `state-migration` KB v2 → v3 row and the `state-schema` KB fallback discipline — backup first, mutate the parsed JSON in place (never re-serialize from a schema template), verify field-for-field against the backup, then write the marker.
 

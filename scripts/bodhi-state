@@ -247,6 +247,51 @@ def state_path(project):
 
 
 _LOADED_VERSION = {}   # spaced-review path -> version found on disk at load
+_UPGRADE_FIELDS = {}   # spaced-review path -> per-concept fields the load added
+
+V3_CONCEPT_DEFAULTS = (("bloomLevel", 0), ("feynmanPassed", False),
+                       ("consecutiveCorrectAtL4Plus", 0), ("question", ""),
+                       ("lastResult", ""), ("reviewHistory", list))
+
+
+def upgrade_to_v3(data):
+    """THE v1/v2 -> v3 upgrade, shared by the load path (in memory, persisted
+    by the next write) and `migrate-spaced-review` (explicit). One function
+    so both paths produce the same file — before 1.18.x the write path
+    added three fields and no marker, migrate added five and a marker, and
+    migrate then reported noop on a file the write path had half-upgraded.
+    Returns the number of per-concept fields added."""
+    added = 0
+    for c in data.get("concepts", []):
+        if not isinstance(c, dict):
+            continue
+        for key, default in V3_CONCEPT_DEFAULTS:
+            if key not in c:
+                c[key] = default() if callable(default) else default
+                added += 1
+    data.setdefault("sessionHistory", [])
+    return added
+
+
+def is_v3_complete(data):
+    return data.get("version") == 3 and all(
+        isinstance(c, dict) and all(k in c for k, _ in V3_CONCEPT_DEFAULTS)
+        for c in data.get("concepts", []))
+
+
+def write_migration_marker(bdir, from_version, concepts, fields_added, performed_by):
+    """`.bodhi/.migration-1.10.md`, written once by whichever path upgraded
+    the file first. Returns the marker path."""
+    marker = os.path.join(bdir, ".migration-1.10.md")
+    if not os.path.exists(marker):
+        with open(marker, "w", encoding="utf-8") as f:
+            f.write(f"# Migration to 1.10 — {iso(today())}\n\n"
+                    f"Performed by {performed_by}.\n\n"
+                    f"- spaced-review.json: v{from_version} -> v3\n"
+                    f"- concepts touched: {concepts}\n"
+                    f"- fields added: {fields_added}\n"
+                    f"- backup: `.bodhi/.pre-1.10-backup/spaced-review.json`\n")
+    return marker
 
 
 def ensure_pre_v3_backup(path):
@@ -271,6 +316,9 @@ def write_spaced_review(path, data):
         backup = ensure_pre_v3_backup(path)
         _WRITE_NOTES["migratedFromVersion"] = loaded
         _WRITE_NOTES["backup"] = backup
+        _WRITE_NOTES["marker"] = write_migration_marker(
+            os.path.dirname(path), loaded, len(data.get("concepts", [])),
+            _UPGRADE_FIELDS.get(path, 0), "the first `bodhi-state` write on the file")
     data["version"] = 3
     write_json(path, data)
 
@@ -294,11 +342,7 @@ def load_spaced_review(project, create=False):
         if not isinstance(c, dict):
             die(f"{path}: concepts[{i}] is {type(c).__name__}, expected object "
                 f"— run `bodhi-state verify`")
-        c.setdefault("bloomLevel", 0)
-        c.setdefault("feynmanPassed", False)
-        c.setdefault("consecutiveCorrectAtL4Plus", 0)
-        c.setdefault("reviewHistory", [])
-    data.setdefault("sessionHistory", [])
+    _UPGRADE_FIELDS[path] = upgrade_to_v3(data)
     validate_spaced_review(data, path)
     return path, data
 
@@ -1680,10 +1724,7 @@ def cmd_migrate(args):
     data = load_json(path)
     version = data.get("version", 1)
     concepts = data.get("concepts", [])
-    already = (version == 3 and all(
-        all(k in c for k in ("bloomLevel", "feynmanPassed", "consecutiveCorrectAtL4Plus"))
-        for c in concepts))
-    if already:
+    if is_v3_complete(data):
         emit({"action": "noop", "reason": "already at v3 with all per-concept fields"})
         return
 
@@ -1696,17 +1737,7 @@ def cmd_migrate(args):
     # Backup (never overwrite an existing backup — it may be the only pre-v3 copy).
     backup = ensure_pre_v3_backup(path)
 
-    fields_added = 0
-    for c in concepts:
-        for key, default in (("bloomLevel", 0), ("feynmanPassed", False),
-                             ("consecutiveCorrectAtL4Plus", 0)):
-            if key not in c:
-                c[key] = default
-                fields_added += 1
-        if "question" not in c:
-            c["question"] = ""
-        if "lastResult" not in c:
-            c["lastResult"] = ""
+    fields_added = upgrade_to_v3(data)
     data["version"] = 3
     write_json(path, data)
 
@@ -1723,15 +1754,8 @@ def cmd_migrate(args):
                 f"{sorted(lost)} during this run — inspect the live file; "
                 f"backup at {backup}")
 
-    marker = os.path.join(bdir, ".migration-1.10.md")
-    if not os.path.exists(marker):
-        with open(marker, "w", encoding="utf-8") as f:
-            f.write(f"# Migration to 1.10 — {iso(today())}\n\n"
-                    f"Performed by `bodhi-state migrate-spaced-review`.\n\n"
-                    f"- spaced-review.json: v{version} -> v3\n"
-                    f"- concepts touched: {len(concepts)}\n"
-                    f"- fields added: {fields_added}\n"
-                    f"- backup: `.bodhi/.pre-1.10-backup/spaced-review.json`\n")
+    marker = write_migration_marker(bdir, version, len(concepts), fields_added,
+                                    "`bodhi-state migrate-spaced-review`")
     emit({"action": "migrated", "fromVersion": version, "toVersion": 3,
           "concepts": len(concepts), "fieldsAdded": fields_added,
           "backup": backup, "marker": marker})

@@ -1717,6 +1717,25 @@ def t_write_on_v2_backs_up():
         out = run(proj, "migrate-spaced-review")
         check("v2 write: migrate afterwards is an honest noop",
               out["action"] == "noop" and os.path.exists(backup), out)
+        # One upgrade, two entry points (1.18.x): the write path must leave
+        # the same file migrate would have — marker included — so "noop"
+        # from migrate afterwards is true, not a half-upgraded file it
+        # cannot see.
+        marker = os.path.join(proj, ".bodhi", ".migration-1.10.md")
+        check("v2 write: migration marker written by the write path",
+              os.path.exists(marker))
+        with open(marker) as f:
+            check("v2 write: marker names the write path and the version",
+                  "write" in f.read() and "v2 -> v3" in open(marker).read())
+        write_path_keys = [sorted(c) for c in read_sr(proj)["concepts"]]
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review=json.loads(json.dumps(V2_SR)))
+        run(proj, "migrate-spaced-review")
+        migrate_keys = [sorted(c) for c in read_sr(proj)["concepts"]]
+        check("v2 write: write-path upgrade has the same key set as migrate",
+              write_path_keys == migrate_keys, (write_path_keys, migrate_keys))
+        check("v2 write: both paths add question/lastResult",
+              all("question" in c and "lastResult" in c for c in read_sr(proj)["concepts"]))
 
 
 def t_script_hygiene():
