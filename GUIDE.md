@@ -73,7 +73,7 @@ BodhiKit will ask you questions to understand your background, goals, and curren
 
 ## Your Journey from Zero to Completion
 
-The fastest way to understand how BodhiKit fits together is to walk a real learner through it from Day 1 to capstone. Meet **Priya** — a backend Python engineer with 5 years of Django experience who wants to learn **Rust** to write production network services. She has about 10 hours a week and a 10-week target. Her dialogue with BodhiKit below is illustrative — your exact phrasing will differ, but the structure of every interaction is real.
+The fastest way to understand how BodhiKit fits together is to walk one learner through it from Day 1 to capstone. Meet **Priya** — a backend Python engineer with 5 years of Django experience who wants to learn **Rust** to write production network services. She has about 10 hours a week and a 10-week target. Priya is a composite, built from what each skill does — nobody has completed this exact journey, and the dialogue is illustrative rather than transcribed. The structure of every interaction is what the skills specify; the real, much thinner numbers from actual use are in [docs/outcomes.md](docs/outcomes.md).
 
 > If you are eager rather than patient, skip to the [Skills Reference](#skills-reference) — every skill has its own deep dive. Come back here when you want to see how they compose.
 

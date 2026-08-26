@@ -8,7 +8,7 @@ Bodhi (Pali: "awakening") is a patient, wise guide that teaches you anything in 
 
 ## TL;DR
 
-BodhiKit turns Claude Code into a research-informed coding tutor. Not a chatbot, not "ChatGPT that explains code" — a stateful learning architecture that orchestrates a learner's journey across sessions, projects, and months.
+BodhiKit turns Claude Code into a research-informed coding tutor: a set of skills that teach by asking rather than answering, keep per-concept learning state across sessions, and schedule your reviews. It does not write the code for you. What "research-informed" does and does not claim is in [The Science](#the-science); the only outcome data so far — one learner, thin, published to be falsifiable — is in [docs/outcomes.md](./docs/outcomes.md).
 
 ### Purpose & philosophy
 
@@ -16,7 +16,7 @@ The animating constraint: **"The learner writes code. BodhiKit asks questions. T
 
 The *voice* comes from four named teachers (Gautama Buddha, Dr. B.R. Ambedkar, Master Oogway, Yoda) — a persona layer in the `teaching-personality` KB that sets the tone: patience, directness with care, "try it and see", education as empowerment. The pedagogy itself is owned by the methodology KBs below, each with its own citations.
 
-### How it achieves excellence
+### How it works
 
 1. **Pedagogical theories wired into behavior, not vibes.** Bloom's taxonomy (per-concept level tracking), Vygotsky's ZPD (calibrated difficulty), Leitner spaced repetition (5-box system with date-computed reviews), Feynman (explain-back gates), Sweller's cognitive load (faded worked examples), Bjork's pretesting, Rawson & Dunlosky's successive relearning, Koriat's confidence calibration, deliberate practice, Whitmore's GROW, Kram's mentoring functions, Flavell's metacognition. Each lives in its own KB, loaded only when its phase fires (progressive disclosure).
 
