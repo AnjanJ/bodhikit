@@ -189,6 +189,15 @@ def t_revision_sheet_required():
               d.get("decision") == "block" and "revision sheet" in d.get("reason", ""), out[:120])
         check("sheet: reason names the file and the concept",
               f"revision/{today}-joins.md" in d.get("reason", "") and "Joins" in d.get("reason", ""), d)
+        # argparse also accepts --project=<path>; a skill that uses it must
+        # not escape the sheet requirement (1.18.x: the regex matched only
+        # the space-separated form)
+        for form in (f'--project={proj}', f'--project="{proj}"', f"--project='{proj}'"):
+            tp = write_transcript(root, [f'"$R/scripts/bodhi-state" {form} touch-state --activity x'], root)
+            out = run_hook({"cwd": root, "transcript_path": tp})
+            d = json.loads(out) if out else {}
+            check(f"sheet: the {form.split('=')[0]}= form is detected ({form[10:12]}…)",
+                  d.get("decision") == "block" and "revision sheet" in d.get("reason", ""), out[:120])
         os.makedirs(os.path.join(proj, "revision"))
         with open(os.path.join(proj, "revision", f"{today}-joins.md"), "w") as f:
             f.write("# Revision — Joins\n")

@@ -105,20 +105,17 @@ def recently_touched(project):
     return False
 
 
-MUTATING = ("record-review", "record-session", "add-concept", "set-feynman",
-            "forget", "park", "defer", "touch-state")
-
-
 def session_writes(transcript_path):
-    """Which projects THIS session wrote to, from its transcript: every Bash
-    tool_use whose command runs bodhi-state with --project. Returns
-    {abs_project_path: {"touch": bool, "study": bool}}. Unreadable or
-    absent transcript -> {} (fail-open: never block on another session's
-    behalf)."""
+    """Which projects THIS session closed, from its transcript: every Bash
+    tool_use whose command runs bodhi-state with --project (either the
+    `--project <path>` or the `--project=<path>` form argparse accepts).
+    Returns {abs_project_path: {"touch": bool}} — touch-state is the
+    closing bookkeeping every study skill performs. Unreadable or absent
+    transcript -> {} (fail-open: never block on another session's behalf)."""
     out = {}
     if not transcript_path or not os.path.exists(transcript_path):
         return out
-    arg_re = re.compile(r"""--project\s+(?:"([^"]+)"|'([^']+)'|(\S+))""")
+    arg_re = re.compile(r"""--project(?:\s+|=)(?:"([^"]+)"|'([^']+)'|(\S+))""")
     try:
         with open(transcript_path, encoding="utf-8", errors="replace") as f:
             for line in f:
@@ -138,12 +135,9 @@ def session_writes(transcript_path):
                     for m in arg_re.finditer(cmd):
                         raw = next(g for g in m.groups() if g)
                         path = os.path.abspath(os.path.join(cwd, os.path.expanduser(raw)))
-                        entry = out.setdefault(path, {"touch": False, "study": False})
-                        tail = cmd[m.end():]
-                        if re.search(r"\btouch-state\b", tail):
+                        entry = out.setdefault(path, {"touch": False})
+                        if re.search(r"\btouch-state\b", cmd[m.end():]):
                             entry["touch"] = True
-                        if any(re.search(r"\b%s\b" % re.escape(s), tail) for s in MUTATING):
-                            entry["study"] = True
     except OSError:
         return {}
     return out
