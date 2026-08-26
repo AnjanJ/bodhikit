@@ -129,7 +129,7 @@ Whole JSON; written exclusively through `bodhi-state`. `/housekeep` does not rot
       "feynmanPassed": false,
       "consecutiveCorrectAtL4Plus": 0,
       "reviewHistory": [
-        { "date": "YYYY-MM-DD", "result": "correct|incorrect|partial", "bloomLevel": 0, "boxBefore": 1, "confidence": "sure|mostly|guessing", "source": "string" }
+        { "date": "YYYY-MM-DD", "result": "correct|incorrect|partial", "bloomLevel": 3, "boxBefore": 1, "confidence": "sure|mostly|guessing", "source": "string" }
       ]
     }
   ],

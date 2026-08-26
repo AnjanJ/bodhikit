@@ -1699,6 +1699,36 @@ def t_date_travel():
               out.get("ok") is False and "BODHI_TODAY" in out.get("error", ""), out)
 
 
+def t_history_bloom_only_when_tested():
+    """A review entry carries `bloomLevel` only when a level was tested. A
+    bare `correct` used to write 0 — indistinguishable from "graded at
+    Remember-minus" — and `/forget`'s synthetic miss did the same."""
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review=json.loads(json.dumps(V2_SR)))
+        run(proj, "record-review", "--concept", "Query planning", "--result", "correct")
+        c = next(x for x in read_sr(proj)["concepts"] if x["name"] == "Query planning")
+        check("history: untested correct has no bloomLevel key",
+              "bloomLevel" not in c["reviewHistory"][-1], c["reviewHistory"][-1])
+        check("history: concept bloomLevel untouched by an untested correct",
+              c["bloomLevel"] == 0, c)
+        run(proj, "record-review", "--concept", "Query planning", "--result", "correct",
+            "--tested-bloom", "2")
+        c = next(x for x in read_sr(proj)["concepts"] if x["name"] == "Query planning")
+        check("history: tested correct records the level",
+              c["reviewHistory"][-1].get("bloomLevel") == 2, c["reviewHistory"][-1])
+        run(proj, "forget", "--concept", "Query planning")
+        c = next(x for x in read_sr(proj)["concepts"] if x["name"] == "Query planning")
+        check("history: forget entry has no bloomLevel key",
+              c["reviewHistory"][-1]["result"] == "incorrect"
+              and "bloomLevel" not in c["reviewHistory"][-1], c["reviewHistory"][-1])
+        # readers tolerate the absence
+        for argv in (("retention",), ("export-anonymized",), ("gate-check", "--prior-module", "Module A"),
+                     ("session-brief", "--concept", "Query planning"), ("snapshot",)):
+            out = run(proj, *argv)
+            check(f"history: {argv[0]} reads entries without bloomLevel", out.get("ok", True) is not False, out)
+        check("history: verify accepts entries without bloomLevel", run(proj, "verify").get("ok") is True)
+
+
 def t_shape_rules_agree():
     """One shape table behind load-time validation and `verify` (1.18.x):
     a value must not pass the Stop hook's `verify` and then kill every other
@@ -1977,7 +2007,7 @@ def main():
               t_profile_project_lifecycle, t_profile_patterns, t_park,
               t_bloom_render, t_gate_evidence,
               t_gate_evidence_reset, t_validation_on_load, t_shape_rules_agree,
-              t_write_keeps_file_mode, t_date_travel,
+              t_write_keeps_file_mode, t_date_travel, t_history_bloom_only_when_tested,
               t_write_on_v2_backs_up, t_script_hygiene,
               t_mastery_snapshot_agree, t_revision_brief,
               t_due_shape):

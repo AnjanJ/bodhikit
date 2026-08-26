@@ -574,9 +574,11 @@ def apply_review(concept, result, tested_bloom, confidence=None, note=None,
             concept["consecutiveCorrectAtL4Plus"] = 0
     concept["lastReviewed"] = iso(t)
     concept["lastResult"] = note or (f"{result} (relearning retry)" if retry else result)
-    entry = {"date": iso(t), "result": result,
-             "bloomLevel": tested_bloom if tested_bloom is not None else 0,
-             "boxBefore": old_box}
+    # bloomLevel is recorded only when a level was tested: a bare `correct`
+    # used to write 0, indistinguishable from "graded at 0".
+    entry = {"date": iso(t), "result": result, "boxBefore": old_box}
+    if tested_bloom is not None:
+        entry["bloomLevel"] = tested_bloom
     if retry:
         entry["retry"] = True
     if confidence:
@@ -742,8 +744,8 @@ def cmd_forget(args):
         c["consecutiveCorrectAtL4Plus"] = 0
         # feynmanPassed and bloomLevel preserved by design (state-schema KB).
         c.setdefault("reviewHistory", []).append(
-            {"date": iso(t), "result": "incorrect", "bloomLevel": 0,
-             "note": "learner-initiated demote"})
+            {"date": iso(t), "result": "incorrect",
+             "note": "learner-initiated demote"})  # nothing was tested: no bloomLevel
         c["lastReviewed"] = iso(t)
         c["lastResult"] = "learner-initiated demote"
     entry = {"date": iso(t), "type": "learner-forget",
