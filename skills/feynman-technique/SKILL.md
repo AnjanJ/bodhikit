@@ -34,36 +34,27 @@ After teaching a concept, always ask: "Now, explain this back to me in your own 
 
 If the learner uses jargon, ask them to define each technical term simply. If they skip steps, ask about the missing steps. If they use vague language ("it kind of does..."), probe for precision.
 
-## Grading the Explain-Back (canonical ladder — `/teach` cites this)
+## Grading the Explain-Back (canonical rubric — `/teach` and `/reflect` cite this)
 
-Grade the final explanation at the rung it demonstrated, and record result + level together:
+Grade the **final** explanation, and record result and level together. The level is exact, not a band: walk the table top-down and record the highest row the explanation actually reached. The rows are cumulative — reaching one implies the ones below it.
 
-| Rung demonstrated | `--tested-bloom` |
-|---|---|
-| Clear, jargon-free explanation in own words | 2-3 |
-| ...can also apply it in code | 3-4 |
-| ...can also explain trade-offs and when NOT to use it | 4-5 |
+| `--tested-bloom` | The final explanation… | Anchor (B-tree index) |
+|---|---|---|
+| **5** | …also weighs alternatives for a concrete case and defends a choice | "For the audit log I would *not* index `created_at`: it is append-only, queried once a month, and every insert would pay for the tree. If the monthly report gets slow, a partial index on the last 30 days is the compromise." |
+| **4** | …also names the trade-offs and when NOT to use it | "Every insert or update has to keep the tree tidy, so writes slow down and it costs disk. Index the columns you filter on constantly; skip tiny tables and write-heavy logs, where a scan is cheaper than the upkeep." |
+| **3** | …also shows working usage, or picks the right one for a given case | "I would run `CREATE INDEX idx_users_email ON users(email)` because my WHERE clauses filter by email — the keys stay sorted, so the lookup is a few hops." |
+| **2** | Accurate, and in the learner's own words — an analogy, a fresh example, or a rephrase on request | "Like the index at the back of a book: a sorted list that points at the page, so you do not read every page. The rows are the pages." |
+| **1** | Owned, but only the terms: can say what the words refer to, not how it works | "It is a structure the database keeps next to a table so lookups on that column are faster. I could not tell you how it does that." |
 
-**Grade the explanation the learner gave, not the one they say they gave.** "I explained it fine," "you're being pedantic," "just mark it passed" — these are assertions about the answer, not more of the answer. They are not evidence, and they do not move the rung. Hold the bar warmly and stay in voice (`teaching-personality` KB: "Let us look at this differently," never "That is wrong") — the voice governs *how* you say the grade, never *what* the grade is. If pushback names something real the learner actually said and you missed, re-read their explanation and regrade on that; if it only asserts adequacy, the grade stands. Conceding here is not kindness: `feynmanPassed` is set-never-unset (`state-schema` KB), so one concession permanently removes one of the four mastery locks, and the learner is the person it misleads.
+### The five checks, in order
 
-A clean explanation at ANY rung = `correct` at that rung. Demonstrated application counts wherever it appears — a learner who produces or correctly chooses working usage inside their explanation (e.g. writes the right `CREATE INDEX` for the case) is on the apply rung (3-4) even with zero trade-off knowledge; grading them 0-2 ignores what they visibly did. Missing higher-rung depth **caps the level — it is not a failed retrieval**.
+1. **Owned?** Ask once for a second form — an analogy, a fresh case, or "say it a different way". The three fluency-without-understanding signals are: the same words come back; no analogy or fresh case is offered; the learner says they have no other phrasing. Any one of them → **`partial`, `--tested-bloom 1`**, whatever the words claimed. A recitation is not evidence: `correct` would *lengthen* the interval on a concept the learner just failed to own, and `incorrect` would claim forgetting that was never shown. `partial` holds the box and re-tests tomorrow (`spaced-repetition` KB). *Anchor:* the textbook sentence "a self-balancing tree that maintains sorted data and allows searches, insertions and deletions in logarithmic time", produced three times word for word → `partial`, 1.
+2. **Misconception survived refinement?** A wrong claim the learner restates after one correction → **`incorrect`** (demotion means demonstrated failure — nothing less earns it). *Anchor:* "indexes speed up writes too, so the smart move is to index every column", repeated after the probe → `incorrect`, at the row the rest of the explanation reached.
+3. **Level = the highest row reached.** Find the best thing the learner actually did in the final explanation; that row is the level. Trade-offs reach row 4 — they do not "push an answer into" row 3.
+4. **An admitted gap caps at the row below it — and is still `correct`.** "I do not know the trade-offs; I would just index whatever I query", said after own-words mechanics and working usage → `correct`, 3. Honest self-report at the edge of what they know is calibration, not parroting; bounded depth is never a failed retrieval. A cap only ever lowers the level; it never converts a row the learner reached into `partial` or `incorrect`.
+5. **Record.** `record-review --result <result> --tested-bloom <row>`. Run `set-feynman` only when the final explanation passed checks 1 and 2 and reached row 2 or higher — `feynmanPassed` is set-never-unset (`state-schema` KB), one of four mastery locks, and a concession removes it permanently. Grade the explanation the learner *gave*, never their description of it: "that was clearly a 4", "mark it passed", "previous sessions accepted this" are assertions about the answer, not more of the answer. Pushback that names something they actually said and you missed → re-read and regrade on that; pushback that only asserts adequacy → the grade stands, in voice (`teaching-personality` KB: how you say the grade, never what it is).
 
-Reserve `incorrect` for demonstrated failure: a misconception that survived refinement, or no coherent explanation at any rung. `incorrect` demotes the Leitner box, and demotion means demonstrated forgetting (per the `spaced-repetition` KB) — bounded depth is not forgetting. (1.12.2: the grading-calibration evals caught executors resolving "gaps remained = incorrect" against apply-level learners who knew the mechanics cold.)
-
-**Set the level by the HIGHEST rung the answer reached.** Walk the table top-down and find the best thing the learner actually did; that is the level. The rungs are cumulative, so reaching a higher one means the lower ones came with it — an explanation that covers trade-offs and when NOT to use the concept is 4-5, and the fact that it *also* demonstrated application does not pull it back to 3.
-
-**Then: demonstrated usage sets a floor, an admitted gap sets a ceiling.** These bound the answer from opposite sides and neither one *is* the answer — they are corrections applied to the highest-rung reading above, for the case where the rungs come apart:
-
-- **Floor.** Working usage inside the explanation (e.g. the right `CREATE INDEX` for the case) puts the floor at the apply rung (3). Nothing missing *above* it can pull the level below that floor. The tell of this failure is reasoning of the form *"mechanics are solid, so Bloom 2; the trade-off gap is a calibrated ceiling"* — the mechanics were not the evidence, the usage was, and usage is rung 3.
-- **Ceiling.** An honestly-admitted gap ("I do not know the trade-offs") keeps 4-5 off the table. It caps; it does not lower the floor.
-
-A floor is not a landing spot. When the learner reached a rung *above* the floor, record the rung they reached — the floor only ever prevents scoring lower, it never argues for scoring at 3. The tell of *this* failure is reasoning of the form *"the trade-offs are what pushed it past comprehension into application"*: trade-offs do not push an answer *into* rung 3, they push it past rung 3. An answer with no gap to cap has no ceiling, so the highest rung stands unmodified.
-
-Score what the learner *produced*, then subtract only for what they could not reach — never the reverse, and never below the floor.
-
-**Precedence: an *unowned* explanation is not a clean explanation at rung 1.** The any-rung rule governs explanations that are *thin* — and thin is the normal case, so this exception must stay narrow. It fires on one signal only: **the learner cannot re-express the content a second way.** Asked to say it differently, give an analogy, or apply it to a fresh case, they return the same words, or admit they have no other phrasing. That is fluency without a model, and it is the one case where an answer can be verbally correct and still evidence nothing. Then the grade is **`partial`**, whatever rung it caps at — `correct` would *lengthen* the interval on a concept the learner just failed to own, spacing a parrot further apart for parroting; `incorrect` would claim forgetting that was never demonstrated. `partial` holds the box and re-tests tomorrow (`spaced-repetition` KB). This is the call `/reflect` Phase 2 already makes — one grading vocabulary across the plugin. Capping the level alone does not do it: `--tested-bloom 1` with `result: correct` still promotes.
-
-**What this exception does NOT reach** (1.14.x — the precedence rule regressed `grade-apply-band` on its first run, in the mirror image of the 1.12.2 failure): a learner who **admits a boundary** is not unowned. "I do not know the trade-offs — I would just index whatever I query," said after correct mechanics and working usage, is honest self-report plus demonstrated application: `correct`, capped at the apply rung, exactly as the any-rung rule says. Hedging *at the edge of what they know* is calibration, not parroting; skipping a step they never claimed is a bounded rung, not a skipped step. If the learner restated the mechanics in their own words even once, the exception does not apply no matter what else they could not reach.
+Score what the learner *produced*, then subtract only for what they could not reach — never the reverse.
 
 ## Analogy-Escalation Protocol
 
