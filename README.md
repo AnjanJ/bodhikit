@@ -85,7 +85,7 @@ Three quick questions: what was hard, what you would do differently, how confide
 <details>
 <summary><strong>Tip: enable BodhiKit only in your learning folder</strong></summary>
 
-BodhiKit loads 20 knowledge bases. To avoid polluting context in unrelated projects, enable it per-project instead of globally. In your `learningWithBodhi/.claude/settings.json`:
+BodhiKit loads 18 knowledge bases. To avoid polluting context in unrelated projects, enable it per-project instead of globally. In your `learningWithBodhi/.claude/settings.json`:
 
 ```json
 {
@@ -151,7 +151,7 @@ BodhiKit currently has a very small number of real learners. If you try it, your
 | resource-finder | Haiku | Web search for verified free learning resources |
 | trajectory-analyzer | Sonnet | Reads full project history (sessions, archives, assessments) and returns a structured trajectory report — used by `/evaluate` so the heavy archive load happens in the agent's context, not the parent skill's |
 
-## Knowledge Bases (20)
+## Knowledge Bases (18)
 
 Each learning methodology lives in its own focused knowledge base, loaded only when needed (progressive disclosure). Since 1.18.1 they ship as model-only skills (`skills/<kb>/SKILL.md`, `user-invocable: false`) — hidden from the `/` menu, loaded through the Skill tool at the phase that needs them:
 
@@ -159,13 +159,11 @@ Each learning methodology lives in its own focused knowledge base, loaded only w
 |---------------|---------|
 | spaced-repetition | Ebbinghaus forgetting curve, Leitner box system, update rules |
 | blooms-taxonomy | 6 cognitive levels for programming, mastery criteria |
-| zone-of-proximal-development | Three zones, detection signals, scaffolding strategy |
 | feynman-technique | 4 steps for deep understanding, when to use |
 | deliberate-practice | Targeted exercises at the edge of ability |
 | growth-mindset | Language patterns, praising strategy over talent |
-| desirable-difficulties | Spacing, interleaving, retrieval, generation, variation |
 | metacognition | Teaching learners HOW to learn, Dunning-Kruger, confidence calibration |
-| cognitive-load | Sweller's worked examples, faded scaffolding, expertise reversal |
+| difficulty-calibration | Vygotsky's ZPD (three zones, detection signals, gradual release), Sweller's cognitive load (worked examples, faded scaffolding, expertise reversal), Bjork's desirable difficulties (spacing, interleaving, retrieval, generation, variation, pretesting) — loaded as one |
 | constructivism | Spiral curriculum, project progression by level |
 | ai-learning-safeguards | Risks of AI over-reliance, structural safeguards |
 | mentoring-theory | GROW model, Kram's career and psychosocial functions |

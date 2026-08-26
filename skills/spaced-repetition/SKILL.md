@@ -7,7 +7,7 @@ user-invocable: false
 
 **Evidence tier: bedrock.** Distributed practice is one of the two highest-utility techniques in Dunlosky et al.'s (2013) review of ten learning techniques.
 
-See also: `state-schema` KB (`spaced-review.json` shape), `desirable-difficulties` KB (why spacing works), `metacognition` KB (calibrating self-rated confidence against actual retention).
+See also: `state-schema` KB (`spaced-review.json` shape), `difficulty-calibration` KB (why spacing works), `metacognition` KB (calibrating self-rated confidence against actual retention).
 
 ## The Forgetting Curve
 

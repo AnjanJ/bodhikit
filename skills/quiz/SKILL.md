@@ -36,7 +36,7 @@ The `due` output is already in review order (`priority` 1 first) and carries no 
 
 ## Phase 2: Adaptive Questions
 
-**For this phase, reference the `assessment-framework` KB for question templates and Bloom's-level mapping, AND the `zone-of-proximal-development` KB for the within-quiz escalation/de-escalation signals applied below.**
+**For this phase, reference the `assessment-framework` KB for question templates and Bloom's-level mapping, AND the `difficulty-calibration` KB for the within-quiz escalation/de-escalation signals applied below.**
 
 Generate 5-7 questions.
 
@@ -55,7 +55,7 @@ For tracked due concepts, pitch each question at THAT concept's recorded `bloomL
 
 ### Within-quiz ZPD signal adjustment
 
-The distribution above is the starting mix; the actual sequence adapts on the fly per the `zone-of-proximal-development` KB signals:
+The distribution above is the starting mix; the actual sequence adapts on the fly per the `difficulty-calibration` KB signals:
 
 - **Below the ZPD (too easy)** — quick, correct, no engagement: next question moves up one Bloom level. Two consecutive Below-ZPD signals: drop the easier band and finish with higher-level questions only.
 - **In the ZPD (productive struggle)** — partial answer, clarifying question, gets there with a small hint: stay at the current level. This is where the quiz is doing its work.

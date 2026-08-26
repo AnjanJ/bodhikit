@@ -30,7 +30,7 @@ Present a brief summary: "Before we close, let us look back at today's path. Tod
 
 ## Phase 2: Reflection Questions
 
-**For this phase, reference the `metacognition` KB for the underlying Flavell self-monitoring research and the rationale behind each question's framing. Reference the `feynman-technique` KB for the fluency-without-understanding signals applied in Q3. Reference the `desirable-difficulties` KB for the retrieval-practice rationale — explaining before rating is itself a retrieval rep, not just a calibration check. Reference the `growth-mindset` KB for the strategy-naming acknowledgment in Phase 3.**
+**For this phase, reference the `metacognition` KB for the underlying Flavell self-monitoring research and the rationale behind each question's framing. Reference the `feynman-technique` KB for the fluency-without-understanding signals applied in Q3. Reference the `difficulty-calibration` KB for the retrieval-practice rationale — explaining before rating is itself a retrieval rep, not just a calibration check. Reference the `growth-mindset` KB for the strategy-naming acknowledgment in Phase 3.**
 
 Ask one at a time. Wait for response before continuing.
 

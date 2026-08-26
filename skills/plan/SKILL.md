@@ -93,7 +93,7 @@ After adjustments, show the updated plan by reading back the edited phase file(s
 
 ## Mode: Regenerate
 
-**Reference the `zone-of-proximal-development`, `constructivism`, and `spaced-repetition` KBs before building the new plan. The regeneration is not just a re-layout — it must honor the same curriculum-design principles as the original plan.**
+**Reference the `difficulty-calibration`, `constructivism`, and `spaced-repetition` KBs before building the new plan. The regeneration is not just a re-layout — it must honor the same curriculum-design principles as the original plan.**
 
 Warn: "Regenerating will create a fresh plan based on a new assessment. Your progress history will be preserved, but the module structure may change. Would you like to proceed?"
 

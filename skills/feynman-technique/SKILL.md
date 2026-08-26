@@ -62,7 +62,7 @@ A single named protocol every skill reaches for when the learner is stuck. Analo
 
 ### When to trigger
 
-Read the `zone-of-proximal-development` KB's *Beyond the ZPD* signals. Trigger this protocol when **any one** of these is observed:
+Read the `difficulty-calibration` KB's *Beyond the ZPD* signals. Trigger this protocol when **any one** of these is observed:
 
 - Learner cannot articulate what they are confused about ("I just don't get it").
 - The first explanation drew a blank stare (no echo of the key terms, no question, no partial attempt).

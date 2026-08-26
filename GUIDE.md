@@ -39,7 +39,7 @@ Install BodhiKit:
 
 Restart Claude Code after installing.
 
-**Context tip:** BodhiKit loads 20 knowledge bases. To keep other projects lean, enable it only where you need it. Add to your `learningWithBodhi/.claude/settings.json`:
+**Context tip:** BodhiKit loads 18 knowledge bases. To keep other projects lean, enable it only where you need it. Add to your `learningWithBodhi/.claude/settings.json`:
 
 ```json
 {

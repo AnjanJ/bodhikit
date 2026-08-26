@@ -38,7 +38,7 @@ End the skill. Do not proceed.
 
 ## Phase 2: Topic Surfacing — Formerly Shaky, Now Solid
 
-**For this phase, reference the `blooms-taxonomy` KB for level criteria and the `desirable-difficulties` KB for the rationale behind writing about hard-won topics.**
+**For this phase, reference the `blooms-taxonomy` KB for level criteria and the `difficulty-calibration` KB for the rationale behind writing about hard-won topics.**
 
 The strongest writing comes from topics the learner *wrestled with*, not topics that came easy. Use the trajectory data the system has accumulated to surface candidates.
 

@@ -24,7 +24,7 @@ Offered (opt-in, not auto-invoked) by `/teach` Phase 3 when the We-Do step would
 
 ## Mode Selection
 
-**For this section, reference the `pair-programming` KB for the methodology behind each mode. When auto-selecting mode by Bloom's level, reference the `zone-of-proximal-development` KB.**
+**For this section, reference the `pair-programming` KB for the methodology behind each mode. When auto-selecting mode by Bloom's level, reference the `difficulty-calibration` KB.**
 
 Determine the mode from `$ARGUMENTS`:
 
@@ -69,7 +69,7 @@ Explain this to the learner: "I will describe what to build. You type it. Even i
 
    **If their explanation is mechanical** (correct words, no underlying model — e.g. "it loops through and adds them") OR **if the next piece of navigation drew confusion** ("wait, why are we doing that?"), apply the **Analogy-Escalation Protocol** from the `feynman-technique` KB on the concept under their hands before navigating further. Strong-style fails silently when the driver can type what they cannot mentally model.
 
-7. **Role reversal as competence grows (ZPD-signal-gated, not time-gated)**: Reference the `zone-of-proximal-development` KB. The signal that the learner is climbing out of the ZPD into "can do alone" territory — and is ready to navigate — is observable in conversation, not in the clock. Watch for ANY TWO of the following within the session:
+7. **Role reversal as competence grows (ZPD-signal-gated, not time-gated)**: Reference the `difficulty-calibration` KB. The signal that the learner is climbing out of the ZPD into "can do alone" territory — and is ready to navigate — is observable in conversation, not in the clock. Watch for ANY TWO of the following within the session:
 
    - **They volunteer the next navigation step before being asked** ("Should this just be a list comprehension?" *before* the navigator's next instruction arrives).
    - **Their post-piece explain-back (step 6) is non-mechanical and goes deeper than asked** — naming trade-offs, mentioning edge cases, connecting to a concept from earlier.

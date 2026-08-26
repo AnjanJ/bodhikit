@@ -150,7 +150,7 @@ Programming examples:
 
 ### Beginner (Bloom's 1-2)
 
-**Structure**: Faded scaffolding per the `cognitive-load` KB — worked example → completion problem → full problem. Never a bare TODO list (problem-solving search consumes the working memory schema-building needs).
+**Structure**: Faded scaffolding per the `difficulty-calibration` KB — worked example → completion problem → full problem. Never a bare TODO list (problem-solving search consumes the working memory schema-building needs).
 
 ```
 exercises/01-topic-name/

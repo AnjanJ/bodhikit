@@ -44,11 +44,11 @@ Skip the gate entirely (do not even run the check) when the caller passed a spec
 
 ## Phase 2: Explain the Concept
 
-**Reference the `zone-of-proximal-development`, `feynman-technique`, and `desirable-difficulties` knowledge bases.**
+**Reference the `difficulty-calibration` and `feynman-technique` knowledge bases.**
 
 ### Opening: pretest or retrieval (per the session brief)
 
-- **`pretestApplies: true`** — this is the concept's first exposure. Per the `desirable-difficulties` KB *Pretesting* section: open with ONE question the learner cannot yet answer — "You have not seen this yet — take a guess anyway. Being wrong here is the point." Do not grade it, do not record it; hold their guess — and quote it back verbatim (`> Your guess: …`) when you resolve it in step 5 below. The explanation below must circle back to it ("Remember your guess? Here is where it was close and where it breaks.").
+- **`pretestApplies: true`** — this is the concept's first exposure. Per the `difficulty-calibration` KB *Pretesting* section: open with ONE question the learner cannot yet answer — "You have not seen this yet — take a guess anyway. Being wrong here is the point." Do not grade it, do not record it; hold their guess — and quote it back verbatim (`> Your guess: …`) when you resolve it in step 5 below. The explanation below must circle back to it ("Remember your guess? Here is where it was close and where it breaks.").
 - **`isReteach: true`** (a demoted concept, or re-entry after 3 failed hints) — the pretest does not apply; the research covers untaught material only, and "you have not seen this yet" would be false. Open instead with a genuine retrieval attempt, graded and recorded per Phase 5 step 1 (`--source teach`); its outcome calibrates how much of the re-explanation is needed.
 - **Neither** — a routine continuation on a known concept; open by bridging from the last outcome (the brief's `lastResult` and `daysSinceLastReview`).
 
@@ -59,7 +59,7 @@ Follow Gradual Release of Responsibility: **I Do → We Do → You Do.**
 1. **Start with WHY** — connect to a real problem the learner's existing knowledge cannot solve (the pretest just demonstrated this from the inside).
 2. **Bridge from prior knowledge** — reference mastered concepts from `progress.md`.
 3. **Explain simply** — follow `feynman-technique` KB rules: no undefined jargon, everyday analogies, concrete code examples, 200-400 words max.
-4. **Show a working example** — small, complete, runnable. Walk through line by line, explanation annotated inline with the code (per the `cognitive-load` KB split-attention rule, loaded in Phase 4).
+4. **Show a working example** — small, complete, runnable. Walk through line by line, explanation annotated inline with the code (per the `difficulty-calibration` KB split-attention rule, loaded in Phase 4).
 5. **Resolve the pretest** — quote their guess, then name what it got right and where it broke.
 
 ### Checkpoint
@@ -108,11 +108,11 @@ Skip the offer when: (a) the concept is purely conceptual (no code to type), (b)
 
 ## Phase 4: Independent Practice
 
-**Reference the `deliberate-practice`, `desirable-difficulties`, `zone-of-proximal-development`, `cognitive-load`, and `assessment-framework` knowledge bases.**
+**Reference the `deliberate-practice`, `difficulty-calibration`, and `assessment-framework` knowledge bases.**
 
 ### Below-ZPD escalation gate (before delivering the exercise)
 
-The Phase 2 Checkpoint or the prior session's Phase 5 retention check may have signaled that the learner is *Below* the ZPD on this concept. Per the `zone-of-proximal-development` KB's *Below the ZPD* row:
+The Phase 2 Checkpoint or the prior session's Phase 5 retention check may have signaled that the learner is *Below* the ZPD on this concept. Per the `difficulty-calibration` KB's *Below the ZPD* row:
 
 - Instant correctness AND flat acknowledgment AND no questions or elaboration → likely Below the ZPD.
 - Instant correctness BUT engaged elaboration (volunteering an edge case, comparing concepts, asking deeper) → in the ZPD, just confident. Proceed normally.
@@ -121,15 +121,15 @@ If BOTH Below-ZPD criteria fire, do NOT deliver the planned exercise at the cali
 
 ### You Do (The Exercise)
 
-The learner works alone. Calibrate scaffolding to level per the `cognitive-load` KB (faded scaffolding for novices, expertise-reversal for the rest):
+The learner works alone. Calibrate scaffolding to level per the `difficulty-calibration` KB (faded scaffolding for novices, expertise-reversal for the rest):
 
-| Bloom's Level | Scaffolding (cognitive-load KB) |
+| Bloom's Level | Scaffolding (difficulty-calibration KB) |
 |---|---|
 | 1-2 | Faded sequence in `exercises/`: worked example to study + explain back, then a completion problem (1-2 steps blanked), then the full problem in a varied context |
 | 3-4 | Completion problem or description + test cases; no worked example (expertise reversal) |
 | 5-6 | Problem statement only |
 
-The full-problem step must differ from the guided example — per the `desirable-difficulties` KB, **generation** (construct, not recognize) and **variation** (different context, not the same shape with different names). Set clear success criteria.
+The full-problem step must differ from the guided example — per the `difficulty-calibration` KB, **generation** (construct, not recognize) and **variation** (different context, not the same shape with different names). Set clear success criteria.
 
 Tell them: "Struggle is where the learning lives. Try for at least 5 minutes before asking."
 

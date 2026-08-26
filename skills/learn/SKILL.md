@@ -122,7 +122,7 @@ Share the summary and ask: "Does this reflect where you feel you are?"
 
 ## Phase 3: Learning Plan Generation
 
-**Reference the `zone-of-proximal-development`, `constructivism`, and `spaced-repetition` knowledge bases.**
+**Reference the `difficulty-calibration`, `constructivism`, and `spaced-repetition` knowledge bases.**
 
 **CHECKPOINT: Do not proceed to Phase 4 until the learner approves the plan.**
 
@@ -199,7 +199,7 @@ If Phase 1.5 already located an existing `learningWithBodhi/` root, use it — d
 Give them the first micro-exercise from Module 1:
 - Achievable in 5-10 minutes with visible output
 - Directly relevant to the first module
-- Calibrated to level per the `cognitive-load` KB: beginners (Bloom 1-2) get the faded sequence in `exercises/01-<topic>/` — a short inline-annotated worked example to study, then a completion version with 1-2 steps blanked (never a bare TODO list; a brand-new learner is at their highest cognitive load); intermediate+ get a clear description.
+- Calibrated to level per the `difficulty-calibration` KB: beginners (Bloom 1-2) get the faded sequence in `exercises/01-<topic>/` — a short inline-annotated worked example to study, then a completion version with 1-2 steps blanked (never a bare TODO list; a brand-new learner is at their highest cognitive load); intermediate+ get a clear description.
 
 Update tracking (this is Session 1 of the project), per the `state-ops` KB write path:
 - `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> touch-state --activity "<one line describing the exercise>"` — the script sets `lastSessionAt`, `sessionDates`, `currentStreak`, `totalSessions`, and bumps the cross-project session counter.
