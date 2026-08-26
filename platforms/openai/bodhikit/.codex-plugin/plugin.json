@@ -1,0 +1,45 @@
+{
+  "name": "bodhikit",
+  "version": "1.19.0",
+  "description": "Research-informed interactive coding tutor that teaches through Socratic dialogue, deliberate practice, active recall, and reflection.",
+  "author": {
+    "name": "Anjan",
+    "url": "https://github.com/AnjanJ"
+  },
+  "homepage": "https://github.com/AnjanJ/bodhikit",
+  "repository": "https://github.com/AnjanJ/bodhikit",
+  "license": "MIT",
+  "keywords": [
+    "learning",
+    "education",
+    "socratic-tutor",
+    "spaced-repetition",
+    "active-recall",
+    "codex",
+    "chatgpt"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "BodhiKit",
+    "shortDescription": "Learn technical topics through guided practice.",
+    "longDescription": "A research-informed Socratic tutor for personalized learning plans, guided coding practice, active recall, spaced repetition, reflection, and evidence-based progress tracking.",
+    "developerName": "Anjan",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/AnjanJ/bodhikit",
+    "privacyPolicyURL": "https://github.com/AnjanJ/bodhikit/blob/master/PRIVACY.md",
+    "termsOfServiceURL": "https://github.com/AnjanJ/bodhikit/blob/master/TERMS.md",
+    "defaultPrompt": [
+      "Help me learn a technical topic through guided practice.",
+      "Quiz me on what I am currently learning.",
+      "Help me reflect on today's learning session."
+    ],
+    "brandColor": "#006B68",
+    "composerIcon": "./assets/bodhikit-icon.png",
+    "logo": "./assets/bodhikit-icon.png",
+    "logoDark": "./assets/bodhikit-icon.png"
+  }
+}

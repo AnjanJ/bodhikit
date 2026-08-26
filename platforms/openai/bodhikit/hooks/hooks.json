@@ -1,0 +1,30 @@
+{
+  "description": "BodhiKit lifecycle helpers for Codex. All hooks fail open. ChatGPT workflows do not depend on them.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "command -v python3 >/dev/null 2>&1 && python3 \"${PLUGIN_ROOT}/scripts/bodhi-session-context.py\" || exit 0",
+            "timeout": 10,
+            "statusMessage": "Loading BodhiKit learning safeguards"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "command -v python3 >/dev/null 2>&1 && python3 \"${PLUGIN_ROOT}/scripts/bodhi-stop-hook.py\" || exit 0",
+            "timeout": 30,
+            "statusMessage": "Checking BodhiKit learning state"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,14 +1,14 @@
 # BodhiKit
 
-[![Version](https://img.shields.io/badge/version-1.18.1-blue)](./CHANGELOG.md) [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow?logo=buymeacoffee)](https://buymeacoffee.com/anjanj) [![Sponsor](https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ea4aaa?logo=githubsponsors)](https://github.com/sponsors/AnjanJ)
+[![Version](https://img.shields.io/badge/version-1.19.0-blue)](./CHANGELOG.md) [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow?logo=buymeacoffee)](https://buymeacoffee.com/anjanj) [![Sponsor](https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ea4aaa?logo=githubsponsors)](https://github.com/sponsors/AnjanJ)
 
-**Research-informed interactive coding tutor for Claude Code.**
+**Research-informed interactive coding tutor for Claude Code, Codex, and ChatGPT.**
 
 Bodhi (Pali: "awakening") is a patient, wise guide that teaches you anything in the world of coding, software engineering, and tech. It does not write code for you. It teaches you to write code yourself.
 
 ## TL;DR
 
-BodhiKit turns Claude Code into a research-informed coding tutor: a set of skills that teach by asking rather than answering, keep per-concept learning state across sessions, and schedule your reviews. It does not write the code for you. What "research-informed" does and does not claim is in [The Science](#the-science); the only outcome data so far — one learner, thin, published to be falsifiable — is in [docs/outcomes.md](./docs/outcomes.md).
+BodhiKit turns Claude Code, Codex, or ChatGPT into a research-informed coding tutor: a set of skills that teach by asking rather than answering, keep per-concept learning state when the platform exposes project files, and schedule your reviews. It does not write the code for you. What "research-informed" does and does not claim is in [The Science](#the-science); the only outcome data so far — one learner, thin, published to be falsifiable — is in [docs/outcomes.md](./docs/outcomes.md).
 
 ### Purpose & philosophy
 
@@ -43,6 +43,8 @@ The *voice* comes from four named teachers (Gautama Buddha, Dr. B.R. Ambedkar, M
 
 ## Install
 
+### Claude Code
+
 ```
 /plugin marketplace add https://github.com/AnjanJ/bodhikit.git
 /plugin install bodhikit@bodhikit
@@ -50,9 +52,24 @@ The *voice* comes from four named teachers (Gautama Buddha, Dr. B.R. Ambedkar, M
 
 Restart Claude Code after installing. (To try a checkout without installing: `claude --plugin-dir ~/code/bodhikit`.)
 
+### Codex and ChatGPT
+
+Build the isolated OpenAI-native package, then install it through a personal
+marketplace or upload it through the OpenAI plugin flow:
+
+```bash
+python3 platforms/openai/build_plugin.py \
+  --archive dist/bodhikit-openai.zip
+```
+
+See [BodhiKit for Codex and ChatGPT](./docs/openai.md) for local marketplace,
+Plugin Directory, invocation, platform-parity, and verification instructions.
+The public data and usage terms are in [PRIVACY.md](./PRIVACY.md) and
+[TERMS.md](./TERMS.md).
+
 ## Your first 15 minutes
 
-**Install** — the two commands above, then restart Claude Code.
+**Install** — use the Claude commands or the [Codex/ChatGPT instructions](./docs/openai.md), then restart or refresh the selected host.
 
 **Pick a place to learn.** `cd` into a folder you want to learn in (an empty one is fine). On your first project BodhiKit asks where to keep learning projects — the current folder is a fine answer — and creates `learningWithBodhi/<topic>/` there. That is where your plan, progress, and review schedule live, and you can put it under git.
 
@@ -144,6 +161,10 @@ BodhiKit currently has a very small number of real learners. If you try it, your
 
 ## Agents (4)
 
+Claude Code loads these as native agents. The OpenAI build preserves the same
+behavior as portable role procedures, so Codex may delegate when useful and
+ChatGPT can perform the procedure directly without depending on subagents.
+
 | Agent | Model | Purpose |
 |-------|-------|---------|
 | skill-assessor | Sonnet | Adaptive Bloom's taxonomy skill evaluation |
@@ -154,6 +175,9 @@ BodhiKit currently has a very small number of real learners. If you try it, your
 ## Knowledge Bases (18)
 
 Each learning methodology lives in its own focused knowledge base, loaded only when needed (progressive disclosure). Since 1.18.1 they ship as model-only skills (`skills/<kb>/SKILL.md`, `user-invocable: false`) — hidden from the `/` menu, loaded through the Skill tool at the phase that needs them:
+
+The OpenAI build converts the same 18 knowledge bases into progressively loaded
+references, preventing them from appearing as duplicate learner commands.
 
 | Knowledge Base | Purpose |
 |---------------|---------|

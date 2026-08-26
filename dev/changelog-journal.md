@@ -8,7 +8,7 @@ This is the full, unabridged, patch-by-patch changelog kept for the maintainer â
 
 All notable changes to BodhiKit will be documented in this file.
 
-## [Unreleased] - 2026-08-26
+## [1.19.0] - 2026-08-26
 
 A second external review pass (commit history, journal, script, lint, skills, evals), this time with the fixes landed one commit per finding. The review's headline was not a bug: five months of engineering discipline had been spent making the system trustworthy for a use that is barely happening (one learner, 11 sessions, 0 mastered), and the KB-load bug survived every layer of it because none of the layers checked the runtime. The code findings, in commit order:
 

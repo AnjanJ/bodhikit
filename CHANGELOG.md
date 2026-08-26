@@ -2,6 +2,18 @@
 
 Notable changes to BodhiKit, summarized for readers. Patch-level development notes live in `dev/changelog-journal.md`.
 
+## [1.19.0] - 2026-08-26
+
+The review-fix release: a second external review of the whole repo, every finding landed as its own commit, and the grading rubric verified on both sides of its bounds with no variance.
+
+- **Grading is a rubric, not case law.** The `feynman-technique` KB's explain-back ladder is now five rows with exact levels, one anchored answer per row (plus the parrot and the misconception), and five ordered checks — owned? → misconception survived? → highest row → an admitted gap caps at the row below and stays `correct` → record. The condition for the Feynman gate is stated for the first time. Live sweep on the rewrite, three samples each: the apply-band learner lands at Apply every time, the genuine learner at Evaluate, the accurate-but-untried learner at Understand, the parrot at `partial` with the box held. The grading eval scripts no longer carry the verdict in the learner's mouth.
+- **Cheaper fires.** The `state-ops` KB drops its 27-row subcommand catalogue (17.4 → 15.0 KB, paid on every fire); `/continue` renders its check-in from one `bodhi-state snapshot` call instead of loading `/progress` to print three lines; `/teach`'s Phase 5 defers to the rubric instead of re-arguing it; and the ZPD, cognitive-load and desirable-difficulties KBs merge into one `difficulty-calibration` KB, so `/teach` Phase 4 makes three loads instead of five. 20 → 18 knowledge bases.
+- **State layer.** One shape table behind load-time validation, `verify`, and `normalize` (they had drifted: `verify` passed a boolean box that every other subcommand died on, with advice naming a repair `normalize` did not perform — it now repairs numeric strings and string booleans, and names itself only when it can). One v3 upgrade shared by the write path and `migrate-spaced-review`, so a noop from migrate is genuine. Atomic writes keep the file's mode instead of leaving tracking files owner-only. A review entry carries `bloomLevel` only when a level was tested. `BODHI_TODAY` pins the script's clock for tests, and the Leitner schedule is tested past same-day for the first time.
+- **Stop hook** accepts `--project=<path>`; that spelling used to escape the revision-sheet requirement.
+- **OpenAI platforms.** An isolated, generated OpenAI package now converts the same canonical source into 18 Agent Skills, 18 progressive knowledge references, four portable role procedures, Codex lifecycle adapters, and a hook-independent ChatGPT fallback. Claude Code runtime files remain unchanged.
+- **Docs.** The README says what the plugin is and links the outcome data from the top; the GUIDE's 10-week walkthrough is labelled the composite it is.
+- No tracking-file migration is needed. Update the plugin and restart Claude Code so the merged KB registers. 339 deterministic tests, 25 Claude hook tests, 27 OpenAI package/runtime tests, 16/16 on the live sweep.
+
 ## [1.18.1] - 2026-08-25
 
 - **Revision-sheet enforcement is scoped to the session that studied.** 1.18.0's Stop hook asked for sheets from any project studied today — including ones other sessions studied — and asked at the end of every turn, so a `/continue` menu got blocked with two sheets it had no context to write. The hook now reads its own session transcript and requires a sheet only for a project this session closed (`touch-state` ran here); without a transcript it never blocks for sheets. Update the plugin and restart.

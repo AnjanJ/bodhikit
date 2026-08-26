@@ -364,6 +364,15 @@ if [ -f dev/eval/test_bodhi_state.py ]; then
   else
     err "dev/eval/test_stop_hook.py missing"
   fi
+  if [ -f dev/eval/test_openai_plugin.py ]; then
+    if ! python3 dev/eval/test_openai_plugin.py >${TMPDIR:-/tmp}/bodhikit-openai-tests.log 2>&1; then
+      err "OpenAI plugin test suite failed — see ${TMPDIR:-/tmp}/bodhikit-openai-tests.log"
+    else
+      ok "OpenAI plugin test suite passed"
+    fi
+  else
+    err "dev/eval/test_openai_plugin.py missing"
+  fi
 else
   err "dev/eval/test_bodhi_state.py missing"
 fi
