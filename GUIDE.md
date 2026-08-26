@@ -121,7 +121,7 @@ Priya opens Claude Code the next day and types one command:
 
 That single command runs her entire session. Here is what happens under the hood:
 
-1. **`/progress quick`** fires first — a 3-line check-in: project, current module, streak (today = day 2, streak = 2), concepts due for review (1 concept from Day 1).
+1. **A 3-line check-in** comes first (the lines `/progress quick` prints, rendered from one `bodhi-state snapshot` call): project, current module, streak (today = day 2, streak = 2), concepts due for review (1 concept from Day 1).
 2. **Spaced review** — the one due concept gets a quick quiz question. Priya gets it right; the concept moves from Box 1 to Box 2 (next review in 3 days).
 3. **`/teach`** is auto-invoked for the next module — *Borrowing*. BodhiKit follows the **I Do → We Do → You Do** flow ([How Teaching Works](#how-teaching-works)). It explains immutable vs mutable borrows with a metaphor about library books, walks her through a sample function, then gives her an exercise. Priya gets stuck — she cannot articulate why the borrow checker is rejecting her code. BodhiKit detects this is the moment for the [Analogy-Escalation Protocol](#when-bodhikit-reaches-for-an-analogy): it has no `learnerBackground.domains[]` on Priya yet, so it asks her once — *"what is a field, hobby, or job you know well?"* She says she gardens. Borrowing gets re-explained as "two people sharing a single pair of pruning shears — they can both look at them, but only one person can be using them at a time, and they have to give them back before the gardener can claim them again." That lands. The exercise unsticks. BodhiKit saves `cooking` and `gardening` to her profile.
 4. **`/reflect`** fires when Priya says she is done. Three questions: hardest thing today? (lifetimes peeked their head out and were scary), confidence on borrowing (7/10), would you do anything differently? (she would re-read the chapter slower). Borrowing goes to Box 1 with `nextReview` tomorrow.
@@ -360,7 +360,7 @@ Expect ~60–90 minutes for the full Day 1: discovery, ~8 assessment questions, 
 
 #### `/bodhikit:continue [project-name]`
 
-**What it does.** The orchestrator. Resolves your project (auto-detect or by name), runs `/progress quick`, surfaces any concepts due for spaced review, auto-invokes `/teach` on the next module, and auto-invokes `/reflect` when you indicate you are done. One command runs an entire session.
+**What it does.** The orchestrator. Resolves your project (auto-detect or by name), prints the 3-line check-in, surfaces any concepts due for spaced review, auto-invokes `/teach` on the next module, and auto-invokes `/reflect` when you indicate you are done. One command runs an entire session.
 
 **When to use.** Every regular learning session after Day 1. This should be your default.
 
@@ -432,7 +432,7 @@ These three skills let you see what you know, what you have planned, and where y
 **When NOT to use.** You want trajectory analysis ("how did I get here, and what next?") — use `/evaluate`, which is much deeper and narrative.
 
 **Pairs well with.**
-- `/continue` — auto-invokes `/progress quick` as its first phase.
+- `/continue` — prints the same 3-line check-in as its first phase (rendered from `bodhi-state snapshot`; the skill itself is not loaded).
 - `/evaluate` — when you want narrative + recommendations on top of the numbers.
 - `/plan adjust` — when the dashboard suggests pacing problems.
 

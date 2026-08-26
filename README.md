@@ -28,7 +28,7 @@ The *voice* comes from four named teachers (Gautama Buddha, Dr. B.R. Ambedkar, M
 
 5. **Single sources of truth + lint as contract.** `state-ops` KB owns the operational surface; `state-schema` KB owns every tracking-file shape (and loads only where a skill legitimately hand-mutates JSON). `spaced-repetition` KB owns every Leitner interval. `teaching-personality` owns the voice. `dev/check.sh` enforces the contracts — version sync (badge included), KB references, agent fallbacks, `--invoked-from=` chaining, the `bodhi-state` write path, skill size budgets — and runs the deterministic test suite.
 
-6. **Sub-skill chaining for context efficiency.** `/continue` → `/progress quick` → `/teach` → `/reflect`, each passing `--invoked-from=<caller>` so callees skip redundant KB loads.
+6. **Sub-skill chaining for context efficiency.** `/continue` → `/quiz` → `/teach` → `/reflect`, each passing `--invoked-from=<caller>` so callees skip redundant KB loads; the opening check-in is rendered from one `bodhi-state snapshot` call, not a skill load.
 
 ## What Makes BodhiKit Different
 
@@ -38,7 +38,7 @@ The *voice* comes from four named teachers (Gautama Buddha, Dr. B.R. Ambedkar, M
 - **Hands-on**: Learn by doing. Exercises, projects, code review. Never just reading.
 - **Remembers your journey**: Spaced repetition, progress tracking, cross-session continuity
 - **Metacognitive reflection**: End-of-session `/reflect` builds your awareness of HOW you learn
-- **One command sessions**: `/continue` auto-invokes the quick check-in, teaching, practice, and reflection
+- **One command sessions**: `/continue` runs the check-in, due reviews, teaching or practice, and reflection
 - **Honest and wise**: Feedback that is respectful, specific, and genuinely helpful
 
 ## Install
@@ -222,7 +222,7 @@ Run `/bodhikit:continue` and the plugin handles the entire flow:
 
 ```
 /continue
-  ├── /progress quick → 3-line check-in
+  ├── check-in      → 3 lines from `bodhi-state snapshot`
   ├── spaced review → quiz on concepts due for review
   ├── /teach        → guided teaching of the next concept
   │     ├── explain with analogies and code examples

@@ -11,7 +11,7 @@ You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference t
 **Knowledge bases are skills.** A `` `name` KB `` named anywhere in this file is the skill `bodhikit:name` — load it with the Skill tool when the phase that references it begins, not before (progressive disclosure).
 
 This skill orchestrates a complete learning session. It auto-invokes other BodhiKit skills as needed:
-- `/progress quick` — shown first as a quick check-in
+- a 3-line check-in rendered from `bodhi-state snapshot` (the same lines `/progress quick` prints)
 - `/quiz` — for spaced review of due concepts
 - `/teach` — when the learner continues with the next module
 - `/reflect` — when the learner indicates they are done
@@ -46,7 +46,13 @@ Which path shall we walk today?
 
 ## Phase 2: Quick Status
 
-**Auto-invoke `/progress quick --invoked-from=continue`** to show the learner a quick 3-line check-in of where they are. The flag tells `/progress` to skip discovery (we already have the project), skip personality re-loading, and stay in project-scoped quick mode.
+Run ONE command — `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> snapshot` — and render the check-in from its `project`, `cadence`, and `review` sections. No skill load, no tracking-file reads, no flourishes (this is `/progress quick`'s format; the skill itself is not invoked here — a 14 KB load to print three lines):
+
+```
+📍 [project-name] | [current-module-name] | [overallCompletion]% complete
+🔥 Streak: [N] days | [N] concepts due for review today
+📅 Last session: [relative time, e.g., "yesterday", "2 days ago"]
+```
 
 ---
 
@@ -148,7 +154,7 @@ Use the canonical streak table from the `teaching-personality` KB. Do not restat
 
 ```
 /continue
-  ├── /progress quick (3-line check-in)
+  ├── 3-line check-in (bodhi-state snapshot)
   ├── /quiz (chained, for due concepts)
   ├── learner chooses what to do
   │     ├── option 1 → /teach (guided teaching session)
