@@ -303,35 +303,87 @@ def load_spaced_review(project, create=False):
     return path, data
 
 
+def _is_int(x):
+    return isinstance(x, int) and not isinstance(x, bool)
+
+
+def _coerce_int(x, lo, hi):
+    """The lossless int repair: a numeric string in range. Anything else
+    (a bool, prose, a float) is None — normalize never guesses."""
+    if isinstance(x, str) and re.fullmatch(r"\s*\d+\s*", x):
+        v = int(x)
+        if lo <= v <= hi:
+            return v
+    return None
+
+
+def _coerce_bool(x):
+    """The lossless bool repair: the strings true/false, or the ints 0/1."""
+    if isinstance(x, str) and x.strip().lower() in ("true", "false"):
+        return x.strip().lower() == "true"
+    if _is_int(x) and x in (0, 1):
+        return bool(x)
+    return None
+
+
+def concept_shape_errors(c):
+    """THE shape table for one spaced-review concept — the single source
+    behind load-time validation (dies on the first), `verify` (reports them
+    all) and `normalize` (repairs the ones with a lossless fix). Returns
+    [(field, actual, expected, repair)] where repair is the coerced value
+    or None. Two hand-kept copies of these rules drifted in 1.18.0 (verify
+    accepted a bool box that every other subcommand then died on)."""
+    errs = []
+    name = c.get("name")
+    if not isinstance(name, str) or not name.strip():
+        errs.append(("name", name, "non-empty string", None))
+    b = c.get("box")
+    if not (_is_int(b) and 1 <= b <= MAX_BOX):
+        errs.append(("box", b, f"int 1-{MAX_BOX}", _coerce_int(b, 1, MAX_BOX)))
+    # The v3 fields may be absent on a v1/v2 file that verify inspects
+    # without upgrading; the load path fills them first.
+    if "bloomLevel" in c:
+        bl = c["bloomLevel"]
+        if not (_is_int(bl) and 0 <= bl <= 6):
+            errs.append(("bloomLevel", bl, "int 0-6", _coerce_int(bl, 0, 6)))
+    if "feynmanPassed" in c:
+        fp = c["feynmanPassed"]
+        if not isinstance(fp, bool):
+            errs.append(("feynmanPassed", fp, "true|false", _coerce_bool(fp)))
+    if "consecutiveCorrectAtL4Plus" in c:
+        cc = c["consecutiveCorrectAtL4Plus"]
+        if not (_is_int(cc) and cc >= 0):
+            errs.append(("consecutiveCorrectAtL4Plus", cc, "int >= 0",
+                         _coerce_int(cc, 0, 10**6)))
+    rh = c.get("reviewHistory", [])
+    if not isinstance(rh, list):
+        errs.append(("reviewHistory", rh, "list", None))
+    elif any(not isinstance(h, dict) for h in rh):
+        errs.append(("reviewHistory", "…", "list of objects", None))
+    return errs
+
+
+def shape_error_text(name, field, actual, expected, repair):
+    """One wording for both paths; names `normalize` only when it can fix it."""
+    msg = f"concept {name!r} {field} {actual!r} not {expected}"
+    if repair is not None:
+        msg += " — run `bodhi-state normalize`"
+    return msg
+
+
 def validate_spaced_review(data, path):
     """Type-check the fields every subcommand computes on, once, at load.
     A string box or a null name used to traceback in some subcommands and
     pass silently through others; now every command fails the same way,
-    naming the field and the repair (`normalize`)."""
-    def bad(i, c, field, expected):
-        label = c.get("name") if isinstance(c.get("name"), str) else f"index {i}"
-        die(f"{path}: concept {label!r} has {field} {c.get(field)!r} "
-            f"(expected {expected}) — run `bodhi-state normalize`, or "
-            f"`bodhi-state verify` for the full list")
+    naming the field and — when there is one — the repair."""
     for i, c in enumerate(data.get("concepts", [])):
-        if not isinstance(c.get("name"), str) or not c.get("name").strip():
-            bad(i, c, "name", "non-empty string")
-        b = c.get("box")
-        if not isinstance(b, int) or isinstance(b, bool) or not 1 <= b <= MAX_BOX:
-            bad(i, c, "box", f"int 1-{MAX_BOX}")
-        bl = c.get("bloomLevel")
-        if not isinstance(bl, int) or isinstance(bl, bool) or not 0 <= bl <= 6:
-            bad(i, c, "bloomLevel", "int 0-6")
-        if not isinstance(c.get("feynmanPassed"), bool):
-            bad(i, c, "feynmanPassed", "true|false")
-        cc = c.get("consecutiveCorrectAtL4Plus")
-        if not isinstance(cc, int) or isinstance(cc, bool) or cc < 0:
-            bad(i, c, "consecutiveCorrectAtL4Plus", "int >= 0")
-        if not isinstance(c.get("reviewHistory"), list):
-            bad(i, c, "reviewHistory", "list")
-        for h in c["reviewHistory"]:
-            if not isinstance(h, dict):
-                bad(i, c, "reviewHistory", "list of objects")
+        errs = concept_shape_errors(c)
+        if errs:
+            field, actual, expected, repair = errs[0]
+            label = c.get("name") if isinstance(c.get("name"), str) else f"index {i}"
+            die(f"{path}: " + shape_error_text(label, field, actual, expected, repair)
+                + ("; " if repair is not None else " — fix it by hand; ")
+                + "`bodhi-state verify` lists every problem")
     if not isinstance(data.get("sessionHistory"), list):
         die(f"{path}: sessionHistory is not a list — run `bodhi-state verify`")
 
@@ -1769,8 +1821,20 @@ def cmd_normalize(args):
     sr_changes = 0
     if sr is not None:
         for c in sr.get("concepts", []):
+            if not isinstance(c, dict):
+                continue
+            # Typed-field repairs from the shape table — only the lossless
+            # ones (numeric strings, string booleans); anything else stays
+            # for verify to report and a human to fix.
+            for field, actual, expected, repair in concept_shape_errors(c):
+                if repair is not None:
+                    c[field] = repair
+                    changes.append(f"{field} {actual!r} -> {repair!r} ({c.get('name')})")
+                    sr_changes += 1
+            if not isinstance(c.get("reviewHistory"), list):
+                continue
             for h in c.get("reviewHistory", []):
-                if h.get("deferred"):
+                if not isinstance(h, dict) or h.get("deferred"):
                     continue
                 res = h.get("result")
                 if res is not None and res not in ("correct", "incorrect", "partial"):
@@ -1890,9 +1954,10 @@ def cmd_verify(args):
                                   f"{seen_names[key]!r} and {name!r} — writers "
                                   f"match first-found; merge them")
                 seen_names[key] = name
-                box = c.get("box")
-                if not isinstance(box, int) or not 1 <= box <= MAX_BOX:
-                    errors.append(f"concept {name!r} box {box!r} not int 1-{MAX_BOX}")
+                for field, actual, expected, repair in concept_shape_errors(c):
+                    if field == "name":
+                        continue  # reported above with the index fallback
+                    errors.append(shape_error_text(name, field, actual, expected, repair))
                 if c.get("nextReview") is not None and parse_date(c.get("nextReview")) is None:
                     errors.append(f"concept {name!r} nextReview "
                                   f"{c.get('nextReview')!r} is not an ISO date — "
@@ -1904,18 +1969,12 @@ def cmd_verify(args):
                     for k in ("bloomLevel", "feynmanPassed", "consecutiveCorrectAtL4Plus"):
                         if k not in c:
                             errors.append(f"concept {name!r} missing v3 field {k!r}")
-                bl = c.get("bloomLevel", 0)
-                if not isinstance(bl, int) or not 0 <= bl <= 6:
-                    errors.append(f"concept {name!r} bloomLevel {bl!r} not int 0-6")
                 rh = c.get("reviewHistory", [])
                 if not isinstance(rh, list):
-                    errors.append(f"concept {name!r} reviewHistory is not a list")
                     rh = []
                 for h in rh:
                     if not isinstance(h, dict):
-                        errors.append(f"concept {name!r} reviewHistory entry "
-                                      f"{h!r} is not an object")
-                        continue
+                        continue  # shape table reported it
                     if h.get("deferred"):
                         if "result" in h:
                             errors.append(f"concept {name!r} deferral entry carries "

@@ -1547,10 +1547,16 @@ def t_validation_on_load():
             out = run(proj, *argv, expect_fail=True)
             check(f"load: string box fails cleanly in {argv[0]}",
                   out.get("ok") is False and "box" in out.get("error", "")
-                  and "normalize" in out.get("error", ""), out)
+                  and "verify" in out.get("error", ""), out)
+            # "three" is not a number: the advice must not name normalize,
+            # which cannot repair it (1.18.x: the load-path advice claimed a
+            # repair normalize did not perform)
+            check(f"load: unrepairable box does not promise normalize in {argv[0]}",
+                  "normalize" not in out.get("error", ""), out)
         out = run(proj, "verify", expect_fail=True)
         check("verify: string box reported, not raised",
               out.get("ok") is False and any("box" in e for e in out["errors"]), out)
+
         # null name: verify reports it; a subcommand dies cleanly
         sr["concepts"][0]["box"] = 2
         sr["concepts"][0]["name"] = None
@@ -1606,6 +1612,80 @@ def t_validation_on_load():
         out = run(proj, "profile-update-project", "--name", "x", "--phase", "1", expect_fail=True)
         check("load: non-object profile entry fails cleanly",
               out.get("ok") is False and "activeProjects[0]" in out.get("error", ""), out)
+
+
+def t_shape_rules_agree():
+    """One shape table behind load-time validation and `verify` (1.18.x):
+    a value must not pass the Stop hook's `verify` and then kill every other
+    subcommand — or the reverse. Booleans are not ints on either path;
+    numeric strings and string booleans are the lossless repairs `normalize`
+    performs, and the load-path advice names normalize exactly when it can."""
+    def v3_sr():
+        sr = json.loads(json.dumps(V2_SR))
+        sr["version"] = 3
+        for c in sr["concepts"]:
+            c.update({"bloomLevel": 3, "feynmanPassed": False,
+                      "consecutiveCorrectAtL4Plus": 0})
+        return sr
+
+    def write_sr(proj, sr):
+        with open(os.path.join(proj, ".bodhi", "spaced-review.json"), "w") as f:
+            json.dump(sr, f)
+
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review=v3_sr())
+        # bool box / bloomLevel / counter: both paths reject, neither offers normalize
+        for field, value in (("box", True), ("bloomLevel", False),
+                             ("consecutiveCorrectAtL4Plus", True)):
+            sr = v3_sr()
+            sr["concepts"][0][field] = value
+            write_sr(proj, sr)
+            v = run(proj, "verify", expect_fail=True)
+            check(f"verify: bool {field} is not an int",
+                  v.get("ok") is False and any(field in e for e in v["errors"]), v)
+            check(f"verify: bool {field} does not promise normalize",
+                  not any(field in e and "normalize" in e for e in v["errors"]), v)
+            d = run(proj, "due", expect_fail=True)
+            check(f"load: bool {field} fails cleanly",
+                  d.get("ok") is False and field in d.get("error", "")
+                  and "normalize" not in d.get("error", ""), d)
+        # feynmanPassed as a string: rejected on both paths
+        sr = v3_sr()
+        sr["concepts"][0]["feynmanPassed"] = "yes"
+        write_sr(proj, sr)
+        v = run(proj, "verify", expect_fail=True)
+        check("verify: string feynmanPassed rejected",
+              v.get("ok") is False and any("feynmanPassed" in e for e in v["errors"]), v)
+        d = run(proj, "due", expect_fail=True)
+        check("load: string feynmanPassed fails cleanly",
+              d.get("ok") is False and "feynmanPassed" in d.get("error", ""), d)
+        # numeric strings and string booleans: verify names normalize, load
+        # names normalize, normalize repairs, verify passes, values are typed
+        sr = v3_sr()
+        sr["concepts"][0]["box"] = "3"
+        sr["concepts"][0]["bloomLevel"] = " 4 "
+        sr["concepts"][0]["feynmanPassed"] = "true"
+        sr["concepts"][1]["consecutiveCorrectAtL4Plus"] = "2"
+        write_sr(proj, sr)
+        v = run(proj, "verify", expect_fail=True)
+        check("verify: numeric-string box names normalize",
+              any("box" in e and "normalize" in e for e in v["errors"]), v)
+        d = run(proj, "due", expect_fail=True)
+        check("load: numeric-string box names normalize",
+              d.get("ok") is False and "normalize" in d.get("error", ""), d)
+        n = run(proj, "normalize")
+        check("normalize: repairs typed fields",
+              n.get("action") == "normalized"
+              and sum(1 for ch in n["changes"] if "->" in ch) >= 4, n)
+        after = read_sr(proj)
+        c0, c1 = after["concepts"][0], after["concepts"][1]
+        check("normalize: box/bloomLevel/feynmanPassed/counter are typed",
+              c0["box"] == 3 and c0["bloomLevel"] == 4 and c0["feynmanPassed"] is True
+              and c1["consecutiveCorrectAtL4Plus"] == 2, after)
+        check("normalize: repaired file verifies clean", run(proj, "verify").get("ok") is True)
+        check("normalize: second run is a noop", run(proj, "normalize").get("action") == "noop")
+        check("normalize: non-canonical fields survive",
+              c0.get("precisionGap") == "confuses clustered vs non-clustered", after)
 
 
 def t_write_on_v2_backs_up():
@@ -1792,7 +1872,7 @@ def main():
               t_due_never_taught, t_concept_tiers,
               t_profile_project_lifecycle, t_profile_patterns, t_park,
               t_bloom_render, t_gate_evidence,
-              t_gate_evidence_reset, t_validation_on_load,
+              t_gate_evidence_reset, t_validation_on_load, t_shape_rules_agree,
               t_write_on_v2_backs_up, t_script_hygiene,
               t_mastery_snapshot_agree, t_revision_brief,
               t_due_shape):
