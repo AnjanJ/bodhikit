@@ -8,6 +8,35 @@ This is the full, unabridged, patch-by-patch changelog kept for the maintainer �
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [Unreleased] - 2026-08-26
+
+A second external review pass (commit history, journal, script, lint, skills, evals), this time with the fixes landed one commit per finding. The review's headline was not a bug: five months of engineering discipline had been spent making the system trustworthy for a use that is barely happening (one learner, 11 sessions, 0 mastered), and the KB-load bug survived every layer of it because none of the layers checked the runtime. The code findings, in commit order:
+
+### Script correctness
+- **One shape table** (`concept_shape_errors`) behind load-time validation, `verify`, and `normalize`. They had drifted: `verify` accepted a bool box that every other subcommand died on, with advice naming a repair `normalize` did not perform. `normalize` now applies only lossless fixes (numeric strings, string booleans); the advice names it only when it can act.
+- **One v3 upgrade** (`upgrade_to_v3`) for the write path and `migrate-spaced-review`; before, the two produced different files and migrate reported noop on a half-upgraded one. The write path now writes the marker too.
+- **Atomic writes keep the file's mode** — `mkstemp`'s 0600 was carried onto the learner's tracking files by `os.replace`.
+- **Stop hook** accepts `--project=<path>` (the regex matched only the space form, so that spelling escaped the revision-sheet gate); the never-read `study` flag is gone.
+- **`BODHI_TODAY`** pins the script's clock: the suites no longer race midnight, and `t_date_travel` tests the Leitner schedule past same-day for the first time. The test `main()` survives a crashed test.
+- A review entry carries `bloomLevel` only when a level was tested (a bare `correct` wrote 0).
+- Shared preamble for forget/park/defer; `require_state` / `state_if_present`.
+
+### Grading
+- The Feynman explain-back ladder is a **rubric**: five rows with exact levels, one anchored B-tree answer per row plus the parrot and the misconception, five ordered checks, and the `set-feynman` condition stated for the first time. The ~900 words of case law (floor, ceiling, "a floor is not a landing spot", precedence, exception-to-the-exception, two "tells") are gone; both regression pairs they defended map to checks 3 and 4. `understanding-only.md` had cited "three fluency-without-understanding signals" that did not exist; check 1 defines them.
+- The grading eval scripts carried the verdict in the learner's mouth ("I answer correctly", the KB's own trigger clause, "my mechanics stay correct"). They now carry answers only.
+
+### Context cost
+- `/teach` Phase 5 step 1 defers to the rubric instead of re-arguing it; the "(the script computes it; do not re-derive)" fossils are gone. 17.7 → 16.6 KB.
+- `state-ops` drops the 27-row subcommand catalogue for a grouped list of contracts. 17.4 → 15.0 KB on every fire.
+- `/continue` renders its check-in from one `snapshot` call instead of loading `/progress quick` (13.9 KB) to print three lines.
+- ZPD, cognitive-load and desirable-difficulties merge into `difficulty-calibration` (7.1 KB): /teach Phase 4 goes from five KB loads to three. Trade-off recorded in the commit: ZPD-only loaders pay ~5 KB more.
+
+### Docs
+- README leads with what the plugin is and links the outcome data from the TL;DR; "How it achieves excellence" → "How it works". GUIDE labels Priya as a composite.
+
+### Not fixed in code
+The usage gap. The plugin's next release should be preceded by real sessions, not another review.
+
 ## [1.18.1] - 2026-08-25
 
 Caught in the maintainer's first real `/continue` after updating: the Stop event fires at the end of **every assistant turn**, not at session end, and `find_projects` + `revision-brief` saw projects other sessions had studied today — so the `/continue` menu turn was blocked with two revision sheets to write from sessions this one never saw. Fix: the hook parses `transcript_path` (the session's own JSONL) for Bash `bodhi-state --project <p> …` calls and requires a sheet only for a project whose closing bookkeeping (`touch-state`) ran in this session; a review alone (mid-lesson) does not trigger it, another project's writes do not, and no transcript means no sheet blocks (fail-open). Four new hook checks. The schema-verify half of the hook keeps its 1.11 semantics.
