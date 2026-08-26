@@ -25,31 +25,34 @@ Skills do not hand-edit tracking JSON. Every mutation of `state.json`, `spaced-r
 
 If `CLAUDE_PLUGIN_ROOT` is not set in the Bash environment, locate the script once with `find ~/.claude/plugins -type f -name bodhi-state -path "*bodhikit*" 2>/dev/null | head -1` (or the repo checkout's `scripts/bodhi-state` when running via `--plugin-dir`).
 
-| Subcommand | Owns |
-|---|---|
-| `add-concept --concept N --module M [--question Q]` | New concept with canonical Box-1 defaults |
-| `record-review --concept N --result correct\|incorrect\|partial --tested-bloom 0-6 [--confidence sure\|mostly\|guessing] [--module M] [--note S] [--source skill] [--retry]` | Leitner box math, nextReview dates, bloomLevel ratchet, `consecutiveCorrectAtL4Plus` rules, `reviewHistory[]` append. `--retry` = successive-relearning rep: history entry only, no box/counter/bloom movement (the original demotion stands). Output reports `crossedBloom3: true` when THIS write crossed Bloom <3 → ≥3 — the exact trigger for `bump-profile --counter totalConceptsLearned`; do not re-derive the crossing |
-| `set-feynman --concept N` | `feynmanPassed = true` (set, never unset) |
-| `record-session --type T [--subtype S] [--data '<json>']` | `sessionHistory[]` append, canonical-type enforcement (`type`/`subtype`/`date` in `--data` are ignored — flags only) |
-| `record-assessment --trigger learn-phase2\|assess\|evaluate\|plan-regenerate --data '<entry json>'` | Append-only `assessment-history.json` entry, date-stamped |
-| `forget --concepts "A, B" \| --concept N (repeatable) [--note S] [--activity S]` | Learner-initiated demote: box 1, counter reset, history + `learner-forget` session entry, `lastActivity`. Use `--concept` for names containing commas |
-| `defer --concept N (repeatable) [--days D] [--note S]` | A due concept the session did not reach: `nextReview` = today + D (default 1), box/bloom/counters/`lastReviewed` untouched, history entry `{date, deferred: true, days}` with NO result — deferral is scheduling, never an outcome. Do NOT invent a `result` for an unreviewed concept |
-| `park --concept N (repeatable) [--resume] [--note S]` | Learner-deprioritized concept out of review rotation: `parked: true`, `nextReview: null`, `learner-park` session entry; box/bloom/Feynman/counters all stand. Excluded from due/retention surfaces but reported as a count, never silently. `--resume` returns it (review tomorrow, box preserved). Parking is scheduling, never an outcome |
-| `normalize` | One-shot, idempotent repair of executor drift: invented result/type vocabulary, nested bookkeeping, and the lossless typed-field fixes (a numeric-string box or level, a string boolean). Backs up both files to `.bodhi/.pre-normalize-backup/` first; `verify` names this as the repair only when it can perform it |
-| `touch-state [--activity S] [--module M] [--module-index N] [--phase P] [--completion N]` | `state.json` session bookkeeping: dates, streak, totalSessions, module advance (records `previousModule`). The first touch of a new day also bumps the profile's `cumulativeStats.totalSessions` — no skill calls `bump-profile --counter totalSessions` |
-| `bump-profile --counter <name>` | `cumulativeStats` increments in `.bodhi-profile.json` |
-| `profile-add-project --name N --topic T [--phase P] [--module M] [--bloom B] [--pace S] [--status S] [--track-purpose S]` | Appends a schema-complete entry to `.bodhi-profile.projects.json` `activeProjects` (creates the file if missing; `startedAt` = today). `/learn` Phase 4 |
-| `profile-update-project --name N [--topic\|--phase\|--module\|--bloom\|--pace\|--status\|--track-purpose ...]` | In-place refresh of an `activeProjects` entry — only the passed fields change, unknown fields preserved. `/evaluate` refresh |
-| `profile-complete-project --name N [--final-bloom B] [--status S]` | Moves the entry `activeProjects` → `completedProjects` (`completedAt` = today, `finalBloomLevel` from `--final-bloom` or the entry's `bloomLevel`, `trackPurpose` carried; `--status` for `/learn`'s replace-archive note). Completion is learner-confirmed, never inferred |
-| `profile-update-patterns` | Counts the project's `assessment-history.json` per sub-topic: 3+ entries at Bloom <3 appends to `patterns.persistentChallenges`, 3+ at Bloom 4+ to `patterns.consistentStrengths` (append-only, deduplicated). The counting is the script's; the skill never tallies assessments in prose |
-| `due [--limit N]` / `mastery` / `calibration` | Read-side rollups: due concepts in review order (`priority` 1 = first; `dueSince`, `overdueDays`, `bloomOutcome` — by design the list carries no box or Bloom number, so narrating it cannot leak one) — each tagged `neverTaught` (no review ever came from `--source teach`; a `/learn`-seeded or quiz-only concept) plus a `neverTaughtCount` rollup, so `/continue` routes never-taught-but-due concepts to `/teach` not `/quiz` (reviewing an untaught concept is not spaced repetition) — plus `unparseableDates` for schedule-broken entries (never silently skipped); canonical mastery % + `blockedOnFeynman`; retention tiers; confidence calibration |
-| `retention` / `export-anonymized` | Read-side outcome analytics: retention-at-review rates by spacing gap and by `boxBefore`, and a shareable anonymized stats export (counts and rates only) |
-| `revision-brief` | Read-side facts for today's revision sheet (1.18.0): concepts with a non-deferred review dated today (or introduced today) with results, sources, outcome clause, next review; `sessionToday`; `suggestedFile` (`revision/<date>-<slug>.md`); `existing` sheets for today (append, never duplicate). The Stop hook reads it |
-| `session-brief --concept N` | Read-side branch detection for `/teach` (1.14.0): `firstExposure`/`pretestApplies` (pretest vs graded retrieval open), `isReteach` (targeted-reteach duty), box/bloom/Feynman position, `dueForReview`. Trust the brief over hand-reading tracking files |
-| `snapshot` | Read-side single-call dashboard for `/progress` (1.14.0): position + Bloom maps (`project`), session cadence (`cadence`), due lists + box distribution + 3-tier retention rollup (`review`), per-module mastery + `blockedOnFeynman` (`mastery`), confidence calibration (`calibration`) |
-| `gate-check [--module M] [--prereqs "A,B"] [--prior-module M]` | Prerequisite Bloom gate verdict (see below) |
-| `migrate-spaced-review` | One-shot v1/v2 → v3 transform: backup, in-place field fill, marker, verification |
-| `verify` | Schema sanity check (also run by the plugin's Stop hook and `dev/check.sh`) |
+Every skill carries its own exact invocation; `bodhi-state <subcommand> --help` prints the flags. What each one owns — the contracts a skill must not work around:
+
+**Writers**
+
+- `add-concept` — a new concept with the canonical Box-1 defaults.
+- `record-review` — Leitner box and `nextReview`, the Bloom ratchet, `consecutiveCorrectAtL4Plus`, the `reviewHistory[]` append. `--confidence sure|mostly|guessing` is the learner's pre-reveal calibration tag — recorded, never a gate on promotion. `--retry` is a successive-relearning rep: history only, no box/counter/bloom movement (the demotion stands). Its output's `crossedBloom3: true` is the one trigger for `bump-profile --counter totalConceptsLearned`.
+- `set-feynman` — `feynmanPassed = true`, never unset.
+- `record-session` — a `sessionHistory[]` entry in the canonical type vocabulary (below); `type`, `subtype` and `date` come from flags, never from `--data`.
+- `record-assessment` — an append-only, date-stamped `assessment-history.json` entry.
+- `forget` — the learner-initiated demote: box 1, counter reset, history and `learner-forget` entries, `lastActivity`. `--concept` (repeatable) for names containing commas.
+- `defer` / `park [--resume]` — scheduling, never an outcome. A deferral rolls `nextReview` and writes a history entry with **no result**; parking leaves rotation with box, bloom, Feynman and counters intact and is reported as a count, never hidden. Do not invent a `result` for a concept that was not reviewed.
+- `touch-state` — `state.json` session bookkeeping: dates, streak, `totalSessions`, module advance (`previousModule`). The first touch of a day also bumps the profile's `cumulativeStats.totalSessions` — no skill calls `bump-profile` for that.
+- `bump-profile --counter` — `cumulativeStats` increments in `.bodhi-profile.json`.
+- `profile-add-project` / `profile-update-project` / `profile-complete-project` / `profile-update-patterns` — the `.bodhi-profile.projects.json` list (schema-complete entries, unknown fields preserved) and the count-based `patterns`. Completion is learner-confirmed, never inferred; the skill never tallies assessments in prose.
+
+**Readers** (no lock file, no writes)
+
+- `due` — due concepts in review order (`priority`, `dueSince`, `overdueDays`, `bloomOutcome`) — by design no box or Bloom number, so narrating it cannot leak one. Each is tagged `neverTaught` (no review ever came from `--source teach`): route those to `/teach`, not `/quiz`. `unparseableDates` lists schedule-broken entries rather than skipping them.
+- `session-brief --concept` — `/teach`'s branches: pretest vs graded retrieval (`firstExposure`/`pretestApplies`), `isReteach`, box/bloom/Feynman position, `dueForReview`.
+- `snapshot` — the whole `/progress` surface in one call (`project`, `cadence`, `review`, `mastery`, `calibration`). `mastery` / `calibration` / `retention` / `export-anonymized` — its parts and the outcome analytics (retention by spacing gap and `boxBefore`; an anonymized counts-only export).
+- `revision-brief` — today's facts for the revision sheet (`sessionToday`, `suggestedFile`, `existing`); the Stop hook reads it.
+- `gate-check` — the prerequisite verdict (*Prerequisite Gate* below).
+
+**Maintenance**
+
+- `migrate-spaced-review` — v1/v2 → v3 once: backup, in-place field fill, marker, verification.
+- `normalize` — idempotent repair of executor drift (invented result/type vocabulary, nested bookkeeping, the lossless type fixes: a numeric-string box or level, a string boolean), both files backed up first. `verify` names it only when it can perform the repair.
+- `verify` — the schema check the Stop hook and `dev/check.sh` run.
 
 The script preserves unknown fields by mutating parsed JSON in place, writes atomically, and rejects invalid `sessionHistory` types in code. The skill's job is the pedagogical judgment (which result, which Bloom level, which confidence tag); the script's job is the file.
 
