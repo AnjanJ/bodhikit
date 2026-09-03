@@ -30,7 +30,7 @@ Every skill carries its own exact invocation; `bodhi-state <subcommand> --help` 
 **Writers**
 
 - `add-concept` — a new concept with the canonical Box-1 defaults.
-- `record-review` — Leitner box and `nextReview`, the Bloom ratchet, `consecutiveCorrectAtL4Plus`, the `reviewHistory[]` append. `--confidence sure|mostly|guessing` is the learner's pre-reveal calibration tag — recorded, never a gate on promotion. `--retry` is a successive-relearning rep: history only, no box/counter/bloom movement (the demotion stands). Its output's `crossedBloom3: true` is the one trigger for `bump-profile --counter totalConceptsLearned`.
+- `record-review` — Leitner box and `nextReview`, the Bloom ratchet, `consecutiveCorrectAtL4Plus`, the `reviewHistory[]` append. `--confidence sure|mostly|guessing` is the learner's pre-reveal calibration tag — recorded, never a gate on promotion. `--retry` is a successive-relearning rep: history only, no box/counter/bloom movement (the demotion stands). `--applied` marks an outcome demonstrated in working code the tutor read (an exercise, a driven piece), never an explanation or a quiz answer: it is the only evidence the gate and the mastery formula accept for "can build with it", so a verbal review must not carry it. Its output's `crossedBloom3: true` is the one trigger for `bump-profile --counter totalConceptsLearned`.
 - `set-feynman` — `feynmanPassed = true`, never unset.
 - `record-session` — a `sessionHistory[]` entry in the canonical type vocabulary (below); `type`, `subtype` and `date` come from flags, never from `--data`.
 - `record-assessment` — an append-only, date-stamped `assessment-history.json` entry.
@@ -128,7 +128,10 @@ mastered = (bloomLevel >= 4)
        AND (consecutiveCorrectAtL4Plus >= 3)
        AND (box >= 4)
        AND (feynmanPassed === true)
+       AND (appliedEvidence >= 1)
 ```
+
+`appliedEvidence` is the count of `correct` reviews flagged `applied` since the most recent miss (`state-schema` KB). Without it, every other conjunct can be met in conversation and a learner who has never run the code reads as *Solid*. `mastery` and `snapshot` report `blockedOnApplied` (every criterion but this one) beside `blockedOnFeynman`, and each module row carries `applied` (concepts with at least one build since the last miss).
 
 Skills MUST NOT redefine this formula inline. Field semantics (the Bloom ratchet, the counter rules, the Feynman flag) live in the `state-schema` KB; the underlying criteria in the `blooms-taxonomy` KB.
 
@@ -142,13 +145,13 @@ The `/teach` Phase 1 gate fires only on the first session of a new module (detec
 
 | Verdict | Condition | Gate behavior |
 |---|---|---|
-| `satisfied` | `bloomLevel >= 3` AND (`box >= 3` OR two or more correct reviews graded at Bloom 3+ **since the most recent miss** — an `incorrect` review or a `/forget` resets the count — with the latest reviewed within 30 days) | Pass (`reason: box` or `evidence`) |
-| `stale-reconfirm` | `bloomLevel >= 3` but box < 3 AND either fewer than two level-3+ corrects since the last miss (`reason: single-evidence` — zero after a `/forget`) or last review > 30 days ago (`reason: stale`) | One quick reconfirm question — a single grade is noisy and the Bloom ratchet is one-way, so one review is not settled evidence. Phrase by reason: "we have only seen this once" vs "it has been a while" |
+| `satisfied` | `bloomLevel >= 3` AND (`box >= 3` OR two or more correct reviews graded at Bloom 3+ **since the most recent miss** — an `incorrect` review or a `/forget` resets the count — with the latest reviewed within 30 days) AND at least one `applied` correct since that miss | Pass (`reason: box` or `evidence`) |
+| `stale-reconfirm` | `bloomLevel >= 3` but box < 3 AND either fewer than two level-3+ corrects since the last miss (`reason: single-evidence` — zero after a `/forget`) or last review > 30 days ago (`reason: stale`); OR the recall evidence above would pass but no `applied` correct exists since the last miss (`reason: no-applied-evidence`, 1.20.0 — every concept tracked before the flag meets this once) | One quick reconfirm — a single grade is noisy and the Bloom ratchet is one-way, so one review is not settled evidence. For `no-applied-evidence` the reconfirm is a few lines of code the learner writes, recorded `--applied`; for the other reasons a question. Phrase by reason: "we have only seen this once" / "it has been a while" / "you have explained this well; show me once in code" |
 | `no-opinion` | `bloomLevel == 0` | Pass (legacy fallthrough) |
-| `apply-equivalent` | `1 <= bloomLevel < 3` but `box >= 3` AND last two reviews correct | Pass (gate-time read only; bloomLevel untouched) |
+| `apply-equivalent` | `1 <= bloomLevel < 3` but `box >= 3` AND last two reviews correct AND one `applied` correct since the last miss (without it: `stale-reconfirm` / `no-applied-evidence`) | Pass (gate-time read only; bloomLevel untouched) |
 | `gap` | otherwise | Surface as an offer — never auto-block; the learner decides |
 
-Each prerequisite row also carries `evidenceAt3Plus` (count of level-3+ corrects since the last miss) and `bloomLabel`/`bloomOutcome` for learner-facing phrasing (`blooms-taxonomy` KB rendering rule).
+Each prerequisite row also carries `evidenceAt3Plus` (count of level-3+ corrects since the last miss), `appliedEvidence` (built corrects since the last miss) and `bloomLabel`/`bloomOutcome` for learner-facing phrasing (`blooms-taxonomy` KB rendering rule).
 
 Prerequisites come from the plan's `**Prerequisites for next module:**` declaration (passed via `--prereqs`) or, as fallback, all concepts of the tracked `previousModule` (the verdict JSON reports `prerequisiteSource: "declared" | "prior-module"` so the skill can tell the learner which mapping it used). When neither is available the gate declines to fire (`fires: false` with the reason) — it never infers a prerequisite module from concept dates; a guessed gate generates false reconfirm questions, which cost more trust than no gate.
 

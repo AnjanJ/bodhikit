@@ -181,8 +181,10 @@ After the learner indicates they have completed (or attempted) the exercise:
       "${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> record-review \
         --concept "<exercise concept>" --result correct|incorrect|partial \
         --tested-bloom <highest level actually demonstrated> \
-        --module "<current module>" --source practice
+        --module "<current module>" --source practice [--applied]
       ```
+
+      `--applied` when the learner's code ran and you read it — the exercise is the plugin's main source of working-code evidence, and the gate and the mastery formula accept nothing else for "can build with it" (`state-ops` KB). No flag for a prose-only answer, an abandoned attempt, or code that never ran.
 
       `--tested-bloom` caps at what was demonstrated, not the exercise tier (a brute-force Advanced solve does not advance past 4; the script ratchets `bloomLevel` and never demotes) — and not at what the learner says they demonstrated, per the `blooms-taxonomy` KB; the ratcheted level feeds the prerequisite gate. Completion = `correct`; abandoned = `incorrect`; got there with heavy hints = `partial`. Do NOT call `set-feynman` here — that gate is owned by `/teach` (including its understanding-only sessions).
 

@@ -394,7 +394,7 @@ fi
 if [ ! -f skills/state-ops/SKILL.md ]; then
   err "skills/state-ops/SKILL.md missing (1.13.0 operational surface)"
 else
-  for token in 'record-review' 'record-session' 'gate-check' 'consecutiveCorrectAtL4Plus >= 3' 'Discovery procedure'; do
+  for token in 'record-review' 'record-session' 'gate-check' 'consecutiveCorrectAtL4Plus >= 3' 'appliedEvidence >= 1' 'no-applied-evidence' 'Discovery procedure'; do
     if ! grep -q "$token" skills/state-ops/SKILL.md; then
       err "skills/state-ops/SKILL.md missing '$token' (operational surface incomplete)"
     fi

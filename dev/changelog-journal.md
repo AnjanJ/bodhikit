@@ -8,6 +8,23 @@ This is the full, unabridged, patch-by-patch changelog kept for the maintainer â
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [Unreleased] - 2026-09-03
+
+Maintainer finding from a real session, the first since 1.19.0's "the next release should be preceded by real sessions": *"too much importance to Bloom level; we should also test if the user can apply what was taught."* Traced: every `record-review` write came from an explanation or a quiz answer. `/teach` Phase 4's exercise was read and acknowledged but never entered the tracking state; Phase 5 graded the retention check's *explanation*, and the Apply row of the rubric is earned by "showing usage" in prose. `/practice` did write the exercise outcome, but into the same `bloomLevel` field, so downstream nothing could tell a built correct from a spoken one. The gate's `satisfied` and all four mastery conjuncts were reachable without a line of code.
+
+### The applied axis (schema, script, tests)
+- `reviewHistory[].applied` (optional bool), written by `record-review --applied`; derived `appliedEvidence` = built corrects since the last miss (same reset as `evidence_at_3_plus`) on `record-review` output, `session-brief`, every `gate-check` row.
+- `gate_verdict`: recall alone never satisfies. `box >= 3`, two level-3+ corrects, and the sub-3 `apply-equivalent` fallthrough all now require one built correct since the last miss; without it the verdict is `stale-reconfirm` / `no-applied-evidence` â€” one code reconfirm, which every pre-1.20.0 concept meets exactly once.
+- `is_mastered` gains the fifth conjunct. `blockedOnApplied` beside `blockedOnFeynman`, each meaning "exactly this one step left"; module rows carry `applied`; `snapshot.mastery.applied` and `export-anonymized.applied` count concepts built since their last miss.
+- `verify` reports a non-bool `applied`; `normalize` repairs the string form. 25 new deterministic checks (`t_applied_evidence`), 11 existing fixtures updated where they assumed recall was enough. 364 pass.
+
+### Skills and KBs
+- `state-schema` documents the field; `state-ops` the flag contract, the five-conjunct formula and the new gate reason; `blooms-taxonomy` the tier row and why; `feynman-technique` "five locks".
+- `/teach` Phase 4 names the working code as the applied observation and Phase 5 carries `--applied` for it; the gate reference shapes the `no-applied-evidence` reconfirm as a few lines of code; `/practice` and `/pair` flag a run piece the learner wrote or drove; `/progress` renders the `blockedOnApplied` line and a `built with N of M` spread.
+- Not changed: the rubric (levels still come from the explanation), `familiar` (Bloom 3 + Box 2 stays the honest state of working knowledge), `/quiz` and `/reflect` (verbal by nature, never flag).
+
+Lint pins `appliedEvidence >= 1` and `no-applied-evidence` between the state-ops KB and the script. No tracking-file migration: the field is optional and absent means "not yet built".
+
 ## [1.19.0] - 2026-08-26
 
 A second external review pass (commit history, journal, script, lint, skills, evals), this time with the fixes landed one commit per finding. The review's headline was not a bug: five months of engineering discipline had been spent making the system trustworthy for a use that is barely happening (one learner, 11 sessions, 0 mastered), and the KB-load bug survived every layer of it because none of the layers checked the runtime. The code findings, in commit order:

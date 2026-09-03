@@ -145,7 +145,7 @@ Tell them: "Struggle is where the learning lives. Try for at least 5 minutes bef
 
 1. Look for code in `exercises/<current-module>/` and any file they named. If no code file was produced, skip step 2 — go straight to step 3 with prose-based acknowledgment.
 2. If code exists, Read it. You MUST use the Agent tool to launch the `code-reviewer` agent for educational review. **Fallback:** If the agent fails or hits its turn limit, conduct the educational review directly by reading the code and applying the Socratic-questioning framework yourself.
-3. Working code (or strong verbal answer): quote the lines the point is about (`path:line`), acknowledge, then ask a deepening question about those lines.
+3. Working code (or strong verbal answer): quote the lines the point is about (`path:line`), acknowledge, then ask a deepening question about those lines. Working code you read is the session's **applied observation**: Phase 5's `record-review` carries `--applied` for it. A verbal answer, however strong, is not one.
 4. Not working: offer the scientific-debugging handoff (reference the `scientific-debugging` KB):
 
    > "We can work through it Socratically here, or switch to `/bodhikit:debug-together --invoked-from=teach <brief description of failing behavior>` and treat it as a hypothesis to test. The debug-together path is slower but it teaches the debugging skill, not just the fix."
@@ -172,6 +172,8 @@ The session is invisible to every future skill until these land. Per the `state-
      --tested-bloom <row the final explanation reached> \
      --module "<current module>" --source teach
    ```
+
+   Add `--applied` only when Phase 4 produced working code you read (the exercise ran, or the deepening question was answered in code that ran). It is a second axis, not a level: the row still comes from the explanation, and the flag is the only evidence the gate and the mastery formula accept for "can build with it" (`state-ops` KB). An understanding-only session, a prose-only completion, or code that never ran gets no flag.
 
    (`--module` auto-creates the concept if this was its first session.) `--tested-bloom` is the row the answer reached, not the row the learner claims for it (`blooms-taxonomy` KB); it ratchets and feeds the prerequisite gate. Tell the learner where they stand as the output's `bloomOutcome` clause; only if it reports `crossedLevel: true` name the rung too ("That moves you to **<bloomLabel>** — <bloomOutcome>") — the `blooms-taxonomy` KB rendering rule. Under the rubric's check-5 condition: `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> set-feynman --concept "<concept>"`.
 

@@ -74,7 +74,7 @@ If multiple projects exist (and not chained), add one line: "(You have [N] other
 
 Run ONE command for all numbers (per the `state-ops` KB write path) instead of hand-computing from tracking files:
 
-- `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> snapshot` — position + Bloom maps (`project`), session cadence (`cadence`), due lists + box distribution + 3-tier retention rollup (`review`), per-module mastery % + `blockedOnFeynman` (`mastery`), and confidence calibration (`calibration`), in one JSON.
+- `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> snapshot` — position + Bloom maps (`project`), session cadence (`cadence`), due lists + box distribution + 3-tier retention rollup (`review`), per-module mastery % + `blockedOnFeynman` + `blockedOnApplied` (`mastery`), and confidence calibration (`calibration`), in one JSON.
 
 Then read ONE file:
 - `.bodhi/progress.md` — the live entry plus the "Summary of earlier sessions" block (do NOT follow archive pointers into `progress/archive/` by default — the summary block is the per-session digest). This is the narrative; the snapshot is the numbers.
@@ -138,7 +138,8 @@ Present the dashboard in this format:
 Notes on the sections:
 
 - **If the snapshot's `mastery` section reports a non-empty `blockedOnFeynman` list**, render one line under the Module Breakdown: *"[N] concept(s) meet every mastery criterion except the explain-back gate: [names]. One `/teach <concept>` session (understanding-only is enough) completes each."* A quiz-only learner otherwise watches mastery sit at 0% with no visible reason.
-- **Mastered `N/M`** comes from the snapshot's `mastery` section (computed by the script): `N` = that module's `mastered`, `M` = its `concepts`. The underlying predicate is the canonical formula from the `state-ops` KB (`mastered === true` requires `bloomLevel >= 4` AND `consecutiveCorrectAtL4Plus >= 3` AND `box >= 4` AND `feynmanPassed`; see `blooms-taxonomy` KB for the criteria). Render the count, not the percentage — `0/3` states a position, where `0%` reads as a score on a test the learner did not know they were taking. When the script reports `masteryPct: null`, display `—` in BOTH this column and *Where you are* — the legacy display rule: no v3 writer has classified the module's concepts yet, and any value would falsely imply the learner tried and fell short.
+- **If it reports a non-empty `blockedOnApplied` list**, render one line beside it: *"[N] concept(s) you have explained and recalled to every bar but not yet built with since your last slip: [names]. One `/practice <concept>` exercise that runs completes each."* Same reason: a learner who only talks otherwise cannot see why *Solid* never arrives.
+- **Mastered `N/M`** comes from the snapshot's `mastery` section (computed by the script): `N` = that module's `mastered`, `M` = its `concepts`. The underlying predicate is the canonical formula from the `state-ops` KB (`mastered === true` requires `bloomLevel >= 4` AND `consecutiveCorrectAtL4Plus >= 3` AND `box >= 4` AND `feynmanPassed` AND one working-code correct since the last miss; see `blooms-taxonomy` KB for the criteria). Render the count, not the percentage — `0/3` states a position, where `0%` reads as a score on a test the learner did not know they were taking. When the script reports `masteryPct: null`, display `—` in BOTH this column and *Where you are* — the legacy display rule: no v3 writer has classified the module's concepts yet, and any value would falsely imply the learner tried and fell short.
 
 - **Where you are** names the learner's position in outcome terms. The plugin's internal scales (Bloom levels, Leitner boxes) are instructor-facing instruments — they belong in the KBs and the tracking files, not in a dashboard the learner reads. A number tells a learner they were graded; an outcome tells them what they can now do.
 
@@ -153,7 +154,7 @@ Notes on the sections:
   | some `introduced` | `**Introduced** — can explain what it does` |
   | otherwise (`familiar` is the floor) | `**Working** — can use it with guidance` |
 
-  Then append the spread when the module is not uniform: `(2 solid, 1 working)`, counting only classified concepts and using the learner-facing words. A module reading `**Working** — can use it with guidance (2 solid, 1 working)` tells the learner both where the module stands and that most of it is further along — which the old single-tier column could not say.
+  Then append the spread when the module is not uniform: `(2 solid, 1 working)`, counting only classified concepts and using the learner-facing words. When the row's `applied` count is below its `classified` count, add `; built with N of M` from those two numbers, so explained-but-never-run concepts are visible without a level. A module reading `**Working** — can use it with guidance (2 solid, 1 working)` tells the learner both where the module stands and that most of it is further along — which the old single-tier column could not say.
 
   Always render the tier WITH its outcome clause. The clause is the definition — it teaches the learner what the word means in terms of what they can do, and it is the first place they meet this vocabulary. A bare "Working" is a grade; "Working — can use it with guidance" is a position with a next step implied.
 

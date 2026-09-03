@@ -18,7 +18,10 @@ Act on the verdict JSON:
 
 - **`fires: false`** — continuation session or first-ever project. Proceed to Phase 2.
 - **`verdict: "clear"`** — proceed to Phase 2, no ceremony.
-- **`staleReconfirm` non-empty** — for each stale concept, ask ONE quick reconfirm question (Bloom 3, applied) before proceeding. Clean answer → run `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> record-review --concept "<c>" --result correct --tested-bloom 3 --source teach` and continue. Missed → record it too (`--result incorrect --tested-bloom 3 --source teach` — a demonstrated forgetting event belongs in the schedule, per the `spaced-repetition` KB), then treat as a gap below.
+- **`staleReconfirm` non-empty** — for each stale concept, ONE quick reconfirm before proceeding, shaped by the row's `reason`:
+  - `single-evidence` / `stale` — one question at the apply rung. Clean answer → `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> record-review --concept "<c>" --result correct --tested-bloom 3 --source teach` and continue.
+  - `no-applied-evidence` — the learner has explained and recalled this well but has never been seen building with it (or not since the last miss). The reconfirm is a few lines of code they write and run, not a question: "You have explained this well; show me once in code." Runs → the same call **with `--applied`** (`state-ops` KB: the flag is the gate's only evidence for building). Say what the flag is for in one line; never call it a grade.
+  - Missed either way → record it too (`--result incorrect --tested-bloom 3 --source teach` — a demonstrated forgetting event belongs in the schedule, per the `spaced-repetition` KB), then treat as a gap below.
 - **`gaps` non-empty** — surface as an **offer, never an auto-block**. The learner decides:
 
   > "Before we move into `<new module>`, [one earlier concept / a few earlier concepts] might still need more time to root: `<concept>` — [what they can do with it today, and what the new module will ask of it]... Revisit one first, carry on into `<new module>`, or end here?"
