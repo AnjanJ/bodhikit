@@ -562,7 +562,7 @@ HISTORY_CAP = 100  # per concept; older entries roll into reviewHistoryArchived
 
 
 def apply_review(concept, result, tested_bloom, confidence=None, note=None,
-                 source=None, retry=False):
+                 source=None, retry=False, applied=False):
     """Canonical per-concept update (spaced-repetition + state-schema KBs).
 
     correct   -> box up one (max 5), nextReview = today + new interval
@@ -576,6 +576,11 @@ def apply_review(concept, result, tested_bloom, confidence=None, note=None,
                  tomorrow's review stand; no box/counter/bloom movement.
     bloomLevel only ever ratchets up (demotion is /forget's job, and even
     /forget demotes the box, not the Bloom classification).
+    `applied` marks the entry as demonstrated in working code the tutor read
+    (an exercise, a driven piece) rather than in an explanation or a quiz
+    answer. It is a separate axis from the level: the rubric still sets
+    `--tested-bloom`, and the flag is what the gate and the mastery formula
+    read for "can the learner actually build with it" (1.20.0).
     """
     t = today()
     old_box = concept.get("box", 1)
@@ -613,6 +618,8 @@ def apply_review(concept, result, tested_bloom, confidence=None, note=None,
         entry["confidence"] = confidence
     if source:
         entry["source"] = source
+    if applied:
+        entry["applied"] = True
     history = concept.setdefault("reviewHistory", [])
     history.append(entry)
     if len(history) > HISTORY_CAP:
@@ -622,6 +629,8 @@ def apply_review(concept, result, tested_bloom, confidence=None, note=None,
     new_bloom = concept.get("bloomLevel", 0)
     return {"concept": concept["name"], "box": f"{old_box} -> {concept['box']}",
             "retry": retry,
+            "applied": bool(applied),
+            "appliedEvidence": applied_evidence(concept),
             "bloomLevel": new_bloom,
             **bloom_render(new_bloom),
             # 1.14.0: THIS write crossed the Bloom-3 line — the exact condition
@@ -672,7 +681,8 @@ def cmd_record_review(args):
         created = True
     change = apply_review(concept, args.result, args.tested_bloom,
                           confidence=args.confidence, note=args.note,
-                          source=args.source, retry=args.retry)
+                          source=args.source, retry=args.retry,
+                          applied=args.applied)
     data["lastReviewCheck"] = now_iso()
     write_spaced_review(path, data)
     change["created"] = created
@@ -1131,12 +1141,20 @@ def cmd_due(args):
 def is_mastered(c):
     """Canonical mastery formula (state-ops KB; field semantics in state-schema).
 
-    Do not redefine inline.
+    Five conjuncts since 1.20.0: the fifth, one correct demonstrated in
+    working code since the last miss, is what keeps "Solid" from being
+    earned entirely in conversation. Do not redefine inline.
     """
+    return (_mastery_core(c)
+            and c.get("feynmanPassed", False) is True
+            and applied_evidence(c) >= 1)
+
+
+def _mastery_core(c):
+    """The three retention conjuncts of is_mastered: level, streak, box."""
     return (c.get("bloomLevel", 0) >= 4
             and c.get("consecutiveCorrectAtL4Plus", 0) >= 3
-            and c.get("box", 1) >= 4
-            and c.get("feynmanPassed", False) is True)
+            and c.get("box", 1) >= 4)
 
 
 def concept_tier(c):
@@ -1161,7 +1179,7 @@ def concept_tier(c):
 
 def new_module_row():
     """Per-module tally shape shared by `mastery` and `snapshot`."""
-    return {"concepts": 0, "mastered": 0, "classified": 0,
+    return {"concepts": 0, "mastered": 0, "classified": 0, "applied": 0,
             "tiers": {"unclassified": 0, "introduced": 0,
                       "familiar": 0, "mastered": 0}}
 
@@ -1173,6 +1191,8 @@ def tally_module(m, c):
         m["classified"] += 1
     if is_mastered(c):
         m["mastered"] += 1
+    if applied_evidence(c) >= 1:
+        m["applied"] += 1
     m["tiers"][concept_tier(c)] += 1
 
 
@@ -1195,13 +1215,22 @@ def retention_tier(b):
 
 
 def blocked_on_feynman(concepts):
-    """is_mastered minus its explain-back conjunct: quiz-only learners hit
-    every other criterion, and /progress names the one step left."""
+    """is_mastered minus its explain-back conjunct: every other criterion met
+    (the applied one included), and /progress names the one step left."""
     return [c["name"] for c in concepts
-            if not c.get("feynmanPassed", False)
-            and c.get("bloomLevel", 0) >= 4
-            and c.get("consecutiveCorrectAtL4Plus", 0) >= 3
-            and c.get("box", 1) >= 4]
+            if _mastery_core(c)
+            and not c.get("feynmanPassed", False)
+            and applied_evidence(c) >= 1]
+
+
+def blocked_on_applied(concepts):
+    """is_mastered minus its working-code conjunct: a learner who has
+    explained and recalled a concept to every other bar but never built
+    with it since the last miss. /progress names the one step left."""
+    return [c["name"] for c in concepts
+            if _mastery_core(c)
+            and c.get("feynmanPassed", False) is True
+            and applied_evidence(c) == 0]
 
 
 def review_rollup(concepts, t):
@@ -1248,7 +1277,8 @@ def cmd_mastery(args):
            "retentionRollup": {k: len(v) for k, v in r["rollup"].items()},
            "retentionConcepts": r["rollup"], "dueToday": r["dueToday"],
            "dueThisWeek": r["dueThisWeek"],
-           "blockedOnFeynman": blocked_on_feynman(concepts)}
+           "blockedOnFeynman": blocked_on_feynman(concepts),
+           "blockedOnApplied": blocked_on_applied(concepts)}
     if r["parked"]:
         out["parked"] = r["parked"]
     emit(out)
@@ -1397,6 +1427,7 @@ def cmd_export_anonymized(args):
     blooms = {str(b): 0 for b in range(0, 7)}
     feynman = 0
     mastered = 0
+    applied = 0
     for c in data.get("concepts", []):
         b = c.get("box", 1)
         if isinstance(b, int) and 1 <= b <= MAX_BOX:
@@ -1408,6 +1439,8 @@ def cmd_export_anonymized(args):
             feynman += 1
         if is_mastered(c):
             mastered += 1
+        if applied_evidence(c) >= 1:
+            applied += 1
     session_types = {}
     for s in data.get("sessionHistory", []):
         t = s.get("type") if isinstance(s.get("type"), str) else "(untyped)"
@@ -1422,6 +1455,7 @@ def cmd_export_anonymized(args):
         "boxDistribution": boxes,
         "bloomDistribution": blooms,
         "feynmanPassed": feynman,
+        "applied": applied,
         "mastered": mastered,
         "sessionTypeCounts": session_types,
         "retention": retention_summary(data),
@@ -1476,6 +1510,7 @@ def cmd_session_brief(args):
         "bloomLevel": c.get("bloomLevel", 0),
         **bloom_render(c.get("bloomLevel", 0)),
         "evidenceAt3Plus": evidence_at_3_plus(c),
+        "appliedEvidence": applied_evidence(c),
         "feynmanPassed": c.get("feynmanPassed", False),
         "lastReviewed": c.get("lastReviewed"),
         "daysSinceLastReview": (t - last).days if last else None,
@@ -1566,6 +1601,7 @@ def cmd_snapshot(args):
     mastered = sum(1 for c in concepts if is_mastered(c))
     feynman = sum(1 for c in concepts if c.get("feynmanPassed") is True)
     classified = sum(1 for c in concepts if c.get("bloomLevel", 0) > 0)
+    applied = sum(1 for c in concepts if applied_evidence(c) >= 1)
 
     calibration = calibration_summary(data)
     calibration.pop("overconfidentEvents", None)
@@ -1606,9 +1642,11 @@ def cmd_snapshot(args):
         "mastery": {
             "mastered": mastered,
             "feynmanPassed": feynman,
+            "applied": applied,
             "classified": classified,
             "modules": r["modules"],
             "blockedOnFeynman": blocked_on_feynman(concepts),
+            "blockedOnApplied": blocked_on_applied(concepts),
         },
         "calibration": calibration,
         "bloomScale": bloom_scale(),
@@ -1635,6 +1673,26 @@ def evidence_at_3_plus(c):
     return n
 
 
+def applied_evidence(c):
+    """Correct results demonstrated in working code (`applied: true`) SINCE
+    THE LAST MISS, the same reset as evidence_at_3_plus. The level says how
+    well the learner can *talk about* a concept; this says whether they have
+    *built* with it. Every recorded level before 1.20.0 came from an
+    explanation or a quiz answer, so the gate and the mastery formula could
+    be satisfied without the learner ever writing a line: the learner
+    finding that motivated the flag. Deferred entries are skipped."""
+    n = 0
+    for h in c.get("reviewHistory", []):
+        if h.get("deferred"):
+            continue
+        result = h.get("result")
+        if result == "incorrect":
+            n = 0
+        elif result == "correct" and h.get("applied") is True:
+            n += 1
+    return n
+
+
 def gate_verdict(c, t):
     """(status, reason) for one prerequisite (canonical).
 
@@ -1645,18 +1703,25 @@ def gate_verdict(c, t):
     two spaced successes), clear the gate. `single-evidence` means "fewer than
     two such corrects on record since the last miss" — after a /forget that
     count is zero and the gate asks again, which is the point of forgetting.
+
+    1.20.0: recall alone never satisfies the gate. A concept whose box or
+    explain-back evidence would pass, but with no `applied` correct since the
+    last miss, earns one reconfirm that is a small piece of code, not a
+    question (`stale-reconfirm`, reason `no-applied-evidence`). That covers
+    every concept tracked before the flag existed exactly once.
     """
     bloom = c.get("bloomLevel", 0)
     box = c.get("box", 1)
     last = parse_date(c.get("lastReviewed"))
     recent = last is not None and (t - last).days <= GATE_RECENCY_DAYS
+    built = applied_evidence(c) >= 1
     if bloom == 0:
         return "no-opinion", "unclassified"   # never classified by a v3 writer; allow
     if bloom >= 3:
         if box >= 3:
-            return "satisfied", "box"
+            return ("satisfied", "box") if built else ("stale-reconfirm", "no-applied-evidence")
         if recent and evidence_at_3_plus(c) >= 2:
-            return "satisfied", "evidence"
+            return ("satisfied", "evidence") if built else ("stale-reconfirm", "no-applied-evidence")
         if recent:
             return "stale-reconfirm", "single-evidence"
         return "stale-reconfirm", "stale"    # Bloom ratchet alone is not current evidence
@@ -1664,7 +1729,9 @@ def gate_verdict(c, t):
     hist = [h.get("result") for h in c.get("reviewHistory", [])
             if not h.get("deferred")]
     if box >= 3 and len(hist) >= 2 and hist[-1] == hist[-2] == "correct":
-        return "apply-equivalent", "box"     # gate-time read only; bloomLevel untouched
+        # gate-time read only; bloomLevel untouched. Reliable recall of a
+        # concept never built with is still a code reconfirm, not a pass.
+        return ("apply-equivalent", "box") if built else ("stale-reconfirm", "no-applied-evidence")
     return "gap", "below-apply"
 
 
@@ -1732,6 +1799,7 @@ def cmd_gate_check(args):
                        **bloom_render(c.get("bloomLevel", 0)),
                        "box": c.get("box", 1), "lastReviewed": c.get("lastReviewed"),
                        "evidenceAt3Plus": evidence_at_3_plus(c),
+                       "appliedEvidence": applied_evidence(c),
                        "status": status, "reason": reason})
     gaps = [r for r in report if r["status"] == "gap"]
     stale = [r for r in report if r["status"] == "stale-reconfirm"]
@@ -1892,6 +1960,13 @@ def cmd_normalize(args):
             for h in c.get("reviewHistory", []):
                 if not isinstance(h, dict) or h.get("deferred"):
                     continue
+                if "applied" in h and not isinstance(h["applied"], bool):
+                    fixed = _coerce_bool(h["applied"])
+                    if fixed is not None:
+                        changes.append(f"reviewHistory applied {h['applied']!r} -> "
+                                       f"{fixed!r} ({c.get('name')})")
+                        h["applied"] = fixed
+                        sr_changes += 1
                 res = h.get("result")
                 if res is not None and res not in ("correct", "incorrect", "partial"):
                     h.pop("result")
@@ -2037,6 +2112,12 @@ def cmd_verify(args):
                                           f"a result — deferral is scheduling, not "
                                           f"an outcome")
                         continue
+                    if "applied" in h and not isinstance(h["applied"], bool):
+                        repairable = _coerce_bool(h["applied"]) is not None
+                        errors.append(f"concept {name!r} reviewHistory applied "
+                                      f"{h['applied']!r} not true|false"
+                                      + (" — run `bodhi-state normalize`"
+                                         if repairable else " — fix it by hand"))
                     hres = h.get("result")
                     if hres not in ("correct", "incorrect", "partial"):
                         errors.append(f"concept {name!r} reviewHistory result "
@@ -2155,6 +2236,10 @@ def main():
     s.add_argument("--question", default="")
     s.add_argument("--note", default=None, help="short lastResult note")
     s.add_argument("--source", default=None, help="which skill produced this review")
+    s.add_argument("--applied", action="store_true",
+                   help="the outcome was demonstrated in working code the tutor "
+                        "read (exercise, driven piece), not an explanation or "
+                        "quiz answer; feeds the gate and the mastery formula")
     s.add_argument("--retry", action="store_true",
                    help="successive-relearning retry: history entry only, no "
                         "box/counter/bloom movement (the original demotion stands)")

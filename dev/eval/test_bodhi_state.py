@@ -272,12 +272,21 @@ def t_gate_check():
         check("gate: legacy fallthrough (bloom 0 = no opinion)",
               out["verdict"] == "clear"
               and all(p["status"] == "no-opinion" for p in out["prerequisites"]), out)
-        # Classify: B-tree to bloom 3 with recent review -> satisfied
+        # Classify: B-tree to bloom 3 with recent review. Box 3 alone is
+        # recall evidence; the gate wants one working-code correct too (1.20.0).
         run(proj, "record-review", "--concept", "B-tree indexes",
             "--result", "correct", "--tested-bloom", "3")
         out = run(proj, "gate-check", "--prior-module", "Module A")
         btree = [p for p in out["prerequisites"] if p["name"] == "B-tree indexes"][0]
-        check("gate: bloom>=3 recent = satisfied", btree["status"] == "satisfied")
+        check("gate: bloom>=3, box>=3, never built = code reconfirm",
+              btree["status"] == "stale-reconfirm"
+              and btree["reason"] == "no-applied-evidence", btree)
+        run(proj, "record-review", "--concept", "B-tree indexes",
+            "--result", "correct", "--tested-bloom", "3", "--applied")
+        out = run(proj, "gate-check", "--prior-module", "Module A")
+        btree = [p for p in out["prerequisites"] if p["name"] == "B-tree indexes"][0]
+        check("gate: bloom>=3 recent + built = satisfied",
+              btree["status"] == "satisfied" and btree["appliedEvidence"] == 1, btree)
         # Query planning at bloom 2, box 1, no strong evidence -> gap
         run(proj, "record-review", "--concept", "Query planning",
             "--result", "incorrect", "--tested-bloom", "2")
@@ -304,7 +313,7 @@ def t_gate_check():
         c["bloomLevel"] = 2
         c["box"] = 3
         c["reviewHistory"] = [{"date": "2026-05-01", "result": "correct"},
-                              {"date": "2026-05-20", "result": "correct"}]
+                              {"date": "2026-05-20", "result": "correct", "applied": True}]
         with open(os.path.join(proj, ".bodhi", "spaced-review.json"), "w") as f:
             json.dump(srdata, f)
         out = run(proj, "gate-check", "--prior-module", "Module A")
@@ -352,8 +361,15 @@ def t_mastery_due_calibration():
             run(proj, "record-review", "--concept", "B-tree indexes",
                 "--result", "correct", "--tested-bloom", "5")
         out = run(proj, "mastery")
+        check("mastery: four verbal conjuncts alone do not reach mastered (1.20.0)",
+              out["modules"]["Module A"]["masteryPct"] == 0
+              and out["blockedOnApplied"] == ["B-tree indexes"], out)
+        run(proj, "record-review", "--concept", "B-tree indexes",
+            "--result", "correct", "--tested-bloom", "5", "--applied")
+        out = run(proj, "mastery")
         check("mastery: formula reaches mastered",
-              out["modules"]["Module A"]["masteryPct"] == 50, out)
+              out["modules"]["Module A"]["masteryPct"] == 50
+              and out["blockedOnApplied"] == [], out)
 
 
 def t_retry_and_relearning():
@@ -594,6 +610,11 @@ def t_mastery_blocked_on_feynman():
         for _ in range(3):
             run(proj, "record-review", "--concept", "B-tree indexes",
                 "--result", "correct", "--tested-bloom", "5")
+        out = run(proj, "mastery")
+        check("blocked: two steps away is named in neither list",
+              out["blockedOnFeynman"] == [] and out["blockedOnApplied"] == [], out)
+        run(proj, "record-review", "--concept", "B-tree indexes",
+            "--result", "correct", "--tested-bloom", "5", "--applied")
         out = run(proj, "mastery")
         check("blocked: quiz-only concept named",
               out["blockedOnFeynman"] == ["B-tree indexes"], out)
@@ -1151,6 +1172,9 @@ def t_concept_tiers():
             c = by_name[name]
             c["bloomLevel"], c["box"] = bloom, box
             c["consecutiveCorrectAtL4Plus"], c["feynmanPassed"] = streak, feyn
+            if feyn:  # the fifth conjunct: one correct built in working code
+                c["reviewHistory"] = [{"date": "2026-01-02", "result": "correct",
+                                       "bloomLevel": 4, "applied": True}]
         with open(os.path.join(proj, ".bodhi", "spaced-review.json"), "w") as f:
             json.dump(srdata, f, indent=2)
 
@@ -1438,7 +1462,8 @@ def t_gate_evidence():
         sr1 = read_sr(proj)
         sr1["concepts"][0]["reviewHistory"] = [
             {"date": TODAY.isoformat(), "result": "correct", "bloomLevel": 3},
-            {"date": TODAY.isoformat(), "result": "correct", "bloomLevel": 3}]
+            {"date": TODAY.isoformat(), "result": "correct", "bloomLevel": 3,
+             "applied": True}]
         sr1["concepts"][0]["box"] = 2
         with open(os.path.join(proj, ".bodhi", "spaced-review.json"), "w") as f:
             json.dump(sr1, f)
@@ -1450,7 +1475,8 @@ def t_gate_evidence():
         # a correct graded at Understand does not count toward apply evidence
         sr2 = read_sr(proj)
         sr2["concepts"][0]["reviewHistory"] = [
-            {"date": TODAY.isoformat(), "result": "correct", "bloomLevel": 3},
+            {"date": TODAY.isoformat(), "result": "correct", "bloomLevel": 3,
+             "applied": True},
             {"date": TODAY.isoformat(), "result": "correct", "bloomLevel": 2}]
         sr2["concepts"][0]["box"] = 2
         with open(os.path.join(proj, ".bodhi", "spaced-review.json"), "w") as f:
@@ -1481,7 +1507,8 @@ def t_gate_evidence_reset():
              "box": 2, "bloomLevel": 3, "nextReview": TODAY.isoformat(),
              "lastReviewed": TODAY.isoformat(),
              "reviewHistory": [
-                 {"date": "2026-01-02", "result": "correct", "bloomLevel": 3},
+                 {"date": "2026-01-02", "result": "correct", "bloomLevel": 3,
+                  "applied": True},
                  {"date": "2026-01-05", "result": "correct", "bloomLevel": 3}]}],
             "sessionHistory": []}
         proj = make_project(root, spaced_review=sr)
@@ -1503,7 +1530,7 @@ def t_gate_evidence_reset():
         check("reset: one fresh correct after a miss = still reconfirm",
               j["status"] == "stale-reconfirm" and j["evidenceAt3Plus"] == 1, j)
         run(proj, "record-review", "--concept", "Joins",
-            "--result", "correct", "--tested-bloom", "3")
+            "--result", "correct", "--tested-bloom", "3", "--applied")
         j = gate(proj)
         check("reset: two fresh corrects after a miss = satisfied again",
               j["status"] == "satisfied" and j["evidenceAt3Plus"] == 2, j)
@@ -1515,7 +1542,8 @@ def t_gate_evidence_reset():
         # (d) deferred entries are scheduling, not observations: ignored
         sr2 = read_sr(proj)
         sr2["concepts"][0]["reviewHistory"] = [
-            {"date": "2026-01-02", "result": "correct", "bloomLevel": 3},
+            {"date": "2026-01-02", "result": "correct", "bloomLevel": 3,
+             "applied": True},
             {"date": TODAY.isoformat(), "deferred": True, "note": "not reached"},
             {"date": TODAY.isoformat(), "result": "correct", "bloomLevel": 3}]
         sr2["concepts"][0]["box"] = 2
@@ -1897,6 +1925,149 @@ def t_script_hygiene():
         check("hygiene: forget lastActivity within LAST_ACTIVITY_MAX", len(la) <= 120, la)
 
 
+def t_applied_evidence():
+    """1.20.0: a level says how well the learner can talk about a concept;
+    `applied` says whether they built with it. Neither the gate nor the
+    mastery formula is satisfied by recall alone any more, and every read
+    surface exposes the count so skills render rather than re-derive."""
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root)
+        run(proj, "add-concept", "--concept", "Joins", "--module", "Module A")
+        # (1) the write: flag on the entry, absent when not passed
+        out = run(proj, "record-review", "--concept", "Joins",
+                  "--result", "correct", "--tested-bloom", "3", "--source", "quiz")
+        check("applied: verbal correct reports applied false, evidence 0",
+              out["applied"] is False and out["appliedEvidence"] == 0, out)
+        h = read_sr(proj)["concepts"][0]["reviewHistory"][-1]
+        check("applied: verbal entry carries no applied key", "applied" not in h, h)
+        out = run(proj, "record-review", "--concept", "Joins",
+                  "--result", "correct", "--tested-bloom", "3",
+                  "--source", "practice", "--applied")
+        check("applied: built correct reports evidence 1",
+              out["applied"] is True and out["appliedEvidence"] == 1, out)
+        h = read_sr(proj)["concepts"][0]["reviewHistory"][-1]
+        check("applied: built entry carries applied true", h.get("applied") is True, h)
+        # (2) a built partial is not evidence: the code did not fully work
+        run(proj, "record-review", "--concept", "Joins",
+            "--result", "partial", "--tested-bloom", "3", "--applied")
+        b = run(proj, "session-brief", "--concept", "Joins")
+        check("applied: partial with the flag does not count",
+              b["appliedEvidence"] == 1, b)
+        # (3) a miss resets it, the same as the apply-rung counter
+        run(proj, "record-review", "--concept", "Joins",
+            "--result", "incorrect", "--tested-bloom", "3")
+        b = run(proj, "session-brief", "--concept", "Joins")
+        check("applied: a miss resets the count", b["appliedEvidence"] == 0, b)
+        # (4) a retry rep with the flag is still history-only but counts as
+        # evidence (it is a real observation; only the box stays put)
+        run(proj, "record-review", "--concept", "Joins",
+            "--result", "correct", "--tested-bloom", "3", "--applied", "--retry")
+        b = run(proj, "session-brief", "--concept", "Joins")
+        check("applied: retry rep counts as evidence, box untouched",
+              b["appliedEvidence"] == 1 and b["box"] == 1, b)
+        # (5) /forget writes a miss: the count resets with it
+        run(proj, "forget", "--concept", "Joins")
+        b = run(proj, "session-brief", "--concept", "Joins")
+        check("applied: /forget resets the count", b["appliedEvidence"] == 0, b)
+
+    # (6) the gate: recall that would pass on every other rule earns a code
+    # reconfirm, and one built correct turns it into the pass it would have been
+    with tempfile.TemporaryDirectory() as root:
+        def gate(proj):
+            return run(proj, "gate-check", "--prior-module", "Module A")["prerequisites"][0]
+        def write_sr(proj, sr):
+            with open(os.path.join(proj, ".bodhi", "spaced-review.json"), "w") as f:
+                json.dump(sr, f)
+        sr = {"version": 3, "concepts": [
+            {"name": "Joins", "module": "Module A", "introduced": "2026-01-01",
+             "box": 4, "bloomLevel": 4, "nextReview": TODAY.isoformat(),
+             "lastReviewed": TODAY.isoformat(),
+             "reviewHistory": [
+                 {"date": "2026-01-02", "result": "correct", "bloomLevel": 3},
+                 {"date": "2026-01-05", "result": "correct", "bloomLevel": 4}]}],
+            "sessionHistory": []}
+        proj = make_project(root, spaced_review=sr)
+        j = gate(proj)
+        check("applied gate: box 4, bloom 4, never built = no-applied-evidence",
+              j["status"] == "stale-reconfirm" and j["reason"] == "no-applied-evidence"
+              and j["appliedEvidence"] == 0, j)
+        sr["concepts"][0]["reviewHistory"][-1]["applied"] = True
+        write_sr(proj, sr)
+        j = gate(proj)
+        check("applied gate: one built correct = satisfied by box",
+              j["status"] == "satisfied" and j["reason"] == "box", j)
+        # built before the last miss is not current evidence
+        sr["concepts"][0]["reviewHistory"].append(
+            {"date": TODAY.isoformat(), "result": "incorrect", "bloomLevel": 3})
+        sr["concepts"][0]["reviewHistory"].append(
+            {"date": TODAY.isoformat(), "result": "correct", "bloomLevel": 3})
+        write_sr(proj, sr)
+        j = gate(proj)
+        check("applied gate: a build before the last miss does not count",
+              j["reason"] == "no-applied-evidence" and j["appliedEvidence"] == 0, j)
+        # the sub-3 fallthrough is held to the same bar
+        sr["concepts"][0]["bloomLevel"] = 2
+        sr["concepts"][0]["reviewHistory"] = [
+            {"date": "2026-01-02", "result": "correct"},
+            {"date": TODAY.isoformat(), "result": "correct"}]
+        write_sr(proj, sr)
+        j = gate(proj)
+        check("applied gate: apply-equivalent without a build = code reconfirm",
+              j["status"] == "stale-reconfirm" and j["reason"] == "no-applied-evidence", j)
+        sr["concepts"][0]["reviewHistory"][-1]["applied"] = True
+        write_sr(proj, sr)
+        j = gate(proj)
+        check("applied gate: apply-equivalent with a build passes",
+              j["status"] == "apply-equivalent", j)
+        # the lower rungs are untouched: a gap is still a gap, 0 is still no-opinion
+        sr["concepts"][0]["box"] = 1
+        write_sr(proj, sr)
+        check("applied gate: below-apply is still a gap", gate(proj)["status"] == "gap")
+        sr["concepts"][0]["bloomLevel"] = 0
+        write_sr(proj, sr)
+        check("applied gate: unclassified is still no-opinion",
+              gate(proj)["status"] == "no-opinion")
+
+    # (7) the read surfaces: counts and the blocked list, and verify/normalize
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root)
+        for name in ("Built", "Talked"):
+            run(proj, "add-concept", "--concept", name, "--module", "Module A")
+            run(proj, "set-feynman", "--concept", name)
+        srd = read_sr(proj)
+        for c in srd["concepts"]:
+            c["bloomLevel"], c["box"], c["consecutiveCorrectAtL4Plus"] = 4, 4, 3
+            c["reviewHistory"] = [{"date": "2026-01-02", "result": "correct",
+                                   "bloomLevel": 4,
+                                   "applied": c["name"] == "Built"}]
+        with open(os.path.join(proj, ".bodhi", "spaced-review.json"), "w") as f:
+            json.dump(srd, f)
+        snap = run(proj, "snapshot")
+        m = snap["mastery"]
+        check("applied snapshot: one built, one mastered, the other blocked",
+              m["applied"] == 1 and m["mastered"] == 1
+              and m["blockedOnApplied"] == ["Talked"] and m["blockedOnFeynman"] == [],
+              m)
+        check("applied snapshot: module row carries the built count",
+              m["modules"]["Module A"]["applied"] == 1
+              and m["modules"]["Module A"]["mastered"] == 1, m["modules"])
+        exp = run(proj, "export-anonymized")
+        check("applied export: count only, no names",
+              exp["applied"] == 1 and "Built" not in json.dumps(exp), exp)
+        # a string boolean is drift verify names and normalize repairs
+        srd["concepts"][1]["reviewHistory"][0]["applied"] = "true"
+        with open(os.path.join(proj, ".bodhi", "spaced-review.json"), "w") as f:
+            json.dump(srd, f)
+        v = run(proj, "verify", expect_fail=True)
+        check("applied verify: string boolean reported with the repair",
+              any("applied" in e and "normalize" in e for e in v.get("errors", [])), v)
+        n = run(proj, "normalize")
+        check("applied normalize: string boolean repaired",
+              read_sr(proj)["concepts"][1]["reviewHistory"][0]["applied"] is True, n)
+        check("applied normalize: repaired file verifies",
+              run(proj, "verify")["ok"] is True)
+
+
 def t_mastery_snapshot_agree():
     """`mastery` and `snapshot.mastery/review` are one computation
     (review_rollup); they must agree on every shared key (1.18.0)."""
@@ -1917,6 +2088,7 @@ def t_mastery_snapshot_agree():
         check("agree: dueToday", m["dueToday"] == snap["review"]["dueTodayConcepts"])
         check("agree: dueThisWeek", m["dueThisWeek"] == snap["review"]["dueThisWeekConcepts"])
         check("agree: blockedOnFeynman", m["blockedOnFeynman"] == snap["mastery"]["blockedOnFeynman"])
+        check("agree: blockedOnApplied", m["blockedOnApplied"] == snap["mastery"]["blockedOnApplied"])
         check("agree: parked", len(m.get("parked", [])) == snap["review"]["parked"] == 1, (m.get("parked"), snap["review"]["parked"]))
         check("agree: boxDistribution excludes parked",
               sum(snap["review"]["boxDistribution"].values()) == 2, snap["review"]["boxDistribution"])
@@ -2009,7 +2181,7 @@ def main():
               t_gate_evidence_reset, t_validation_on_load, t_shape_rules_agree,
               t_write_keeps_file_mode, t_date_travel, t_history_bloom_only_when_tested,
               t_write_on_v2_backs_up, t_script_hygiene,
-              t_mastery_snapshot_agree, t_revision_brief,
+              t_applied_evidence, t_mastery_snapshot_agree, t_revision_brief,
               t_due_shape):
         print(f"-- {t.__name__}")
         try:
