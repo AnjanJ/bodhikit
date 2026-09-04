@@ -299,6 +299,9 @@ run_discovery_scenario() {
   echo "== scenario: $name  (workdir $tmp)"
   transcript="$tmp/transcript.jsonl"
   run_headless "$tmp" "$tmp/learningWithBodhi" "$prompt" 30 "$transcript" stream
+  if truncated_by_limit "$transcript"; then
+    echo "INCONCLUSIVE: $name — usage limit hit mid-run (transcript at $transcript); re-run after the limit resets"; FAIL=1; return
+  fi
   if python3 "$REPO/dev/eval/assert_scenario.py" "$assert" "$tmp/learningWithBodhi/sql-deep-dive" "$transcript"; then
     echo "PASS: $name"
     rm -rf "$tmp"
@@ -322,6 +325,9 @@ run_parent_scenario() {
   echo "== scenario: $name  (workdir $tmp)"
   if [ -n "$prep" ]; then "$prep" "$tmp/learningWithBodhi/sql-deep-dive" || { echo "FAIL: $name prep"; FAIL=1; return; }; fi
   run_headless "$tmp" "$tmp" "$prompt" "$maxturns" "$tmp/transcript.txt"
+  if truncated_by_limit "$tmp/transcript.txt"; then
+    echo "INCONCLUSIVE: $name — usage limit hit mid-run (transcript at $tmp/transcript.txt); re-run after the limit resets"; FAIL=1; return
+  fi
   if python3 "$REPO/dev/eval/assert_scenario.py" "$assert" "$tmp/learningWithBodhi/sql-deep-dive"; then
     echo "PASS: $name"
     [ -n "${BODHI_EVAL_KEEP:-}" ] || rm -rf "$tmp"
