@@ -8,7 +8,7 @@ This is the full, unabridged, patch-by-patch changelog kept for the maintainer �
 
 All notable changes to BodhiKit will be documented in this file.
 
-## [Unreleased] - 2026-09-03
+## [1.20.0] - 2026-09-03
 
 Maintainer finding from a real session, the first since 1.19.0's "the next release should be preceded by real sessions": *"too much importance to Bloom level; we should also test if the user can apply what was taught."* Traced: every `record-review` write came from an explanation or a quiz answer. `/teach` Phase 4's exercise was read and acknowledged but never entered the tracking state; Phase 5 graded the retention check's *explanation*, and the Apply row of the rubric is earned by "showing usage" in prose. `/practice` did write the exercise outcome, but into the same `bloomLevel` field, so downstream nothing could tell a built correct from a spoken one. The gate's `satisfied` and all four mastery conjuncts were reachable without a line of code.
 
@@ -24,6 +24,9 @@ Maintainer finding from a real session, the first since 1.19.0's "the next relea
 - Not changed: the rubric (levels still come from the explanation), `familiar` (Bloom 3 + Box 2 stays the honest state of working knowledge), `/quiz` and `/reflect` (verbal by nature, never flag).
 
 Lint pins `appliedEvidence >= 1` and `no-applied-evidence` between the state-ops KB and the script. No tracking-file migration: the field is optional and absent means "not yet built".
+
+### Release sweep (2026-09-03/04, fable-5)
+First full run hit the claude.ai session limit after grade-misconception: 9 PASS, 6 INCONCLUSIVE, and 2 (`continue-discovery`, `learn-scaffold`) reported FAIL because `run_discovery_scenario` / `run_parent_scenario` never called `truncated_by_limit` — both transcripts end in "You've hit your session limit". Fixed in the runner. Re-run after the reset: teach-pretest, teach-hint-discipline, grade-understand-band PASS. `kb-load` failed on the bare-number detector: `/quiz`'s closing line read "review recorded (Box 1 → 2, …)". The skill's own sentence — "its JSON output tells you the box movement to report" — asked for it; it now asks for the `nextReview` date. Re-run recorded below. Lifecycle and discovery were not re-run; the 1.18.0 passes stand as the last certification.
 
 ## [1.19.0] - 2026-08-26
 

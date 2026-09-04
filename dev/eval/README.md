@@ -112,14 +112,14 @@ a test. The run header prints the model; a pass certifies that executor only.
 
 | Scenario | Group | Last live pass |
 |---|---|---|
-| migrate, forget, quiz, reflect | executor-discipline | 2026-08-26, all PASS (fable-5), first live run of the 1.18.0 revision-sheet assertions on quiz/reflect |
-| grade-apply-band, grade-genuine, grade-jargon | grading | 2026-08-26, `BODHI_EVAL_RUNS=3` each, 9/9 PASS (fable-5) on the rubric rewrite with de-labelled learner scripts. Recorded levels had **no variance**: apply-band 3/3/3, genuine 5/5/5, jargon `partial` at 1 with the box held ×3. (The 1.14.0 sonnet-5 sweep had measured 3/3 vs 1/3 on the same tree.) |
-| grade-pushback, grade-misconception | grading | 1.14.0 sweep (sonnet-5). Not re-run since the rubric rewrite — run before the next tag |
-| grade-understand-band | grading | 2026-08-26, `BODHI_EVAL_RUNS=3`, 3/3 PASS (fable-5): tested-bloom 2/2/2, gate threshold not crossed (1.18.0 first run: 2) |
-| teach-pretest | fidelity | 1.18.0 PASS (fable-5) |
-| teach-hint-discipline | fidelity | 1.18.0 PASS (fable-5) after the "hint turn shows its artifact" detector was anchored to line-initial `Hint N` (first sample matched the word in the closing recap) |
+| migrate, forget, quiz, reflect | executor-discipline | 2026-09-03, all PASS (fable-5) on the 1.20.0 tree. Previously 2026-08-26, all PASS (fable-5), first live run of the 1.18.0 revision-sheet assertions on quiz/reflect |
+| grade-apply-band, grade-genuine, grade-jargon | grading | 2026-09-03, single pass each, 3/3 PASS (fable-5) on the 1.20.0 tree: apply-band 3, genuine 5, jargon `partial`. Previously 2026-08-26, `BODHI_EVAL_RUNS=3` each, 9/9 PASS (fable-5) on the rubric rewrite with de-labelled learner scripts. Recorded levels had **no variance**: apply-band 3/3/3, genuine 5/5/5, jargon `partial` at 1 with the box held ×3. (The 1.14.0 sonnet-5 sweep had measured 3/3 vs 1/3 on the same tree.) |
+| grade-pushback, grade-misconception | grading | 2026-09-03, both PASS (fable-5), first run since the 1.19.0 rubric rewrite: pushback held at tested-bloom 1 through the escalation, misconception not passed. Previously 1.14.0 sweep (sonnet-5) |
+| grade-understand-band | grading | 2026-09-04, single pass, PASS (fable-5): tested-bloom 2, gate threshold not crossed. Previously 2026-08-26, `BODHI_EVAL_RUNS=3`, 3/3 PASS (fable-5): tested-bloom 2/2/2, gate threshold not crossed (1.18.0 first run: 2) |
+| teach-pretest | fidelity | 2026-09-04 PASS (fable-5) on the 1.20.0 tree (first attempt on 2026-09-03 was cut off by the usage limit). Previously 1.18.0 PASS (fable-5) |
+| teach-hint-discipline | fidelity | 2026-09-04 PASS (fable-5) on the 1.20.0 tree: re-teach signal, artifacts shown, no unearned `correct`. Previously 1.18.0 PASS (fable-5) after the "hint turn shows its artifact" detector was anchored to line-initial `Hint N` (first sample matched the word in the closing recap) |
 | continue-discovery | discovery | 1.14.1 (sonnet-5) |
-| kb-load | fidelity | 1.18.0 (sonnet-5 first pass; then fable-5 ×4): KB always loaded. The bare-number detector caught one **real** miss ("Query planning — Box 1", read off the `due` output) — fixed by removing box/level numbers from `due` itself — and two recap false positives (now excluded). Learner-facing text clean in every sample after the reshape |
+| kb-load | fidelity | 2026-09-04 PASS (fable-5) after a real catch: the first 1.20.0 sample printed "review recorded (Box 1 → 2, …)" in `/quiz`'s closing bookkeeping line — the skill had asked for "the box movement to report"; it now asks for the `nextReview` date, and the re-run is clean. Previously 1.18.0 (sonnet-5 first pass; then fable-5 ×4): KB always loaded. The bare-number detector caught one **real** miss ("Query planning — Box 1", read off the `due` output) — fixed by removing box/level numbers from `due` itself — and two recap false positives (now excluded). Learner-facing text clean in every sample after the reshape |
 | learn-scaffold, plan-regenerate, evaluate | lifecycle | 1.18.0, first live runs, all PASS (fable-5). The first attempt at plan-regenerate/evaluate was cut off by the claude.ai usage limit — now labelled INCONCLUSIVE, not FAIL |
 
 Update the row when you run a scenario. `BODHI_EVAL_RUNS=N` sweeps report a

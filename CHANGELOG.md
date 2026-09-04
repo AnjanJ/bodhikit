@@ -2,6 +2,17 @@
 
 Notable changes to BodhiKit, summarized for readers. Patch-level development notes live in `dev/changelog-journal.md`.
 
+## [1.20.0] - 2026-09-03
+
+The first release driven by a real learning session rather than a review. The maintainer's finding: the tutor weighed the Bloom level too heavily and never checked whether the learner could *build* with what was taught. Traced, it was true at the root: every recorded level came from an explanation or a quiz answer, `/teach` read the exercise but never wrote it, and both the prerequisite gate and the mastery formula could be satisfied without a line of code.
+
+- **A review can be marked as built.** `record-review --applied` marks an outcome demonstrated in working code the tutor read. `/teach` carries it when the Phase 4 exercise ran, `/practice` when the exercise ran, `/pair` when the learner drove the piece. Quiz answers and explain-backs never carry it. The level still comes from the explain-back rubric; this is a second axis, not a replacement.
+- **The prerequisite gate needs one build.** Recall alone no longer passes: a concept with a high box or two apply-level corrects but no build since the last miss earns one reconfirm that is a few lines of code, not a question. Every concept tracked before this release meets that once.
+- **Mastery has a fifth conjunct.** *Solid* now requires one build since the last miss. `/progress` names the concepts blocked only on that beside the ones blocked only on the explain-back, and each module row shows how many concepts were built versus explained.
+- **State layer.** `appliedEvidence` on every read surface (`record-review`, `session-brief`, `gate-check` rows), `blockedOnApplied` in `mastery` and `snapshot`, an `applied` count in `export-anonymized`; `verify` and `normalize` handle the new field. 25 new deterministic checks on both sides of each bound; 364 pass.
+- **Release evals caught a box leak.** `/quiz`'s closing bookkeeping line printed a raw Leitner transition to the learner; the skill had literally asked for "the box movement to report". It now reports the next-review date. The eval runner also labels a parent-directory scenario cut off by the usage limit as inconclusive instead of failed.
+- No tracking-file migration: the field is optional, and an absent flag reads as "not yet built". Update the plugin and restart Claude Code. Live sweep on the 1.20.0 tree (fable-5): executor-discipline 4/4, grading 6/6 including the first pushback and misconception runs since the rubric rewrite, teach-pretest and teach-hint-discipline pass; lifecycle and discovery were cut off by the usage limit and are not re-certified for this release.
+
 ## [1.19.0] - 2026-08-26
 
 The review-fix release: a second external review of the whole repo, every finding landed as its own commit, and the grading rubric verified on both sides of its bounds with no variance.
