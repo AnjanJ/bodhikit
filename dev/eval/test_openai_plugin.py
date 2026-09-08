@@ -348,6 +348,47 @@ def test_hooks(output, temp_path):
     )
     check("Stop: completed revision sheet is silent", stop_output == "", stop_output[:200])
 
+    # Review finding 8: prose that MENTIONS a command is not evidence it ran.
+    revision.unlink()
+    prose = temp_path / "codex-prose.jsonl"
+    prose.write_text(
+        json.dumps({"role": "assistant", "cwd": str(root),
+                    "content": f"Earlier we ran {command}; here is what it did."})
+        + "\n"
+        + json.dumps({"type": "message", "cwd": str(root),
+                      "message": {"content": [{"type": "text", "text": command}]}})
+        + "\n",
+        encoding="utf-8",
+    )
+    stop_output = run_hook(
+        stop_hook,
+        {"cwd": str(root), "hook_event_name": "Stop", "transcript_path": str(prose)},
+    )
+    check("Stop: prose mentioning a command never blocks", stop_output == "", stop_output[:200])
+    # Structured shapes a host may use all count; each must block.
+    shapes = {
+        "tool_use block": {"type": "assistant", "cwd": str(root), "message": {"content": [
+            {"type": "tool_use", "name": "Bash", "input": {"command": command}}]}},
+        "function_call with stringified arguments": {"cwd": str(root), "type": "function_call",
+            "name": "shell", "arguments": json.dumps({"command": command})},
+        "nested function object": {"cwd": str(root), "tool_calls": [
+            {"id": "c1", "type": "function", "function": {"name": "bash", "arguments": json.dumps({"command": command})}}]},
+    }
+    for label, record in shapes.items():
+        path = temp_path / f"codex-{abs(hash(label))}.jsonl"
+        path.write_text(json.dumps(record) + "\n", encoding="utf-8")
+        stop_output = run_hook(
+            stop_hook,
+            {"cwd": str(root), "hook_event_name": "Stop", "transcript_path": str(path)},
+        )
+        try:
+            decision = json.loads(stop_output)
+        except json.JSONDecodeError:
+            decision = {}
+        check(f"Stop: {label} is recognised as execution",
+              decision.get("decision") == "block", stop_output[:200])
+    revision.write_text("# Revision — Joins\n", encoding="utf-8")
+
     broken_root = temp_path / "codex-broken"
     broken = {
         "version": 3,
