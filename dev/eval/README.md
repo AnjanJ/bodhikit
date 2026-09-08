@@ -32,7 +32,11 @@ see by design — the automated successor to the manual dogfood passes
 documented in the 1.10.7–1.10.13 CHANGELOG entries.
 
 Executor-discipline scenarios: `migrate`, `forget`, `quiz`, `reflect`
-(simulated learner), plus the **lifecycle group** (1.16.0): `learn-scaffold`
+(simulated learner), `reflect-difficulty` (the learner names a hard concept,
+retrieves it cleanly but rates it 3, and fails another outright: no `/forget`
+may run, the clean retrieval is `correct` and promoted, the failure is an
+observed `incorrect` — review finding 4, difficulty and confidence are not
+forgetting), plus the **lifecycle group** (1.16.0): `learn-scaffold`
 (/learn from the parent dir — scaffolds a second project, must preserve the
 existing profile entry exactly), `plan-regenerate` (old plan archived, history
 preserved), and `evaluate` (assessment + session + patterns + project-entry
@@ -128,6 +132,7 @@ a test. The run header prints the model; a pass certifies that executor only.
 | teach-pretest | fidelity | 2026-09-04 PASS (fable-5) on the 1.20.0 tree (first attempt on 2026-09-03 was cut off by the usage limit). Previously 1.18.0 PASS (fable-5) |
 | teach-hint-discipline | fidelity | 2026-09-04 PASS (fable-5) on the 1.20.0 tree: re-teach signal, artifacts shown, no unearned `correct`. Previously 1.18.0 PASS (fable-5) after the "hint turn shows its artifact" detector was anchored to line-initial `Hint N` (first sample matched the word in the closing recap) |
 | continue-discovery | discovery | 1.14.1 (sonnet-5) |
+| reflect-difficulty | executor-discipline | 2026-09-08 PASS (fable-5), first live run: no `/forget`, hard-and-low-rated clean retrieval promoted to Box 5, failed retrieval recorded `incorrect` at Box 1, sheet written. |
 | continue-gate | fidelity | 2026-09-08 PASS (fable-5), first live run: `/continue` → option 1 → chained `/teach` ran `gate-check`, surfaced `Query planning` as a gap in outcome terms, learner carried on, no unearned correct. (The first attempt was refused by the API's safeguards before any turn ran — now labelled INCONCLUSIVE, not FAIL.) |
 | kb-load | fidelity | 2026-09-04 PASS (fable-5) after a real catch: the first 1.20.0 sample printed "review recorded (Box 1 → 2, …)" in `/quiz`'s closing bookkeeping line — the skill had asked for "the box movement to report"; it now asks for the `nextReview` date, and the re-run is clean. Previously 1.18.0 (sonnet-5 first pass; then fable-5 ×4): KB always loaded. The bare-number detector caught one **real** miss ("Query planning — Box 1", read off the `due` output) — fixed by removing box/level numbers from `due` itself — and two recap false positives (now excluded). Learner-facing text clean in every sample after the reshape |
 | learn-scaffold, plan-regenerate, evaluate | lifecycle | 1.18.0, first live runs, all PASS (fable-5). The first attempt at plan-regenerate/evaluate was cut off by the claude.ai usage limit — now labelled INCONCLUSIVE, not FAIL |

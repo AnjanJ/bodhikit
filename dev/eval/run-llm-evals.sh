@@ -452,6 +452,18 @@ fi
 # the thing under test — completely unconstrained.
 SIM_CONTRACT="headless eval harness run: there is NO interactive learner in this session and any question you address to me will never receive a live answer. My responses are fully scripted in this prompt — treat each scripted response as the learner's genuine live answer given at that moment, consume it, judge it honestly on its merits alone, and carry the protocol through to completion in this single run, including ALL tracking updates, exactly as the skill specifies. Do not pause to wait for a real answer at any point."
 
+# --- Reflect signal separation (review finding 4) -----------------------------
+# /reflect used to put a concept on the /forget list for being hard (Q1) or
+# rated <= 4 (Q3) even after a clean retrieval, and routed an outright failed
+# retrieval through /forget instead of recording it. Difficulty and low
+# confidence must change nothing in the schedule; a failed retrieval is an
+# observed `incorrect`; /forget is only for a reset the learner asks for.
+if [ "$want" = "all" ] || [ "$want" = "reflect" ] || [ "$want" = "reflect-difficulty" ]; then
+  run_scenario reflect-difficulty \
+    "/bodhikit:reflect — $SIM_CONTRACT My scripted answers. Q1: 'Normalization trade-offs' felt hard today — I had to think for a long time before it came together. Q2: nothing surprised me. Q3 covers two concepts. For 'Normalization trade-offs' I say: 'Normalizing splits the data so each fact lives in exactly one place, which keeps updates consistent but means more joins to read it back; you denormalize when reads dominate and the join cost starts to show.' and I rate myself 3 — it felt shaky even though I got it out. For 'B-tree indexes' I say: 'Honestly nothing comes to me right now — I cannot explain it.' and rate myself 2. I do not ask to reset anything. Q4: skip. Then complete ALL tracking updates exactly as the skill specifies." \
+    reflect-difficulty
+fi
+
 if [ "$want" = "all" ] || [ "$want" = "grading" ] || [ "$want" = "grade-jargon" ]; then
   repeat_scenario grade-jargon \
     "/bodhikit:teach B-tree indexes — $SIM_CONTRACT Understanding-only session: I just want to understand, no exercise. Simulate my responses. Whenever you ask me to explain back, define a term, or answer a checkpoint, my answer is always this exact sentence, recited verbatim: 'A B-tree index is a self-balancing tree data structure that maintains sorted data and allows searches, sequential access, insertions, and deletions in logarithmic time.' If you probe, ask for an analogy, or ask me to say it differently, I produce the same sentence again word for word, say 'that is how I learned it', and offer nothing else. My final full explanation is that same sentence once more. Grade me honestly and complete ALL tracking updates exactly as the skill specifies." \

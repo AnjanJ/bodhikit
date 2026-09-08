@@ -202,6 +202,42 @@ def assert_reflect(project):
     assert_revision_sheet(project, must_mention=["B-tree", "Normalization"])
 
 
+def assert_reflect_difficulty(project):
+    """Review finding 4: difficulty (Q1) and a low rating (Q3) must not demote;
+    a clean retrieval is `correct` at any rating; an outright failed retrieval
+    is an observed `incorrect` review, not a /forget."""
+    import datetime
+    today = datetime.date.today().isoformat()
+    sr = load(project, ".bodhi", "spaced-review.json")
+    forgets = [e for e in sr.get("sessionHistory", []) if e.get("type") == "learner-forget"]
+    if forgets:
+        fail(f"/forget ran without the learner asking for a reset: {forgets}")
+    ok("no /forget on difficulty or low confidence")
+    norm = concept(sr, "Normalization trade-offs")
+    nt = todays_entries(norm)
+    if not nt:
+        fail("no review recorded for the hard-but-retrieved concept")
+    if nt[-1].get("result") != "correct":
+        fail(f"clean retrieval rated 3 recorded as {nt[-1].get('result')!r} — "
+             f"the rating must not gate the outcome")
+    if norm["box"] != 5:
+        fail(f"Normalization box is {norm['box']}, expected 5 — hard + low-rated "
+             f"but retrieved cleanly must promote, never demote")
+    ok("hard, low-rated, cleanly retrieved: correct and promoted")
+    btree = concept(sr, "B-tree indexes")
+    bt = todays_entries(btree)
+    if not bt:
+        fail("no review recorded for the failed retrieval")
+    if bt[-1].get("result") != "incorrect":
+        fail(f"failed retrieval recorded as {bt[-1].get('result')!r}, expected incorrect")
+    if bt[-1].get("note") == "learner-initiated demote":
+        fail("failed retrieval was written by /forget (self-report), not as a tested outcome")
+    if btree["box"] != 1:
+        fail(f"B-tree box is {btree['box']}, expected 1 after an observed miss")
+    ok("failed retrieval recorded as an observed incorrect, box 1")
+    assert_revision_sheet(project, must_mention=["Normalization"])
+
+
 # --- Grading-calibration scenarios (1.12.0) ---------------------------------
 # The deterministic layer guarantees the file mechanics; these guarantee the
 # JUDGMENT feeding them. Each scenario scripts a learner answer of controlled
@@ -799,6 +835,7 @@ def main():
                   "grade-pushback": assert_grade_pushback,
                   "grade-misconception": assert_grade_misconception,
                   "learn-scaffold": assert_learn_scaffold,
+                  "reflect-difficulty": assert_reflect_difficulty,
                   "plan-regenerate": assert_plan_regenerate,
                   "evaluate": assert_evaluate}
     with_transcript = {"teach-pretest": assert_teach_pretest,

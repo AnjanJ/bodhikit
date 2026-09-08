@@ -29,7 +29,7 @@ Without review, memory decays steeply: most forgetting happens within the first 
 - **One box movement per concept per day.** A Leitner interval is earned by recalling *after* the gap, so a second graded review on the same date (`/practice` after `/teach`, a `/quiz` question on a concept taught an hour ago) is evidence — history, Bloom ratchet, applied flag — but not a spaced success: the box, `nextReview` and the mastery streak wait for the next scheduled day (`record-review` reports `boxHeld`). A same-day miss still demotes; the correct that follows it is the relearning rep and holds, exactly as `--retry` does.
 - Incorrect recall: move to Box 1, `nextReview` = tomorrow
 - Partial recall: box held, `nextReview` = tomorrow (re-test soon; partial is not a Leitner demotion — but it does reset the `consecutiveCorrectAtL4Plus` mastery streak, per the `state-schema` KB)
-- Learner-initiated demote (`/forget` or self-rated low confidence in `/reflect`): same as incorrect recall
+- Learner-initiated demote (`/forget`, including a reset the learner asks for in `/reflect`): same box effect as incorrect recall. A low confidence rating or a hard session is never a demotion on its own — the box tracks demonstrated recall; confidence is the separate calibration axis of the `metacognition` KB
 - `nextReview` = `lastReviewed` + box interval
 
 For the JSON shape of `spaced-review.json` and the write path, see the `state-schema` KB.

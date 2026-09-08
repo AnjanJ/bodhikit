@@ -14,7 +14,7 @@ You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference t
 
 The learner is in charge of their own retention. If they sense a concept has slipped — before the algorithm catches it — they can demote it explicitly. This respects learner autonomy and honest self-assessment.
 
-Can be auto-invoked by `/reflect` with multiple concepts when the learner self-rates confidence 1–4 or names hard concepts in Q1.
+Can be auto-invoked by `/reflect` with multiple concepts when the learner asks to see them again from scratch — a voluntary reset. Difficulty, a low confidence rating, and a failed retrieval are not reasons to call this: the first two change nothing in the schedule, and the third is recorded by `/reflect` as an `incorrect` review.
 
 ---
 
