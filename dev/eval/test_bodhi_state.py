@@ -608,6 +608,82 @@ def t_history_cap():
         check("cap: archived count recorded", c.get("reviewHistoryArchived") == 6)
         check("cap: newest entry kept",
               c["reviewHistory"][-1]["date"] == TODAY.isoformat())
+        check("cap: archived summary written",
+              c.get("archivedSummary", {}).get("through") == "2026-01-01", c.get("archivedSummary"))
+
+
+def t_history_cap_keeps_facts():
+    """Review finding 6: the reviewer's fixture — teach + working code on the
+    first observation, 101 daily quiz corrects after it. After the cut the
+    concept read as neverTaught with zero applied evidence, and the first
+    retained gap was measured from `introduced` (a 1-day gap landed in the
+    2-3d bucket). No reader's answer may change at the cut."""
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review={"version": 3, "concepts": [],
+                                                  "sessionHistory": []})
+        d0 = datetime.date(2026, 1, 1)
+        hist = [{"date": d0.isoformat(), "result": "correct", "bloomLevel": 4,
+                 "boxBefore": 1, "source": "teach", "applied": True}]
+        for i in range(1, 101):
+            hist.append({"date": (d0 + datetime.timedelta(days=i)).isoformat(),
+                         "result": "correct", "bloomLevel": 4, "boxBefore": 5,
+                         "source": "quiz"})
+        sr = read_sr(proj)
+        sr["concepts"].append({
+            "name": "Loops", "module": "Module A", "introduced": d0.isoformat(),
+            "box": 5, "nextReview": "2026-05-11", "lastReviewed": "2026-04-11",
+            "question": "", "lastResult": "correct", "bloomLevel": 4,
+            "feynmanPassed": True, "consecutiveCorrectAtL4Plus": 3,
+            "reviewHistory": hist})
+        with open(os.path.join(proj, ".bodhi", "spaced-review.json"), "w") as f:
+            json.dump(sr, f)
+        before = run(proj, "retention")
+        # 102nd observation triggers the cut of the first two entries.
+        run(proj, "record-review", "--concept", "Loops", "--result", "correct",
+            "--tested-bloom", "4", "--source", "quiz", on="2026-05-11")
+        c = read_sr(proj)["concepts"][0]
+        check("facts: two entries archived",
+              len(c["reviewHistory"]) == 100 and c["reviewHistoryArchived"] == 2, c.get("reviewHistoryArchived"))
+        summ = c["archivedSummary"]
+        check("facts: summary carries the build and the teaching",
+              summ["exposure"] == "built" and summ["appliedEvidence"] == 1
+              and summ["evidenceAt3Plus"] == 2 and summ["through"] == "2026-01-02", summ)
+        brief = run(proj, "session-brief", "--concept", "Loops")
+        check("facts: applied evidence survives the cut",
+              brief["appliedEvidence"] == 1 and brief["evidenceAt3Plus"] == 102, brief)
+        check("facts: review count includes the archive", brief["reviews"] == 102, brief)
+        sr = read_sr(proj); sr["concepts"][0]["nextReview"] = "2026-05-11"
+        with open(os.path.join(proj, ".bodhi", "spaced-review.json"), "w") as f:
+            json.dump(sr, f)
+        due = run(proj, "due", on="2026-05-11")["concepts"][0]
+        check("facts: still built, not neverTaught",
+              due["neverTaught"] is False and due["exposure"] == "built", due)
+        after = run(proj, "retention")
+        check("facts: no phantom 2-3d gap after the cut",
+              after["byGap"]["2-3d"]["reviews"] == 0
+              and after["byGap"]["1d"]["reviews"] == before["byGap"]["1d"]["reviews"] - 1, after["byGap"])
+        check("facts: mastery unchanged by the cut",
+              run(proj, "mastery")["modules"]["Module A"]["mastered"] == 1)
+        # A second cut accumulates; a later miss still resets the live counts
+        # but never the fact that it was built.
+        run(proj, "record-review", "--concept", "Loops", "--result", "correct",
+            "--tested-bloom", "4", "--source", "quiz", on="2026-05-12")
+        c = read_sr(proj)["concepts"][0]
+        check("facts: second cut accumulates",
+              c["reviewHistoryArchived"] == 3 and c["archivedSummary"]["through"] == "2026-01-03"
+              and c["archivedSummary"]["appliedEvidence"] == 1, c["archivedSummary"])
+        run(proj, "record-review", "--concept", "Loops", "--result", "incorrect",
+            "--tested-bloom", "4", "--source", "quiz", on="2026-05-13")
+        brief = run(proj, "session-brief", "--concept", "Loops")
+        check("facts: a live miss resets the since-last-miss counts",
+              brief["appliedEvidence"] == 0 and brief["evidenceAt3Plus"] == 0, brief)
+        sr = read_sr(proj); sr["concepts"][0]["nextReview"] = "2026-05-14"
+        with open(os.path.join(proj, ".bodhi", "spaced-review.json"), "w") as f:
+            json.dump(sr, f)
+        due = run(proj, "due", on="2026-05-14")["concepts"][0]
+        check("facts: exposure never falls below the archived fact",
+              due["exposure"] == "built", due)
+        check("facts: verify accepts the summary", run(proj, "verify")["ok"] is True)
 
 
 def t_mastery_blocked_on_feynman():
@@ -2486,7 +2562,7 @@ def main():
               t_applied_evidence, t_mastery_snapshot_agree, t_revision_brief,
               t_due_shape, t_same_day_promotion,
               t_gate_seeded_module, t_exposure_routes, t_add_concept_bloom,
-              t_verify_implies_readers):
+              t_verify_implies_readers, t_history_cap_keeps_facts):
         print(f"-- {t.__name__}")
         try:
             t()

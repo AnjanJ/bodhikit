@@ -685,7 +685,7 @@ def apply_review(concept, result, tested_bloom, confidence=None, note=None,
     history.append(entry)
     if len(history) > HISTORY_CAP:
         overflow = len(history) - HISTORY_CAP
-        concept["reviewHistoryArchived"] = concept.get("reviewHistoryArchived", 0) + overflow
+        archive_history(concept, history[:overflow])
         del history[:overflow]
     new_bloom = concept.get("bloomLevel", 0)
     out = {"concept": concept["name"], "box": f"{old_box} -> {concept['box']}",
@@ -1443,7 +1443,10 @@ def retention_summary(data):
     legacy_no_box = 0
     delayed = new_bucket()
     for c in data.get("concepts", []):
-        prev = parse_date(c.get("introduced"))
+        # After a truncation the first retained gap runs from the last
+        # archived review, not from `introduced` (review finding 6).
+        prev = (parse_date(archived_summary(c).get("through"))
+                or parse_date(c.get("introduced")))
         for h in c.get("reviewHistory", []):
             if h.get("deferred"):
                 deferrals += 1  # scheduling event, not retrieval evidence
@@ -1601,7 +1604,7 @@ def cmd_session_brief(args):
         "daysSinceLastReview": (t - last).days if last else None,
         "lastResult": last_result,
         "dueForReview": nr is not None and nr <= t,
-        "reviews": len(history),
+        "reviews": len(history) + (c.get("reviewHistoryArchived", 0) or 0),
         "currentModule": state.get("currentModule"),
     })
 
@@ -1745,17 +1748,69 @@ def evidence_at_3_plus(c):
     Evidence that predates a demonstrated forgetting event is not current
     evidence; without the reset, two old corrects kept a concept `satisfied`
     through any number of later misses. Deferred entries are scheduling
-    notes, not observations, and are skipped."""
-    n = 0
-    for h in c.get("reviewHistory", []):
-        if h.get("deferred"):
+    notes, not observations, and are skipped; archived entries are carried
+    by archivedSummary."""
+    seed = archived_summary(c)
+    return _evidence_counts(c.get("reviewHistory", []),
+                            seed.get("appliedEvidence", 0) or 0,
+                            seed.get("evidenceAt3Plus", 0) or 0)[1]
+
+
+EXPOSURE_RANK = {"seeded": 0, "quizzed-only": 1, "demonstrated": 2,
+                 "taught": 3, "built": 4}
+
+
+def archived_summary(c):
+    s = c.get("archivedSummary")
+    return s if isinstance(s, dict) else {}
+
+
+def _evidence_counts(entries, applied=0, at3plus=0):
+    """(applied corrects, level-3+ corrects) since the most recent miss over
+    `entries`, continuing from the seeds — the one loop behind
+    applied_evidence, evidence_at_3_plus and archive_history."""
+    for h in entries:
+        if not isinstance(h, dict) or h.get("deferred"):
             continue
         result = h.get("result")
         if result == "incorrect":
-            n = 0
-        elif result == "correct" and (h.get("bloomLevel") or 0) >= 3:
-            n += 1
-    return n
+            applied = at3plus = 0
+        elif result == "correct":
+            if h.get("applied") is True:
+                applied += 1
+            if (h.get("bloomLevel") or 0) >= 3:
+                at3plus += 1
+    return applied, at3plus
+
+
+def archive_history(c, archived):
+    """Fold the entries about to leave reviewHistory into archivedSummary so
+    no reader's answer changes at the cut (review finding 6, 2026-09-07:
+    truncation used to turn a taught, built concept into neverTaught with
+    zero applied evidence, and to measure the first retained gap from
+    `introduced`). Accumulates across repeated truncations."""
+    prev = archived_summary(c)
+    applied, at3plus = _evidence_counts(
+        archived, prev.get("appliedEvidence", 0) or 0, prev.get("evidenceAt3Plus", 0) or 0)
+    summary = {"appliedEvidence": applied, "evidenceAt3Plus": at3plus}
+    dates = [h.get("date") for h in archived
+             if isinstance(h, dict) and parse_date(h.get("date"))]
+    through = dates[-1] if dates else prev.get("through")
+    if through:
+        summary["through"] = through
+    # Instruction facts never reset; the evidence-derived states are
+    # recomputed from the seeds, so only these two are worth carrying.
+    graded = [h for h in archived if isinstance(h, dict) and not h.get("deferred")
+              and h.get("result") in ("correct", "incorrect", "partial")]
+    exposure = prev.get("exposure")
+    if any(h.get("applied") is True and h.get("result") == "correct" for h in graded):
+        exposure = "built"
+    elif exposure != "built" and any(h.get("source") in INSTRUCTIONAL_SOURCES for h in graded):
+        exposure = "taught"
+    if exposure in ("taught", "built"):
+        summary["exposure"] = exposure
+    c["reviewHistoryArchived"] = (c.get("reviewHistoryArchived", 0) or 0) + len(archived)
+    c["archivedSummary"] = summary
 
 
 def applied_evidence(c):
@@ -1765,17 +1820,12 @@ def applied_evidence(c):
     *built* with it. Every recorded level before 1.20.0 came from an
     explanation or a quiz answer, so the gate and the mastery formula could
     be satisfied without the learner ever writing a line: the learner
-    finding that motivated the flag. Deferred entries are skipped."""
-    n = 0
-    for h in c.get("reviewHistory", []):
-        if h.get("deferred"):
-            continue
-        result = h.get("result")
-        if result == "incorrect":
-            n = 0
-        elif result == "correct" and h.get("applied") is True:
-            n += 1
-    return n
+    finding that motivated the flag. Deferred entries are skipped; archived
+    entries are carried by archivedSummary."""
+    seed = archived_summary(c)
+    return _evidence_counts(c.get("reviewHistory", []),
+                            seed.get("appliedEvidence", 0) or 0,
+                            seed.get("evidenceAt3Plus", 0) or 0)[0]
 
 
 # Review sources that are instruction: the tutor taught, or watched the
@@ -1803,11 +1853,13 @@ def exposure_of(c):
     graded = [h for h in c.get("reviewHistory", []) if isinstance(h, dict)
               and not h.get("deferred")
               and h.get("result") in ("correct", "incorrect", "partial")]
-    if any(h.get("applied") is True and h.get("result") == "correct" for h in graded):
+    floor = archived_summary(c).get("exposure")
+    if floor == "built" or any(h.get("applied") is True and h.get("result") == "correct"
+                               for h in graded):
         return "built"
-    if any(h.get("source") in INSTRUCTIONAL_SOURCES for h in graded):
+    if floor == "taught" or any(h.get("source") in INSTRUCTIONAL_SOURCES for h in graded):
         return "taught"
-    if not graded:
+    if not graded and not c.get("reviewHistoryArchived"):
         return "seeded"
     if evidence_at_3_plus(c) >= 1:
         return "demonstrated"
