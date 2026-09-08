@@ -52,10 +52,11 @@ def main(paths):
     w("")
     w("## Per project")
     w("")
-    w("| | Days active | Sessions | Concepts | Classified | Mastered | Feynman passed | Reviews | Overall recall |")
-    w("|---|---|---|---|---|---|---|---|---|")
+    w("| | Days active | Sessions | Concepts | Classified | Mastered | Feynman passed | Reviews | Overall recall | Delayed recall |")
+    w("|---|---|---|---|---|---|---|---|---|---|")
     tot = {"sessions": 0, "concepts": 0, "classified": 0, "mastered": 0,
-           "feynman": 0, "reviews": 0, "correct": 0}
+           "feynman": 0, "reviews": 0, "correct": 0,
+           "delayed": 0, "delayedCorrect": 0}
     for i, e in enumerate(exports, 1):
         proj = e.get("project") or {}
         bd = e.get("bloomDistribution", {})
@@ -63,10 +64,12 @@ def main(paths):
         ret = e.get("retention", {})
         reviews = ret.get("reviews", 0)
         rate = ret.get("overallSuccessRate")
+        delayed = ret.get("delayedReviews", 0)
+        drate = ret.get("delayedSuccessRate")
         days = proj.get("daysSinceStart")
         w(f"| P{i} | {'—' if days is None else days} | {proj.get('totalSessions', '—')} | "
           f"{e.get('concepts', 0)} | {classified} | {e.get('mastered', 0)} | "
-          f"{e.get('feynmanPassed', 0)} | {reviews} | {pct(rate)} |")
+          f"{e.get('feynmanPassed', 0)} | {reviews} | {pct(rate)} | {pct(drate)} |")
         tot["sessions"] += proj.get("totalSessions", 0) or 0
         tot["concepts"] += e.get("concepts", 0)
         tot["classified"] += classified
@@ -75,11 +78,19 @@ def main(paths):
         tot["reviews"] += reviews
         if rate is not None:
             tot["correct"] += round(rate * reviews)
+        tot["delayed"] += delayed
+        if drate is not None:
+            tot["delayedCorrect"] += round(drate * delayed)
     overall = tot["correct"] / tot["reviews"] if tot["reviews"] else None
+    doverall = tot["delayedCorrect"] / tot["delayed"] if tot["delayed"] else None
     w(f"| **All** | | {tot['sessions']} | {tot['concepts']} | {tot['classified']} | "
-      f"{tot['mastered']} | {tot['feynman']} | {tot['reviews']} | {pct(overall)} |")
+      f"{tot['mastered']} | {tot['feynman']} | {tot['reviews']} | {pct(overall)} | {pct(doverall)} |")
     w("")
-    w("_Classified_ = concepts a teaching or review session has actually graded "
+    w("_Reviews_ and _Overall recall_ count tested outcomes only — a `/forget` is "
+      "a self-report and is excluded. _Delayed recall_ further drops same-day "
+      "reviews (immediate post-instruction performance) and is the number that "
+      "answers whether the intervals are working. "
+      "_Classified_ = concepts a teaching or review session has actually graded "
       "(Bloom ≥ 1); the rest were scaffolded by the plan and never reached. "
       "_Mastered_ uses the four-part formula (Analyze-level or above, three "
       "consecutive correct at that level, Box 4-5, Feynman explain-back passed).")

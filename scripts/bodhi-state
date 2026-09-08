@@ -805,7 +805,7 @@ def cmd_forget(args):
         c["consecutiveCorrectAtL4Plus"] = 0
         # feynmanPassed and bloomLevel preserved by design (state-schema KB).
         c.setdefault("reviewHistory", []).append(
-            {"date": iso(t), "result": "incorrect",
+            {"date": iso(t), "result": "incorrect", "selfReport": True,
              "note": "learner-initiated demote"})  # nothing was tested: no bloomLevel
         c["lastReviewed"] = iso(t)
         c["lastResult"] = "learner-initiated demote"
@@ -1367,6 +1367,12 @@ GAP_BUCKETS = (
 )
 
 
+def is_self_report(h):
+    """A /forget entry: the learner asked for a reset, nobody tested them.
+    Entries written before the `selfReport` field carry the note."""
+    return h.get("selfReport") is True or h.get("note") == "learner-initiated demote"
+
+
 def bucket_for_gap(days):
     for name, lo, hi in GAP_BUCKETS:
         if days >= lo and (hi is None or days <= hi):
@@ -1381,8 +1387,11 @@ def retention_summary(data):
     reviewHistory is a longitudinal retention dataset — every due-review
     outcome is a natural experiment on whether the Leitner intervals are
     calibrated. Relearning retries are excluded (same-session reps, not
-    spacing evidence); the gap for a concept's first review runs from its
-    `introduced` date.
+    spacing evidence); so are self-reports (/forget writes an `incorrect`
+    nobody tested — review finding 5: one /forget on a fresh concept read as
+    "1 review, 0% recall"). The gap for a concept's first review runs from
+    its `introduced` date. `delayedSuccessRate` drops the same-day bucket,
+    which is immediate post-instruction performance, not retention.
     """
     def new_bucket():
         return {"correct": 0, "incorrect": 0, "partial": 0}
@@ -1392,12 +1401,17 @@ def retention_summary(data):
     relearning = 0
     skipped = 0
     deferrals = 0
+    self_reports = 0
     legacy_no_box = 0
+    delayed = new_bucket()
     for c in data.get("concepts", []):
         prev = parse_date(c.get("introduced"))
         for h in c.get("reviewHistory", []):
             if h.get("deferred"):
                 deferrals += 1  # scheduling event, not retrieval evidence
+                continue
+            if is_self_report(h):
+                self_reports += 1  # nothing was asked; not retrieval evidence
                 continue
             d = parse_date(h.get("date"))
             res = h.get("result")
@@ -1411,6 +1425,8 @@ def retention_summary(data):
                 bucket = bucket_for_gap((d - prev).days)
                 if bucket:
                     by_gap[bucket][res] += 1
+                    if bucket != "same-day":
+                        delayed[res] += 1
             prev = d
             totals[res] += 1
             bb = h.get("boxBefore")
@@ -1425,13 +1441,17 @@ def retention_summary(data):
         out["successRate"] = round(bucket["correct"] / n, 2) if n else None
         return out
     total_n = sum(totals.values())
+    delayed_n = sum(delayed.values())
     return {
         "reviews": total_n,
         "overallSuccessRate": round(totals["correct"] / total_n, 2) if total_n else None,
+        "delayedReviews": delayed_n,
+        "delayedSuccessRate": round(delayed["correct"] / delayed_n, 2) if delayed_n else None,
         "byGap": {k: with_rate(v) for k, v in by_gap.items()},
         "byBoxAtReview": {k: with_rate(v) for k, v in by_box.items()},
         "relearningRetriesExcluded": relearning,
         "deferralsExcluded": deferrals,
+        "selfReportsExcluded": self_reports,
         "entriesWithoutBoxBefore": legacy_no_box,
         "entriesSkipped": skipped,
     }

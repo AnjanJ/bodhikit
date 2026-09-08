@@ -34,7 +34,7 @@ Every skill carries its own exact invocation; `bodhi-state <subcommand> --help` 
 - `set-feynman` — `feynmanPassed = true`, never unset.
 - `record-session` — a `sessionHistory[]` entry in the canonical type vocabulary (below); `type`, `subtype` and `date` come from flags, never from `--data`.
 - `record-assessment` — an append-only, date-stamped `assessment-history.json` entry.
-- `forget` — the learner-initiated demote: box 1, counter reset, history and `learner-forget` entries, `lastActivity`. `--concept` (repeatable) for names containing commas.
+- `forget` — the learner-initiated demote: box 1, counter reset, a `selfReport` history entry (excluded from `retention`) and a `learner-forget` session entry, `lastActivity`. `--concept` (repeatable) for names containing commas.
 - `defer` / `park [--resume]` — scheduling, never an outcome. A deferral rolls `nextReview` and writes a history entry with **no result**; parking leaves rotation with box, bloom, Feynman and counters intact and is reported as a count, never hidden. Do not invent a `result` for a concept that was not reviewed.
 - `touch-state` — `state.json` session bookkeeping: dates, streak, `totalSessions`, module advance (`previousModule`). The first touch of a day also bumps the profile's `cumulativeStats.totalSessions` — no skill calls `bump-profile` for that.
 - `bump-profile --counter` — `cumulativeStats` increments in `.bodhi-profile.json`.
@@ -44,7 +44,7 @@ Every skill carries its own exact invocation; `bodhi-state <subcommand> --help` 
 
 - `due` — due concepts in review order (`priority`, `dueSince`, `overdueDays`, `bloomOutcome`) — by design no box or Bloom number, so narrating it cannot leak one. Each carries `exposure` — `seeded` (never graded), `quizzed-only` (graded only by quiz/reflect retrievals, none at the apply rung since the last miss), `demonstrated` (no instruction on record but an apply-rung correct: knowledge shown, whatever skill asked), `taught` (a `/teach`, `/practice` or `/pair` review), `built` (an `applied` correct) — and `neverTaught`, true for the first two: route those to `/teach`, not `/quiz`; the other three are real review material. `unparseableDates` lists schedule-broken entries rather than skipping them.
 - `session-brief --concept` — `/teach`'s branches: pretest vs graded retrieval (`firstExposure`/`pretestApplies`), `isReteach`, box/bloom/Feynman position, `dueForReview`.
-- `snapshot` — the whole `/progress` surface in one call (`project`, `cadence`, `review`, `mastery`, `calibration`). `mastery` / `calibration` / `retention` / `export-anonymized` — its parts and the outcome analytics (retention by spacing gap and `boxBefore`; an anonymized counts-only export).
+- `snapshot` — the whole `/progress` surface in one call (`project`, `cadence`, `review`, `mastery`, `calibration`). `mastery` / `calibration` / `retention` / `export-anonymized` — its parts and the outcome analytics (retention by spacing gap and `boxBefore`, with `delayedSuccessRate` — every bucket but same-day — as the honest answer to "are the intervals working", since the same-day bucket is immediate post-instruction performance and self-reports are excluded; an anonymized counts-only export).
 - `revision-brief` — today's facts for the revision sheet (`sessionToday`, `suggestedFile`, `existing`); the Stop hook reads it.
 - `gate-check` — the prerequisite verdict (*Prerequisite Gate* below).
 

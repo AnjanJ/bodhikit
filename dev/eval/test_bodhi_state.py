@@ -212,6 +212,12 @@ def t_sessions_and_forget():
               sr["concepts"][0]["bloomLevel"] == 0 or "bloomLevel" in sr["concepts"][0])
         check("forget: sessionHistory learner-forget entry",
               sr["sessionHistory"][-1]["type"] == "learner-forget")
+        check("forget: history entry is marked a self-report",
+              sr["concepts"][0]["reviewHistory"][-1].get("selfReport") is True)
+        ret = run(proj, "retention")
+        check("forget: self-reports are not retrieval evidence",
+              ret["selfReportsExcluded"] == 2
+              and ret["reviews"] == 3 and ret["overallSuccessRate"] == 0.67, ret)
         check("forget: state lastActivity updated",
               "Demoted" in read_state(proj)["lastActivity"])
         run(proj, "forget", "--concepts", "Nonexistent", expect_fail=True)
@@ -689,6 +695,33 @@ def t_retention():
               boxes["1"]["correct"] == 2 and boxes["2"]["incorrect"] == 1, boxes)
         check("retention: legacy entries without boxBefore counted honestly",
               out["entriesWithoutBoxBefore"] == 1)
+        check("retention: delayed-only rate drops the same-day bucket",
+              out["delayedReviews"] == 4 and out["delayedSuccessRate"] == 0.75, out)
+        # Review finding 5: a /forget on a fresh concept read as "1 review,
+        # 0% recall". Self-reports (new field, or the legacy note) are out.
+        sr = read_sr(proj)
+        sr["concepts"].append({
+            "name": "Fresh", "module": "Module A", "introduced": "2026-03-01",
+            "box": 1, "nextReview": "2026-03-02", "lastReviewed": "2026-03-01",
+            "question": "", "lastResult": "learner-initiated demote",
+            "bloomLevel": 0, "feynmanPassed": False, "consecutiveCorrectAtL4Plus": 0,
+            "reviewHistory": [
+                {"date": "2026-03-01", "result": "incorrect",
+                 "note": "learner-initiated demote"},           # legacy form
+                {"date": "2026-03-05", "result": "correct", "bloomLevel": 2,
+                 "boxBefore": 1, "source": "teach"},
+                {"date": "2026-03-06", "result": "incorrect", "selfReport": True,
+                 "note": "learner-initiated demote"},
+            ]})
+        with open(os.path.join(proj, ".bodhi", "spaced-review.json"), "w") as f:
+            json.dump(sr, f)
+        out = run(proj, "retention")
+        check("retention: self-reports excluded, legacy note included",
+              out["selfReportsExcluded"] == 2 and out["reviews"] == 5, out)
+        check("retention: the gap after a self-report runs from the last real review",
+              out["byGap"]["4-7d"]["correct"] == 1, out["byGap"])
+        check("retention: overall rate counts only tested outcomes",
+              out["overallSuccessRate"] == 0.8, out)
 
 
 def t_export_anonymized():
