@@ -153,16 +153,17 @@ def t_record_review():
               c["reviewHistory"][-1].get("confidence") == "sure")
         check("review: non-canonical field survives write",
               c.get("precisionGap") is not None)
-        # correct at L2: bloom NOT demoted, counter unchanged
+        # correct at L2 on a later day: bloom NOT demoted, counter unchanged
+        # (one box movement per day — t_same_day_promotion — so date-travel)
         run(proj, "record-review", "--concept", "B-tree indexes",
-            "--result", "correct", "--tested-bloom", "2")
+            "--result", "correct", "--tested-bloom", "2", on="2026-06-01")
         c = read_sr(proj)["concepts"][0]
         check("review: bloom never demotes", c["bloomLevel"] == 4)
         check("review: counter unchanged on low-level correct",
               c["consecutiveCorrectAtL4Plus"] == 1)
         check("review: box capped at 5", c["box"] == 5)
         run(proj, "record-review", "--concept", "B-tree indexes",
-            "--result", "correct", "--tested-bloom", "5")
+            "--result", "correct", "--tested-bloom", "5", on="2026-06-02")
         check("review: box stays at 5", read_sr(proj)["concepts"][0]["box"] == 5)
         # incorrect: box 1, counter reset, bloom preserved
         run(proj, "record-review", "--concept", "B-tree indexes",
@@ -357,15 +358,15 @@ def t_mastery_due_calibration():
               out["underconfidenceRate"] == 1.0)
         # set-feynman + mastery formula end-to-end
         run(proj, "set-feynman", "--concept", "B-tree indexes")
-        for _ in range(3):
+        for day in ("2026-06-01", "2026-06-02", "2026-06-03"):  # spaced days
             run(proj, "record-review", "--concept", "B-tree indexes",
-                "--result", "correct", "--tested-bloom", "5")
+                "--result", "correct", "--tested-bloom", "5", on=day)
         out = run(proj, "mastery")
         check("mastery: four verbal conjuncts alone do not reach mastered (1.20.0)",
               out["modules"]["Module A"]["masteryPct"] == 0
               and out["blockedOnApplied"] == ["B-tree indexes"], out)
         run(proj, "record-review", "--concept", "B-tree indexes",
-            "--result", "correct", "--tested-bloom", "5", "--applied")
+            "--result", "correct", "--tested-bloom", "5", "--applied", on="2026-06-04")
         out = run(proj, "mastery")
         check("mastery: formula reaches mastered",
               out["modules"]["Module A"]["masteryPct"] == 50
@@ -405,26 +406,26 @@ def t_partial_breaks_streak():
         proj = make_project(root, spaced_review=json.loads(json.dumps(V2_SR)))
         run(proj, "migrate-spaced-review")
         run(proj, "record-review", "--concept", "B-tree indexes",
-            "--result", "correct", "--tested-bloom", "4")
+            "--result", "correct", "--tested-bloom", "4", on="2026-06-01")
         c = read_sr(proj)["concepts"][0]
         check("streak: correct at L4 increments", c["consecutiveCorrectAtL4Plus"] == 1)
         box_after_correct = c["box"]
         run(proj, "record-review", "--concept", "B-tree indexes",
-            "--result", "partial", "--tested-bloom", "4")
+            "--result", "partial", "--tested-bloom", "4", on="2026-06-02")
         c = read_sr(proj)["concepts"][0]
         check("streak: partial resets counter", c["consecutiveCorrectAtL4Plus"] == 0, c)
         check("streak: partial still holds box (no Leitner demotion)",
               c["box"] == box_after_correct)
         run(proj, "record-review", "--concept", "B-tree indexes",
-            "--result", "correct", "--tested-bloom", "4")
+            "--result", "correct", "--tested-bloom", "4", on="2026-06-03")
         run(proj, "record-review", "--concept", "B-tree indexes",
-            "--result", "correct", "--tested-bloom", "4")
+            "--result", "correct", "--tested-bloom", "4", on="2026-06-04")
         c = read_sr(proj)["concepts"][0]
         check("streak: rebuilt from zero after the partial",
               c["consecutiveCorrectAtL4Plus"] == 2, c)
         # A partial RETRY is a relearning rep: no counter movement of any kind.
         run(proj, "record-review", "--concept", "B-tree indexes",
-            "--result", "partial", "--tested-bloom", "4", "--retry")
+            "--result", "partial", "--tested-bloom", "4", "--retry", on="2026-06-04")
         c = read_sr(proj)["concepts"][0]
         check("streak: partial retry does not touch the counter",
               c["consecutiveCorrectAtL4Plus"] == 2, c)
@@ -607,14 +608,14 @@ def t_mastery_blocked_on_feynman():
     with tempfile.TemporaryDirectory() as root:
         proj = make_project(root, spaced_review=json.loads(json.dumps(V2_SR)))
         run(proj, "migrate-spaced-review")
-        for _ in range(3):
+        for day in ("2026-06-01", "2026-06-02", "2026-06-03"):  # spaced days
             run(proj, "record-review", "--concept", "B-tree indexes",
-                "--result", "correct", "--tested-bloom", "5")
+                "--result", "correct", "--tested-bloom", "5", on=day)
         out = run(proj, "mastery")
         check("blocked: two steps away is named in neither list",
               out["blockedOnFeynman"] == [] and out["blockedOnApplied"] == [], out)
         run(proj, "record-review", "--concept", "B-tree indexes",
-            "--result", "correct", "--tested-bloom", "5", "--applied")
+            "--result", "correct", "--tested-bloom", "5", "--applied", on="2026-06-04")
         out = run(proj, "mastery")
         check("blocked: quiz-only concept named",
               out["blockedOnFeynman"] == ["B-tree indexes"], out)
@@ -2161,6 +2162,73 @@ def t_due_shape():
         check("due: dueSince + overdueDays + bloomOutcome present",
               all(r["dueSince"] and isinstance(r["overdueDays"], int)
                   and r["bloomOutcome"] for r in rows), rows)
+def t_same_day_promotion():
+    """One box movement per concept per day (spaced-repetition KB). Three
+    corrects on one date used to stack Box 1 -> 4, a 14-day interval and the
+    full L4+ streak — "mastered" with no delayed recall ever observed. The
+    later same-day corrects are still evidence (history, Bloom ratchet,
+    applied flag); the box, nextReview and the streak counter wait for the
+    next scheduled day. A same-day miss still demotes."""
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review={"version": 3, "concepts": [],
+                                                  "sessionHistory": []})
+        d0 = "2026-09-07"
+        first = run(proj, "record-review", "--concept", "Loops", "--module", "Module A",
+                    "--result", "correct", "--tested-bloom", "3", "--source", "teach",
+                    on=d0)
+        check("same-day: first correct promotes", first["box"] == "1 -> 2")
+        second = run(proj, "record-review", "--concept", "Loops",
+                     "--result", "correct", "--tested-bloom", "4", "--source", "practice",
+                     "--applied", on=d0)
+        c = read_sr(proj)["concepts"][0]
+        check("same-day: second correct holds the box", c["box"] == 2, second)
+        check("same-day: output reports the hold",
+              second.get("boxHeld") == "already reviewed today", second)
+        check("same-day: nextReview unchanged",
+              c["nextReview"] == "2026-09-10")
+        check("same-day: bloom still ratchets", c["bloomLevel"] == 4)
+        check("same-day: streak counter waits for a spaced day",
+              c["consecutiveCorrectAtL4Plus"] == 0)
+        check("same-day: evidence still recorded",
+              len(c["reviewHistory"]) == 2 and c["reviewHistory"][-1].get("applied") is True)
+        third = run(proj, "record-review", "--concept", "Loops",
+                    "--result", "correct", "--tested-bloom", "4", "--source", "quiz",
+                    on=d0)
+        c = read_sr(proj)["concepts"][0]
+        check("same-day: third correct still held", c["box"] == 2)
+        run(proj, "set-feynman", "--concept", "Loops")
+        m = run(proj, "mastery")
+        check("same-day: one day of practice is not mastery",
+              m["modules"]["Module A"]["mastered"] == 0, m)
+        # A same-day miss is real evidence of forgetting: it still demotes.
+        run(proj, "record-review", "--concept", "Loops",
+            "--result", "incorrect", "--tested-bloom", "3", on=d0)
+        c = read_sr(proj)["concepts"][0]
+        check("same-day: miss still demotes", c["box"] == 1)
+        check("same-day: miss re-tests tomorrow", c["nextReview"] == "2026-09-08")
+        # A correct after a same-day miss is the relearning rep: recorded, no move.
+        run(proj, "record-review", "--concept", "Loops",
+            "--result", "correct", "--tested-bloom", "3", on=d0)
+        c = read_sr(proj)["concepts"][0]
+        check("same-day: correct after a miss does not undo it", c["box"] == 1)
+        # The next scheduled day promotes normally, and the streak resumes.
+        for day, box in (("2026-09-08", 2), ("2026-09-11", 3), ("2026-09-18", 4)):
+            out = run(proj, "record-review", "--concept", "Loops",
+                      "--result", "correct", "--tested-bloom", "4", "--applied", on=day)
+            check(f"same-day: {day} promotes to {box}", out["box"].endswith(f"-> {box}"), out)
+        c = read_sr(proj)["concepts"][0]
+        check("same-day: streak counts spaced days only",
+              c["consecutiveCorrectAtL4Plus"] == 3, c["consecutiveCorrectAtL4Plus"])
+        # A deferral today is scheduling, not a review: it does not spend the day.
+        proj2 = make_project(os.path.join(root, "two"), spaced_review={
+            "version": 3, "concepts": [], "sessionHistory": []})
+        run(proj2, "add-concept", "--concept", "Maps", "--module", "Module A", on="2026-09-01")
+        run(proj2, "defer", "--concept", "Maps", "--days", "1", on="2026-09-07")
+        out = run(proj2, "record-review", "--concept", "Maps",
+                  "--result", "correct", "--tested-bloom", "2", on="2026-09-07")
+        check("same-day: a deferral does not count as today's review",
+              out["box"] == "1 -> 2", out)
+
 
 def main():
     for t in (t_migrate, t_record_review, t_sessions_and_forget,
@@ -2182,7 +2250,7 @@ def main():
               t_write_keeps_file_mode, t_date_travel, t_history_bloom_only_when_tested,
               t_write_on_v2_backs_up, t_script_hygiene,
               t_applied_evidence, t_mastery_snapshot_agree, t_revision_brief,
-              t_due_shape):
+              t_due_shape, t_same_day_promotion):
         print(f"-- {t.__name__}")
         try:
             t()

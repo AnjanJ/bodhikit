@@ -587,13 +587,30 @@ def apply_review(concept, result, tested_bloom, confidence=None, note=None,
     old_bloom = concept.get("bloomLevel", 0)
     if result not in ("correct", "incorrect", "partial"):
         die(f"result must be correct|incorrect|partial, got {result!r}")
+    # One box movement per concept per day (spaced-repetition KB). A Leitner
+    # interval is earned by recalling AFTER the gap, so a second graded
+    # review on the same date — /practice after /teach, a /quiz question on
+    # a concept taught an hour ago — is evidence (history, ratchet, applied)
+    # but not a spaced success: the box, nextReview and the L4+ streak wait
+    # for the next scheduled day. Before this rule three same-day corrects
+    # stacked Box 1 -> 4, a 14-day interval and full mastery with no delayed
+    # recall ever observed. A same-day miss still demotes (forgetting is
+    # forgetting); the correct that follows it is the relearning rep and
+    # holds, exactly as --retry does.
+    reviewed_today = any(h.get("date") == iso(t) and not h.get("deferred")
+                         and h.get("result") in ("correct", "incorrect", "partial")
+                         for h in concept.get("reviewHistory", []))
+    box_held = None
     if not retry:
         if result == "correct":
-            concept["box"] = min(old_box + 1, MAX_BOX)
-            concept["nextReview"] = iso(t + datetime.timedelta(days=BOX_INTERVALS[concept["box"]]))
+            if reviewed_today:
+                box_held = "already reviewed today"
+            else:
+                concept["box"] = min(old_box + 1, MAX_BOX)
+                concept["nextReview"] = iso(t + datetime.timedelta(days=BOX_INTERVALS[concept["box"]]))
             if tested_bloom is not None:
                 concept["bloomLevel"] = max(concept.get("bloomLevel", 0), tested_bloom)
-                if tested_bloom >= 4:
+                if tested_bloom >= 4 and not reviewed_today:
                     concept["consecutiveCorrectAtL4Plus"] = concept.get("consecutiveCorrectAtL4Plus", 0) + 1
         elif result == "incorrect":
             concept["box"] = 1
@@ -627,7 +644,7 @@ def apply_review(concept, result, tested_bloom, confidence=None, note=None,
         concept["reviewHistoryArchived"] = concept.get("reviewHistoryArchived", 0) + overflow
         del history[:overflow]
     new_bloom = concept.get("bloomLevel", 0)
-    return {"concept": concept["name"], "box": f"{old_box} -> {concept['box']}",
+    out = {"concept": concept["name"], "box": f"{old_box} -> {concept['box']}",
             "retry": retry,
             "applied": bool(applied),
             "appliedEvidence": applied_evidence(concept),
@@ -640,6 +657,9 @@ def apply_review(concept, result, tested_bloom, confidence=None, note=None,
             "crossedLevel": new_bloom > old_bloom,   # the one moment the label is spoken
             "consecutiveCorrectAtL4Plus": concept.get("consecutiveCorrectAtL4Plus", 0),
             "nextReview": concept["nextReview"]}
+    if box_held:
+        out["boxHeld"] = box_held
+    return out
 
 
 # --- Subcommands ------------------------------------------------------------

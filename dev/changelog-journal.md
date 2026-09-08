@@ -8,6 +8,13 @@ This is the full, unabridged, patch-by-patch changelog kept for the maintainer �
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [Unreleased]
+
+An independent review (2026-09-07) probed the state engine with seven isolated fixtures and found eight defects, all reproduced on the 1.20.0 tree. Each lands as its own commit, test or fixture first.
+
+### One box movement per concept per day (review finding 1, HIGH)
+Three same-day `correct` calls stacked Box 1 → 4, a 14-day interval, the full L4+ streak and `mastered: true` with no delayed recall ever observed — reachable through `/teach` + `/practice` + `/quiz` on one concept in one session. `apply_review` now promotes the box and increments the streak only on the day's first graded review; later same-day corrects are still recorded (history, Bloom ratchet, `applied`) and report `boxHeld: "already reviewed today"`. A same-day miss still demotes, and the correct after it holds like `--retry`. Deferrals do not spend the day. `t_same_day_promotion` (17 checks); four existing tests that stacked same-day corrects as a shortcut now date-travel. Rule stated in the `spaced-repetition` KB, the counter semantics in `state-schema`, the `boxHeld` contract in `state-ops`.
+
 ## [1.20.0] - 2026-09-03
 
 Maintainer finding from a real session, the first since 1.19.0's "the next release should be preceded by real sessions": *"too much importance to Bloom level; we should also test if the user can apply what was taught."* Traced: every `record-review` write came from an explanation or a quiz answer. `/teach` Phase 4's exercise was read and acknowledged but never entered the tracking state; Phase 5 graded the retention check's *explanation*, and the Apply row of the rubric is earned by "showing usage" in prose. `/practice` did write the exercise outcome, but into the same `bloomLevel` field, so downstream nothing could tell a built correct from a spoken one. The gate's `satisfied` and all four mastery conjuncts were reachable without a line of code.

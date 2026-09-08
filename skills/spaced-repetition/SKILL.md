@@ -26,6 +26,7 @@ Without review, memory decays steeply: most forgetting happens within the first 
 **Rules (canonical — skills MUST cite this KB, not redeclare; implemented in code by `bodhi-state record-review`):**
 - New concepts start in Box 1, `nextReview` = tomorrow
 - Correct recall: move up one box (max 5), `nextReview` = today + new box interval
+- **One box movement per concept per day.** A Leitner interval is earned by recalling *after* the gap, so a second graded review on the same date (`/practice` after `/teach`, a `/quiz` question on a concept taught an hour ago) is evidence — history, Bloom ratchet, applied flag — but not a spaced success: the box, `nextReview` and the mastery streak wait for the next scheduled day (`record-review` reports `boxHeld`). A same-day miss still demotes; the correct that follows it is the relearning rep and holds, exactly as `--retry` does.
 - Incorrect recall: move to Box 1, `nextReview` = tomorrow
 - Partial recall: box held, `nextReview` = tomorrow (re-test soon; partial is not a Leitner demotion — but it does reset the `consecutiveCorrectAtL4Plus` mastery streak, per the `state-schema` KB)
 - Learner-initiated demote (`/forget` or self-rated low confidence in `/reflect`): same as incorrect recall
