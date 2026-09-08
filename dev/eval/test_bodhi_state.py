@@ -2229,6 +2229,41 @@ def t_same_day_promotion():
         check("same-day: a deferral does not count as today's review",
               out["box"] == "1 -> 2", out)
 
+def t_gate_seeded_module():
+    """Module entry is detected by graded activity, not tracked membership
+    (review finding 2b). /learn seeds assessed sub-topics into their modules
+    with add-concept, so under the old membership test a seeded module never
+    gated — the reviewer's exact sequence: weak prerequisite, empty target
+    module -> offer; add one untaught target concept -> gate silent."""
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review={"version": 3, "concepts": [],
+                                                  "sessionHistory": []})
+        run(proj, "record-review", "--concept", "Prerequisite", "--module", "Module A",
+            "--result", "correct", "--tested-bloom", "2", "--source", "teach",
+            on="2026-09-01")
+        run(proj, "record-review", "--concept", "Prerequisite",
+            "--result", "incorrect", "--tested-bloom", "2", "--source", "teach",
+            on="2026-09-02")
+        before = run(proj, "gate-check", "--prereqs", "Prerequisite")
+        check("gate-seeded: weak prerequisite, empty module = offer",
+              before["fires"] is True and before["verdict"] == "offer", before)
+        run(proj, "add-concept", "--concept", "Untaught target", "--module", "Module B")
+        run(proj, "add-concept", "--concept", "Second seed", "--module", "Module B")
+        after = run(proj, "gate-check", "--prereqs", "Prerequisite")
+        check("gate-seeded: seeded-only module still gates",
+              after["fires"] is True and after["verdict"] == "offer", after)
+        check("gate-seeded: seeded count reported", after.get("seededOnly") == 2, after)
+        # A deferral is scheduling, not activity: still gates.
+        run(proj, "defer", "--concept", "Untaught target", "--days", "2")
+        out = run(proj, "gate-check", "--prereqs", "Prerequisite")
+        check("gate-seeded: deferral is not module activity", out["fires"] is True, out)
+        # The first graded review in the module is what makes it a continuation.
+        run(proj, "record-review", "--concept", "Untaught target",
+            "--result", "partial", "--tested-bloom", "1", "--source", "teach")
+        out = run(proj, "gate-check", "--prereqs", "Prerequisite")
+        check("gate-seeded: graded review in module = continuation",
+              out["fires"] is False and "1 concept(s) graded" in out["reason"], out)
+
 
 def main():
     for t in (t_migrate, t_record_review, t_sessions_and_forget,
@@ -2250,7 +2285,8 @@ def main():
               t_write_keeps_file_mode, t_date_travel, t_history_bloom_only_when_tested,
               t_write_on_v2_backs_up, t_script_hygiene,
               t_applied_evidence, t_mastery_snapshot_agree, t_revision_brief,
-              t_due_shape, t_same_day_promotion):
+              t_due_shape, t_same_day_promotion,
+              t_gate_seeded_module):
         print(f"-- {t.__name__}")
         try:
             t()

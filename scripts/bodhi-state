@@ -1772,18 +1772,27 @@ def cmd_gate_check(args):
     concepts = data.get("concepts", [])
     t = today()
 
-    started = [c for c in concepts
-               if c.get("module", "").strip().lower() == current.strip().lower()]
+    # Module entry is detected by graded ACTIVITY in the module, not by
+    # tracked membership: /learn seeds every assessed sub-topic into its
+    # module with add-concept on day 1, so "any concept tracked here" made a
+    # seeded module a continuation session before it was ever taught and
+    # the gate never fired on the journey it exists for (review finding 2b).
+    in_module = [c for c in concepts
+                 if c.get("module", "").strip().lower() == current.strip().lower()]
+    started = [c for c in in_module if any(
+        not h.get("deferred") and h.get("result") in ("correct", "incorrect", "partial")
+        for h in c.get("reviewHistory", []) if isinstance(h, dict))]
     if not concepts:
         emit({"fires": False, "reason": "first-ever session — nothing to gate against",
               "currentModule": current})
         return
     if started:
         emit({"fires": False,
-              "reason": f"continuation session — {len(started)} concept(s) already "
-                        f"tracked for module {current!r}",
+              "reason": f"continuation session — {len(started)} concept(s) graded "
+                        f"in module {current!r}",
               "currentModule": current})
         return
+    seeded_only = len(in_module)
 
     # First session on a new module: identify prerequisites.
     if args.prereqs:
@@ -1824,6 +1833,7 @@ def cmd_gate_check(args):
     gaps = [r for r in report if r["status"] == "gap"]
     stale = [r for r in report if r["status"] == "stale-reconfirm"]
     emit({"fires": True, "currentModule": current,
+          "seededOnly": seeded_only,   # tracked in the module, none graded yet
           "prerequisiteSource": source,
           "prerequisites": report,
           "gaps": [r["name"] for r in gaps],

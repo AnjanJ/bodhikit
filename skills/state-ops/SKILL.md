@@ -141,7 +141,7 @@ Skills MUST NOT redefine this formula inline. Field semantics (the Bloom ratchet
 
 ## Prerequisite Gate (canonical, computed by `bodhi-state gate-check`)
 
-The `/teach` Phase 1 gate fires only on the first session of a new module (detected by: zero tracked concepts whose `module` matches `state.json.currentModule`). Per-prerequisite verdicts:
+The `/teach` Phase 1 gate fires only on the first session of a new module (detected by: no concept whose `module` matches `state.json.currentModule` carries a graded review yet — concepts `/learn` seeded from the assessment are tracked but not started, and the verdict reports them as `seededOnly`; a deferral is not activity). Per-prerequisite verdicts:
 
 | Verdict | Condition | Gate behavior |
 |---|---|---|

@@ -12,6 +12,9 @@ All notable changes to BodhiKit will be documented in this file.
 
 An independent review (2026-09-07) probed the state engine with seven isolated fixtures and found eight defects, all reproduced on the 1.20.0 tree. Each lands as its own commit, test or fixture first.
 
+### The gate detects module entry by graded activity (review finding 2b, HIGH)
+`gate-check` treated any concept tracked in `currentModule` as "the module has started". `/learn` seeds every assessed sub-topic into its module with `add-concept` on day 1, so a seeded module was a continuation session before it was ever taught and the gate never fired on the journey it exists for. Module entry now means a concept in the module with at least one graded review (deferrals are scheduling); the verdict reports `seededOnly`. `t_gate_seeded_module` runs the reviewer's exact sequence. `state-ops` *Prerequisite Gate* trigger sentence updated.
+
 ### One box movement per concept per day (review finding 1, HIGH)
 Three same-day `correct` calls stacked Box 1 → 4, a 14-day interval, the full L4+ streak and `mastered: true` with no delayed recall ever observed — reachable through `/teach` + `/practice` + `/quiz` on one concept in one session. `apply_review` now promotes the box and increments the streak only on the day's first graded review; later same-day corrects are still recorded (history, Bloom ratchet, `applied`) and report `boxHeld: "already reviewed today"`. A same-day miss still demotes, and the correct after it holds like `--retry`. Deferrals do not spend the day. `t_same_day_promotion` (17 checks); four existing tests that stacked same-day corrects as a shortcut now date-travel. Rule stated in the `spaced-repetition` KB, the counter semantics in `state-schema`, the `boxHeld` contract in `state-ops`.
 
