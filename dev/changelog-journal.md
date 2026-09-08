@@ -12,6 +12,12 @@ All notable changes to BodhiKit will be documented in this file.
 
 An independent review (2026-09-07) probed the state engine with seven isolated fixtures and found eight defects, all reproduced on the 1.20.0 tree. Each lands as its own commit, test or fixture first.
 
+### Claims and held-out grading (review, measurement section)
+- `/reflect` and three GUIDE passages claimed learners who reflect "retain 20-30% more" with no source. Replaced with what the skill actually rests on: Q3's explain-first step is a practice-testing rep (Dunlosky 2013) and the rating-before-reveal is Koriat's calibration measure; no separate retention claim for reflection.
+- README item 2 no longer says "Socratic enforcement as architecture". It says what is true: a protocol the lint checks is referenced and the evals sample; the file mechanics are deterministic, the Socratic behaviour is not.
+- Every grading scenario used the rubric's own topic and anchor examples (B-tree indexes, the audit log, the `CREATE INDEX` line), so a pass could not distinguish transferable judgment from recognition of the anchors. Three held-out variants on *Connection pooling* — a topic the rubric never mentions — run the same bands through the same assertions (`BODHI_EVAL_CONCEPT`). First live pass: jargon-heldout `partial` at 1, Feynman held (the executor slugged the new concept's name; the assertion now matches on letters and digits). genuine-heldout and apply-band-heldout hit the usage limit mid-run — INCONCLUSIVE, to be re-run.
+- CLAUDE.md's chaining contract gains the line the gate finding needed: chaining never skips the prerequisite gate.
+
 ### The OpenAI Stop adapter trusts tool-call records only (review finding 8, MEDIUM)
 The Codex adapter walked every string in the transcript for `bodhi-state … --project` and emitted a synthetic tool call for each, so an assistant paragraph *mentioning* an earlier `touch-state` blocked a read-only turn with a revision-sheet demand. It now extracts commands only from records that carry a tool marker (`tool_name` / `name` / `function`, or a `type` of tool_use / tool_call / function_call) with the command under `command`, `tool_input`, `input`, or `arguments` (stringified JSON accepted); prose fields are never descended into. When no tool record is recognisable the documented fail-open stands. `test_openai_plugin.py`: a prose-only transcript never blocks; three structured shapes each do.
 

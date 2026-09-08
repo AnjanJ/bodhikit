@@ -36,8 +36,16 @@ def ok(msg):
     print(f"  assert ok:   {msg}")
 
 
+def _key(name):
+    # An executor tracking a NEW concept may write "connection-pooling" for
+    # "Connection pooling" (seen on the first held-out grading run,
+    # 2026-09-08). Match on letters and digits only; the name it chose is
+    # not the judgment under test.
+    return re.sub(r"[^a-z0-9]+", "", name.lower())
+
+
 def concept(sr, name):
-    c = next((c for c in sr["concepts"] if c["name"].strip().lower() == name.lower()), None)
+    c = next((c for c in sr["concepts"] if _key(c["name"]) == _key(name)), None)
     if c is None:
         fail(f"concept {name!r} not tracked — the session recorded nothing")
     return c
@@ -243,10 +251,19 @@ def assert_reflect_difficulty(project):
 # JUDGMENT feeding them. Each scenario scripts a learner answer of controlled
 # quality and asserts the grade lands in the honest band.
 
+# The grading scenarios historically all used "B-tree indexes" — the same
+# topic, audit-log example and CREATE INDEX line that appear verbatim as the
+# rubric's anchors — so a pass could show recognition of the rubric's own
+# examples rather than transferable judgment (review, 2026-09-07). The
+# held-out variants set BODHI_EVAL_CONCEPT to a topic absent from the
+# rubric; the bands are identical.
+GRADE_CONCEPT = os.environ.get("BODHI_EVAL_CONCEPT", "B-tree indexes")
+
+
 def assert_grade_jargon(project):
     """A fluent verbatim-textbook parrot must NOT be graded as understanding."""
     sr = load(project, ".bodhi", "spaced-review.json")
-    c = concept(sr, "B-tree indexes")
+    c = concept(sr, GRADE_CONCEPT)
     entries = todays_entries(c)
     if not entries:
         fail("no review recorded — the session must land tracking either way")
@@ -272,7 +289,7 @@ def assert_grade_jargon(project):
 def assert_grade_genuine(project):
     """A clean own-words explanation with trade-offs must earn its grade."""
     sr = load(project, ".bodhi", "spaced-review.json")
-    c = concept(sr, "B-tree indexes")
+    c = concept(sr, GRADE_CONCEPT)
     entries = todays_entries(c)
     if not entries:
         fail("no review recorded for a genuinely strong explanation")
@@ -297,7 +314,7 @@ def assert_grade_genuine(project):
 def assert_grade_apply_band(project):
     """Mechanics + usage but explicitly no trade-offs = Bloom 3-4, not 5-6."""
     sr = load(project, ".bodhi", "spaced-review.json")
-    c = concept(sr, "B-tree indexes")
+    c = concept(sr, GRADE_CONCEPT)
     entries = todays_entries(c)
     if not entries:
         fail("no review recorded")

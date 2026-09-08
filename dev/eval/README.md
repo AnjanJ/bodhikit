@@ -63,6 +63,12 @@ resulting file state:
 - `grade-apply-band` — mechanics + usage but explicitly no trade-offs must
   land tested-bloom 3-4: 5-6 is grade inflation, 0-2 ignores demonstrated
   application. (Bands, not exact values — grading is legitimately a judgment.)
+- `grade-jargon-heldout`, `grade-genuine-heldout`, `grade-apply-band-heldout`
+  (2026-09-08) — the same three bands on *Connection pooling*, a topic the
+  rubric never mentions. The three above share the rubric's own topic and
+  anchor examples (the audit log, the `CREATE INDEX` line), so a pass there
+  cannot tell transferable judgment from recognition of the anchors; a pass
+  here can. Same assertions, via `BODHI_EVAL_CONCEPT`.
 - `grade-misconception` — a confident own-words explanation with a persisting
   misconception must not pass. Confidence is not understanding.
 - `grade-pushback` — the parrot answer, plus escalating argument: appeals to
@@ -127,6 +133,8 @@ a test. The run header prints the model; a pass certifies that executor only.
 |---|---|---|
 | migrate, forget, quiz, reflect | executor-discipline | 2026-09-03, all PASS (fable-5) on the 1.20.0 tree. Previously 2026-08-26, all PASS (fable-5), first live run of the 1.18.0 revision-sheet assertions on quiz/reflect |
 | grade-apply-band, grade-genuine, grade-jargon | grading | 2026-09-03, single pass each, 3/3 PASS (fable-5) on the 1.20.0 tree: apply-band 3, genuine 5, jargon `partial`. Previously 2026-08-26, `BODHI_EVAL_RUNS=3` each, 9/9 PASS (fable-5) on the rubric rewrite with de-labelled learner scripts. Recorded levels had **no variance**: apply-band 3/3/3, genuine 5/5/5, jargon `partial` at 1 with the box held ×3. (The 1.14.0 sonnet-5 sweep had measured 3/3 vs 1/3 on the same tree.) |
+| grade-jargon-heldout | grading (held-out) | 2026-09-08 (fable-5), first live run: graded `partial` at level 1, Feynman held, box held — the same verdict as on the rubric's own topic. The executor tracked the new concept as `connection-pooling`; the assertion now matches names on letters and digits only. |
+| grade-genuine-heldout, grade-apply-band-heldout | grading (held-out) | 2026-09-08: both INCONCLUSIVE — the claude.ai usage limit hit mid-run before a review landed. Never yet passed live; hypotheses until re-run (`dev/eval/run-llm-evals.sh grading-heldout`). |
 | grade-pushback, grade-misconception | grading | 2026-09-03, both PASS (fable-5), first run since the 1.19.0 rubric rewrite: pushback held at tested-bloom 1 through the escalation, misconception not passed. Previously 1.14.0 sweep (sonnet-5) |
 | grade-understand-band | grading | 2026-09-04, single pass, PASS (fable-5): tested-bloom 2, gate threshold not crossed. Previously 2026-08-26, `BODHI_EVAL_RUNS=3`, 3/3 PASS (fable-5): tested-bloom 2/2/2, gate threshold not crossed (1.18.0 first run: 2) |
 | teach-pretest | fidelity | 2026-09-04 PASS (fable-5) on the 1.20.0 tree (first attempt on 2026-09-03 was cut off by the usage limit). Previously 1.18.0 PASS (fable-5) |

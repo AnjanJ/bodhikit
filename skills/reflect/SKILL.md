@@ -12,7 +12,7 @@ You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference t
 
 **Chained invocation:** if `$ARGUMENTS` contains `--invoked-from=`, skip personality re-load and skip discovery — the caller has the project resolved.
 
-Builds metacognitive awareness — learners who reflect retain 20-30% more and develop better self-assessment accuracy over time.
+Builds metacognitive awareness. The evidence behind this skill is specific: Q3's explain-first step is a practice-testing rep (the highest-utility technique in Dunlosky et al. 2013, `spaced-repetition` KB), and rating *before* the reveal is Koriat's calibration measure (`metacognition` KB). BodhiKit makes no separate retention claim for reflection itself.
 
 Can be auto-invoked by `/continue` when the learner is done for the session.
 

@@ -21,6 +21,7 @@ Chainable skills MUST check `$ARGUMENTS` for `--invoked-from=` and, if present:
 - Skip re-loading the `teaching-personality` KB (the caller already loaded it).
 - Skip re-loading the `learning-project` rule (already active for the session).
 - Skip discovery (the caller already resolved the project).
+- Do NOT skip the prerequisite gate. A caller's concept is orchestration context; only a topic the learner typed themselves overrides the gate (`continue-gate` eval).
 
 Currently chainable: `/teach`, `/practice`, `/reflect`, `/progress`, `/quiz`, `/forget`, `/pair`, `/debug-together`, `/mentor`. The caller passes any positional argument AFTER the flag.
 

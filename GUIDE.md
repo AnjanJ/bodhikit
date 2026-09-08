@@ -321,7 +321,7 @@ It asks:
 3. **Confidence rating (1-10)** — Low confidence concepts get scheduled for review sooner
 4. **What would you do differently?** — Builds strategic thinking about learning itself
 
-Why this matters: research shows learners who reflect on their learning process retain 20-30% more. Your confidence rating feeds directly into the spaced repetition system, so concepts you are unsure about get reviewed sooner.
+Why this matters: the explain-first step in Q3 is a retrieval rep — practice testing is the best-supported learning technique in the literature — and rating yourself *before* the reveal is how calibration is measured. Your rating never moves a review date on its own; what you actually retrieved does. A concept you could not explain is re-tested tomorrow; one you explained cleanly but rated low gets named as underconfidence and offered as tomorrow's practice.
 
 ---
 
@@ -401,7 +401,7 @@ Expect ~60–90 minutes for the full Day 1: discovery, ~8 assessment questions, 
 
 **What it does.** End-of-session metacognitive reflection. Asks four short questions (hardest concept today, what surprised you, confidence ratings, what would you do differently), records a Leitner update for concepts not already reviewed today — the retrieval outcome decides the box, the rating is pure calibration signal — auto-invokes `/forget` when confidence ≤ 4 or retrieval fails, and writes the session summary to `progress.md`. You can run `/housekeep` afterwards when the live docs feel heavy.
 
-**When to use.** Every session, at the end. Auto-invoked by `/continue` when you say goodbye. Even when you are running solo skills, take 3 minutes to reflect — research shows reflection is where ~20–30% of retention comes from.
+**When to use.** Every session, at the end. Auto-invoked by `/continue` when you say goodbye. Even when you are running solo skills, take 3 minutes to reflect — the explain-back is one more retrieval rep, and the rating is the calibration data the tutor learns you from.
 
 **When NOT to use.** You just spent 5 minutes asking a one-off question — there is no session to reflect on. You are in the middle of a session and not ready to close — reflection works best at the end.
 
@@ -969,7 +969,7 @@ If you only have time for one paragraph: **BodhiKit's job is to make the next mo
 
 **What it is.** Thinking about your thinking. Knowing what you know, what you do not know, and what tactics work for *you* specifically.
 
-**Why BodhiKit uses it.** The Dunning-Kruger curve and "illusions of competence" mean learners routinely overestimate their own understanding. Without explicit metacognitive practice, you do not know that you do not know. Reflection is also where retention is durably encoded — research shows learners who reflect retain 20-30% more.
+**Why BodhiKit uses it.** The Dunning-Kruger curve and "illusions of competence" mean learners routinely overestimate their own understanding. Without explicit metacognitive practice, you do not know that you do not know. Reflection is also one more retrieval rep on the day's concepts, and the rating-before-reveal is the calibration measurement (Koriat 1997). BodhiKit makes no separate retention claim for reflection itself.
 
 **When it fires.**
 - `/reflect`: the entire skill is direct metacognitive practice — four questions probing what was hardest, what surprised you, your confidence ratings, and what you would do differently.

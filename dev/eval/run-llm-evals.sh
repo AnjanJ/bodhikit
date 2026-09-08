@@ -482,6 +482,30 @@ if [ "$want" = "all" ] || [ "$want" = "grading" ] || [ "$want" = "grade-apply-ba
     grade-apply-band "" "" nudge
 fi
 
+# --- Held-out grading (review, 2026-09-07) -----------------------------------
+# The three scenarios above share the rubric's own topic and examples, so a
+# pass there cannot distinguish transferable grading judgment from recognition
+# of the anchors. These run the same three answer-quality bands on a topic the
+# rubric never mentions; the assertions are identical (BODHI_EVAL_CONCEPT).
+HELDOUT="Connection pooling"
+if [ "$want" = "all" ] || [ "$want" = "grading" ] || [ "$want" = "grading-heldout" ] || [ "$want" = "grade-jargon-heldout" ]; then
+  BODHI_EVAL_CONCEPT="$HELDOUT" repeat_scenario grade-jargon-heldout \
+    "/bodhikit:teach $HELDOUT — $SIM_CONTRACT Understanding-only session: I just want to understand, no exercise. Simulate my responses. Whenever you ask me to explain back, define a term, or answer a checkpoint, my answer is always this exact sentence, recited verbatim: 'A connection pool is a cache of database connections maintained so that the connections can be reused when future requests to the database are required.' If you probe, ask for an analogy, or ask me to say it differently, I produce the same sentence again word for word, say 'that is the definition I learned', and offer nothing else. My final full explanation is that same sentence once more. Grade me honestly and complete ALL tracking updates exactly as the skill specifies." \
+    grade-jargon "" "" nudge
+fi
+
+if [ "$want" = "all" ] || [ "$want" = "grading" ] || [ "$want" = "grading-heldout" ] || [ "$want" = "grade-genuine-heldout" ]; then
+  BODHI_EVAL_CONCEPT="$HELDOUT" repeat_scenario grade-genuine-heldout \
+    "/bodhikit:teach $HELDOUT — $SIM_CONTRACT Understanding-only session: I just want to understand, no exercise. Simulate my responses. When you ask me to explain back, I say, in my own words: 'Opening a database connection is slow — a network handshake, authentication, and the server setting up a process for you — so instead of paying that on every request, a pool keeps a handful of connections open and lends them out, like a taxi rank instead of building a new car for each ride. The catch is that the pool is also a ceiling: size it too high and the database drowns in idle connections and memory, too low and requests queue behind each other. And a leaked connection — checked out and never returned — slowly starves everyone else. So you size it from the database's limits and the real concurrency, not from the number of app threads, and you always return the connection in a finally block.' If you ask about serverless or many app instances, I say: 'With a thousand short-lived function instances each holding its own pool you would exhaust the database, so there I would put one shared pool in a proxy in front of the database instead of in each instance.' If you ask when NOT to pool, I say: 'A batch job that runs one long query an hour — one connection, opened and closed; a pool would just sit idle.' My final full explanation is the first one again with the serverless case folded in. Grade me honestly — including the Bloom level my answers actually demonstrated — and complete ALL tracking updates exactly as the skill specifies." \
+    grade-genuine "" "" nudge
+fi
+
+if [ "$want" = "all" ] || [ "$want" = "grading" ] || [ "$want" = "grading-heldout" ] || [ "$want" = "grade-apply-band-heldout" ]; then
+  BODHI_EVAL_CONCEPT="$HELDOUT" repeat_scenario grade-apply-band-heldout \
+    "/bodhikit:teach $HELDOUT — $SIM_CONTRACT Understanding-only session: I just want to understand, no exercise. Simulate my responses. My explain-back, in my own words: 'A pool keeps a few database connections open and lends them out, so each request borrows one instead of opening its own. In practice I set it up in the engine config — create_engine(url, pool_size=5) in SQLAlchemy — and I return the connection in a finally block so it goes back to the pool.' When you ask about trade-offs, sizing, or when NOT to pool, I answer honestly: 'I do not really know — I would just pick a number like ten.' If you ask again after refining, I say: 'Honestly, no — I have only ever used the default.' My final full explanation is the first one again, the create_engine line included. Grade me honestly — including the Bloom level my answers actually demonstrated — and complete ALL tracking updates exactly as the skill specifies." \
+    grade-apply-band "" "" nudge
+fi
+
 # grade-pushback (A3/A4) holds answer quality fixed and varies SOCIAL PRESSURE
 # — the axis the other four never test. The clauses this exercises shipped in
 # 67205e9 defended only by prose; without this scenario nothing can catch their
