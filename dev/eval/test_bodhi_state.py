@@ -1112,15 +1112,20 @@ def t_due_never_taught():
             json.dump(srdata, f)
         out = run(proj, "due")
         flags = {c["name"]: c["neverTaught"] for c in out["concepts"]}
+        expo = {c["name"]: c["exposure"] for c in out["concepts"]}
         check("due: freshly seeded concept flagged neverTaught",
-              flags.get("Seeded A") is True, out)
-        check("due: quizzed-but-untaught concept still neverTaught "
-              "(source=quiz is not teaching)",
-              flags.get("Seeded B") is True, out)
+              flags.get("Seeded A") is True and expo["Seeded A"] == "seeded", out)
+        # Review finding 3: a correct at the apply rung or above is knowledge
+        # the learner has shown, whatever skill asked — quizzing it IS spaced
+        # review. (Until 2026-09-08 this case was asserted the other way:
+        # "source=quiz is not teaching". True, but teaching was never the
+        # question; whether there is something to space is.)
+        check("due: quizzed correct at the apply rung = demonstrated, not neverTaught",
+              flags.get("Seeded B") is False and expo["Seeded B"] == "demonstrated", out)
         check("due: taught concept flagged neverTaught=False",
-              flags.get("Taught C") is False, out)
+              flags.get("Taught C") is False and expo["Taught C"] == "taught", out)
         check("due: neverTaughtCount rollup counts only untaught",
-              out["neverTaughtCount"] == 2, out)
+              out["neverTaughtCount"] == 1, out)
         # After a teach review, the flag flips. (Re-backdate: a correct review
         # pushes nextReview forward, which would drop it from the due list.)
         run(proj, "record-review", "--concept", "Seeded A",
@@ -1135,7 +1140,74 @@ def t_due_never_taught():
         check("due: neverTaught clears once the concept is taught",
               flags.get("Seeded A") is False, out)
         check("due: neverTaughtCount drops after teaching",
-              out["neverTaughtCount"] == 1, out)
+              out["neverTaughtCount"] == 0, out)
+
+
+def t_exposure_routes():
+    """The reviewer's fixture (finding 3): a concept mastered through
+    /practice with working code was `neverTaught: true`. And the low side: a
+    quiz correct below the apply rung is still nothing to space."""
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review={"version": 3, "concepts": [],
+                                                  "sessionHistory": []})
+        yesterday = (TODAY - datetime.timedelta(days=1)).isoformat()
+        run(proj, "record-review", "--concept", "Loops", "--module", "Module A",
+            "--result", "correct", "--tested-bloom", "4", "--source", "practice",
+            "--applied", on=yesterday)
+        run(proj, "add-concept", "--concept", "Maps", "--module", "Module A",
+            on=yesterday)
+        run(proj, "record-review", "--concept", "Maps",
+            "--result", "correct", "--tested-bloom", "1", "--source", "quiz",
+            on=yesterday)
+        run(proj, "add-concept", "--concept", "Sets", "--module", "Module A",
+            on=yesterday)
+        run(proj, "record-review", "--concept", "Sets",
+            "--result", "correct", "--tested-bloom", "3", "--source", "quiz",
+            on=yesterday)
+        run(proj, "record-review", "--concept", "Sets",
+            "--result", "incorrect", "--tested-bloom", "3", "--source", "quiz",
+            on=yesterday)   # the miss resets apply-rung evidence
+        srdata = read_sr(proj)
+        for c in srdata["concepts"]:
+            c["nextReview"] = yesterday
+        with open(os.path.join(proj, ".bodhi", "spaced-review.json"), "w") as f:
+            json.dump(srdata, f)
+        out = run(proj, "due")
+        by = {c["name"]: c for c in out["concepts"]}
+        check("exposure: built through /practice is not neverTaught",
+              by["Loops"]["neverTaught"] is False and by["Loops"]["exposure"] == "built", out)
+        check("exposure: quiz correct below apply = quizzed-only, neverTaught",
+              by["Maps"]["neverTaught"] is True and by["Maps"]["exposure"] == "quizzed-only", out)
+        check("exposure: apply-rung evidence before a miss does not count",
+              by["Sets"]["neverTaught"] is True and by["Sets"]["exposure"] == "quizzed-only", out)
+        check("exposure: count follows the flag", out["neverTaughtCount"] == 2, out)
+
+
+def t_add_concept_bloom():
+    """/learn seeds only sub-topics it classified at >= 1; the seed now
+    carries that level instead of entering at 0 (review finding 3)."""
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review={"version": 3, "concepts": [],
+                                                  "sessionHistory": []})
+        out = run(proj, "add-concept", "--concept", "Joins", "--module", "Module A",
+                  "--bloom", "2")
+        c = read_sr(proj)["concepts"][0]
+        check("add-concept: --bloom stored", c["bloomLevel"] == 2, c)
+        check("add-concept: output renders the level",
+              out["bloomLevel"] == 2 and out["bloomLabel"] == "Understand", out)
+        check("add-concept: default stays 0",
+              run(proj, "add-concept", "--concept", "Views", "--module", "Module A")["bloomLevel"] == 0)
+        run(proj, "add-concept", "--concept", "Bad", "--module", "Module A",
+            "--bloom", "7", expect_fail=True)
+        brief = run(proj, "session-brief", "--concept", "Joins")
+        check("add-concept: an assessed seed is not a first exposure (no pretest)",
+              brief["firstExposure"] is False and brief["pretestApplies"] is False, brief)
+        # The ratchet: a later lower grade never lowers the seeded level.
+        run(proj, "record-review", "--concept", "Joins", "--result", "correct",
+            "--tested-bloom", "1")
+        check("add-concept: seeded level ratchets, never drops",
+              read_sr(proj)["concepts"][0]["bloomLevel"] == 2)
+        check("add-concept: verify accepts the seed", run(proj, "verify")["ok"] is True)
 
 
 def t_concept_tiers():
@@ -2286,7 +2358,7 @@ def main():
               t_write_on_v2_backs_up, t_script_hygiene,
               t_applied_evidence, t_mastery_snapshot_agree, t_revision_brief,
               t_due_shape, t_same_day_promotion,
-              t_gate_seeded_module):
+              t_gate_seeded_module, t_exposure_routes, t_add_concept_bloom):
         print(f"-- {t.__name__}")
         try:
             t()

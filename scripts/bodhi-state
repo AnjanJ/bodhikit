@@ -526,7 +526,13 @@ def find_concept(data, name):
     return None
 
 
-def new_concept(name, module, question=""):
+def new_concept(name, module, question="", bloom=0):
+    """bloom: the level a /learn or /assess classification observed (0 = not
+    classified). Before this flag every seed entered at 0 even though /learn
+    only seeds sub-topics it classified at >= 1, so the assessment's own
+    reading was dropped at the door: the gate saw `no-opinion`, /continue saw
+    `neverTaught`, and session-brief opened with a pretest on material the
+    learner had just been assessed on (review finding 3, 2026-09-07)."""
     t = today()
     return {
         "name": name,
@@ -537,7 +543,7 @@ def new_concept(name, module, question=""):
         "lastReviewed": None,
         "question": question,
         "lastResult": "",
-        "bloomLevel": 0,
+        "bloomLevel": bloom,
         "feynmanPassed": False,
         "consecutiveCorrectAtL4Plus": 0,
         "reviewHistory": [],
@@ -669,11 +675,15 @@ def cmd_add_concept(args):
     if find_concept(data, args.concept):
         emit({"action": "noop", "reason": f"concept {args.concept!r} already tracked"})
         return
+    bloom = args.bloom or 0
+    if not 0 <= bloom <= 6:
+        die(f"--bloom must be 0-6, got {bloom}")
     data.setdefault("concepts", []).append(
-        new_concept(args.concept, args.module, args.question or ""))
+        new_concept(args.concept, args.module, args.question or "", bloom))
     write_spaced_review(path, data)
     emit({"action": "added", "concept": args.concept, "module": args.module,
-          "box": 1, "nextReview": data["concepts"][-1]["nextReview"]})
+          "box": 1, "nextReview": data["concepts"][-1]["nextReview"],
+          "bloomLevel": bloom, **bloom_render(bloom)})
 
 
 def cmd_record_review(args):
@@ -1121,16 +1131,12 @@ def cmd_due(args):
                                 "nextReview": raw})
             continue
         if nr <= t:
-            # neverTaught: no review has ever come from a /teach session. A
-            # concept /learn seeds from the assessment (or one only ever
-            # quizzed) has retention evidence but was never taught — quizzing
-            # it tests nothing. /continue routes these to /teach first. The
-            # source=="teach" absence is the precise test: a seeded concept can
-            # sit at bloomLevel > 0 from assessment, so bloomLevel==0 would miss
-            # it (session-brief's firstExposure keys on bloom for a different,
-            # pretest-vs-retrieval purpose).
-            never_taught = not any(h.get("source") == "teach"
-                                   for h in c.get("reviewHistory", []))
+            # neverTaught / exposure: see exposure_of. A concept /learn seeded
+            # from the assessment, or one only ever quizzed below the apply
+            # rung, has a schedule but nothing to space — /continue routes
+            # these to /teach first. Knowledge shown at the apply rung, or
+            # taught, or built, is real review material whatever its source.
+            exposure = exposure_of(c)
             # The due list is the surface skills narrate from, so it carries
             # the words a learner may hear (dueSince / overdueDays / the
             # outcome clause) and NOT the box or Bloom number — 1/2 Fable
@@ -1138,7 +1144,8 @@ def cmd_due(args):
             # Ordering is by box then date; `priority` is the rank.
             due.append({"name": c["name"], "module": c.get("module", ""),
                         "dueSince": raw, "overdueDays": (t - nr).days,
-                        "neverTaught": never_taught,
+                        "neverTaught": exposure in ("seeded", "quizzed-only"),
+                        "exposure": exposure,
                         "bloomOutcome": bloom_render(c.get("bloomLevel", 0))["bloomOutcome"],
                         "question": c.get("question", ""),
                         "_sort": (c.get("box", 1), raw)})
@@ -1713,6 +1720,46 @@ def applied_evidence(c):
     return n
 
 
+# Review sources that are instruction: the tutor taught, or watched the
+# learner build. A quiz answer or a /reflect retrieval is evidence of
+# knowledge, not of teaching. debug-together writes no reviews today; listed
+# so a future write from it counts as instruction without a script change.
+INSTRUCTIONAL_SOURCES = {"teach", "practice", "pair", "debug-together"}
+
+
+def exposure_of(c):
+    """How the learner has met this concept, from the evidence on record:
+      seeded        — tracked (by /learn's assessment or a skill), never graded
+      quizzed-only  — graded, but only by quiz/reflect retrievals and none of
+                      them reached the apply rung since the last miss
+      demonstrated  — no instruction on record, but the learner has answered
+                      at the apply rung or above (a seed assessed high and
+                      quizzed correctly): knowledge acquired elsewhere
+      taught        — at least one review from an instructional source
+      built         — at least one `applied` correct on record
+    Review finding 3 (2026-09-07): `neverTaught` used to mean only "no
+    source=teach entry", so a concept mastered through /practice with working
+    code was routed to first teaching, and knowledge shown in quizzes did not
+    count. It now means exposure in {seeded, quizzed-only} — the two states
+    where quizzing it would test nothing the learner has been given."""
+    graded = [h for h in c.get("reviewHistory", []) if isinstance(h, dict)
+              and not h.get("deferred")
+              and h.get("result") in ("correct", "incorrect", "partial")]
+    if any(h.get("applied") is True and h.get("result") == "correct" for h in graded):
+        return "built"
+    if any(h.get("source") in INSTRUCTIONAL_SOURCES for h in graded):
+        return "taught"
+    if not graded:
+        return "seeded"
+    if evidence_at_3_plus(c) >= 1:
+        return "demonstrated"
+    return "quizzed-only"
+
+
+def never_taught(c):
+    return exposure_of(c) in ("seeded", "quizzed-only")
+
+
 def gate_verdict(c, t):
     """(status, reason) for one prerequisite (canonical).
 
@@ -2252,6 +2299,8 @@ def main():
     s.add_argument("--concept", required=True)
     s.add_argument("--module", required=True)
     s.add_argument("--question", default="")
+    s.add_argument("--bloom", type=int, default=0,
+                   help="level an assessment classified it at (0-6; 0 = unclassified)")
     s.set_defaults(fn=cmd_add_concept)
 
     s = sub.add_parser("record-review",

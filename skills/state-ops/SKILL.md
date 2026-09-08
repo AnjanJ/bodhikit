@@ -29,7 +29,7 @@ Every skill carries its own exact invocation; `bodhi-state <subcommand> --help` 
 
 **Writers**
 
-- `add-concept` — a new concept with the canonical Box-1 defaults.
+- `add-concept` — a new concept with the canonical Box-1 defaults. `--bloom N` records the level an assessment classified it at (`/learn` seeds pass it; a seed at 0 reads as unclassified everywhere downstream).
 - `record-review` — Leitner box and `nextReview`, the Bloom ratchet, `consecutiveCorrectAtL4Plus`, the `reviewHistory[]` append. The box and the streak move at most once per concept per day (`spaced-repetition` KB); a later same-day review is recorded and ratchets the level but reports `boxHeld` — do not re-run it hoping for a promotion. `--confidence sure|mostly|guessing` is the learner's pre-reveal calibration tag — recorded, never a gate on promotion. `--retry` is a successive-relearning rep: history only, no box/counter/bloom movement (the demotion stands). `--applied` marks an outcome demonstrated in working code the tutor read (an exercise, a driven piece), never an explanation or a quiz answer: it is the only evidence the gate and the mastery formula accept for "can build with it", so a verbal review must not carry it. Its output's `crossedBloom3: true` is the one trigger for `bump-profile --counter totalConceptsLearned`.
 - `set-feynman` — `feynmanPassed = true`, never unset.
 - `record-session` — a `sessionHistory[]` entry in the canonical type vocabulary (below); `type`, `subtype` and `date` come from flags, never from `--data`.
@@ -42,7 +42,7 @@ Every skill carries its own exact invocation; `bodhi-state <subcommand> --help` 
 
 **Readers** (no lock file, no writes)
 
-- `due` — due concepts in review order (`priority`, `dueSince`, `overdueDays`, `bloomOutcome`) — by design no box or Bloom number, so narrating it cannot leak one. Each is tagged `neverTaught` (no review ever came from `--source teach`): route those to `/teach`, not `/quiz`. `unparseableDates` lists schedule-broken entries rather than skipping them.
+- `due` — due concepts in review order (`priority`, `dueSince`, `overdueDays`, `bloomOutcome`) — by design no box or Bloom number, so narrating it cannot leak one. Each carries `exposure` — `seeded` (never graded), `quizzed-only` (graded only by quiz/reflect retrievals, none at the apply rung since the last miss), `demonstrated` (no instruction on record but an apply-rung correct: knowledge shown, whatever skill asked), `taught` (a `/teach`, `/practice` or `/pair` review), `built` (an `applied` correct) — and `neverTaught`, true for the first two: route those to `/teach`, not `/quiz`; the other three are real review material. `unparseableDates` lists schedule-broken entries rather than skipping them.
 - `session-brief --concept` — `/teach`'s branches: pretest vs graded retrieval (`firstExposure`/`pretestApplies`), `isReteach`, box/bloom/Feynman position, `dueForReview`.
 - `snapshot` — the whole `/progress` surface in one call (`project`, `cadence`, `review`, `mastery`, `calibration`). `mastery` / `calibration` / `retention` / `export-anonymized` — its parts and the outcome analytics (retention by spacing gap and `boxBefore`; an anonymized counts-only export).
 - `revision-brief` — today's facts for the revision sheet (`sessionToday`, `suggestedFile`, `existing`); the Stop hook reads it.
