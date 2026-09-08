@@ -51,7 +51,8 @@ Every skill carries its own exact invocation; `bodhi-state <subcommand> --help` 
 **Maintenance**
 
 - `migrate-spaced-review` — v1/v2 → v3 once: backup, in-place field fill, marker, verification.
-- `normalize` — idempotent repair of executor drift (invented result/type vocabulary, nested bookkeeping, the lossless type fixes: a numeric-string box or level, a string boolean), both files backed up first. `verify` names it only when it can perform the repair.
+- `normalize` — idempotent repair of executor drift (invented result/type vocabulary, nested bookkeeping, the lossless type fixes: a numeric-string box or level, a string boolean — on the concept and on every `reviewHistory[]` entry), both files backed up first. `verify` names it only when it can perform the repair.
+- The contract between the two: whatever `verify` accepts, every read subcommand handles without crashing; whatever a reader cannot compute on, `verify` reports (the deterministic suite runs every reader against every state `verify` passes).
 - `verify` — the schema check the Stop hook and `dev/check.sh` run.
 
 The script preserves unknown fields by mutating parsed JSON in place, writes atomically, and rejects invalid `sessionHistory` types in code. The skill's job is the pedagogical judgment (which result, which Bloom level, which confidence tag); the script's job is the file.

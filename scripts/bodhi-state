@@ -439,6 +439,33 @@ def concept_shape_errors(c):
     return errs
 
 
+def history_entry_errors(h):
+    """Shape table for one reviewHistory entry — the fields readers compute
+    on. Review finding 7 (2026-09-07): `verify` passed a history bloomLevel of
+    "three" that session-brief then died on with a TypeError, so the Stop
+    hook certified a project /teach could not read. Rule: whatever verify
+    accepts, every read subcommand must handle. Returns the same
+    (field, actual, expected, repair) tuples as concept_shape_errors; dates
+    are not here — readers skip an unparseable date, so verify only warns."""
+    errs = []
+    if h.get("deferred"):
+        if "days" in h and not (_is_int(h["days"]) and h["days"] >= 0):
+            errs.append(("days", h["days"], "int >= 0", _coerce_int(h["days"], 0, 10**6)))
+        return errs
+    if "bloomLevel" in h:
+        bl = h["bloomLevel"]
+        if not (_is_int(bl) and 0 <= bl <= 6):
+            errs.append(("bloomLevel", bl, "int 0-6", _coerce_int(bl, 0, 6)))
+    if "boxBefore" in h:
+        bb = h["boxBefore"]
+        if not (_is_int(bb) and 1 <= bb <= MAX_BOX):
+            errs.append(("boxBefore", bb, f"int 1-{MAX_BOX}", _coerce_int(bb, 1, MAX_BOX)))
+    for flag in ("applied", "retry", "selfReport"):
+        if flag in h and not isinstance(h[flag], bool):
+            errs.append((flag, h[flag], "true|false", _coerce_bool(h[flag])))
+    return errs
+
+
 def shape_error_text(name, field, actual, expected, repair):
     """One wording for both paths; names `normalize` only when it can fix it."""
     msg = f"concept {name!r} {field} {actual!r} not {expected}"
@@ -460,6 +487,17 @@ def validate_spaced_review(data, path):
             die(f"{path}: " + shape_error_text(label, field, actual, expected, repair)
                 + ("; " if repair is not None else " — fix it by hand; ")
                 + "`bodhi-state verify` lists every problem")
+        for h in c.get("reviewHistory", []) if isinstance(c.get("reviewHistory"), list) else []:
+            if not isinstance(h, dict):
+                continue
+            herrs = history_entry_errors(h)
+            if herrs:
+                field, actual, expected, repair = herrs[0]
+                label = c.get("name") if isinstance(c.get("name"), str) else f"index {i}"
+                die(f"{path}: " + shape_error_text(label, f"reviewHistory {field}",
+                                                   actual, expected, repair)
+                    + ("; " if repair is not None else " — fix it by hand; ")
+                    + "`bodhi-state verify` lists every problem")
     if not isinstance(data.get("sessionHistory"), list):
         die(f"{path}: sessionHistory is not a list — run `bodhi-state verify`")
 
@@ -2055,15 +2093,16 @@ def cmd_normalize(args):
             if not isinstance(c.get("reviewHistory"), list):
                 continue
             for h in c.get("reviewHistory", []):
-                if not isinstance(h, dict) or h.get("deferred"):
+                if not isinstance(h, dict):
                     continue
-                if "applied" in h and not isinstance(h["applied"], bool):
-                    fixed = _coerce_bool(h["applied"])
-                    if fixed is not None:
-                        changes.append(f"reviewHistory applied {h['applied']!r} -> "
-                                       f"{fixed!r} ({c.get('name')})")
-                        h["applied"] = fixed
+                for field, actual, expected, repair in history_entry_errors(h):
+                    if repair is not None:
+                        changes.append(f"reviewHistory {field} {actual!r} -> "
+                                       f"{repair!r} ({c.get('name')})")
+                        h[field] = repair
                         sr_changes += 1
+                if h.get("deferred"):
+                    continue
                 res = h.get("result")
                 if res is not None and res not in ("correct", "incorrect", "partial"):
                     h.pop("result")
@@ -2203,18 +2242,20 @@ def cmd_verify(args):
                 for h in rh:
                     if not isinstance(h, dict):
                         continue  # shape table reported it
+                    for field, actual, expected, repair in history_entry_errors(h):
+                        errors.append(shape_error_text(name, f"reviewHistory {field}",
+                                                       actual, expected, repair)
+                                      + ("" if repair is not None else " — fix it by hand"))
+                    if h.get("date") is not None and parse_date(h.get("date")) is None:
+                        warnings.append(f"concept {name!r} reviewHistory date "
+                                        f"{h.get('date')!r} is not an ISO date — "
+                                        f"readers skip this entry")
                     if h.get("deferred"):
                         if "result" in h:
                             errors.append(f"concept {name!r} deferral entry carries "
                                           f"a result — deferral is scheduling, not "
                                           f"an outcome")
                         continue
-                    if "applied" in h and not isinstance(h["applied"], bool):
-                        repairable = _coerce_bool(h["applied"]) is not None
-                        errors.append(f"concept {name!r} reviewHistory applied "
-                                      f"{h['applied']!r} not true|false"
-                                      + (" — run `bodhi-state normalize`"
-                                         if repairable else " — fix it by hand"))
                     hres = h.get("result")
                     if hres not in ("correct", "incorrect", "partial"):
                         errors.append(f"concept {name!r} reviewHistory result "

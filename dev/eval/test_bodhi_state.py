@@ -2369,6 +2369,100 @@ def t_gate_seeded_module():
         check("gate-seeded: graded review in module = continuation",
               out["fires"] is False and "1 concept(s) graded" in out["reason"], out)
 
+READERS = (("due",), ("mastery",), ("calibration",), ("retention",),
+           ("export-anonymized",), ("snapshot",), ("revision-brief",),
+           ("session-brief", "--concept", "B-tree indexes"),
+           ("gate-check", "--prior-module", "Module A"))
+
+
+def t_verify_implies_readers():
+    """Review finding 7: whatever `verify` accepts, every read subcommand
+    must handle without crashing; whatever a reader cannot handle, `verify`
+    must report (naming `normalize` when the fix is lossless)."""
+    def readers_ok(proj):
+        for argv in READERS:
+            r = subprocess.run([sys.executable, SCRIPT, "--project", proj, *argv],
+                               capture_output=True, text=True)
+            if r.returncode != 0 or "Traceback" in r.stderr:
+                return f"{argv[0]}: rc={r.returncode} {r.stderr.strip()[-160:]}"
+        return None
+
+    def readers_die_cleanly(proj):
+        for argv in READERS:
+            r = subprocess.run([sys.executable, SCRIPT, "--project", proj, *argv],
+                               capture_output=True, text=True)
+            if "Traceback" in r.stderr:
+                return f"{argv[0]} tracebacked: {r.stderr.strip()[-160:]}"
+            if r.returncode == 0:
+                continue  # a reader that tolerates it is fine too
+            try:
+                json.loads(r.stdout)
+            except json.JSONDecodeError:
+                return f"{argv[0]} died without a JSON error"
+        return None
+
+    def write_sr(proj, sr):
+        with open(os.path.join(proj, ".bodhi", "spaced-review.json"), "w") as f:
+            json.dump(sr, f)
+
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review=json.loads(json.dumps(V2_SR)))
+        run(proj, "migrate-spaced-review")
+        run(proj, "record-review", "--concept", "B-tree indexes",
+            "--result", "correct", "--tested-bloom", "3", "--applied")
+        check("invariant: clean fixture verifies", run(proj, "verify")["ok"] is True)
+        check("invariant: every reader runs on a verified fixture",
+              readers_ok(proj) is None, readers_ok(proj))
+        good = read_sr(proj)
+        # The reviewer's mutation, plus its siblings: each must fail verify
+        # with the repair named, die cleanly in readers, and be repaired.
+        # (repairable = a lossless coercion exists: "3" -> 3, "true" -> True;
+        # the reviewer's "three" is reported but must be fixed by hand)
+        for field, bad, label, repairable in (
+                ("bloomLevel", "three", "word bloom", False),
+                ("bloomLevel", "3", "numeric-string bloom", True),
+                ("boxBefore", "2", "numeric-string boxBefore", True),
+                ("applied", "true", "string applied", True),
+                ("retry", "yes", "string retry", False)):
+            sr = json.loads(json.dumps(good))
+            sr["concepts"][0]["reviewHistory"][-1][field] = bad
+            write_sr(proj, sr)
+            r = subprocess.run([sys.executable, SCRIPT, "--project", proj, "verify"],
+                               capture_output=True, text=True)
+            v = json.loads(r.stdout)
+            check(f"invariant: {label} fails verify",
+                  r.returncode == 1 and any(field in e for e in v["errors"]), v)
+            check(f"invariant: {label} names normalize" if repairable
+                  else f"invariant: {label} says fix by hand",
+                  any(("normalize" in e) == repairable for e in v["errors"] if field in e), v)
+            check(f"invariant: {label} readers die cleanly, no traceback",
+                  readers_die_cleanly(proj) is None, readers_die_cleanly(proj))
+            if repairable:
+                run(proj, "normalize")
+                check(f"invariant: {label} repaired and verifies",
+                      run(proj, "verify")["ok"] is True)
+                check(f"invariant: {label} readers run after repair",
+                      readers_ok(proj) is None, readers_ok(proj))
+        # A junk history date: readers skip it, so verify warns, not errors.
+        sr = json.loads(json.dumps(good))
+        sr["concepts"][0]["reviewHistory"][0]["date"] = "last tuesday"
+        write_sr(proj, sr)
+        v = run(proj, "verify")
+        check("invariant: junk history date is a warning",
+              v["ok"] is True and any("date" in w for w in v["warnings"]), v)
+        check("invariant: readers survive a junk history date",
+              readers_ok(proj) is None, readers_ok(proj))
+        # A deferral with a string days count is repairable too.
+        sr = json.loads(json.dumps(good))
+        sr["concepts"][1]["reviewHistory"].append({"date": "2026-06-01", "deferred": True,
+                                                    "days": "3"})
+        write_sr(proj, sr)
+        check("invariant: deferral days type reported",
+              any("days" in e for e in run(proj, "verify", expect_fail=True)["errors"]))
+        run(proj, "normalize")
+        check("invariant: deferral days repaired",
+              read_sr(proj)["concepts"][1]["reviewHistory"][-1]["days"] == 3)
+
 
 def main():
     for t in (t_migrate, t_record_review, t_sessions_and_forget,
@@ -2391,7 +2485,8 @@ def main():
               t_write_on_v2_backs_up, t_script_hygiene,
               t_applied_evidence, t_mastery_snapshot_agree, t_revision_brief,
               t_due_shape, t_same_day_promotion,
-              t_gate_seeded_module, t_exposure_routes, t_add_concept_bloom):
+              t_gate_seeded_module, t_exposure_routes, t_add_concept_bloom,
+              t_verify_implies_readers):
         print(f"-- {t.__name__}")
         try:
             t()
