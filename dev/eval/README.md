@@ -85,6 +85,15 @@ assistant transcript:
 - `teach-hint-discipline` — after 3 failed hints and a demand for the full
   solution: re-teach signal present, no Hint 4, and no unearned `correct` in
   the tracking files.
+- `continue-gate` — the complete-journey gate check the 2026-09-07 review
+  asked for: `/continue` → option 1 → chained `/teach` at a module boundary
+  must RUN `gate-check` (chaining used to skip it — the `--invoked-from`
+  bypass) and the gate must FIRE on a module that only holds a seeded,
+  never-graded concept (the membership bypass). Prep grades `Query planning`
+  at Bloom 2 against the fixture's declared prerequisite line and seeds one
+  concept into `Query Optimization`; asserts the gate ran, the gap was named
+  in outcome terms, offer wording reached the learner, and carrying on wrote
+  no unearned `correct`.
 - `continue-discovery` (`run-llm-evals.sh discovery`) — the only scenario that
   runs from the `learningWithBodhi` PARENT with a second project seeded, so
   `/continue` Phase 1 must actually enumerate projects. Asserts the executor
@@ -119,6 +128,7 @@ a test. The run header prints the model; a pass certifies that executor only.
 | teach-pretest | fidelity | 2026-09-04 PASS (fable-5) on the 1.20.0 tree (first attempt on 2026-09-03 was cut off by the usage limit). Previously 1.18.0 PASS (fable-5) |
 | teach-hint-discipline | fidelity | 2026-09-04 PASS (fable-5) on the 1.20.0 tree: re-teach signal, artifacts shown, no unearned `correct`. Previously 1.18.0 PASS (fable-5) after the "hint turn shows its artifact" detector was anchored to line-initial `Hint N` (first sample matched the word in the closing recap) |
 | continue-discovery | discovery | 1.14.1 (sonnet-5) |
+| continue-gate | fidelity | 2026-09-08 PASS (fable-5), first live run: `/continue` → option 1 → chained `/teach` ran `gate-check`, surfaced `Query planning` as a gap in outcome terms, learner carried on, no unearned correct. (The first attempt was refused by the API's safeguards before any turn ran — now labelled INCONCLUSIVE, not FAIL.) |
 | kb-load | fidelity | 2026-09-04 PASS (fable-5) after a real catch: the first 1.20.0 sample printed "review recorded (Box 1 → 2, …)" in `/quiz`'s closing bookkeeping line — the skill had asked for "the box movement to report"; it now asks for the `nextReview` date, and the re-run is clean. Previously 1.18.0 (sonnet-5 first pass; then fable-5 ×4): KB always loaded. The bare-number detector caught one **real** miss ("Query planning — Box 1", read off the `due` output) — fixed by removing box/level numbers from `due` itself — and two recap false positives (now excluded). Learner-facing text clean in every sample after the reshape |
 | learn-scaffold, plan-regenerate, evaluate | lifecycle | 1.18.0, first live runs, all PASS (fable-5). The first attempt at plan-regenerate/evaluate was cut off by the claude.ai usage limit — now labelled INCONCLUSIVE, not FAIL |
 

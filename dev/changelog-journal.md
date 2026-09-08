@@ -12,6 +12,9 @@ All notable changes to BodhiKit will be documented in this file.
 
 An independent review (2026-09-07) probed the state engine with seven isolated fixtures and found eight defects, all reproduced on the 1.20.0 tree. Each lands as its own commit, test or fixture first.
 
+### The gate runs on the chained path (review finding 2a, HIGH)
+`/teach` skipped the gate for ANY concept passed via `--invoked-from=`, so `/continue`'s "continue with the current module" — the module-start boundary the gate exists for — never gated. The skip now applies only to a topic the learner themselves typed (`/teach <topic>` with no `--invoked-from=`); a caller's concept is orchestration context. `/continue` says so beside its auto-invoke. New LLM eval `continue-gate` (fidelity group): prep grades `Query planning` at Bloom 2 against the fixture's declared prerequisite line and seeds a never-graded concept into the current module, then asserts the chained `/teach` ran `gate-check`, named the gap in outcome terms, made the offer, and wrote no unearned correct when the learner carried on. First live run PASS (fable-5, 2026-09-08). The harness now labels an API safeguards refusal INCONCLUSIVE like a usage-limit cutoff.
+
 ### The gate detects module entry by graded activity (review finding 2b, HIGH)
 `gate-check` treated any concept tracked in `currentModule` as "the module has started". `/learn` seeds every assessed sub-topic into its module with `add-concept` on day 1, so a seeded module was a continuation session before it was ever taught and the gate never fired on the journey it exists for. Module entry now means a concept in the module with at least one graded review (deferrals are scheduling); the verdict reports `seededOnly`. `t_gate_seeded_module` runs the reviewer's exact sequence. `state-ops` *Prerequisite Gate* trigger sentence updated.
 

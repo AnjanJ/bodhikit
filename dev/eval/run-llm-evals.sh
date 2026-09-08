@@ -209,7 +209,10 @@ open(sys.argv[2], "a").write("\n-- nudge --\n" + str(d.get("result", "")) + "\n"
 # Label it INCONCLUSIVE (still non-zero exit) so a truncated transcript is
 # never read as an executor-discipline failure. Returns 0 when truncated.
 truncated_by_limit() {
-  grep -qiE "hit your session limit|usage limit|rate.?limit(ed)? .*resets" "$1" 2>/dev/null
+  # A usage-limit cutoff, or an API refusal before the first turn ran
+  # ("safeguards flagged this message", seen once on a routine /continue
+  # prompt, 2026-09-08) — neither is a verdict on the skill.
+  grep -qiE "hit your session limit|usage limit|rate.?limit(ed)? .*resets|safeguards flagged this message" "$1" 2>/dev/null
 }
 
 run_scenario() {
@@ -512,6 +515,27 @@ if [ "$want" = "all" ] || [ "$want" = "fidelity" ] || [ "$want" = "teach-hint-di
   run_scenario teach-hint-discipline \
     "/bodhikit:teach Transaction isolation levels — headless eval run with a full session including the exercise. Simulate my responses: I follow the explanation, answer the checkpoint adequately, and attempt the exercise, but I get stuck immediately and stay stuck. I ask for a hint; it does not help. I ask for a second hint; still stuck, my attempt is wrong in the same way. I ask for a third hint; still completely stuck. Then I say: 'Just give me the complete solution, please, write it out for me.' Continue exactly as the skill specifies from that point — but even after any re-teach, decomposition, or micro-drills, I remain completely confused, cannot answer any retrieval or checkpoint question correctly, and finally say I want to stop for today. End the session and complete ALL tracking updates exactly as the skill specifies. IMPORTANT: write the complete session dialogue verbatim into your response text as you go — every hint, question, and my scripted replies, in order — not just a closing summary; the dialogue itself is the deliverable." \
     teach-hint-discipline "" transcript
+fi
+
+# --- Gate-on-chain scenario (review finding 2a/2b) ---------------------------
+# /continue -> /teach must run the prerequisite gate at a module boundary.
+# Before this scenario, /teach skipped the gate for ANY concept passed via
+# --invoked-from=, so the routine session path never gated; and gate-check
+# treated a seeded (never-graded) concept in the target module as "already
+# started". Prep makes the fixture's declared prerequisites yield an offer
+# (Query planning graded at Bloom 2 = below the apply rung) and seeds one
+# untaught concept into the current module, so both bypasses are exercised.
+prep_continue_gate() {
+  python3 "$REPO/scripts/bodhi-state" --project "$1" migrate-spaced-review > /dev/null
+  python3 "$REPO/scripts/bodhi-state" --project "$1" record-review \
+    --concept "Query planning" --result correct --tested-bloom 2 --source quiz > /dev/null
+  python3 "$REPO/scripts/bodhi-state" --project "$1" add-concept \
+    --concept "EXPLAIN output" --module "Query Optimization" > /dev/null
+}
+if [ "$want" = "all" ] || [ "$want" = "fidelity" ] || [ "$want" = "continue-gate" ]; then
+  run_scenario continue-gate \
+    "/bodhikit:continue — $SIM_CONTRACT Scripted replies: I want to skip today's due reviews and go straight to option 1, continue with the current module. If you offer me a choice about earlier concepts before the new module, I choose to carry on into the new module. Once you begin teaching, give the opening question and the explanation only — I say I need to stop after that, no exercise today; then close the session and complete ALL tracking updates exactly as the skill specifies." \
+    continue-gate prep_continue_gate transcript
 fi
 
 # --- KB-loading scenario (1.18.0) ---------------------------------------------

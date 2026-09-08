@@ -10,7 +10,7 @@ You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference t
 
 **Knowledge bases are skills.** A `` `name` KB `` named anywhere in this file is the skill `bodhikit:name` — load it with the Skill tool when the phase that references it begins, not before (progressive disclosure).
 
-**Chained invocation:** if `$ARGUMENTS` contains `--invoked-from=continue` (or any `--invoked-from=` value), skip the personality and state-ops re-load — the caller has them in context. Skip Phase 1 discovery; the caller passes the resolved topic as the remaining argument.
+**Chained invocation:** if `$ARGUMENTS` contains `--invoked-from=continue` (or any `--invoked-from=` value), skip the personality and state-ops re-load — the caller has them in context. Skip Phase 1 discovery; the caller passes the resolved topic as the remaining argument. The prerequisite gate is NOT skipped by chaining (see Phase 1).
 
 This skill is the heart of BodhiKit — walking the learner through a concept step by step, checking understanding along the way.
 
@@ -38,7 +38,7 @@ The brief decides the branches: `firstExposure`/`pretestApplies` — how Phase 2
 
 ### Prerequisite Bloom Gate (module-start boundaries only)
 
-Skip the gate entirely (do not even run the check) when the caller passed a specific concept via `--invoked-from=`, or the learner passed an explicit topic in `$ARGUMENTS` — an explicit request overrides the gate. Otherwise read `references/prerequisite-gate.md` in this skill's directory (`${CLAUDE_PLUGIN_ROOT}/skills/teach/references/prerequisite-gate.md`) and follow it: it runs `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> gate-check`, and turns the verdict into either nothing, one reconfirm question, or an **offer** the learner decides on — never an auto-block. The gate logic is the `state-ops` KB *Prerequisite gate* section.
+Skip the gate only when the learner themselves typed a topic — `/teach <topic>` with no `--invoked-from=` — an explicit request overrides the gate. A concept passed by a caller via `--invoked-from=` is orchestration context, not a learner override: `/continue`'s "continue with the current module" is exactly the module-start boundary the gate exists for, so run the check (the script itself decides whether it fires; on a continuation session it is one read and no ceremony). Otherwise read `references/prerequisite-gate.md` in this skill's directory (`${CLAUDE_PLUGIN_ROOT}/skills/teach/references/prerequisite-gate.md`) and follow it: it runs `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> gate-check`, and turns the verdict into either nothing, one reconfirm question, or an **offer** the learner decides on — never an auto-block. The gate logic is the `state-ops` KB *Prerequisite gate* section.
 
 ---
 

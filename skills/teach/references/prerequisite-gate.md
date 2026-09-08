@@ -4,7 +4,7 @@ Loaded on demand by `/teach` Phase 1 at a module-start boundary. The verdict is 
 
 The gate's trigger detection and per-prerequisite verdicts are computed by `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> gate-check` — the canonical logic (trigger model, recency rule, legacy fallthrough, apply-equivalent fallthrough) is documented in the `state-ops` KB's *Prerequisite gate* section. Do not re-derive it in prose.
 
-Skip the gate entirely (do not even run the check) when: the caller passed a specific concept via `--invoked-from=`, or the learner passed an explicit topic in `$ARGUMENTS` — an explicit request overrides the gate.
+Skip the gate only when the learner themselves typed a topic (`/teach <topic>` with no `--invoked-from=`) — an explicit request overrides the gate. A concept passed by a caller via `--invoked-from=` (`/continue`'s next module, a never-taught seed) is orchestration context, not an override: run the check. The script decides whether it fires; a continuation session costs one read.
 
 Otherwise, run:
 

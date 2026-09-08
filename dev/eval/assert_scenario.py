@@ -499,6 +499,47 @@ KB_LOAD_RE = re.compile(
 RECAP_RE = re.compile(r"^(?:#{1,4}\s*|\*\*)(Recap|Harness recap|Writes completed)\b.*$", re.M | re.I)
 
 
+GATE_CHECK_RE = re.compile(r"bodhi-state[^\n\]]*\bgate-check\b")
+GATE_OFFER_RE = re.compile(r"(revisit|carry on|carry-on|press on|move (on|into)|go ahead|end (here|the session))", re.I)
+
+
+def assert_continue_gate(project, transcript):
+    """/continue -> /teach must RUN the prerequisite gate at a module boundary
+    (review finding 2a: chaining used to skip it) and the gate must FIRE on a
+    module that only holds seeded concepts (finding 2b). Prep leaves 'Query
+    planning' at Bloom 2 against a declared prerequisite line, so the verdict
+    is an offer naming it; the learner carries on. Wording-tolerant."""
+    text = assistant_text(transcript)
+    if not text.strip():
+        fail("empty transcript — run did not produce assistant output")
+    if not GATE_CHECK_RE.search(text):
+        fail("bodhi-state gate-check was never run — /teach skipped the gate "
+             "on a chained module-start (the --invoked-from bypass)")
+    ok("gate-check ran on the chained /teach")
+    after = text[GATE_CHECK_RE.search(text).end():]
+    if "Query planning" not in after:
+        fail("the gap prerequisite 'Query planning' was never surfaced after the "
+             "gate ran — the offer did not reach the learner")
+    ok("gap prerequisite surfaced")
+    if not GATE_OFFER_RE.search(after):
+        fail("no offer wording (revisit / carry on / end here) after the gate — "
+             "read the transcript before judging")
+    ok("offer wording present")
+    # Carrying on is a choice, not evidence: no unearned correct on the gap.
+    sr = load(project, ".bodhi", "spaced-review.json")
+    qp = concept(sr, "Query planning")
+    unearned = [h for h in todays_entries(qp) if h.get("result") == "correct"
+                and h.get("source") == "teach"]
+    if unearned:
+        fail(f"Query planning gained a teach-sourced correct today without a "
+             f"reconfirm: {unearned}")
+    ok("no unearned correct on the carried-on gap")
+    bare = re.search(r"\(Bloom \d\)|Bloom \d\b|[Bb]ox \d\b", after)
+    if bare:
+        fail(f"bare level/box number in learner-facing gate text: {bare.group(0)!r}")
+    ok("gate offer phrased in outcome terms")
+
+
 def assistant_prose(transcript_path):
     """Assistant TEXT blocks only — what the learner reads — without the
     tool_use renderings (which legitimately carry --tested-bloom N) and
@@ -763,6 +804,7 @@ def main():
     with_transcript = {"teach-pretest": assert_teach_pretest,
                        "teach-hint-discipline": assert_teach_hint_discipline,
                        "continue-discovery": assert_continue_discovery,
+                       "continue-gate": assert_continue_gate,
                        "kb-load": assert_kb_load}
     if name in with_transcript:
         if not transcript:

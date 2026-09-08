@@ -105,7 +105,7 @@ What feels right?"
 
 ### If the learner chooses option 1 (continue):
 
-**Auto-invoke `/teach --invoked-from=continue <next concept or module>`** — pass the resolved topic positionally after the flag (the callee skips discovery and expects the caller to name the target). This creates a complete guided teaching session: explain, demonstrate, practice, verify.
+**Auto-invoke `/teach --invoked-from=continue <next concept or module>`** — pass the resolved topic positionally after the flag (the callee skips discovery and expects the caller to name the target). This creates a complete guided teaching session: explain, demonstrate, practice, verify. The passed topic is orchestration, not a learner override: when it opens a new module, `/teach` still runs the prerequisite gate and may surface an offer before teaching.
 
 ### If the learner chooses option 2 (practice):
 
