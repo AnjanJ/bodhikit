@@ -311,6 +311,59 @@ def assert_grade_genuine(project):
     ok("box promoted")
 
 
+def assert_grade_terse(project):
+    """A short but accurate explanation that cannot produce a second form must
+    still pass ownership when it correctly answers a prediction probe — the
+    rubric's check 1 no longer fails a correct answer for being terse.
+    Review finding on the ownership check, 2026-09-07."""
+    sr = load(project, ".bodhi", "spaced-review.json")
+    c = concept(sr, GRADE_CONCEPT)
+    entries = todays_entries(c)
+    if not entries:
+        fail("no review recorded for a terse but accurate explanation")
+    last = entries[-1]
+    if last.get("result") != "correct":
+        fail(f"terse-but-correct explanation, with a correctly-answered "
+             f"prediction probe, graded {last.get('result')!r} — brevity is "
+             "not a fluency-without-understanding signal once the probe passed")
+    ok("graded correct")
+    bl = last.get("bloomLevel", 0)
+    if bl < 1:
+        fail(f"tested-bloom recorded as {bl}; a correct mechanics explanation "
+             "with a passed prediction probe reaches at least row 1")
+    ok(f"tested-bloom {bl}")
+    if c.get("feynmanPassed") is not True:
+        fail("feynmanPassed not set — the prediction probe is a second route "
+             "to ownership and must satisfy check 1 the same as a rephrase")
+    ok("Feynman gate passed via the prediction probe")
+
+
+def assert_grade_second_language(project):
+    """Rough grammar with an accurate own-words analogy must not be treated
+    as a fluency-without-understanding signal. Review finding on the
+    ownership check, 2026-09-07."""
+    sr = load(project, ".bodhi", "spaced-review.json")
+    c = concept(sr, GRADE_CONCEPT)
+    entries = todays_entries(c)
+    if not entries:
+        fail("no review recorded for an accurate non-native explanation")
+    last = entries[-1]
+    if last.get("result") != "correct":
+        fail(f"accurate own-words explanation (rough grammar, own analogy) "
+             f"graded {last.get('result')!r} — grammar is not the signal "
+             "check 1 tests for")
+    ok("graded correct")
+    bl = last.get("bloomLevel", 0)
+    if bl < 1:
+        fail(f"tested-bloom recorded as {bl}; an accurate analogy in the "
+             "learner's own words reaches at least row 1-2")
+    ok(f"tested-bloom {bl}")
+    if c.get("feynmanPassed") is not True:
+        fail("feynmanPassed not set on an accurate own-words analogy — "
+             "rough grammar must not block the ownership check")
+    ok("Feynman gate passed")
+
+
 def assert_grade_apply_band(project):
     """Mechanics + usage but explicitly no trade-offs = Bloom 3-4, not 5-6."""
     sr = load(project, ".bodhi", "spaced-review.json")
@@ -848,6 +901,8 @@ def main():
                   "grade-jargon": assert_grade_jargon,
                   "grade-genuine": assert_grade_genuine,
                   "grade-apply-band": assert_grade_apply_band,
+                  "grade-terse": assert_grade_terse,
+                  "grade-second-language": assert_grade_second_language,
                   "grade-understand-band": assert_grade_understand_band,
                   "grade-pushback": assert_grade_pushback,
                   "grade-misconception": assert_grade_misconception,

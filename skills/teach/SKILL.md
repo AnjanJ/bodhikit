@@ -164,7 +164,7 @@ Ask 2-3 questions mixing Bloom's levels: Level 2 (explain in own words), Level 3
 
 The session is invisible to every future skill until these land. Per the `state-ops` KB write path (judgment is yours; the file mechanics are the script's):
 
-1. **Record the retention outcome** — result and level come from the `feynman-technique` KB *Grading the Explain-Back* rubric, applied to the final explanation of the retention check: five checks in order (owned? → misconception survived? → highest row reached → an admitted gap caps at the row below → record). The `spaced-repetition` KB judgment rules carry the rest — struggled-but-got-there is `correct`.
+1. **Record the retention outcome** — result and level come from the `feynman-technique` KB *Grading the Explain-Back* rubric, applied to the final explanation of the retention check: five checks in order (owned, by a second form or a prediction probe? → misconception survived? → highest row reached → an admitted gap caps at the row below → record). The `spaced-repetition` KB judgment rules carry the rest — struggled-but-got-there is `correct`.
 
    ```
    "${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> record-review \

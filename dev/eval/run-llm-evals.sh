@@ -482,6 +482,36 @@ if [ "$want" = "all" ] || [ "$want" = "grading" ] || [ "$want" = "grade-apply-ba
     grade-apply-band "" "" nudge
 fi
 
+# --- Ownership-probe grading matrix (review, 2026-09-07, finding: rubric ----
+# check 1) ---------------------------------------------------------------
+# The old check 1 recorded `partial` at level 1 the moment a learner could
+# not produce a second phrasing, which fails a correct answer for being
+# terse or for rough English rather than for lacking understanding. The
+# rubric now asks for a second form OR a correct prediction on a novel case;
+# either counts. These three scenarios pin the new boundary: a terse but
+# genuinely correct answer must pass on the probe, non-native phrasing must
+# not itself be treated as a fluency-without-understanding signal, and the
+# original parrot must still fail — a lucky guess on the probe is exactly
+# the case `--tested-bloom 1` exists to catch, so the parrot's probe answer
+# is scripted wrong too.
+if [ "$want" = "all" ] || [ "$want" = "grading" ] || [ "$want" = "grade-terse" ]; then
+  repeat_scenario grade-terse \
+    "/bodhikit:teach B-tree indexes — $SIM_CONTRACT Understanding-only session: I just want to understand, no exercise. Simulate my responses. My explain-back is short: 'It's a sorted structure next to the table so lookups skip straight to the row instead of scanning everything.' If you ask for an analogy, a fresh case, or to say it differently, I say: 'I don't have another way to put it, that's the explanation.' If you then give me a concrete case and ask what happens — for example inserting a new key into a small tree and asking which existing key it ends up next to — I work it through correctly and answer right, in as few words as the answer needs. My final full explanation is the first sentence again. Grade me honestly — including the Bloom level my answers actually demonstrated — and complete ALL tracking updates exactly as the skill specifies." \
+    grade-terse "" "" nudge
+fi
+
+if [ "$want" = "all" ] || [ "$want" = "grading" ] || [ "$want" = "grade-second-language" ]; then
+  repeat_scenario grade-second-language \
+    "/bodhikit:teach B-tree indexes — $SIM_CONTRACT Understanding-only session: I just want to understand, no exercise. Simulate my responses. English is not my first language and my grammar is rough, but my explain-back is accurate and in my own words with an analogy: 'Is like when you cooking and you have spice rack in order, alphabet order. You want cumin, you go straight to C, you not smelling every jar one by one. B-tree is same — the database keep the keys in order in small groups, so it jump close and then close more, not reading whole table.' If you ask for a different phrasing, I add: 'or like phone book, name in order, you open close to the letter, not reading every page.' My final full explanation is the spice-rack version again. Grade me honestly — including the Bloom level my answers actually demonstrated — and complete ALL tracking updates exactly as the skill specifies." \
+    grade-second-language "" "" nudge
+fi
+
+if [ "$want" = "all" ] || [ "$want" = "grading" ] || [ "$want" = "grade-parrot-fails-probe" ]; then
+  repeat_scenario grade-parrot-fails-probe \
+    "/bodhikit:teach B-tree indexes — $SIM_CONTRACT Understanding-only session: I just want to understand, no exercise. Simulate my responses. Whenever you ask me to explain back, define a term, or answer a checkpoint, my answer is always this exact sentence, recited verbatim: 'A B-tree index is a self-balancing tree data structure that maintains sorted data and allows searches, sequential access, insertions, and deletions in logarithmic time.' If you probe, ask for an analogy, or ask me to say it differently, I produce the same sentence again word for word, say 'that is how I learned it', and offer nothing else. If you then give me a concrete case and ask what happens — for example inserting a new key and asking which existing key it ends up next to — I get it wrong: I guess a key that is not actually adjacent, or say 'I am not sure, maybe the first one in the tree.' My final full explanation is the original sentence once more. Grade me honestly and complete ALL tracking updates exactly as the skill specifies." \
+    grade-jargon "" "" nudge
+fi
+
 # --- Held-out grading (review, 2026-09-07) -----------------------------------
 # The three scenarios above share the rubric's own topic and examples, so a
 # pass there cannot distinguish transferable grading judgment from recognition
