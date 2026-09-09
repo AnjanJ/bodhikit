@@ -306,9 +306,16 @@ def assert_grade_genuine(project):
     if c.get("feynmanPassed") is not True:
         fail("feynmanPassed not set on a clear, jargon-free own-words explanation")
     ok("Feynman gate passed")
-    if c.get("box", 0) < 4:
-        fail(f"box is {c.get('box')} — a correct review from box 3 must promote")
-    ok("box promoted")
+    # Promotion is relative to where the concept started today, not an
+    # absolute box: the fixture's B-tree indexes sits at box 3, but a
+    # held-out concept is new and its first correct moves 1 -> 2. The
+    # 2026-09-09 held-out run graded correct/5/Feynman and then failed a
+    # hard-coded "box >= 4" here — a harness bug, not a grading one.
+    before = last.get("boxBefore", 0)
+    if c.get("box", 0) <= before:
+        fail(f"box is {c.get('box')} after a correct review from box {before} "
+             "— a correct review must promote")
+    ok(f"box promoted {before} -> {c.get('box')}")
 
 
 def assert_grade_terse(project):
