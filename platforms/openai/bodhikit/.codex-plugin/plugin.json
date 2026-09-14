@@ -21,7 +21,7 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "BodhiKit",
-    "shortDescription": "Learn technical topics through guided practice.",
+    "shortDescription": "Learn through guided practice",
     "longDescription": "A research-informed Socratic tutor for personalized learning plans, guided coding practice, active recall, spaced repetition, reflection, and evidence-based progress tracking.",
     "developerName": "Anjan",
     "category": "Productivity",

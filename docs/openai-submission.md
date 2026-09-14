@@ -8,7 +8,7 @@ plugin. Keep it synchronized with the generated package and the public listing.
 - **Plugin name:** BodhiKit
 - **Submission type:** Skills only
 - **Category:** Productivity
-- **Short description:** Learn technical topics through guided practice.
+- **Short description:** Learn through guided practice (the portal caps this at 30 characters)
 - **Long description:** A research-informed Socratic tutor for personalized
   learning plans, guided coding practice, active recall, spaced repetition,
   reflection, and evidence-based progress tracking.
