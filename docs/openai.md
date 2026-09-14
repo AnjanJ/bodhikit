@@ -93,6 +93,13 @@ The submitting organization needs Apps Management write access and a verified
 developer or business identity. Submission starts OpenAI review; after
 approval, the publisher chooses when to make the plugin public.
 
+BodhiKit is listed publicly on the ChatGPT plugin marketplace. That listing is
+a snapshot of the bundle last uploaded, not a link to this repository, so
+**every release must be re-uploaded there** after the tag is pushed (release
+checklist step 7 in `CLAUDE.md`): rebuild `dist/bodhikit-openai.zip` from the
+tagged tree, then submit the new version through the same portal. Until that
+upload is approved and published, ChatGPT users are on the previous release.
+
 After installation, mention the plugin and state the learning goal:
 
 ```text
@@ -133,3 +140,13 @@ The OpenAI suite verifies package isolation, manifest/version synchronization,
 removal, archive structure, byte-for-byte state-engine reuse, Codex-shaped
 SessionStart and Stop events, ChatGPT hook independence, and schema/revision
 enforcement.
+
+That is the whole certification for the OpenAI runtimes. The live-model evals
+in `dev/eval/run-llm-evals.sh` run through `claude -p` (or the sibling
+`bodhi-cli`) and certify only the executor they print in their header; no
+grading, executor-discipline, or fidelity scenario has been run against Codex
+or ChatGPT. Before re-uploading a release, run at least one headless smoke test
+through Codex — install the rebuilt package from a local marketplace, run one
+writing skill such as `$quiz` against a copy of `dev/eval/fixtures/v2-project`,
+and check the result with `dev/eval/assert_scenario.py` — so the package is
+known to load, fire its hooks, and write state on that runtime.
