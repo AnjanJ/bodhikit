@@ -135,6 +135,14 @@ Skip the offer when none of the above hold — mid-journey evaluations without a
 
 Do NOT auto-invoke `/mentor`. Mirrors the `/teach-back` opt-in pattern exactly.
 
+### Feedback survey (only when the mentor offer fired)
+
+Close with one line after the mentor offer — information, not a request:
+
+> "BodhiKit is built by one person. If you would like to say how this path went, there is an anonymous 5-minute survey: https://docs.google.com/forms/d/e/1FAIpQLSdTfBrT3J3ot94JmDXwIQosYQaCoxd-K2hDTYWlctl1lKfEgQ/viewform?usp=pp_url&entry.396027065=Inside+BodhiKit,+at+the+end+of+an+evaluation — entirely optional."
+
+Print the link exactly as written. Never open it, never mention it again this session, and skip it whenever the mentor offer is skipped.
+
 ---
 
 ## Update Tracking
