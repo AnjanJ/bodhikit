@@ -8,6 +8,22 @@ This is the full, unabridged, patch-by-patch changelog kept for the maintainer â
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [1.22.0] - 2026-09-28
+
+The feedback-survey release (PR #2). A Reddit user reported that a group of biology students had been using BodhiKit on the ChatGPT phone app. None of them could reach the GitHub issue templates, which need an account and are public, so there was no channel for them at all.
+
+### The survey (`c492320`)
+A Google Form, 17 questions, anonymous, no sign-in. The questions live in `docs/survey.md` as version 1 with a note on what each one is for; the form and that file change together. Each placement uses its own pre-filled link that answers the last question ("Where did you find this survey?"), so the channel is known without tracking anyone. Built with a one-off Apps Script (`FormApp`) rather than by hand in the Forms editor: the editor dropped type changes and required toggles until an unrelated edit forced a save, and the script produced the three pre-filled links from `toPrefilledUrl()` in the same run. Linked from the README Feedback section and `.github/ISSUE_TEMPLATE/config.yml`.
+
+### Privacy (`863863f`)
+`PRIVACY.md` said the publisher "does not receive, collect, sell, or use learner data". Once the plugin links a form, that is false for anyone who answers, and the ChatGPT reviewers read this page. The plugin's claim (it sends nothing) and the publisher's (it receives what people choose to submit) are now stated separately, with the survey's limits.
+
+### `/evaluate` (`71f54c2`)
+One opt-in line after the mentor offer, riding its trigger (project completion, or a major Bloom delta). Rejected a session-count trigger: on conversation-only hosts there is no count, so it would fire every time or never, and elsewhere it needs a new tracking field, which the freeze rules out. The skill prints the link and never opens or repeats it.
+
+### Release checks
+`dev/check.sh` green on every commit. Live `evaluate` scenario re-run on this tree (see `dev/eval/README.md`). The OpenAI build carries the new line and URL unchanged.
+
 ## [1.21.0] - 2026-09-13
 
 An independent review (2026-09-07) probed the state engine with seven isolated fixtures and found eight defects, all reproduced on the 1.20.0 tree. Each lands as its own commit, test or fixture first.

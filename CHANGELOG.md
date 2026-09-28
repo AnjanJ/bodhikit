@@ -2,6 +2,15 @@
 
 Notable changes to BodhiKit, summarized for readers. Patch-level development notes live in `dev/changelog-journal.md`.
 
+## [1.22.0] - 2026-09-28
+
+A way for learners to tell us how it went. The first outside users arrived on the ChatGPT phone app, where the GitHub issue templates are out of reach.
+
+- **An anonymous feedback survey.** Five minutes, no sign-in, no email unless you type one. It is linked from the README's Feedback section and from GitHub's *New issue* page, and its questions are versioned in [`docs/survey.md`](./docs/survey.md).
+- **`/evaluate` mentions it once, at milestones only.** At project completion or a major milestone, one line after the mentor offer carries the link. It never opens the link, never asks again in the session, and never appears during a lesson.
+- **Privacy policy updated.** [`PRIVACY.md`](./PRIVACY.md) no longer says the publisher receives no data at all: it names the survey, what it stores, and how to have answers deleted. The plugin itself still sends nothing.
+- No tracking-file migration. Update the plugin and restart Claude Code.
+
 ## [1.21.0] - 2026-09-13
 
 The second review-fix release. An independent review on 2026-09-07 probed the state engine with isolated fixtures and found eight defects that reproduced on the 1.20.0 tree, plus one critique of the grading rubric. Every finding landed as its own commit with a test or fixture first. Three were HIGH: a learner could reach a 14-day interval and `mastered: true` in one sitting, the prerequisite gate never fired on the journey it exists for, and `/continue`'s chained `/teach` skipped the gate entirely.
