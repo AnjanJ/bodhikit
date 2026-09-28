@@ -130,6 +130,7 @@ Or disable it in projects where you do not need it by adding to `.claude/setting
 
 BodhiKit currently has a very small number of real learners. If you try it, your experience is the most valuable thing you can send — one honest account of one session beats any feature request.
 
+- [Anonymous 5-minute survey](https://docs.google.com/forms/d/e/1FAIpQLSdTfBrT3J3ot94JmDXwIQosYQaCoxd-K2hDTYWlctl1lKfEgQ/viewform?usp=pp_url&entry.396027065=GitHub+README) — any platform, no GitHub account needed ([the questions](./docs/survey.md))
 - [Something broke or graded you wrong](./.github/ISSUE_TEMPLATE/bug-report.md) — bug report
 - [How did a session go?](./.github/ISSUE_TEMPLATE/feedback.md) — five short prompts
 - [Share your learning data](./.github/ISSUE_TEMPLATE/learning-data-report.md) — one command, numbers only, no concept names or free text

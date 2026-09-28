@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
+  - name: Anonymous 5-minute survey
+    url: https://docs.google.com/forms/d/e/1FAIpQLSdTfBrT3J3ot94JmDXwIQosYQaCoxd-K2hDTYWlctl1lKfEgQ/viewform?usp=pp_url&entry.396027065=GitHub+%22New+issue%22+page
+    about: Used BodhiKit on any platform? Tell us how it went. No GitHub account needed, nothing public.
   - name: Questions and general discussion
     url: https://github.com/AnjanJ/bodhikit/discussions
     about: Not a bug and not session feedback? Ask or discuss here.
