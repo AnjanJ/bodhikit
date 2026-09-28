@@ -1,10 +1,11 @@
 # BodhiKit Privacy Policy
 
-Effective date: August 26, 2026
+Effective date: September 28, 2026
 
 BodhiKit is an open-source, local-first learning plugin. The BodhiKit publisher
-does not operate a server for the plugin and does not receive, collect, sell,
-or use learner data.
+does not operate a server for the plugin, and the plugin does not send learner
+data anywhere. The only data the publisher receives is what someone chooses to
+submit to the optional feedback survey described below.
 
 ## Data handled by the plugin
 
@@ -25,6 +26,21 @@ BodhiKit may request access to read and write files in the selected project and
 to run its bundled local state scripts. Codex may also run the packaged
 lifecycle hooks after the user reviews and trusts them. The plugin does not
 require network access, advertising identifiers, analytics, or tracking.
+
+## Optional feedback survey
+
+The publisher runs an anonymous feedback survey on Google Forms. Its questions
+are listed in [docs/survey.md](./docs/survey.md). It is linked from the README,
+from GitHub's "New issue" page, and by `/evaluate` once at a project milestone.
+The plugin never opens the link, never submits anything, and never asks during
+a lesson; answering is entirely up to you.
+
+The survey does not require signing in and does not collect an email address
+unless you type one into the optional email question. Answers are stored
+in the publisher's Google account under Google's privacy policy, are used only
+to improve BodhiKit, and are never published individually; anything shared
+from them is aggregated and anonymized. To have your answers deleted, ask through
+GitHub Discussions and describe your answer closely enough to identify it.
 
 ## Retention and deletion
 
