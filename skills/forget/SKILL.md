@@ -46,7 +46,7 @@ Do NOT moralize. Do NOT re-teach here. This skill is purely the demote action.
 
 **For this phase, reference the `spaced-repetition` KB for the demote rule — implemented by `bodhi-state` per the `state-ops` KB write path.**
 
-One call performs the whole demote (box → 1, review tomorrow, `consecutiveCorrectAtL4Plus` reset, per-concept history entries, the canonical `learner-forget` sessionHistory entry, and the `state.json` lastActivity pointer — while preserving `bloomLevel` and `feynmanPassed`, which `/forget` never touches: the demote is about retention, not understanding):
+One call performs the whole demote (box → 1, review tomorrow, `consecutiveCorrectAtL4Plus` reset, per-concept history entries, the canonical `learner-forget` sessionHistory entry, and the `state.json` lastActivity pointer — while preserving `bloomLevel` and `feynmanPassed`, which `/forget` never touches: the demote is about retention, not understanding. Like any miss, it restarts the "since the last miss" evidence mastery reads — a fresh explain-back and build):
 
 ```
 "${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> forget \

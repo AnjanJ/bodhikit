@@ -57,7 +57,7 @@ Every classified concept sits in exactly one tier. The ladder is ordered and eva
 
 | Tier | Criteria | Learner-facing word |
 |---|---|---|
-| **mastered** | Bloom 4+ AND 3 consecutive correct at Level 4+ AND Box 4-5 AND Feynman check passed AND built with it in working code since the last miss | *Solid* — can debug it and explain the trade-offs |
+| **mastered** | Bloom 4+ AND 3 consecutive correct at Level 4+ AND Box 4-5 AND Feynman check passed AND built with it in working code, both since the last miss | *Solid* — can debug it and explain the trade-offs |
 | **familiar** | Bloom 3+ AND Box 2+ (not yet mastered) | *Working* — can use it with guidance |
 | **introduced** | classified (Bloom 1+), everything below familiar | *Introduced* — can explain what it does |
 | **unclassified** | Bloom 0 — no v3 writer has classified it yet | *—* (not "introduced": nothing has been observed) |

@@ -31,7 +31,7 @@ Every skill carries its own exact invocation; `bodhi-state <subcommand> --help` 
 
 - `add-concept` — a new concept with the canonical Box-1 defaults. `--bloom N` records the level an assessment classified it at (`/learn` seeds pass it; a seed at 0 reads as unclassified everywhere downstream).
 - `record-review` — Leitner box and `nextReview`, the Bloom ratchet, `consecutiveCorrectAtL4Plus`, the `reviewHistory[]` append. The box and the streak move only on a due review (`spaced-repetition` KB); an early, same-day or first review is recorded and ratchets the level but reports `boxHeld` — do not re-run it hoping for a promotion. `--confidence sure|mostly|guessing` is the learner's pre-reveal calibration tag — recorded, never a gate on promotion. `--retry` is a successive-relearning rep: history only, no box/counter/bloom movement (the demotion stands). `--applied` marks an outcome demonstrated in working code the tutor read (an exercise, a driven piece), never an explanation or a quiz answer: it is the only evidence the gate and the mastery formula accept for "can build with it", so a verbal review must not carry it. Its output's `crossedBloom3: true` is the one trigger for `bump-profile --counter totalConceptsLearned`.
-- `set-feynman` — `feynmanPassed = true`, never unset.
+- `set-feynman` — `feynmanPassed = true` (never unset), `feynmanPassedAt = today`.
 - `record-session` — a `sessionHistory[]` entry in the canonical type vocabulary (below); `type`, `subtype` and `date` come from flags, never from `--data`.
 - `record-assessment` — an append-only, date-stamped `assessment-history.json` entry.
 - `forget` — the learner-initiated demote: box 1, counter reset, a `selfReport` history entry (excluded from `retention`) and a `learner-forget` session entry, `lastActivity`. `--concept` (repeatable) for names containing commas.
@@ -128,11 +128,11 @@ Optional fields on entries (writers MAY include via `--data`): `conceptsReviewed
 mastered = (bloomLevel >= 4)
        AND (consecutiveCorrectAtL4Plus >= 3)
        AND (box >= 4)
-       AND (feynmanPassed === true)
+       AND (feynmanCurrent)
        AND (appliedEvidence >= 1)
 ```
 
-`appliedEvidence` is the count of `correct` reviews flagged `applied` since the most recent miss (`state-schema` KB). Without it, every other conjunct can be met in conversation and a learner who has never run the code reads as *Solid*. `mastery` and `snapshot` report `blockedOnApplied` (every criterion but this one) beside `blockedOnFeynman`, and each module row carries `applied` (concepts with at least one build since the last miss). `masteredDueForCheck` (per module: `dueForCheck`) names mastered concepts overdue by more than their box interval: still mastered — a skipped check is unverified, not forgotten — and `/progress` renders them *Solid, due for a check*.
+`appliedEvidence` counts `applied` corrects since the most recent miss; `feynmanCurrent` is an explain-back dated after it (`state-schema` KB). Without the build, every other conjunct can be met in conversation and a learner who has never run the code reads as *Solid*. `mastery` and `snapshot` report `blockedOnApplied` (every criterion but this one) beside `blockedOnFeynman`, and each module row carries `applied` (concepts with at least one build since the last miss). `masteredDueForCheck` (per module: `dueForCheck`) names mastered concepts overdue by more than their box interval: still mastered — a skipped check is unverified, not forgotten — and `/progress` renders them *Solid, due for a check*.
 
 Skills MUST NOT redefine this formula inline. Field semantics (the Bloom ratchet, the counter rules, the Feynman flag) live in the `state-schema` KB; the underlying criteria in the `blooms-taxonomy` KB.
 

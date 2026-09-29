@@ -2572,6 +2572,75 @@ def t_mastered_due_for_check():
         check("due-check: a passed check clears the flag", m["masteredDueForCheck"] == ["Box5"], m)
 
 
+def t_feynman_after_last_miss():
+    """The explain-back conjunct counts only when it postdates the most
+    recent miss (1.23.0): a pass given before the concept was forgotten says
+    nothing about the understanding that came back."""
+    def concept(history, **extra):
+        return {"name": "Refs", "module": "M1", "introduced": "2026-01-01", "box": 4,
+                "nextReview": "2026-12-01", "lastReviewed": "2026-03-20", "question": "",
+                "lastResult": "correct", "bloomLevel": 4, "feynmanPassed": True,
+                "consecutiveCorrectAtL4Plus": 3, "reviewHistory": history, **extra}
+    built = [{"date": "2026-03-20", "result": "correct", "bloomLevel": 4, "applied": True}]
+    missed = [{"date": "2026-03-05", "result": "incorrect", "bloomLevel": 4}] + built
+    with tempfile.TemporaryDirectory() as root:
+        def project(c, sub):
+            return make_project(os.path.join(root, sub), spaced_review={
+                "version": 3, "sessionHistory": [], "concepts": [c]})
+        def mastered(proj):
+            return run(proj, "mastery", on="2026-03-21")["modules"]["M1"]["mastered"] == 1
+        check("feynman-date: undated legacy flag, no miss on record: counts",
+              mastered(project(concept(built), "a")))
+        proj = project(concept(missed), "b")
+        m = run(proj, "mastery", on="2026-03-21")
+        check("feynman-date: undated flag with a miss on record: does not count",
+              m["modules"]["M1"]["mastered"] == 0 and m["blockedOnFeynman"] == ["Refs"], m)
+        brief = run(proj, "session-brief", "--concept", "Refs", on="2026-03-21")
+        check("feynman-date: session-brief reports it stale",
+              brief["feynmanPassed"] is True and brief["feynmanCurrent"] is False, brief)
+        out = run(proj, "set-feynman", "--concept", "Refs", on="2026-03-05")
+        check("feynman-date: set-feynman stamps the date",
+              out["feynmanPassedAt"] == "2026-03-05" and out["feynmanCurrent"] is False, out)
+        check("feynman-date: a pass on the day of the miss does not count", not mastered(proj))
+        out = run(proj, "set-feynman", "--concept", "Refs", on="2026-03-06")
+        check("feynman-date: the next day's pass counts",
+              out["feynmanCurrent"] is True and mastered(proj), out)
+        check("feynman-date: pass dated before the miss does not count",
+              not mastered(project(concept(missed, feynmanPassedAt="2026-03-04"), "c")))
+        # The miss anchor survives the history cap.
+        archived = concept(built, feynmanPassedAt="2026-01-15",
+                           reviewHistoryArchived=5,
+                           archivedSummary={"through": "2026-02-01", "appliedEvidence": 0,
+                                            "evidenceAt3Plus": 0, "lastMiss": "2026-02-01"})
+        check("feynman-date: an archived miss still counts as the last miss",
+              not mastered(project(archived, "d")))
+        check("feynman-date: a pass after the archived miss counts",
+              mastered(project(dict(archived, feynmanPassedAt="2026-02-02"), "e")))
+        long = [{"date": "2026-01-01", "result": "incorrect", "bloomLevel": 2}] + [
+            {"date": "2026-02-%02d" % (1 + i % 28), "result": "correct", "bloomLevel": 2}
+            for i in range(99)]
+        proj = project(concept(long), "f")
+        run(proj, "record-review", "--concept", "Refs", "--result", "correct",
+            "--tested-bloom", "2", on="2026-03-21")
+        c = read_sr(proj)["concepts"][0]
+        check("feynman-date: the cap archives the miss date",
+              c["archivedSummary"].get("lastMiss") == "2026-01-01", c.get("archivedSummary"))
+        # /forget is a miss on record: the same reset as the build evidence.
+        proj = project(concept(built, feynmanPassedAt="2026-03-10"), "g")
+        check("feynman-date: dated pass, no miss: counts", mastered(proj))
+        run(proj, "forget", "--concept", "Refs", on="2026-03-21")
+        c = read_sr(proj)["concepts"][0]
+        check("feynman-date: /forget keeps the flag but not its currency",
+              c["feynmanPassed"] is True and
+              run(proj, "session-brief", "--concept", "Refs", on="2026-03-21")["feynmanCurrent"] is False)
+        # verify: a malformed date is a warning, read as undated.
+        proj = project(concept(built, feynmanPassedAt="last week"), "h")
+        v = run(proj, "verify")
+        check("feynman-date: verify warns on a malformed date",
+              any("feynmanPassedAt" in w for w in v.get("warnings", [])), v)
+        check("feynman-date: malformed date with no miss reads as undated: counts", mastered(proj))
+
+
 def t_gate_seeded_module():
     """Module entry is detected by graded activity, not tracked membership
     (review finding 2b). /learn seeds assessed sub-topics into their modules
@@ -2723,7 +2792,7 @@ def main():
               t_write_on_v2_backs_up, t_script_hygiene,
               t_applied_evidence, t_mastery_snapshot_agree, t_revision_brief,
               t_due_shape, t_same_day_promotion, t_due_gated_promotion,
-              t_mastered_due_for_check,
+              t_mastered_due_for_check, t_feynman_after_last_miss,
               t_gate_seeded_module, t_exposure_routes, t_add_concept_bloom,
               t_verify_implies_readers, t_history_cap_keeps_facts):
         print(f"-- {t.__name__}")
