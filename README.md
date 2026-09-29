@@ -312,6 +312,7 @@ Fencing the weak claims is what lets you trust the strong ones.
 
 - **Desirable Difficulties** — Interleaving, retrieval practice, and variation for stronger retention
   - Dr. Robert Bjork and Dr. Elizabeth Bjork, *[Making Things Hard on Yourself, But in a Good Way](https://bjorklab.psych.ucla.edu/research/)* (2011)
+  - Doug Rohrer and Kelli Taylor, *[The shuffling of mathematics problems improves learning](https://link.springer.com/article/10.1007/s11251-007-9015-8)* (2007) and Matthias Brunmair and Tobias Richter, *[Similarity matters: A meta-analysis of interleaved learning and its moderators](https://psycnet.apa.org/record/2019-57442-001)* (2019) — why a `/quiz` review question describes the situation instead of naming the concept (1.23.0)
 
 - **Pretesting** — Attempting a question *before* instruction improves learning of the material that follows
   - Nate Kornell, Matthew Hays, and Robert Bjork, *[Unsuccessful retrieval attempts enhance subsequent learning](https://psycnet.apa.org/record/2009-09556-006)* (2009)

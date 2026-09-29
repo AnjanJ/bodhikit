@@ -93,6 +93,10 @@ Scaffolding that helps novices actively *hurts* intermediate-and-above learners 
 4. **Generation**: Produce answers before being shown them
 5. **Variation**: Practice in varied contexts (not identical conditions)
 
+### Interleaving as a test condition
+
+Interleaving helps most where it forces a choice: mixed practice makes the learner decide *which* idea a problem needs, a step blocked practice hands over by announcing the topic (Rohrer & Taylor, *The shuffling of mathematics problems improves learning*, 2007). A meta-analysis of 59 studies puts the average benefit at a moderate g ≈ 0.42, largest for categories that look alike — and weak for material that shares little (Brunmair & Richter, *Similarity matters*, 2019). So a review question that names its concept tests recall of an answer the learner has already been given half of. `/quiz` states the situation, not the concept, and puts confusable concepts back to back; a correct there is recall **and** discrimination at once, with no extra field to track.
+
 ### The Paradox
 
 These all SLOW DOWN apparent progress but produce significantly STRONGER long-term retention and transfer. Learners often rate these methods as less effective precisely because the struggle feels bad — even when outcomes are superior.

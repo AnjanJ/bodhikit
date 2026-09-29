@@ -616,6 +616,17 @@ if [ "$want" = "all" ] || [ "$want" = "fidelity" ] || [ "$want" = "kb-load" ]; t
     kb-load "" transcript
 fi
 
+# --- Unlabelled review questions (1.23.0) -------------------------------------
+# A due review question must present the situation, not name the concept it
+# tests: knowing which idea a problem needs is part of knowing it, and a
+# labelled question hands that step over (difficulty-calibration KB,
+# Interleaving as a test condition). Drift detector over the quoted questions.
+if [ "$want" = "all" ] || [ "$want" = "fidelity" ] || [ "$want" = "quiz-unlabelled" ]; then
+  run_scenario quiz-unlabelled \
+    "/bodhikit:quiz current — $SIM_CONTRACT Ask exactly two questions, each on a different due concept. Scripted replies: to each question I answer correctly in my own words, tagged 'mostly'. Then complete ALL tracking updates exactly as the skill specifies." \
+    quiz-unlabelled "" transcript
+fi
+
 # --- Discovery scenario (1.14.x) ----------------------------------------------
 # Regression guard for the /continue hallucination: the executor must find
 # projects by globbing the filesystem, not by calling a non-existent

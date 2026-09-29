@@ -910,6 +910,43 @@ def assert_evaluate(project):
     ok("verify ok")
 
 
+# The quoted-question convention /quiz mandates before every verdict
+# ("> Q2: … / > You: …"), tolerant of bold and of "Q2." / "Q2)".
+QUOTED_QUESTION_RE = re.compile(r"^\s*>\s*\**\s*Q(\d+)\s*\**\s*[:.)]\s*\**\s*(.+)$", re.M)
+# Each due fixture concept by the stem that would name it in a question.
+DUE_CONCEPT_STEMS = {"B-tree indexes": r"b-?tree",
+                     "Query planning": r"query\s+plann",
+                     "Normalization trade-offs": r"normali[sz]"}
+
+
+def assert_quiz_unlabelled(project, transcript):
+    """A due review question describes the situation and never names the
+    concept it tests (quiz skill, 1.23.0). Drift detector over the quoted
+    questions: read the transcript before judging a failure — a stem can
+    appear for a reason the regex cannot see."""
+    prose = assistant_prose(transcript)
+    if not prose.strip():
+        fail("empty transcript — run did not produce assistant output")
+    questions = {}
+    for m in QUOTED_QUESTION_RE.finditer(prose):
+        questions.setdefault(m.group(1), m.group(2))
+    if len(questions) < 2:
+        fail(f"found {len(questions)} quoted question(s) ('> Qn: …'); the skill "
+             "quotes each question before its verdict")
+    ok(f"{len(questions)} quoted questions found")
+    for n, q in sorted(questions.items()):
+        for concept_name, stem in DUE_CONCEPT_STEMS.items():
+            if re.search(stem, q, re.I):
+                fail(f"Q{n} names the due concept {concept_name!r}: {q[:120]!r} — "
+                     "state the situation, name the concept only in the verdict")
+    ok("no quoted question names a due concept")
+    sr = load(project, ".bodhi", "spaced-review.json")
+    reviewed = [c["name"] for c in sr["concepts"] if todays_entries(c)]
+    if len(reviewed) < 2:
+        fail(f"reviews recorded today for {reviewed}; expected two due concepts")
+    ok(f"reviews recorded for {reviewed}")
+
+
 def main():
     name, project = sys.argv[1], sys.argv[2]
     transcript = sys.argv[3] if len(sys.argv) > 3 else None
@@ -931,7 +968,8 @@ def main():
                        "teach-hint-discipline": assert_teach_hint_discipline,
                        "continue-discovery": assert_continue_discovery,
                        "continue-gate": assert_continue_gate,
-                       "kb-load": assert_kb_load}
+                       "kb-load": assert_kb_load,
+                       "quiz-unlabelled": assert_quiz_unlabelled}
     if name in with_transcript:
         if not transcript:
             fail(f"scenario {name} requires a transcript path")

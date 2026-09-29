@@ -53,6 +53,8 @@ For tracked due concepts, pitch each question at THAT concept's recorded `bloomL
 
 **Bloom probe (1.11.0).** Include ONE question pitched exactly one level above a strong concept's recorded `bloomLevel` (pick a due concept with `box >= 3`). This is the quiz's channel for moving classifications up — without it, a concept's Bloom level can only rise when `/teach` revisits it, and the prerequisite gate's inputs go stale. Announce nothing; it is just one of the questions.
 
+**Due questions never name the concept they test (1.23.0).** For a tracked due concept, give the situation — a snippet to predict or debug, a symptom to explain, a choice between two approaches, a description whose name the learner must supply — and let the learner bring the idea; name the concept only in the verdict. Mix the due concepts rather than grouping them by module, and when two are easy to confuse (`private` vs `protected`, `include` vs `prepend`), ask them back to back so the answer turns on the difference. Knowing *when* an idea applies is part of knowing it, and a labelled question gives that step away (`difficulty-calibration` KB, *Interleaving as a test condition*). A due correct earned this way is what the box records as retained.
+
 ### Within-quiz ZPD signal adjustment
 
 The distribution above is the starting mix; the actual sequence adapts on the fly per the `difficulty-calibration` KB signals:
@@ -65,7 +67,7 @@ The Bloom level recorded per answer is the level the question *actually tested a
 
 ### Question Types (mix these)
 
-- **Recall**: "What does [concept] do?" (Level 1-2)
+- **Recall**: "What does this line do?" / "What is the name for …?" (Level 1-2) — describe the concept, never name it, when it is a due concept
 - **Output prediction**: "What does this code print?" (Level 2-3)
 - **Code writing**: "Write a function that..." (Level 3)
 - **Spot the bug**: "What is wrong with this code?" (Level 4)
