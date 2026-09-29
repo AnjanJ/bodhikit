@@ -103,6 +103,9 @@ before tags.
 file trace, asserted with wording-tolerant regexes over the full stream-json
 assistant transcript:
 
+- `quiz-unlabelled` (1.23.0) — `/quiz` on due concepts: no question quoted
+  before its verdict may name the concept it tests (stems for the three due
+  fixture concepts), and both reviews land in the tracking file.
 - `teach-pretest` — first-exposure `/teach` must open with the ungraded
   guess-first question before the explanation, and must not record it.
 - `teach-hint-discipline` — after 3 failed hints and a demand for the full
@@ -151,6 +154,7 @@ a test. The run header prints the model; a pass certifies that executor only.
 | grade-terse, grade-second-language, grade-parrot-fails-probe | grading | 2026-09-13, `BODHI_EVAL_RUNS=3` each on the 1.21.0 tree (fable-5), 9/9 PASS with no variance: terse `correct` at 2/2/2, second-language `correct` at 2/2/2, parrot-fails-probe `partial` at 1/1/1 with the box held. Previously 2026-09-09 (fable-5), first live runs, 3/3 PASS: terse `correct` at 2 with Feynman set via the prediction probe; second-language `correct` at 2, Feynman set; parrot-fails-probe `partial` at 1, Feynman held. Both sides of the new check-1 bound observed on the same tree within 8 minutes. |
 | grade-pushback, grade-misconception | grading | 2026-09-14, `BODHI_EVAL_RUNS=3` on the 1.21.0 tree (fable-5): pushback 3/3 PASS, `partial` at 1/1/1 with the box held through the escalation; misconception 3/3 PASS across two sweeps (2/3 then 1/1 after a usage-limit cut; the cut run had already recorded `incorrect` at 2, box 3 → 1, like the others). Previously 2026-09-03, both PASS (fable-5), first run since the 1.19.0 rubric rewrite: pushback held at tested-bloom 1 through the escalation, misconception not passed. Previously 1.14.0 sweep (sonnet-5) |
 | grade-understand-band | grading | 2026-09-14, `BODHI_EVAL_RUNS=3` on the 1.21.0 tree (fable-5), 3/3 PASS: `correct` at 2/2/2 (box 3 → 4), gate threshold not crossed. Previously 2026-09-04, single pass, PASS (fable-5): tested-bloom 2, gate threshold not crossed. Previously 2026-08-26, `BODHI_EVAL_RUNS=3`, 3/3 PASS (fable-5): tested-bloom 2/2/2, gate threshold not crossed (1.18.0 first run: 2) |
+| quiz-unlabelled | fidelity | never run (added 1.23.0) |
 | teach-pretest | fidelity | 2026-09-04 PASS (fable-5) on the 1.20.0 tree (first attempt on 2026-09-03 was cut off by the usage limit). Previously 1.18.0 PASS (fable-5) |
 | teach-hint-discipline | fidelity | 2026-09-04 PASS (fable-5) on the 1.20.0 tree: re-teach signal, artifacts shown, no unearned `correct`. Previously 1.18.0 PASS (fable-5) after the "hint turn shows its artifact" detector was anchored to line-initial `Hint N` (first sample matched the word in the closing recap) |
 | continue-discovery | discovery | 1.14.1 (sonnet-5) |
