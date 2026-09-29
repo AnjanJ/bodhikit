@@ -1274,14 +1274,31 @@ def concept_tier(c):
     return "introduced"
 
 
+def due_for_check(c, t):
+    """A mastered concept whose last check has aged: overdue by more than
+    its box interval, i.e. more than twice the gap the schedule chose.
+
+    It stays mastered (is_mastered does not read the clock): a skipped
+    check is unverified, not known forgotten — access fades while storage
+    persists and relearning is fast (Bjork & Bjork 1992) — so mastery
+    counts, tiers and the anonymized export do not flicker with absence.
+    /progress renders it *Solid, due for a check* (1.23.0). Parked and
+    unscheduled concepts are out of rotation and never flagged."""
+    if c.get("parked") is True or not is_mastered(c):
+        return False
+    nr = parse_date(c.get("nextReview"))
+    return nr is not None and (t - nr).days > BOX_INTERVALS.get(c.get("box", 1), 1)
+
+
 def new_module_row():
     """Per-module tally shape shared by `mastery` and `snapshot`."""
     return {"concepts": 0, "mastered": 0, "classified": 0, "applied": 0,
+            "dueForCheck": 0,
             "tiers": {"unclassified": 0, "introduced": 0,
                       "familiar": 0, "mastered": 0}}
 
 
-def tally_module(m, c):
+def tally_module(m, c, t):
     """Fold one concept into a module row (counts + tier distribution)."""
     m["concepts"] += 1
     if c.get("bloomLevel", 0) > 0:
@@ -1290,6 +1307,8 @@ def tally_module(m, c):
         m["mastered"] += 1
     if applied_evidence(c) >= 1:
         m["applied"] += 1
+    if due_for_check(c, t):
+        m["dueForCheck"] += 1
     m["tiers"][concept_tier(c)] += 1
 
 
@@ -1337,12 +1356,14 @@ def review_rollup(concepts, t):
     surfaces — a parked concept must not nag as "needs review"."""
     modules = {}
     rollup = {"strong": [], "building": [], "needs_review": []}
-    due_today, due_week, parked = [], [], []
+    due_today, due_week, parked, due_check = [], [], [], []
     boxes = {str(b): 0 for b in range(1, MAX_BOX + 1)}
     overdue10 = unparseable = 0
     for c in concepts:
         tally_module(modules.setdefault(c.get("module", "(none)"),
-                                        new_module_row()), c)
+                                        new_module_row()), c, t)
+        if due_for_check(c, t):
+            due_check.append(c["name"])
         if c.get("parked") is True:
             parked.append(c["name"])
             continue
@@ -1363,6 +1384,7 @@ def review_rollup(concepts, t):
     finalize_module_rows(modules)
     return {"modules": modules, "rollup": rollup, "dueToday": due_today,
             "dueThisWeek": due_week, "parked": parked, "boxes": boxes,
+            "dueForCheck": due_check,
             "overdue10": overdue10, "unparseable": unparseable}
 
 
@@ -1375,7 +1397,8 @@ def cmd_mastery(args):
            "retentionConcepts": r["rollup"], "dueToday": r["dueToday"],
            "dueThisWeek": r["dueThisWeek"],
            "blockedOnFeynman": blocked_on_feynman(concepts),
-           "blockedOnApplied": blocked_on_applied(concepts)}
+           "blockedOnApplied": blocked_on_applied(concepts),
+           "masteredDueForCheck": r["dueForCheck"]}
     if r["parked"]:
         out["parked"] = r["parked"]
     emit(out)
@@ -1767,6 +1790,7 @@ def cmd_snapshot(args):
             "modules": r["modules"],
             "blockedOnFeynman": blocked_on_feynman(concepts),
             "blockedOnApplied": blocked_on_applied(concepts),
+            "masteredDueForCheck": r["dueForCheck"],
         },
         "calibration": calibration,
         "bloomScale": bloom_scale(),

@@ -2527,6 +2527,51 @@ def t_due_gated_promotion():
               out["box"] == "2 -> 3" and out["nextReview"] == "2026-09-14", out)
 
 
+def t_mastered_due_for_check():
+    """A mastered concept overdue by more than its box interval is flagged
+    *Solid, due for a check* (1.23.0) — and stays mastered: a skipped check
+    is unverified, not known forgotten, so the counts do not move."""
+    def mastered(name, box, nr, **extra):
+        return {"name": name, "module": "M1", "introduced": "2026-01-01", "box": box,
+                "nextReview": nr, "lastReviewed": "2026-01-01", "question": "",
+                "lastResult": "correct", "bloomLevel": 4, "feynmanPassed": True,
+                "consecutiveCorrectAtL4Plus": 3,
+                "reviewHistory": [{"date": "2026-01-01", "result": "correct",
+                                   "bloomLevel": 4, "applied": True}], **extra}
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review={"version": 3, "sessionHistory": [], "concepts": [
+            mastered("Box4", 4, "2026-03-01"),
+            mastered("Box5", 5, "2026-03-01"),
+            mastered("Parked", 4, None, parked=True),
+            dict(mastered("Working", 3, "2026-03-01"), consecutiveCorrectAtL4Plus=1)]})
+        # Box 4 (14 days): overdue by exactly 14 is not flagged, by 15 is.
+        m = run(proj, "mastery", on="2026-03-15")
+        check("due-check: overdue by exactly the interval is not flagged",
+              m["masteredDueForCheck"] == [] and m["modules"]["M1"]["dueForCheck"] == 0, m)
+        m = run(proj, "mastery", on="2026-03-16")
+        check("due-check: overdue past the interval is flagged",
+              m["masteredDueForCheck"] == ["Box4"] and m["modules"]["M1"]["dueForCheck"] == 1, m)
+        check("due-check: a flagged concept is still mastered",
+              m["modules"]["M1"]["mastered"] == 3 and m["modules"]["M1"]["tiers"]["mastered"] == 3, m)
+        # Box 5 (30 days): the bar scales with the interval.
+        m = run(proj, "mastery", on="2026-03-31")
+        check("due-check: box 5 waits for its own interval", m["masteredDueForCheck"] == ["Box4"], m)
+        m = run(proj, "mastery", on="2026-04-01")
+        check("due-check: box 5 flagged past 30 days overdue",
+              m["masteredDueForCheck"] == ["Box4", "Box5"], m)
+        check("due-check: parked and unmastered concepts are never flagged",
+              "Parked" not in m["masteredDueForCheck"] and "Working" not in m["masteredDueForCheck"], m)
+        snap = run(proj, "snapshot", on="2026-04-01")
+        check("due-check: snapshot agrees with mastery",
+              snap["mastery"]["masteredDueForCheck"] == m["masteredDueForCheck"]
+              and snap["mastery"]["modules"]["M1"]["dueForCheck"] == 2, snap["mastery"])
+        # A due correct clears it: the check happened.
+        run(proj, "record-review", "--concept", "Box4", "--result", "correct",
+            "--tested-bloom", "4", on="2026-04-01")
+        m = run(proj, "mastery", on="2026-04-01")
+        check("due-check: a passed check clears the flag", m["masteredDueForCheck"] == ["Box5"], m)
+
+
 def t_gate_seeded_module():
     """Module entry is detected by graded activity, not tracked membership
     (review finding 2b). /learn seeds assessed sub-topics into their modules
@@ -2678,6 +2723,7 @@ def main():
               t_write_on_v2_backs_up, t_script_hygiene,
               t_applied_evidence, t_mastery_snapshot_agree, t_revision_brief,
               t_due_shape, t_same_day_promotion, t_due_gated_promotion,
+              t_mastered_due_for_check,
               t_gate_seeded_module, t_exposure_routes, t_add_concept_bloom,
               t_verify_implies_readers, t_history_cap_keeps_facts):
         print(f"-- {t.__name__}")
