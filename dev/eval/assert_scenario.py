@@ -657,7 +657,12 @@ def assert_continue_gate(project, transcript):
         fail(f"Query planning gained a teach-sourced correct today without a "
              f"reconfirm: {unearned}")
     ok("no unearned correct on the carried-on gap")
-    bare = re.search(r"\(Bloom \d\)|Bloom \d\b|[Bb]ox \d\b", after)
+    # Learner-facing lines only: a Write to progress.md that preserves the
+    # fixture's older entries verbatim ("demoted to Box 1") is the skill
+    # doing its job, not the gate speaking a number (2026-09-30 false FAIL).
+    spoken = "\n".join(line for line in after.split("\n")
+                       if not line.startswith("[tool_use "))
+    bare = re.search(r"\(Bloom \d\)|Bloom \d\b|[Bb]ox \d\b", spoken)
     if bare:
         fail(f"bare level/box number in learner-facing gate text: {bare.group(0)!r}")
     ok("gate offer phrased in outcome terms")
