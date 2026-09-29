@@ -103,9 +103,10 @@ before tags.
 file trace, asserted with wording-tolerant regexes over the full stream-json
 assistant transcript:
 
-- `quiz-unlabelled` (1.23.0) — `/quiz` on due concepts: no question quoted
-  before its verdict may name the concept it tests (stems for the three due
-  fixture concepts), and both reviews land in the tracking file.
+- `quiz-unlabelled` (1.23.0) — `/quiz` on due concepts: no question block
+  (`> Q1: …` or `**Question 1.** …`, up to the learner's reply) may name the
+  concept it tests (stems for the three due fixture concepts), and both
+  graded reviews land in the tracking file.
 - `teach-pretest` — first-exposure `/teach` must open with the ungraded
   guess-first question before the explanation, and must not record it.
 - `teach-hint-discipline` — after 3 failed hints and a demand for the full
