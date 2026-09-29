@@ -23,10 +23,17 @@ Without review, memory decays steeply: most forgetting happens within the first 
 | 4   | 14 days        | Strong retention |
 | 5   | 30 days        | Long-term mastery |
 
+The spacing is the bedrock part; the expanding 1/3/7/14/30 ladder is a convention. Expanding schedules have not reliably beaten equal spacing for long-term retention (Karpicke & Roediger, *Expanding retrieval practice promotes short-term retention, but equally spaced retrieval enhances long-term retention*, 2007).
+
 **Rules (canonical — skills MUST cite this KB, not redeclare; implemented in code by `bodhi-state record-review`):**
 - New concepts start in Box 1, `nextReview` = tomorrow
-- Correct recall: move up one box (max 5), `nextReview` = today + new box interval
-- **One box movement per concept per day.** A Leitner interval is earned by recalling *after* the gap, so a second graded review on the same date (`/practice` after `/teach`, a `/quiz` question on a concept taught an hour ago) is evidence — history, Bloom ratchet, applied flag — but not a spaced success: the box, `nextReview` and the mastery streak wait for the next scheduled day (`record-review` reports `boxHeld`). A same-day miss still demotes; the correct that follows it is the relearning rep and holds, exactly as `--retry` does.
+- Correct recall **on a due review** (today ≥ `nextReview`): move up one box (max 5), `nextReview` = today + new box interval
+- **Only a due review moves the box.** A Leitner interval is earned by recalling *after* the gap. Every other correct is evidence — history, Bloom ratchet, applied flag — but not a spaced success: the box, `nextReview` and the mastery streak hold, and `record-review` reports `boxHeld`:
+  - `not yet due` — before `nextReview` (a `/practice` rep two days into a 7-day interval). With no readable `nextReview` (parked, legacy, malformed) the interval is measured from `lastReviewed`.
+  - `already reviewed today` — a second graded review on the same date (`/practice` after `/teach`). A same-day miss still demotes; the correct that follows it is the relearning rep and holds, exactly as `--retry` does.
+  - `first review` — the concept's first graded review: the lesson's own check, or a `/learn` seed taught weeks after seeding (overdue on paper). Nothing has been spaced yet; the first promotion comes from the first recall after the gap, and `nextReview` restarts at tomorrow if it had passed.
+
+  Why: performance during and right after instruction is an unreliable index of what is retained (Soderstrom & Bjork, *Learning versus performance: An integrative review*, 2015). Recall is easy while access is fresh and builds little; recall after access has begun to fade is what strengthens storage (Bjork & Bjork, *A new theory of disuse*, 1992). In tutoring-system data, the number of distinct days a skill was practised predicts retention a week later where the amount of practice does not (Wang & Beck, *Using student modeling to estimate student knowledge retention*, EDM 2012). Physical Leitner boxes enforce the rule by construction — a card is only seen when its box comes due.
 - Incorrect recall: move to Box 1, `nextReview` = tomorrow
 - Partial recall: box held, `nextReview` = tomorrow (re-test soon; partial is not a Leitner demotion — but it does reset the `consecutiveCorrectAtL4Plus` mastery streak, per the `state-schema` KB)
 - Learner-initiated demote (`/forget`, including a reset the learner asks for in `/reflect`): same box effect as incorrect recall. A low confidence rating or a hard session is never a demotion on its own — the box tracks demonstrated recall; confidence is the separate calibration axis of the `metacognition` KB

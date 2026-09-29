@@ -307,15 +307,25 @@ def assert_grade_genuine(project):
         fail("feynmanPassed not set on a clear, jargon-free own-words explanation")
     ok("Feynman gate passed")
     # Promotion is relative to where the concept started today, not an
-    # absolute box: the fixture's B-tree indexes sits at box 3, but a
-    # held-out concept is new and its first correct moves 1 -> 2. The
-    # 2026-09-09 held-out run graded correct/5/Feynman and then failed a
-    # hard-coded "box >= 4" here — a harness bug, not a grading one.
-    before = last.get("boxBefore", 0)
-    if c.get("box", 0) <= before:
-        fail(f"box is {c.get('box')} after a correct review from box {before} "
-             "— a correct review must promote")
-    ok(f"box promoted {before} -> {c.get('box')}")
+    # absolute box (the 2026-09-09 held-out run failed a hard-coded
+    # "box >= 4" — a harness bug, not a grading one). Since 1.23.0 only a
+    # due review promotes: the fixture's B-tree indexes has been due since
+    # May and must move up; a held-out concept is new, so its first graded
+    # review is first contact and must hold at box 1 (spaced-repetition KB).
+    before = entries[0].get("boxBefore", 0)
+    earlier = [h for h in c.get("reviewHistory", [])
+               if h.get("date") != entries[0].get("date")
+               and h.get("result") in ("correct", "incorrect", "partial")]
+    if not earlier and not c.get("reviewHistoryArchived"):
+        if c.get("box", 0) != before:
+            fail(f"box moved {before} -> {c.get('box')} on a concept's first "
+                 "review — the first promotion comes from a spaced recall")
+        ok(f"first review held the box at {c.get('box')}")
+    else:
+        if c.get("box", 0) <= before:
+            fail(f"box is {c.get('box')} after a due correct review from box "
+                 f"{before} — a due correct review must promote")
+        ok(f"box promoted {before} -> {c.get('box')}")
 
 
 def assert_grade_terse(project):
