@@ -132,7 +132,7 @@ mastered = (bloomLevel >= 4)
        AND (appliedEvidence >= 1)
 ```
 
-`appliedEvidence` is the count of `correct` reviews flagged `applied` since the most recent miss (`state-schema` KB). Without it, every other conjunct can be met in conversation and a learner who has never run the code reads as *Solid*. `mastery` and `snapshot` report `blockedOnApplied` (every criterion but this one) beside `blockedOnFeynman`, and each module row carries `applied` (concepts with at least one build since the last miss).
+`appliedEvidence` is the count of `correct` reviews flagged `applied` since the most recent miss (`state-schema` KB). Without it, every other conjunct can be met in conversation and a learner who has never run the code reads as *Solid*. `mastery` and `snapshot` report `blockedOnApplied` (every criterion but this one) beside `blockedOnFeynman`, and each module row carries `applied` (concepts with at least one build since the last miss). `masteredDueForCheck` (per module: `dueForCheck`) names mastered concepts overdue by more than their box interval: still mastered — a skipped check is unverified, not forgotten — and `/progress` renders them *Solid, due for a check*.
 
 Skills MUST NOT redefine this formula inline. Field semantics (the Bloom ratchet, the counter rules, the Feynman flag) live in the `state-schema` KB; the underlying criteria in the `blooms-taxonomy` KB.
 

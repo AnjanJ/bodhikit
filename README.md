@@ -333,6 +333,7 @@ Fencing the weak claims is what lets you trust the strong ones.
 
 - **Mastery-Based Learning** — Demonstrate competence before advancing, not time-based
   - Benjamin Bloom, *[Learning for Mastery](https://en.wikipedia.org/wiki/Mastery_learning)* (1968)
+  - Robert Bjork and Elizabeth Bjork, *[A new theory of disuse and an old theory of stimulus fluctuation](https://www.researchgate.net/publication/281322665_A_new_theory_of_disuse_and_an_old_theory_of_stimulus_fluctuation)* (1992) — why a long-unchecked *Solid* concept is flagged for a check, not revoked (1.23.0)
 
 - **Metacognition** — Teach learners HOW to learn, not just WHAT to learn
   - John Flavell, who coined the term in *[Metacognition and Cognitive Monitoring](https://psycnet.apa.org/record/1980-09388-001)* (1979)
