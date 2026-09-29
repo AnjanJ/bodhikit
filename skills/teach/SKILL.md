@@ -34,7 +34,7 @@ Once the concept is identified, run:
 "${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> session-brief --concept "<concept>"
 ```
 
-The brief decides the branches: `firstExposure`/`pretestApplies` — how Phase 2 opens; `isReteach` — Phase 5's targeted-reteach entry; `box`/`bloomLevel`/`feynmanPassed`/`daysSinceLastReview` — depth. Trust the brief over your own reading of the tracking files.
+The brief decides the branches: `firstExposure`/`pretestApplies` — how Phase 2 opens; `isReteach` — Phase 5's targeted-reteach entry; `box`/`bloomLevel`/`feynmanCurrent`/`daysSinceLastReview` — depth. Trust the brief over your own reading of the tracking files.
 
 ### Prerequisite Bloom Gate (module-start boundaries only)
 

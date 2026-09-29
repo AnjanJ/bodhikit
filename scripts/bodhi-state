@@ -797,8 +797,13 @@ def cmd_set_feynman(args):
     if concept is None:
         die(f"concept {args.concept!r} not tracked")
     concept["feynmanPassed"] = True  # set, never unset
+    # 1.23.0: the date of the most recent pass. Mastery counts the
+    # explain-back only when it postdates the last miss (feynman_current).
+    concept["feynmanPassedAt"] = iso(today())
     write_spaced_review(path, data)
-    emit({"concept": concept["name"], "feynmanPassed": True})
+    emit({"concept": concept["name"], "feynmanPassed": True,
+          "feynmanPassedAt": concept["feynmanPassedAt"],
+          "feynmanCurrent": feynman_current(concept)})
 
 
 def cmd_record_session(args):
@@ -1240,10 +1245,11 @@ def is_mastered(c):
 
     Five conjuncts since 1.20.0: the fifth, one correct demonstrated in
     working code since the last miss, is what keeps "Solid" from being
-    earned entirely in conversation. Do not redefine inline.
+    earned entirely in conversation. Since 1.23.0 the explain-back must
+    also postdate the last miss (feynman_current). Do not redefine inline.
     """
     return (_mastery_core(c)
-            and c.get("feynmanPassed", False) is True
+            and feynman_current(c)
             and applied_evidence(c) >= 1)
 
 
@@ -1335,7 +1341,7 @@ def blocked_on_feynman(concepts):
     (the applied one included), and /progress names the one step left."""
     return [c["name"] for c in concepts
             if _mastery_core(c)
-            and not c.get("feynmanPassed", False)
+            and not feynman_current(c)
             and applied_evidence(c) >= 1]
 
 
@@ -1345,7 +1351,7 @@ def blocked_on_applied(concepts):
     with it since the last miss. /progress names the one step left."""
     return [c["name"] for c in concepts
             if _mastery_core(c)
-            and c.get("feynmanPassed", False) is True
+            and feynman_current(c)
             and applied_evidence(c) == 0]
 
 
@@ -1655,6 +1661,7 @@ def cmd_session_brief(args):
         "evidenceAt3Plus": evidence_at_3_plus(c),
         "appliedEvidence": applied_evidence(c),
         "feynmanPassed": c.get("feynmanPassed", False),
+        "feynmanCurrent": feynman_current(c),
         "lastReviewed": c.get("lastReviewed"),
         "daysSinceLastReview": (t - last).days if last else None,
         "lastResult": last_result,
@@ -1854,6 +1861,11 @@ def archive_history(c, archived):
     through = dates[-1] if dates else prev.get("through")
     if through:
         summary["through"] = through
+    misses = [d for d in (parse_date(h.get("date")) for h in archived
+                          if isinstance(h, dict) and h.get("result") == "incorrect")
+              if d] + [d for d in [parse_date(prev.get("lastMiss"))] if d]
+    if misses:
+        summary["lastMiss"] = iso(max(misses))
     # Instruction facts never reset; the evidence-derived states are
     # recomputed from the seeds, so only these two are worth carrying.
     graded = [h for h in archived if isinstance(h, dict) and not h.get("deferred")
@@ -1882,6 +1894,38 @@ def applied_evidence(c):
     return _evidence_counts(c.get("reviewHistory", []),
                             seed.get("appliedEvidence", 0) or 0,
                             seed.get("evidenceAt3Plus", 0) or 0)[0]
+
+
+def last_miss(c):
+    """Date of the most recent `incorrect` on record — live history, else
+    archivedSummary.lastMiss. The anchor for "since the last miss" when a
+    reader needs a date rather than a count (feynman_current)."""
+    dates = [parse_date(h.get("date")) for h in c.get("reviewHistory", [])
+             if isinstance(h, dict) and not h.get("deferred")
+             and h.get("result") == "incorrect"]
+    dates = [d for d in dates if d]
+    archived = parse_date(archived_summary(c).get("lastMiss"))
+    if archived:
+        dates.append(archived)
+    return max(dates) if dates else None
+
+
+def feynman_current(c):
+    """The explain-back conjunct of is_mastered (1.23.0): passed, and dated
+    AFTER the most recent miss. An explanation given before the concept was
+    forgotten says nothing about the understanding that came back — a real
+    learner's delayed quiz (2026-09-25) missed a concept whose explain-back
+    had passed 17 days earlier, and the flag still counted. A pass on the day of
+    the miss does not count (dates carry no order within a day, and an
+    explanation right after relearning is the fluency peak); an undated
+    pre-1.23.0 flag counts only when no miss is on record."""
+    if c.get("feynmanPassed") is not True:
+        return False
+    miss = last_miss(c)
+    if miss is None:
+        return True
+    passed = parse_date(c.get("feynmanPassedAt"))
+    return passed is not None and passed > miss
 
 
 # Review sources that are instruction: the tutor taught, or watched the
@@ -2340,6 +2384,10 @@ def cmd_verify(args):
                 if c.get("lastReviewed") is not None and parse_date(c.get("lastReviewed")) is None:
                     warnings.append(f"concept {name!r} lastReviewed "
                                     f"{c.get('lastReviewed')!r} is not an ISO date")
+                if c.get("feynmanPassedAt") is not None and parse_date(c.get("feynmanPassedAt")) is None:
+                    warnings.append(f"concept {name!r} feynmanPassedAt "
+                                    f"{c.get('feynmanPassedAt')!r} is not an ISO date — "
+                                    f"read as an undated explain-back")
                 if v == 3:
                     for k in ("bloomLevel", "feynmanPassed", "consecutiveCorrectAtL4Plus"):
                         if k not in c:
