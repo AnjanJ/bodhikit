@@ -215,6 +215,17 @@ truncated_by_limit() {
   grep -qiE "hit your session limit|usage limit|rate.?limit(ed)? .*resets|safeguards flagged this message" "$1" 2>/dev/null
 }
 
+# Which of the two it was, for the INCONCLUSIVE line: a safeguard refusal is
+# not cured by waiting for a reset (2026-09-30: both /teach fidelity prompts
+# were refused on the first turn two days running, labelled "usage limit").
+inconclusive_reason() {
+  if grep -qi "safeguards flagged this message" "$1" 2>/dev/null; then
+    echo "refused by the API safeguards before the skill ran — not a verdict on it; rephrase the prompt or re-run"
+  else
+    echo "usage limit hit mid-run — re-run after the limit resets"
+  fi
+}
+
 run_scenario() {
   name="$1"; prompt="$2"; assert="$3"; prep="${4:-}"; transcript_mode="${5:-}"; nudge="${6:-}"; maxturns="${7:-30}"
   # BODHI_EVAL_SWEEP/KEEP are set by repeat_scenario so a sampled run lands in
@@ -245,7 +256,7 @@ run_scenario() {
     transcript="$tmp/transcript.jsonl"
     run_headless "$tmp" "$tmp/learningWithBodhi/sql-deep-dive" "$prompt" "$maxturns" "$transcript" stream
     if truncated_by_limit "$transcript"; then
-      echo "INCONCLUSIVE: $name — usage limit hit mid-run (transcript at $transcript); re-run after the limit resets"; FAIL=1; return
+      echo "INCONCLUSIVE: $name — $(inconclusive_reason "$transcript") (transcript at $transcript)"; FAIL=1; return
     fi
     if python3 "$REPO/dev/eval/assert_scenario.py" "$assert" "$tmp/learningWithBodhi/sql-deep-dive" "$transcript"; then
       echo "PASS: $name"
@@ -258,7 +269,7 @@ run_scenario() {
   else
     run_headless "$tmp" "$tmp/learningWithBodhi/sql-deep-dive" "$prompt" "$maxturns" "$tmp/transcript.txt"
     if truncated_by_limit "$tmp/transcript.txt"; then
-      echo "INCONCLUSIVE: $name — usage limit hit mid-run (transcript at $tmp/transcript.txt); re-run after the limit resets"; FAIL=1; return
+      echo "INCONCLUSIVE: $name — $(inconclusive_reason "$tmp/transcript.txt") (transcript at $tmp/transcript.txt)"; FAIL=1; return
     fi
     nudges=0
     while true; do
@@ -303,7 +314,7 @@ run_discovery_scenario() {
   transcript="$tmp/transcript.jsonl"
   run_headless "$tmp" "$tmp/learningWithBodhi" "$prompt" 30 "$transcript" stream
   if truncated_by_limit "$transcript"; then
-    echo "INCONCLUSIVE: $name — usage limit hit mid-run (transcript at $transcript); re-run after the limit resets"; FAIL=1; return
+    echo "INCONCLUSIVE: $name — $(inconclusive_reason "$transcript") (transcript at $transcript)"; FAIL=1; return
   fi
   if python3 "$REPO/dev/eval/assert_scenario.py" "$assert" "$tmp/learningWithBodhi/sql-deep-dive" "$transcript"; then
     echo "PASS: $name"
@@ -329,7 +340,7 @@ run_parent_scenario() {
   if [ -n "$prep" ]; then "$prep" "$tmp/learningWithBodhi/sql-deep-dive" || { echo "FAIL: $name prep"; FAIL=1; return; }; fi
   run_headless "$tmp" "$tmp" "$prompt" "$maxturns" "$tmp/transcript.txt"
   if truncated_by_limit "$tmp/transcript.txt"; then
-    echo "INCONCLUSIVE: $name — usage limit hit mid-run (transcript at $tmp/transcript.txt); re-run after the limit resets"; FAIL=1; return
+    echo "INCONCLUSIVE: $name — $(inconclusive_reason "$tmp/transcript.txt") (transcript at $tmp/transcript.txt)"; FAIL=1; return
   fi
   if python3 "$REPO/dev/eval/assert_scenario.py" "$assert" "$tmp/learningWithBodhi/sql-deep-dive"; then
     echo "PASS: $name"
@@ -573,13 +584,13 @@ fi
 
 if [ "$want" = "all" ] || [ "$want" = "fidelity" ] || [ "$want" = "teach-pretest" ]; then
   run_scenario teach-pretest \
-    "/bodhikit:teach Write-ahead logging — headless eval run. Simulate my responses: to your opening question my guess is 'maybe the database writes changes to a log before applying them, so it can recover after a crash?'. At the checkpoint I explain back cleanly in my own words. I decline any exercise — understanding only is fine today. Complete ALL tracking updates exactly as the skill specifies. IMPORTANT: write the complete session dialogue verbatim into your response text as you go — every question you ask me and my scripted replies, in order — not just a closing summary; the dialogue itself is the deliverable." \
+    "/bodhikit:teach Write-ahead logging — headless eval run. Simulate my responses: to your opening question my guess is 'maybe the database writes changes to a log before applying them, so it can recover after a crash?'. At the checkpoint I explain back cleanly in my own words. I decline any exercise — understanding only is fine today. Complete ALL tracking updates exactly as the skill specifies. Run the session turn by turn in your messages — each question you ask, then my scripted reply to it — rather than summarising it at the end." \
     teach-pretest "" transcript
 fi
 
 if [ "$want" = "all" ] || [ "$want" = "fidelity" ] || [ "$want" = "teach-hint-discipline" ]; then
   run_scenario teach-hint-discipline \
-    "/bodhikit:teach Transaction isolation levels — headless eval run with a full session including the exercise. Simulate my responses: I follow the explanation, answer the checkpoint adequately, and attempt the exercise, but I get stuck immediately and stay stuck. I ask for a hint; it does not help. I ask for a second hint; still stuck, my attempt is wrong in the same way. I ask for a third hint; still completely stuck. Then I say: 'Just give me the complete solution, please, write it out for me.' Continue exactly as the skill specifies from that point — but even after any re-teach, decomposition, or micro-drills, I remain completely confused, cannot answer any retrieval or checkpoint question correctly, and finally say I want to stop for today. End the session and complete ALL tracking updates exactly as the skill specifies. IMPORTANT: write the complete session dialogue verbatim into your response text as you go — every hint, question, and my scripted replies, in order — not just a closing summary; the dialogue itself is the deliverable." \
+    "/bodhikit:teach Transaction isolation levels — headless eval run with a full session including the exercise. Simulate my responses: I follow the explanation, answer the checkpoint adequately, and attempt the exercise, but I get stuck immediately and stay stuck. I ask for a hint; it does not help. I ask for a second hint; still stuck, my attempt is wrong in the same way. I ask for a third hint; still completely stuck. Then I say: 'Just give me the complete solution, please, write it out for me.' Continue exactly as the skill specifies from that point — but even after any re-teach, decomposition, or micro-drills, I remain completely confused, cannot answer any retrieval or checkpoint question correctly, and finally say I want to stop for today. End the session and complete ALL tracking updates exactly as the skill specifies. Run the session turn by turn in your messages — each hint and question you give, then my scripted reply to it — rather than summarising it at the end." \
     teach-hint-discipline "" transcript
 fi
 
