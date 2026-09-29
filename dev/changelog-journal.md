@@ -8,6 +8,25 @@ This is the full, unabridged, patch-by-patch changelog kept for the maintainer �
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [1.23.0] - 2026-09-29
+
+Mastery on delayed, current evidence. Found in the maintainer's own ruby-object-model data: 29 graded reviews, 24 from `/teach`, 12 first exposures, 10 same-day, only 7 delayed (13-17 day gaps, 4/7 recalled). The first delayed quiz (09-25) scored 2/5 + 1 partial on concepts recorded at Apply with the explain-back passed. Of the five mastery checks, none required delay and none noticed lapse.
+
+### Due-gated promotion (`8057877`)
+`apply_review` promoted on the first correct of any day and never compared today with `nextReview`; the 1.21.0 same-day rule only stopped stacking within a date. Repro: four consecutive-day corrects at L4 + explain-back + one build → Box 5, streak 4, `mastered: 1`. Now `promotion_hold()` decides: `not yet due` / `already reviewed today` / `first review` (no `lastReviewed`, exposure seeded — without it a `/learn` seed, overdue since the day after seeding, promoted on the lesson's own check, as "Object identity" did on 09-09). No readable `nextReview` → interval from `lastReviewed`; neither date → promote once (the promotion writes a valid schedule). Rejected a `source: teach` rule (reteach openings and stale re-checks are real delayed recalls) and lastReviewed-based due-ness (disagrees with `due` after a partial; early reviews would postpone the check). Residual kept: an early partial pulls `nextReview` to tomorrow, so the next day's correct promotes; the streak reset keeps it off mastery. Seven existing tests moved onto due dates (assertions unchanged), `t_concurrency` proves the write by its history entry, `t_same_day_promotion` starts from a first review; new `t_due_gated_promotion`. `assert_grade_genuine` expects a held-out new concept to hold at box 1. Replay of the real history: 6 of 10 concepts in Box 2-3 end at Box 1, 4 at Box 2.
+
+### Solid, due for a check (`08c2ce2`)
+`due_for_check()`: mastered, not parked, overdue by more than `BOX_INTERVALS[box]`. `is_mastered` unchanged (rejected: lapsed = not mastered — counts and the anonymized export would flicker with absence); no fifth tier key (lint pins four). `review_rollup` builds `masteredDueForCheck` and the module `dueForCheck` once for both `mastery` and `snapshot`. Threshold is a heuristic; stated as such. New `t_mastered_due_for_check`, both sides of the 14- and 30-day bounds.
+
+### Dated explain-back (`326250b`)
+The maintainer hit the gap in a real session (the freeze's bar): "Mutation versus reassignment" passed its explain-back 09-08, missed cold 09-25, flag still counting. `set-feynman` stamps `feynmanPassedAt`; `feynman_current()` requires it strictly after `last_miss()` (latest `incorrect`, live or `archivedSummary.lastMiss`, which the history cap now writes). Same-day pass does not count (no intra-day order; relearning fluency peak). Undated legacy flag counts only with no miss on record. Malformed date: verify warning, read as undated. state-schema went over the 18 KB budget; trimmed restated prose. New `t_feynman_after_last_miss`. Item 3 of the plan (`--hints` on applied entries) held: no real-session evidence either way.
+
+### Unlabelled review questions (`7e0696b`)
+`/quiz` due questions state the situation, never the concept; confusable pairs back to back. `difficulty-calibration` KB: *Interleaving as a test condition*. Rejected a discrimination conjunct in the formula (grading noise compounds per conjunct; needs a field). New fidelity eval `quiz-unlabelled`; detector exercised on synthetic transcripts (pass and fail).
+
+### Out of scope, flagged
+ZeroCourse (`app/models/concerns/leitner_review.rb`, `record_correct!`) ports this logic and promotes on every correct, with no due check and no same-day rule. Not touched here.
+
 ## [1.22.0] - 2026-09-28
 
 The feedback-survey release (PR #2). A Reddit user reported that a group of biology students had been using BodhiKit on the ChatGPT phone app. None of them could reach the GitHub issue templates, which need an account and are public, so there was no channel for them at all.

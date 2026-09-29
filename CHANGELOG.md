@@ -2,6 +2,18 @@
 
 Notable changes to BodhiKit, summarized for readers. Patch-level development notes live in `dev/changelog-journal.md`.
 
+## [1.23.0] - 2026-09-29
+
+Mastery now rests on delayed, current evidence. The maintainer's first delayed quiz on a real project scored 2 of 5 on concepts recorded at Apply with the explain-back passed: the levels and flags had captured the fluency peak right after teaching, and only the delayed review showed what stuck. Traced, every mastery check could be met in the week a concept was taught, and none noticed when review stopped.
+
+- **Only a due review moves the box.** A correct answer promotes a concept, and extends the mastery streak, only when its review is due. An early correct, a second one the same day, or the first graded answer after a lesson is still recorded (history, level, built flag) but holds the box. Four correct answers on four consecutive days used to climb Box 1 → 5 and reach *Solid*; now they reach Box 2, and the earliest *Solid* is eleven days after first teaching, with recalls after gaps of 1, 3 and 7 days. A miss still demotes whenever it happens. Existing boxes are not re-scored.
+- **Solid is a claim about now.** A mastered concept overdue by more than its box interval shows in `/progress` as *Solid, due for a check*, with a one-line offer to quiz it. It stays mastered in every count: an unchecked concept is unverified, not forgotten.
+- **The explain-back must follow the last slip.** `set-feynman` now dates the pass, and mastery counts it only when it comes after the most recent miss, `/forget` included. An explanation from before a concept was forgotten no longer vouches for what came back. A flag set before this release still counts if the concept has never been missed.
+- **Review questions don't name their concept.** `/quiz` asks about a due concept through a snippet, a symptom or a choice, names it only in the verdict, and puts easily confused pairs back to back, so a correct answer shows the learner knew *when* the idea applies, not just what it is.
+- **Science.** The spaced-repetition, difficulty-calibration and Bloom KBs and the README cite Soderstrom & Bjork (2015), Bjork & Bjork (1992), Wang & Beck (2012), Karpicke & Roediger (2007), Rohrer & Taylor (2007) and Brunmair & Richter (2019). The spaced-repetition KB now labels the 1/3/7/14/30 ladder a convention, not a proven optimum.
+- **State layer.** `record-review` reports why a box held (`not yet due`, `already reviewed today`, `first review`); `mastery` and `snapshot` report `masteredDueForCheck` and a per-module `dueForCheck`; `session-brief` reports `feynmanCurrent`; the history cap keeps the date of the last miss. 485 deterministic tests pass.
+- No tracking-file migration: the new fields are optional and script-written. Update the plugin and restart Claude Code.
+
 ## [1.22.0] - 2026-09-28
 
 A way for learners to tell us how it went. The first outside users arrived on the ChatGPT phone app, where the GitHub issue templates are out of reach.
