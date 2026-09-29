@@ -24,6 +24,9 @@ The maintainer hit the gap in a real session (the freeze's bar): "Mutation versu
 ### Unlabelled review questions (`7e0696b`)
 `/quiz` due questions state the situation, never the concept; confusable pairs back to back. `difficulty-calibration` KB: *Interleaving as a test condition*. Rejected a discrimination conjunct in the formula (grading noise compounds per conjunct; needs a field). New fidelity eval `quiz-unlabelled`; detector exercised on synthetic transcripts (pass and fail).
 
+### Release eval pass (`08dfa49`, `9c8fa69`, `eca5f58`)
+fable-5, 2026-09-29/30, cut twice by the usage limit (cut runs INCONCLUSIVE, re-run). Grading `BODHI_EVAL_RUNS=3` on all twelve: 36/36, levels identical to 1.21.0; the two held-out `correct` scenarios record box 1 -> 1 (first review), the due fixture concept 3 -> 4. Executor-discipline 5/5. Fidelity 5/5 after three harness fixes: continue-gate's bare-number check read a `progress.md` Write that preserved the fixture's "demoted to Box 1" (now learner-facing lines only); both /teach prompts were refused on turn 1 by the safeguard classifier (`[reasoning_extraction]`) and reported as usage limits (now labelled as refusals; the "write the dialogue verbatim" instruction reworded — same wording passed 09-04); quiz-unlabelled's detector keyed only on the "> Qn:" re-quote and missed a correct run that printed "**Question n.**" blocks (now reads question blocks; deferrals no longer count as reviews). Each fix re-asserted against the live transcript with a negative control.
+
 ### Out of scope, flagged
 ZeroCourse (`app/models/concerns/leitner_review.rb`, `record_correct!`) ports this logic and promotes on every correct, with no due check and no same-day rule. Not touched here.
 
