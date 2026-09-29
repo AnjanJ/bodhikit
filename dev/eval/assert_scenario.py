@@ -915,41 +915,66 @@ def assert_evaluate(project):
     ok("verify ok")
 
 
-# The quoted-question convention /quiz mandates before every verdict
-# ("> Q2: … / > You: …"), tolerant of bold and of "Q2." / "Q2)".
-QUOTED_QUESTION_RE = re.compile(r"^\s*>\s*\**\s*Q(\d+)\s*\**\s*[:.)]\s*\**\s*(.+)$", re.M)
+# A question starts at a "Qn" / "Question n" marker, bare, bolded or quoted
+# ("> Q2: …", "**Question 2.** …"), and runs until the learner's reply
+# ("> You …"), the verdict, or the next question — so a question printed
+# once over several lines reads the same as one re-quoted before its verdict.
+QUESTION_START_RE = re.compile(r"^\s*(?:>\s*)?\**\s*(?:Q|Question)\s*(\d+)\b\s*\**\s*[:.)\u2014-]?\s*\**\s*(.*)$")
+QUESTION_END_RE = re.compile(r"^\s*(?:>\s*\**\s*(?:You|Learner)\b|\**\s*Verdict\b)", re.I)
 # Each due fixture concept by the stem that would name it in a question.
 DUE_CONCEPT_STEMS = {"B-tree indexes": r"b-?tree",
                      "Query planning": r"query\s+plann",
                      "Normalization trade-offs": r"normali[sz]"}
 
 
+def question_texts(prose):
+    """{n: question text} for the first block carrying each number."""
+    found, current, buf = {}, None, []
+    def close():
+        if current is not None and current not in found:
+            found[current] = " ".join(x.strip() for x in buf if x.strip())
+    for line in prose.split("\n"):
+        m = QUESTION_START_RE.match(line)
+        if m:
+            close()
+            current, buf = m.group(1), [m.group(2)]
+        elif current is not None and QUESTION_END_RE.match(line):
+            close()
+            current, buf = None, []
+        elif current is not None:
+            buf.append(line)
+    close()
+    return found
+
+
 def assert_quiz_unlabelled(project, transcript):
     """A due review question describes the situation and never names the
-    concept it tests (quiz skill, 1.23.0). Drift detector over the quoted
-    questions: read the transcript before judging a failure — a stem can
+    concept it tests (quiz skill, 1.23.0). Drift detector over the question
+    blocks: read the transcript before judging a failure — a stem can
     appear for a reason the regex cannot see."""
     prose = assistant_prose(transcript)
     if not prose.strip():
         fail("empty transcript — run did not produce assistant output")
-    questions = {}
-    for m in QUOTED_QUESTION_RE.finditer(prose):
-        questions.setdefault(m.group(1), m.group(2))
+    questions = question_texts(prose)
     if len(questions) < 2:
-        fail(f"found {len(questions)} quoted question(s) ('> Qn: …'); the skill "
-             "quotes each question before its verdict")
-    ok(f"{len(questions)} quoted questions found")
+        fail(f"found {len(questions)} question(s) marked 'Qn' / 'Question n'; "
+             "read the transcript — the detector needs each question visible")
+    ok(f"{len(questions)} questions found")
     for n, q in sorted(questions.items()):
         for concept_name, stem in DUE_CONCEPT_STEMS.items():
             if re.search(stem, q, re.I):
                 fail(f"Q{n} names the due concept {concept_name!r}: {q[:120]!r} — "
                      "state the situation, name the concept only in the verdict")
-    ok("no quoted question names a due concept")
+    ok("no question names a due concept")
     sr = load(project, ".bodhi", "spaced-review.json")
-    reviewed = [c["name"] for c in sr["concepts"] if todays_entries(c)]
+    # Graded results only: a due concept the quiz did not reach is deferred,
+    # and a deferral is scheduling, not a review.
+    reviewed = [c["name"] for c in sr["concepts"]
+                if any(h.get("result") in ("correct", "incorrect", "partial")
+                       for h in todays_entries(c))]
     if len(reviewed) < 2:
-        fail(f"reviews recorded today for {reviewed}; expected two due concepts")
-    ok(f"reviews recorded for {reviewed}")
+        fail(f"graded reviews recorded today for {reviewed}; expected two due concepts")
+    ok(f"graded reviews recorded for {reviewed}")
 
 
 def main():
