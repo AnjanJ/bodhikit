@@ -286,6 +286,7 @@ Fencing the weak claims is what lets you trust the strong ones.
 - **Spaced Repetition** — Review concepts at expanding intervals for durable memory
   - Hermann Ebbinghaus, *[Memory: A Contribution to Experimental Psychology](https://en.wikipedia.org/wiki/Memory:_A_Contribution_to_Experimental_Psychology)* (1885)
   - Sebastian Leitner, *[Learning to Learn](https://en.wikipedia.org/wiki/Leitner_system)* (1972)
+  - Nicholas Soderstrom and Robert Bjork, *[Learning versus performance: An integrative review](https://journals.sagepub.com/doi/10.1177/1745691615569000)* (2015) — why only a recall after the gap moves a concept's box (1.23.0)
 
 - **Learning How to Learn** — Focused/diffuse modes, chunking, interleaving, overcoming procrastination
   - Dr. Barbara Oakley, *[A Mind for Numbers](https://barbaraoakley.com/books/a-mind-for-numbers/)* (2014)

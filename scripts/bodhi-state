@@ -605,11 +605,50 @@ def find_profile(project):
 HISTORY_CAP = 100  # per concept; older entries roll into reviewHistoryArchived
 
 
+def promotion_hold(concept, t):
+    """Why a correct on date `t` earns no box movement, or None when it is a
+    spaced recall (spaced-repetition KB). A Leitner interval is earned by
+    recalling AFTER the gap, so the box and the L4+ streak move only on a
+    DUE review; any other correct is evidence (history, Bloom ratchet,
+    applied) but not a spaced success.
+
+    Until 1.23.0 only a second review on the same date was held, so corrects
+    on consecutive days climbed Box 1 -> 5 and reached mastery in four days
+    with no gap longer than one. Performance right after instruction is a
+    poor index of what is retained (Soderstrom & Bjork 2015); the rule makes
+    the box measure the delayed recall.
+
+    - "already reviewed today": a same-day miss still demotes (forgetting is
+      forgetting); the correct that follows it is the relearning rep and
+      holds, exactly as --retry does.
+    - "first review": nothing has been spaced yet — a lesson's own check, or
+      the first grade on a /learn seed (overdue on paper since the day after
+      seeding) is first contact, not a delayed recall.
+    - "not yet due": reviewed before nextReview. With no readable
+      nextReview (parked, legacy, malformed) the interval is measured from
+      lastReviewed; with neither date there is nothing to be early against.
+    """
+    if any(h.get("date") == iso(t) and not h.get("deferred")
+           and h.get("result") in ("correct", "incorrect", "partial")
+           for h in concept.get("reviewHistory", [])):
+        return "already reviewed today"
+    last = parse_date(concept.get("lastReviewed"))
+    if last is None and exposure_of(concept) == "seeded":
+        return "first review"
+    due = parse_date(concept.get("nextReview"))
+    if due is None and last is not None:
+        due = last + datetime.timedelta(days=BOX_INTERVALS.get(concept.get("box", 1), 1))
+    if due is not None and t < due:
+        return "not yet due"
+    return None
+
+
 def apply_review(concept, result, tested_bloom, confidence=None, note=None,
                  source=None, retry=False, applied=False):
     """Canonical per-concept update (spaced-repetition + state-schema KBs).
 
-    correct   -> box up one (max 5), nextReview = today + new interval
+    correct   -> box up one (max 5), nextReview = today + new interval, when
+                 the review is due; otherwise evidence only (promotion_hold)
     incorrect -> box 1, nextReview tomorrow, counter reset
     partial   -> box held, nextReview tomorrow (re-test soon), counter reset
                  (1.11.2: not a Leitner demotion, but it breaks the
@@ -631,30 +670,23 @@ def apply_review(concept, result, tested_bloom, confidence=None, note=None,
     old_bloom = concept.get("bloomLevel", 0)
     if result not in ("correct", "incorrect", "partial"):
         die(f"result must be correct|incorrect|partial, got {result!r}")
-    # One box movement per concept per day (spaced-repetition KB). A Leitner
-    # interval is earned by recalling AFTER the gap, so a second graded
-    # review on the same date — /practice after /teach, a /quiz question on
-    # a concept taught an hour ago — is evidence (history, ratchet, applied)
-    # but not a spaced success: the box, nextReview and the L4+ streak wait
-    # for the next scheduled day. Before this rule three same-day corrects
-    # stacked Box 1 -> 4, a 14-day interval and full mastery with no delayed
-    # recall ever observed. A same-day miss still demotes (forgetting is
-    # forgetting); the correct that follows it is the relearning rep and
-    # holds, exactly as --retry does.
-    reviewed_today = any(h.get("date") == iso(t) and not h.get("deferred")
-                         and h.get("result") in ("correct", "incorrect", "partial")
-                         for h in concept.get("reviewHistory", []))
     box_held = None
     if not retry:
         if result == "correct":
-            if reviewed_today:
-                box_held = "already reviewed today"
-            else:
+            box_held = promotion_hold(concept, t)
+            if box_held is None:
                 concept["box"] = min(old_box + 1, MAX_BOX)
                 concept["nextReview"] = iso(t + datetime.timedelta(days=BOX_INTERVALS[concept["box"]]))
+            elif box_held == "first review":
+                # The clock starts at first contact: a /learn seed taught
+                # weeks after seeding is overdue on paper, and without this
+                # it would stay in `due` for the rest of the day it was taught.
+                nr = parse_date(concept.get("nextReview"))
+                if nr is None or nr <= t:
+                    concept["nextReview"] = iso(t + datetime.timedelta(days=BOX_INTERVALS.get(old_box, 1)))
             if tested_bloom is not None:
                 concept["bloomLevel"] = max(concept.get("bloomLevel", 0), tested_bloom)
-                if tested_bloom >= 4 and not reviewed_today:
+                if tested_bloom >= 4 and box_held is None:
                     concept["consecutiveCorrectAtL4Plus"] = concept.get("consecutiveCorrectAtL4Plus", 0) + 1
         elif result == "incorrect":
             concept["box"] = 1

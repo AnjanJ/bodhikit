@@ -153,17 +153,19 @@ def t_record_review():
               c["reviewHistory"][-1].get("confidence") == "sure")
         check("review: non-canonical field survives write",
               c.get("precisionGap") is not None)
-        # correct at L2 on a later day: bloom NOT demoted, counter unchanged
-        # (one box movement per day — t_same_day_promotion — so date-travel)
+        # correct at L2 on its due day: bloom NOT demoted, counter unchanged
+        # (the box moves only on a due review — t_due_gated_promotion)
+        due4 = TODAY + datetime.timedelta(days=14)
         run(proj, "record-review", "--concept", "B-tree indexes",
-            "--result", "correct", "--tested-bloom", "2", on="2026-06-01")
+            "--result", "correct", "--tested-bloom", "2", on=due4.isoformat())
         c = read_sr(proj)["concepts"][0]
         check("review: bloom never demotes", c["bloomLevel"] == 4)
         check("review: counter unchanged on low-level correct",
               c["consecutiveCorrectAtL4Plus"] == 1)
         check("review: box capped at 5", c["box"] == 5)
         run(proj, "record-review", "--concept", "B-tree indexes",
-            "--result", "correct", "--tested-bloom", "5", on="2026-06-02")
+            "--result", "correct", "--tested-bloom", "5",
+            on=(due4 + datetime.timedelta(days=30)).isoformat())
         check("review: box stays at 5", read_sr(proj)["concepts"][0]["box"] == 5)
         # incorrect: box 1, counter reset, bloom preserved
         run(proj, "record-review", "--concept", "B-tree indexes",
@@ -364,15 +366,18 @@ def t_mastery_due_calibration():
               out["underconfidenceRate"] == 1.0)
         # set-feynman + mastery formula end-to-end
         run(proj, "set-feynman", "--concept", "B-tree indexes")
-        for day in ("2026-06-01", "2026-06-02", "2026-06-03"):  # spaced days
+        for gap in (14, 44, 74):  # each on its due day
             run(proj, "record-review", "--concept", "B-tree indexes",
-                "--result", "correct", "--tested-bloom", "5", on=day)
+                "--result", "correct", "--tested-bloom", "5",
+                on=(TODAY + datetime.timedelta(days=gap)).isoformat())
         out = run(proj, "mastery")
         check("mastery: four verbal conjuncts alone do not reach mastered (1.20.0)",
               out["modules"]["Module A"]["masteryPct"] == 0
               and out["blockedOnApplied"] == ["B-tree indexes"], out)
+        # An early review holds the box, but a build is still evidence.
         run(proj, "record-review", "--concept", "B-tree indexes",
-            "--result", "correct", "--tested-bloom", "5", "--applied", on="2026-06-04")
+            "--result", "correct", "--tested-bloom", "5", "--applied",
+            on=(TODAY + datetime.timedelta(days=75)).isoformat())
         out = run(proj, "mastery")
         check("mastery: formula reaches mastered",
               out["modules"]["Module A"]["masteryPct"] == 50
@@ -425,13 +430,13 @@ def t_partial_breaks_streak():
         run(proj, "record-review", "--concept", "B-tree indexes",
             "--result", "correct", "--tested-bloom", "4", on="2026-06-03")
         run(proj, "record-review", "--concept", "B-tree indexes",
-            "--result", "correct", "--tested-bloom", "4", on="2026-06-04")
+            "--result", "correct", "--tested-bloom", "4", on="2026-07-03")
         c = read_sr(proj)["concepts"][0]
         check("streak: rebuilt from zero after the partial",
               c["consecutiveCorrectAtL4Plus"] == 2, c)
         # A partial RETRY is a relearning rep: no counter movement of any kind.
         run(proj, "record-review", "--concept", "B-tree indexes",
-            "--result", "partial", "--tested-bloom", "4", "--retry", on="2026-06-04")
+            "--result", "partial", "--tested-bloom", "4", "--retry", on="2026-07-03")
         c = read_sr(proj)["concepts"][0]
         check("streak: partial retry does not touch the counter",
               c["consecutiveCorrectAtL4Plus"] == 2, c)
@@ -587,7 +592,8 @@ def t_concurrency():
         check("concurrency: 8 parallel writers, zero failures", not errs, errs)
         sr = read_sr(proj)
         lost = [f"c{i}" for i in range(8)
-                if next(c for c in sr["concepts"] if c["name"] == f"c{i}")["box"] != 2]
+                if len(next(c for c in sr["concepts"]
+                            if c["name"] == f"c{i}")["reviewHistory"]) != 1]
         check("concurrency: zero lost updates", not lost, lost)
 
 
@@ -690,14 +696,14 @@ def t_mastery_blocked_on_feynman():
     with tempfile.TemporaryDirectory() as root:
         proj = make_project(root, spaced_review=json.loads(json.dumps(V2_SR)))
         run(proj, "migrate-spaced-review")
-        for day in ("2026-06-01", "2026-06-02", "2026-06-03"):  # spaced days
+        for day in ("2026-06-01", "2026-06-15", "2026-07-15"):  # each due
             run(proj, "record-review", "--concept", "B-tree indexes",
                 "--result", "correct", "--tested-bloom", "5", on=day)
         out = run(proj, "mastery")
         check("blocked: two steps away is named in neither list",
               out["blockedOnFeynman"] == [] and out["blockedOnApplied"] == [], out)
         run(proj, "record-review", "--concept", "B-tree indexes",
-            "--result", "correct", "--tested-bloom", "5", "--applied", on="2026-06-04")
+            "--result", "correct", "--tested-bloom", "5", "--applied", on="2026-07-16")
         out = run(proj, "mastery")
         check("blocked: quiz-only concept named",
               out["blockedOnFeynman"] == ["B-tree indexes"], out)
@@ -1872,29 +1878,29 @@ def t_date_travel():
     with tempfile.TemporaryDirectory() as root:
         sr = json.loads(json.dumps(V2_SR))
         proj = make_project(root, spaced_review=sr)
-        # Box 3 -> 4 on 2026-01-01: next review in 14 days (BOX_INTERVALS[4])
+        # Box 3 -> 4 on 2026-06-01 (due since 05-08): next review in 14 days
         out = run(proj, "record-review", "--concept", "B-tree indexes",
-                  "--result", "correct", "--tested-bloom", "4", on="2026-01-01")
+                  "--result", "correct", "--tested-bloom", "4", on="2026-06-01")
         check("travel: promotion recorded on the pinned day",
               out.get("box") == "3 -> 4", out)
         c = next(x for x in read_sr(proj)["concepts"] if x["name"] == "B-tree indexes")
         check("travel: nextReview is the box-4 interval from the pinned day",
-              c["nextReview"] == "2026-01-15" and c["lastReviewed"] == "2026-01-01", c)
+              c["nextReview"] == "2026-06-15" and c["lastReviewed"] == "2026-06-01", c)
         check("travel: history entry carries the pinned date",
-              c["reviewHistory"][-1]["date"] == "2026-01-01", c["reviewHistory"][-1])
+              c["reviewHistory"][-1]["date"] == "2026-06-01", c["reviewHistory"][-1])
         names = lambda o: [d["name"] for d in o.get("concepts", [])]
         check("travel: not due the day before the interval ends",
-              "B-tree indexes" not in names(run(proj, "due", on="2026-01-14")))
+              "B-tree indexes" not in names(run(proj, "due", on="2026-06-14")))
         check("travel: due on the interval day",
-              "B-tree indexes" in names(run(proj, "due", on="2026-01-15")))
+              "B-tree indexes" in names(run(proj, "due", on="2026-06-15")))
         check("travel: overdue after it",
-              "B-tree indexes" in names(run(proj, "due", on="2026-02-01")))
+              "B-tree indexes" in names(run(proj, "due", on="2026-07-01")))
         # a miss on the due day demotes and reschedules at the box-1 interval
         out = run(proj, "record-review", "--concept", "B-tree indexes",
-                  "--result", "incorrect", "--tested-bloom", "3", on="2026-01-15")
+                  "--result", "incorrect", "--tested-bloom", "3", on="2026-06-15")
         c = next(x for x in read_sr(proj)["concepts"] if x["name"] == "B-tree indexes")
         check("travel: a miss lands at box 1, review the next day",
-              c["box"] == 1 and c["nextReview"] == "2026-01-16", c)
+              c["box"] == 1 and c["nextReview"] == "2026-06-16", c)
         # streak: consecutive pinned days count, a gap resets
         for day in ("2026-03-01", "2026-03-02", "2026-03-03"):
             run(proj, "touch-state", "--activity", "x", on=day)
@@ -2349,15 +2355,22 @@ def t_same_day_promotion():
     full L4+ streak — "mastered" with no delayed recall ever observed. The
     later same-day corrects are still evidence (history, Bloom ratchet,
     applied flag); the box, nextReview and the streak counter wait for the
-    next scheduled day. A same-day miss still demotes."""
+    next scheduled day. A same-day miss still demotes. (Since 1.23.0 the
+    lesson's own check is a first review and holds too — the promotion here
+    comes from the next day's recall.)"""
     with tempfile.TemporaryDirectory() as root:
         proj = make_project(root, spaced_review={"version": 3, "concepts": [],
                                                   "sessionHistory": []})
-        d0 = "2026-09-07"
         first = run(proj, "record-review", "--concept", "Loops", "--module", "Module A",
                     "--result", "correct", "--tested-bloom", "3", "--source", "teach",
-                    on=d0)
-        check("same-day: first correct promotes", first["box"] == "1 -> 2")
+                    on="2026-09-06")
+        check("same-day: the lesson's check is a first review",
+              first["box"] == "1 -> 1" and first.get("boxHeld") == "first review", first)
+        d0 = "2026-09-07"
+        promoted = run(proj, "record-review", "--concept", "Loops",
+                       "--result", "correct", "--tested-bloom", "3", "--source", "quiz",
+                       on=d0)
+        check("same-day: the next day's recall promotes", promoted["box"] == "1 -> 2", promoted)
         second = run(proj, "record-review", "--concept", "Loops",
                      "--result", "correct", "--tested-bloom", "4", "--source", "practice",
                      "--applied", on=d0)
@@ -2371,10 +2384,9 @@ def t_same_day_promotion():
         check("same-day: streak counter waits for a spaced day",
               c["consecutiveCorrectAtL4Plus"] == 0)
         check("same-day: evidence still recorded",
-              len(c["reviewHistory"]) == 2 and c["reviewHistory"][-1].get("applied") is True)
-        third = run(proj, "record-review", "--concept", "Loops",
-                    "--result", "correct", "--tested-bloom", "4", "--source", "quiz",
-                    on=d0)
+              len(c["reviewHistory"]) == 3 and c["reviewHistory"][-1].get("applied") is True)
+        run(proj, "record-review", "--concept", "Loops",
+            "--result", "correct", "--tested-bloom", "4", "--source", "quiz", on=d0)
         c = read_sr(proj)["concepts"][0]
         check("same-day: third correct still held", c["box"] == 2)
         run(proj, "set-feynman", "--concept", "Loops")
@@ -2400,15 +2412,120 @@ def t_same_day_promotion():
         c = read_sr(proj)["concepts"][0]
         check("same-day: streak counts spaced days only",
               c["consecutiveCorrectAtL4Plus"] == 3, c["consecutiveCorrectAtL4Plus"])
-        # A deferral today is scheduling, not a review: it does not spend the day.
+        # A deferral today is scheduling, not a review: it moves the due date
+        # (so a review later that day is early), but it does not spend the day.
         proj2 = make_project(os.path.join(root, "two"), spaced_review={
             "version": 3, "concepts": [], "sessionHistory": []})
-        run(proj2, "add-concept", "--concept", "Maps", "--module", "Module A", on="2026-09-01")
+        run(proj2, "record-review", "--concept", "Maps", "--module", "Module A",
+            "--result", "correct", "--tested-bloom", "2", on="2026-09-01")
         run(proj2, "defer", "--concept", "Maps", "--days", "1", on="2026-09-07")
         out = run(proj2, "record-review", "--concept", "Maps",
                   "--result", "correct", "--tested-bloom", "2", on="2026-09-07")
         check("same-day: a deferral does not count as today's review",
-              out["box"] == "1 -> 2", out)
+              out.get("boxHeld") == "not yet due", out)
+        out = run(proj2, "record-review", "--concept", "Maps",
+                  "--result", "correct", "--tested-bloom", "2", on="2026-09-08")
+        check("same-day: the deferred date promotes", out["box"] == "1 -> 2", out)
+
+
+def t_due_gated_promotion():
+    """A correct moves the box and the L4+ streak only on a DUE review
+    (spaced-repetition KB, 1.23.0). Before, the first correct of any day
+    promoted, so four consecutive days reached Box 5 and mastery with no
+    gap longer than a day. Every bound is tested from both sides."""
+    with tempfile.TemporaryDirectory() as root:
+        # The four-consecutive-days scenario that used to master.
+        proj = make_project(root, spaced_review={"version": 3, "concepts": [],
+                                                  "sessionHistory": []})
+        run(proj, "add-concept", "--concept", "Closures", "--module", "M1", on="2026-10-01")
+        boxes = []
+        for day in ("2026-10-01", "2026-10-02", "2026-10-03", "2026-10-04"):
+            out = run(proj, "record-review", "--concept", "Closures", "--result", "correct",
+                      "--tested-bloom", "4", "--source", "quiz", on=day)
+            boxes.append((out["box"], out.get("boxHeld")))
+        check("due-gate: consecutive days climb one box, not four",
+              boxes == [("1 -> 1", "first review"), ("1 -> 2", None),
+                        ("2 -> 2", "not yet due"), ("2 -> 2", "not yet due")], boxes)
+        run(proj, "set-feynman", "--concept", "Closures", on="2026-10-04")
+        out = run(proj, "record-review", "--concept", "Closures", "--result", "correct",
+                  "--tested-bloom", "4", "--applied", "--source", "practice", on="2026-10-04")
+        c = read_sr(proj)["concepts"][0]
+        check("due-gate: early correct holds nextReview and the streak",
+              c["nextReview"] == "2026-10-05" and c["consecutiveCorrectAtL4Plus"] == 1, c)
+        check("due-gate: early build is still evidence", out["appliedEvidence"] == 1, out)
+        m = run(proj, "mastery", on="2026-10-04")
+        check("due-gate: four consecutive days are not mastery",
+              m["modules"]["M1"]["mastered"] == 0, m)
+        # Earliest mastery: recalls on the due days +1, +4, +11 after first contact.
+        for day, box in (("2026-10-05", "2 -> 3"), ("2026-10-11", "3 -> 3"),
+                         ("2026-10-12", "3 -> 4")):
+            out = run(proj, "record-review", "--concept", "Closures", "--result", "correct",
+                      "--tested-bloom", "4", "--source", "quiz", on=day)
+            check(f"due-gate: {day} -> {box}", out["box"] == box, out)
+        c = read_sr(proj)["concepts"][0]
+        check("due-gate: streak counts due corrects only",
+              c["consecutiveCorrectAtL4Plus"] == 3, c)
+        m = run(proj, "mastery", on="2026-10-12")
+        check("due-gate: mastered after three spaced recalls",
+              m["modules"]["M1"]["mastered"] == 1, m)
+        # Overdue correct promotes and schedules from today.
+        out = run(proj, "record-review", "--concept", "Closures", "--result", "correct",
+                  "--tested-bloom", "4", on="2026-11-20")
+        check("due-gate: overdue correct promotes from today",
+              out["box"] == "4 -> 5" and out["nextReview"] == "2026-12-20", out)
+        # An early miss still demotes; an early partial still resets the streak.
+        out = run(proj, "record-review", "--concept", "Closures", "--result", "partial",
+                  "--tested-bloom", "4", on="2026-11-25")
+        c = read_sr(proj)["concepts"][0]
+        check("due-gate: early partial holds the box, resets the streak",
+              c["box"] == 5 and c["consecutiveCorrectAtL4Plus"] == 0
+              and c["nextReview"] == "2026-11-26", c)
+        out = run(proj, "record-review", "--concept", "Closures", "--result", "incorrect",
+                  "--tested-bloom", "4", on="2026-11-26")
+        check("due-gate: a miss demotes whenever it happens", out["box"] == "5 -> 1", out)
+
+        # A /learn seed taught weeks later is overdue on paper: the lesson's
+        # check is still first contact, and it restarts the clock.
+        run(proj, "add-concept", "--concept", "Seeded", "--module", "M1", on="2026-09-01")
+        out = run(proj, "record-review", "--concept", "Seeded", "--result", "correct",
+                  "--tested-bloom", "3", "--source", "teach", on="2026-09-20")
+        check("due-gate: first review of an overdue seed holds at box 1",
+              out["box"] == "1 -> 1" and out.get("boxHeld") == "first review"
+              and out["nextReview"] == "2026-09-21", out)
+        due = [d["name"] for d in run(proj, "due", on="2026-09-20")["concepts"]]
+        check("due-gate: a just-taught seed leaves today's due list", "Seeded" not in due, due)
+        out = run(proj, "record-review", "--concept", "Seeded", "--result", "correct",
+                  "--tested-bloom", "3", on="2026-09-21")
+        check("due-gate: the first spaced recall promotes", out["box"] == "1 -> 2", out)
+
+        # No readable nextReview: measured from lastReviewed + the box interval.
+        sr = read_sr(proj)
+        for name, nr, last, box in (("Parked", None, "2026-09-01", 3),
+                                    ("Junk", "soon", "2026-09-01", 3),
+                                    ("Legacy", None, None, 2)):
+            sr["concepts"].append({
+                "name": name, "module": "M1", "introduced": "2026-08-01", "box": box,
+                "nextReview": nr, "lastReviewed": last, "question": "", "lastResult": "",
+                "bloomLevel": 3, "feynmanPassed": False, "consecutiveCorrectAtL4Plus": 0,
+                "reviewHistory": [{"date": "2026-08-20", "result": "correct",
+                                   "bloomLevel": 3}],
+                **({"parked": True} if name == "Parked" else {})})
+        with open(os.path.join(proj, ".bodhi", "spaced-review.json"), "w") as f:
+            json.dump(sr, f)
+        for name in ("Parked", "Junk"):
+            out = run(proj, "record-review", "--concept", name, "--result", "correct",
+                      "--tested-bloom", "3", on="2026-09-07")
+            check(f"due-gate: {name} inside the box interval holds",
+                  out.get("boxHeld") == "not yet due", out)
+            out = run(proj, "record-review", "--concept", name, "--result", "correct",
+                      "--tested-bloom", "3", on="2026-09-15")
+            check(f"due-gate: {name} past the box interval promotes",
+                  out["box"] == "3 -> 4", out)
+        out = run(proj, "record-review", "--concept", "Legacy", "--result", "correct",
+                  "--tested-bloom", "3", on="2026-09-07")
+        check("due-gate: no date at all is nothing to be early against",
+              out["box"] == "2 -> 3" and out["nextReview"] == "2026-09-14", out)
+
 
 def t_gate_seeded_module():
     """Module entry is detected by graded activity, not tracked membership
@@ -2560,7 +2677,7 @@ def main():
               t_write_keeps_file_mode, t_date_travel, t_history_bloom_only_when_tested,
               t_write_on_v2_backs_up, t_script_hygiene,
               t_applied_evidence, t_mastery_snapshot_agree, t_revision_brief,
-              t_due_shape, t_same_day_promotion,
+              t_due_shape, t_same_day_promotion, t_due_gated_promotion,
               t_gate_seeded_module, t_exposure_routes, t_add_concept_bloom,
               t_verify_implies_readers, t_history_cap_keeps_facts):
         print(f"-- {t.__name__}")
