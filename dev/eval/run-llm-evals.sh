@@ -31,6 +31,17 @@
 #                                        # BODHI_EVAL_PROVIDER=<name> to eval a
 #                                        # non-Anthropic provider (model comes
 #                                        # from BODHI_EVAL_MODEL).
+#
+#   BODHI_EVAL_RUNTIME=codex dev/eval/run-llm-evals.sh quiz
+#                                        # run the SAME scenarios through the
+#                                        # OpenAI package on headless Codex
+#                                        # (`codex exec`). Needs the codex CLI
+#                                        # logged in; the package is built to
+#                                        # dist/openai/bodhikit if absent
+#                                        # (override: BODHI_OPENAI_PACKAGE).
+#                                        # BODHI_EVAL_MODEL is optional here:
+#                                        # unset, Codex's configured default
+#                                        # runs and the header says so.
 
 set -u
 cd "$(dirname "$0")/../.." || exit 2
@@ -63,6 +74,22 @@ if [ "$RUNTIME" = "bodhi-cli" ]; then
   if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
     echo "SKIP: BODHI_EVAL_RUNTIME=bodhi-cli needs ANTHROPIC_API_KEY"; exit 0
   fi
+elif [ "$RUNTIME" = "codex" ]; then
+  # Codex runtime (1.23.1). The OpenAI package copies bodhi-state byte for
+  # byte, so the deterministic layer is identical; what was never measured is
+  # whether the OpenAI executor CALLS it — grades to the rubric, writes the
+  # files, keeps numbers off the screen. The same fixtures and the same
+  # file-state assertions answer that for Codex. ChatGPT has no headless
+  # interface, so it stays on the manual smoke test in docs/openai.md.
+  if ! command -v codex >/dev/null 2>&1; then
+    echo "SKIP: BODHI_EVAL_RUNTIME=codex but the codex CLI is not on PATH"; exit 0
+  fi
+  OPENAI_PACKAGE="${BODHI_OPENAI_PACKAGE:-$REPO/dist/openai/bodhikit}"
+  if [ ! -f "$OPENAI_PACKAGE/.codex-plugin/plugin.json" ]; then
+    echo "-- building the OpenAI package at $OPENAI_PACKAGE"
+    python3 "$REPO/platforms/openai/build_plugin.py" --output "$OPENAI_PACKAGE" >/dev/null \
+      || { echo "FAIL: OpenAI package build failed"; exit 2; }
+  fi
 elif ! command -v claude >/dev/null 2>&1; then
   echo "SKIP: claude CLI not on PATH"; exit 0
 fi
@@ -80,7 +107,12 @@ fi
 # certifies exactly one executor — the one printed in the run header — and
 # for two release lines that was claude-sonnet-5 while every real session
 # ran on claude-fable-5.
-EVAL_MODEL="${BODHI_EVAL_MODEL:-claude-fable-5}"
+if [ "$RUNTIME" = "codex" ]; then
+  # No Claude model name makes sense here; unset means Codex's own default.
+  EVAL_MODEL="${BODHI_EVAL_MODEL:-}"
+else
+  EVAL_MODEL="${BODHI_EVAL_MODEL:-claude-fable-5}"
+fi
 
 # F2 routing: a shell that exports ANTHROPIC_BASE_URL / ANTHROPIC_AUTH_TOKEN
 # (e.g. to a local Ollama on 127.0.0.1:11434) overrides the claude.ai OAuth
@@ -96,7 +128,7 @@ if [ "${BODHI_EVAL_USE_MAX:-1}" = "1" ]; then
 else
   EVAL_ENV=(env)
 fi
-echo "== bodhikit LLM evals — runtime: $RUNTIME  model: $EVAL_MODEL  (a pass certifies this executor only)"
+echo "== bodhikit LLM evals — runtime: $RUNTIME  model: ${EVAL_MODEL:-(codex default from config.toml)}  (a pass certifies this executor only)"
 
 # Learner-departure nudge (1.14.0). Even with SYS_HARNESS, the model sometimes
 # ends its turn at a natural dialogue boundary awaiting the learner's reply —
@@ -119,10 +151,104 @@ NUDGE_MSG="(headless harness — the learner has left the session: no live reply
 #              so transcripts/config never touch the contributor's machine.
 # run_headless_continue <home> <cwd> <maxturns> <outfile>
 #   The learner-departure nudge: `claude -p --continue` / `bodhi --resume`.
+# --- Codex runtime helpers (1.23.1) ------------------------------------------
+#
+# codex_prepare_home <home>
+#   A sandboxed CODEX_HOME under the run's temp dir, laid out AS the built
+#   package (skills/, references/, scripts/, rules/ at its root). Two reasons:
+#   Codex discovers user-scoped skills at $CODEX_HOME/skills/<name>/SKILL.md,
+#   and the runtime adapter resolves <BODHIKIT_PLUGIN_ROOT> as two directories
+#   above an installed SKILL.md — so this layout makes the references and the
+#   state script resolvable exactly as the adapter prescribes, with no
+#   marketplace registration. auth.json and config.toml are copied from the
+#   real CODEX_HOME so the login carries over and nothing else does (the
+#   contributor's own sessions never mix with a run). SYS_HARNESS goes in
+#   $CODEX_HOME/AGENTS.md, Codex's user-scoped instructions file — the
+#   equivalent of --append-system-prompt.
+# codex_prompt "/bodhikit:<skill> <rest>"  →  "$<skill> <rest>"
+#   Codex skills are invoked with a `$name` mention.
+# codex_filter <events.jsonl> <outfile> <stream|plain>
+#   `codex exec --json` streams JSONL events. The filter re-emits them in the
+#   shapes assert_scenario.assistant_text already reads for bodhi-cli — a
+#   `delta` per agent message, a `tool` per command execution carrying the full
+#   command — so the transcript detectors work unchanged. Error and turn-failure
+#   events are appended as text so truncated_by_limit still sees a usage-limit
+#   message. In plain mode every agent message is written (the claude path
+#   writes only the final result; a superset is harmless to the assertions).
+#
+# Known limits, stated rather than hidden: Codex has no --max-turns, so the
+# scenario turn cap is not enforced on this runtime; the exact `codex exec`
+# flag spellings below were written without network access to the Codex CLI
+# reference and are to be confirmed on the first local run (adjust here, not
+# in the scenarios).
+CODEX_EVAL_HOME=""
+codex_prepare_home() {
+  CODEX_EVAL_HOME="$1/codex-home"
+  [ -d "$CODEX_EVAL_HOME" ] && return   # the nudge reuses the run's home
+  mkdir -p "$CODEX_EVAL_HOME"
+  cp -R "$OPENAI_PACKAGE"/. "$CODEX_EVAL_HOME"/
+  real_home="${CODEX_HOME:-$HOME/.codex}"
+  for f in auth.json config.toml; do
+    [ -f "$real_home/$f" ] && cp "$real_home/$f" "$CODEX_EVAL_HOME/$f"
+  done
+  printf '%s\n' "$SYS_HARNESS" > "$CODEX_EVAL_HOME/AGENTS.md"
+}
+codex_prompt() {
+  cp_line="${1#/bodhikit:}"
+  printf '$%s' "$cp_line"
+}
+codex_filter() {
+  python3 - "$1" "$2" "$3" <<'PYF'
+import json, sys
+src, out, mode = sys.argv[1:4]
+texts, lines = [], []
+for raw in open(src, encoding="utf-8"):
+    raw = raw.strip()
+    if not raw:
+        continue
+    try:
+        ev = json.loads(raw)
+    except json.JSONDecodeError:
+        continue
+    kind = ev.get("type", "")
+    item = ev.get("item") if isinstance(ev.get("item"), dict) else None
+    if kind == "item.completed" and item:
+        if item.get("type") == "agent_message" and isinstance(item.get("text"), str):
+            texts.append(item["text"]); lines.append({"type": "delta", "text": item["text"]})
+        elif item.get("type") == "command_execution" and isinstance(item.get("command"), str):
+            lines.append({"type": "tool", "name": "Bash", "input": {"command": item["command"]}})
+    elif kind in ("error", "turn.failed"):
+        err = ev.get("error") if isinstance(ev.get("error"), dict) else {}
+        msg = str(ev.get("message") or err.get("message") or raw)
+        texts.append(msg); lines.append({"type": "delta", "text": msg})
+with open(out, "a", encoding="utf-8") as f:
+    if mode == "stream":
+        for l in lines:
+            f.write(json.dumps(l) + "\n")
+    else:
+        f.write("\n".join(texts) + "\n")
+PYF
+}
+
 LAST_SKILL=""
 run_headless() {
   hl_home="$1"; hl_cwd="$2"; hl_prompt="$3"; hl_maxturns="$4"; hl_out="$5"; hl_stream="${6:-}"
-  if [ "$RUNTIME" = "bodhi-cli" ]; then
+  if [ "$RUNTIME" = "codex" ]; then
+    codex_prepare_home "$hl_home"
+    # --dangerously-bypass-approvals-and-sandbox mirrors the claude path's
+    # --dangerously-skip-permissions: the run is confined to a throwaway copy
+    # of the fixture, and a sandboxed run could not execute bodhi-state and
+    # would silently certify the manual fallback instead of the executor.
+    ( cd "$hl_cwd" && \
+      CODEX_HOME="$CODEX_EVAL_HOME" codex exec \
+        --cd "$hl_cwd" --skip-git-repo-check \
+        --dangerously-bypass-approvals-and-sandbox \
+        ${EVAL_MODEL:+--model "$EVAL_MODEL"} \
+        --json \
+        "$(codex_prompt "$hl_prompt")" \
+        > "$hl_home/codex-events.jsonl" 2>"$hl_home/codex-stderr.txt" )
+    codex_filter "$hl_home/codex-events.jsonl" "$hl_out" "${hl_stream:-plain}"
+  elif [ "$RUNTIME" = "bodhi-cli" ]; then
     hl_line="${hl_prompt#/bodhikit:}"
     LAST_SKILL="${hl_line%% *}"
     hl_rest="${hl_line#"$LAST_SKILL"}"; hl_rest="${hl_rest# }"
@@ -172,7 +298,20 @@ LAST_SESSION_ID=""
 
 run_headless_continue() {
   hl_home="$1"; hl_cwd="$2"; hl_maxturns="$3"; hl_out="$4"
-  if [ "$RUNTIME" = "bodhi-cli" ]; then
+  if [ "$RUNTIME" = "codex" ]; then
+    # `codex exec resume --last` picks the newest session in CODEX_HOME — the
+    # run's own, because the home is per run.
+    ( cd "$hl_cwd" && \
+      CODEX_HOME="$CODEX_EVAL_HOME" codex exec \
+        --cd "$hl_cwd" --skip-git-repo-check \
+        --dangerously-bypass-approvals-and-sandbox \
+        ${EVAL_MODEL:+--model "$EVAL_MODEL"} \
+        --json \
+        resume --last "$NUDGE_MSG" \
+        > "$hl_home/codex-events.nudge.jsonl" 2>>"$hl_home/codex-stderr.txt" )
+    printf '\n-- nudge --\n' >> "$hl_out"
+    codex_filter "$hl_home/codex-events.nudge.jsonl" "$hl_out" plain
+  elif [ "$RUNTIME" = "bodhi-cli" ]; then
     ( cd "$hl_cwd" && \
       HOME="$hl_home" BODHI_CONTENT_ROOT="$REPO" "$CLI_TSX" "$BODHI_CLI_ROOT/src/cli/index.ts" "$LAST_SKILL" \
         --resume --prompt "$NUDGE_MSG" \
