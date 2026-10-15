@@ -378,7 +378,7 @@ Expect ~60–90 minutes for the full Day 1: discovery, ~8 assessment questions, 
 
 #### `/bodhikit:teach [topic|next]`
 
-**What it does.** Proactive guided teaching of a single concept. Follows **I Do → We Do → You Do**: BodhiKit explains the concept, walks you through a sample together, then gives you an exercise calibrated to your Bloom level. Verifies retention with 2–3 questions at the end. If you get stuck, the [Analogy-Escalation Protocol](#when-bodhikit-reaches-for-an-analogy) fires.
+**What it does.** Proactive guided teaching of a single concept. It opens with one guess-first question, then names the three to six words the lesson will use (one plain line each, the ones you have met marked), and only then follows **I Do → We Do → You Do**: BodhiKit explains the concept, walks you through a sample together, then gives you an exercise calibrated to your Bloom level. Verifies retention with 2–3 questions at the end. If you get stuck, the [Analogy-Escalation Protocol](#when-bodhikit-reaches-for-an-analogy) fires.
 
 **When to use.** You want focused instruction on a specific concept (e.g., `/teach pattern matching`). Auto-invoked by `/continue` for the next-untaught concept in your plan.
 
@@ -395,7 +395,7 @@ Expect ~60–90 minutes for the full Day 1: discovery, ~8 assessment questions, 
 ```
 > "Lifetimes. Let us start with why they exist. A reference points at memory owned by something else — and that something else can disappear. The compiler needs to know how long a reference is valid so it never points at memory that has been freed. Lifetimes are the syntax for telling the compiler 'this reference is valid as long as that data is alive.' Here is a tiny example, then we will build one together, then you will write one alone."
 
-**Pedagogy:** [ZPD / Gradual Release](#3-zone-of-proximal-development-vygotsky), [Bloom](#1-blooms-taxonomy), [Feynman](#4-feynman-technique), [Desirable Difficulties](#6-desirable-difficulties-bjork).
+**Pedagogy:** [ZPD / Gradual Release](#3-zone-of-proximal-development-vygotsky), [Bloom](#1-blooms-taxonomy), [Feynman](#4-feynman-technique), [Desirable Difficulties](#6-desirable-difficulties-bjork), [Vocabulary Preview](#13-vocabulary-preview-marzano-beck-mckeown--kucan-ausubel).
 
 #### `/bodhikit:reflect`
 
@@ -425,7 +425,7 @@ These three skills let you see what you know, what you have planned, and where y
 
 #### `/bodhikit:progress [quick|all|project-name]`
 
-**What it does.** Three views on the same question, at three depths. **`quick`**: a flourish-free 3-line check-in (project, current module + completion, streak, concepts due today) — this is what `/continue` shows first. **No argument** (or a project name): the full dashboard — module completion with mastery %, a per-module tier (**Solid** / **Working** / **Introduced**), per-concept positions as outcome clauses (e.g. *you can apply it in working code with some guidance*) with a one-line legend of the rung names, spaced-review retention by box, confidence calibration once you have tagged quiz answers, and a growth-trajectory closing. **`all`**: a one-line-per-project table across active, stale, and dormant tracks with health flags (unmigrated files, broken JSON, incomplete layouts).
+**What it does.** Three views on the same question, at three depths. **`quick`**: a flourish-free 3-line check-in (project, *Module 3 of 8* with its name and completion, streak, concepts due today) — this is what `/continue` shows first. **No argument** (or a project name): the full dashboard — the syllabus in plan order with each module's status, a per-module tier (**Solid** / **Working** / **Introduced**), mastered count and next review (the same rows `/plan view` shows), a *waiting for their review day* count so a quiet board reads as the schedule working rather than you being stuck, per-concept positions as outcome clauses (e.g. *you can apply it in working code with some guidance*) with a one-line legend of the rung names, spaced-review retention by box, confidence calibration once you have tagged quiz answers, and a growth-trajectory closing. **`all`**: a one-line-per-project table across active, stale, and dormant tracks with health flags (unmigrated files, broken JSON, incomplete layouts).
 
 **When to use.** `quick` when you want "where am I?" without committing to a session. The dashboard weekly or bi-weekly to take stock, or before deciding whether to push forward or shore up foundations. `all` when you run multiple projects and want the portfolio view.
 
@@ -448,7 +448,7 @@ These three skills let you see what you know, what you have planned, and where y
 
 #### `/bodhikit:plan [view|adjust|regenerate]`
 
-**What it does.** Read, adjust, or regenerate your learning plan. `view` (default) prints `plan/README.md` plus the current phase. `adjust` opens a focused conversation about pace or scope — extend a phase, reorder modules, drop a sub-topic, change cadence. `regenerate` runs a fresh skill assessment and rebuilds the plan from current Bloom levels.
+**What it does.** Read, adjust, or regenerate your learning plan. `view` (default) prints the syllabus as one table — every module in order, which are done, which you are on (*Module 3 of 8*), how the finished ones went, and when each comes up for review — plus the spiral revisits. `adjust` opens a focused conversation about pace or scope — extend a phase, reorder modules, drop a sub-topic, change cadence. `regenerate` runs a fresh skill assessment and rebuilds the plan from current Bloom levels.
 
 **When to use.** `view` — when you want to see where you are heading. `adjust` — when life happened (busy week, faster pace, scope creep). `regenerate` — when the original plan has drifted too far from reality (typically after 3+ months or a major skill shift).
 
@@ -948,6 +948,23 @@ If you only have time for one paragraph: **BodhiKit's job is to make the next mo
 
 ---
 
+### 13. Vocabulary Preview (Marzano; Beck, McKeown & Kucan; Ausubel)
+
+**What it is.** Naming the words a lesson will use before the lesson — three to six domain terms, one plain line each — and then having the learner *use* one of them rather than define it. Teaching a passage's vocabulary before the passage raises comprehension of that passage with a large effect (Stahl & Fairbanks, 1986); a short list presented first also acts as an advance organizer (Ausubel, 1960).
+
+**Why BodhiKit uses it.** A lesson that introduces six terms in passing asks working memory to hold the words *and* the idea. Naming them first turns them into labelled slots the explanation fills. Learners asked for it directly: they wanted to see the vocabulary a session would use up front.
+
+**When it fires.**
+- `/teach` Phase 2: after the guess-first question (a term list before it would leak the answer), before the explanation. The checkpoint asks you to use one term in a sentence about your own code.
+- The revision sheet carries the list under *Words*, with your own restatement where you gave one.
+- `/learn` may write a *Key terms* line per module in the plan; `/teach` starts from it when present.
+
+**Go deeper.**
+- Steven Stahl and Marilyn Fairbanks, *The effects of vocabulary instruction: A model-based meta-analysis* (1986).
+- Robert Marzano and Debra Pickering, *Building Academic Vocabulary* (2005) — the six-step process; Isabel Beck, Margaret McKeown and Linda Kucan, *Bringing Words to Life* (2002) — which words are worth it.
+
+---
+
 ### 7. Growth Mindset (Dweck)
 
 **What it is.** Whether learners believe ability is fixed or developable changes how they respond to difficulty. Fixed-mindset learners avoid challenge (failure threatens identity); growth-mindset learners seek it (challenge is the path to growth).
@@ -1055,7 +1072,7 @@ If you only have time for one paragraph: **BodhiKit's job is to make the next mo
 |---|---|
 | Day 1 — `/learn` onboarding | Bloom (assessment), Constructivism (start by building, not reading) |
 | Daily — `/continue` rhythm | Spaced Repetition (due reviews), ZPD (next-concept calibration) |
-| Teaching a concept — `/teach` | ZPD (Gradual Release), Feynman (explain-back), Bloom (exercise calibration), Desirable Difficulties (interleaving) |
+| Teaching a concept — `/teach` | ZPD (Gradual Release), Vocabulary Preview (words first), Feynman (explain-back), Bloom (exercise calibration), Desirable Difficulties (interleaving) |
 | A concept stalls — `/teach` understanding-only, analogy protocol | Feynman (4-step refinement), ZPD (Beyond signals → protocol fires) |
 | Honest self-assessment — `/reflect`, `/forget` | Metacognition, Growth Mindset, Spaced Repetition (box updates) |
 | Hands-on building — `/practice`, `/pair` | Deliberate Practice, Pair Programming, Constructivism |
