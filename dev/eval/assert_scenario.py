@@ -981,21 +981,43 @@ def assert_quiz_unlabelled(project, transcript):
 
 
 # Vocabulary preview (1.24.0): the words block sits after the pretest and
-# before the explanation, carries 3-6 bolded terms, and the day's sheet has a
-# `## Words` section. The transcript checks are drift detectors; the sheet
-# check is file state.
+# before the explanation, carries 3-6 terms one per line, and the day's sheet
+# has a `## Words` section. The transcript checks are drift detectors over
+# learner-facing prose — never the tool renderings, where an executor that
+# reads skills through the shell (Codex: `rg ... Vocabulary`) names the block
+# before the lesson starts; the sheet check is file state.
 WORDS_BLOCK_RE = re.compile(r"(Words (for|you.ll meet|to know) today|Words for this (lesson|session)|Today.s words|Vocabulary( preview)?)\b", re.I)
-# One term per line: a list marker, the term in bold or backticks (code
-# inside bold allowed), an optional short mark such as "(met before)" or
-# "✓", then the separator before the plain-words line.
-TERM_LINE_RE = re.compile(r"^\s*(?:[-*]|\d+\.)\s+(?:\*\*`?|`)([^*`\n]{2,60}?)(?:`?\*\*|`)[^\n—–:-]{0,40}?[—–:-]", re.M)
+# One term per line ("one plain line each" — the list marker and the bold or
+# backticks are optional): the term, an optional short mark such as "(WAL)",
+# "(met before)" or "✓", then the separator before the plain-words line.
+TERM_LINE_RE = re.compile(
+    r"^\s*(?:(?:[-*•]|\d+\.)\s+)?(?:\*\*`?|`)?"
+    r"([^*`\n—–:()✓]{2,60}?)"
+    r"(?:\s*\([^)\n]{0,30}\))?(?:`?\*\*|`)?(?:\s*\([^)\n]{0,30}\)|\s*✓)?"
+    r"\s*(?:[—–:]|\s-)\s+\S")
 EXPLANATION_RE = re.compile(r"(?i)(^\s*#{1,4}\s*(I Do|Why|The idea|Explanation)\b|```)", re.M)
+
+
+def previewed_terms(block):
+    """The first run of term lines after the block's header line: intro lines
+    before it are skipped, blank lines inside it are allowed, and the first
+    other line ends it (a scripted learner reply, the explanation)."""
+    terms = []
+    for line in block.split("\n")[1:]:
+        if not line.strip():
+            continue
+        m = TERM_LINE_RE.match(line)
+        if m:
+            terms.append(m.group(1).strip())
+        elif terms:
+            break
+    return terms
 
 
 def assert_teach_vocabulary(project, transcript):
     """First-exposure /teach: pretest → words block (3-6 terms) → explanation;
     the revision sheet carries `## Words`."""
-    text = assistant_text(transcript)
+    text = assistant_prose(transcript)
     if not text.strip():
         fail("empty transcript — run did not produce assistant output")
     pre = PRETEST_RE.search(text)
@@ -1015,13 +1037,12 @@ def assert_teach_vocabulary(project, transcript):
     nxt = EXPLANATION_RE.search(block)
     if nxt:
         block = block[:nxt.start()]
-    terms = TERM_LINE_RE.findall(block)
+    terms = previewed_terms(block)
     if not 3 <= len(terms) <= 6:
-        fail(f"words block lists {len(terms)} bolded/backticked terms ({terms}); the rule is 3–6, "
+        fail(f"words block lists {len(terms)} terms ({terms}); the rule is 3–6, "
              "one plain line each")
     ok(f"{len(terms)} terms previewed: {terms}")
-    prose = assistant_prose(transcript)
-    m = BARE_LEVEL_RE.search(prose)
+    m = BARE_LEVEL_RE.search(text)
     if m:
         fail(f"learner-facing text quotes a bare level/box ({m.group(0)!r})")
     ok("no bare Bloom/Box numbers in learner-facing text")
