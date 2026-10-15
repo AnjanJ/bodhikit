@@ -977,6 +977,101 @@ def assert_quiz_unlabelled(project, transcript):
     ok(f"graded reviews recorded for {reviewed}")
 
 
+# Vocabulary preview (1.24.0): the words block sits after the pretest and
+# before the explanation, carries 3-6 bolded terms, and the day's sheet has a
+# `## Words` section. The transcript checks are drift detectors; the sheet
+# check is file state.
+WORDS_BLOCK_RE = re.compile(r"^\s*(?:#{1,4}\s*|\*\*)?\s*(Words (for|you.ll meet|to know) today|Words for this (lesson|session)|Today.s words|Vocabulary( preview)?)\b.*$", re.M | re.I)
+TERM_LINE_RE = re.compile(r"^\s*(?:[-*]|\d+\.)\s+(?:\*\*|`)([^*`\n]{2,60})(?:\*\*|`)\s*[—–:-]", re.M)
+EXPLANATION_RE = re.compile(r"(?i)(^\s*#{1,4}\s*(I Do|Why|The idea|Explanation)\b|```)", re.M)
+
+
+def assert_teach_vocabulary(project, transcript):
+    """First-exposure /teach: pretest → words block (3-6 terms) → explanation;
+    the revision sheet carries `## Words`."""
+    text = assistant_text(transcript)
+    if not text.strip():
+        fail("empty transcript — run did not produce assistant output")
+    pre = PRETEST_RE.search(text)
+    if not pre:
+        fail("no pretest invitation found — the words block has nothing to follow")
+    ok("pretest invitation present")
+    words = WORDS_BLOCK_RE.search(text)
+    if not words:
+        fail("no 'Words for today' block found — the vocabulary preview was skipped "
+             "(difficulty-calibration KB *Vocabulary Preview*)")
+    ok(f"words block present ({words.group(1)!r})")
+    if words.start() < pre.start():
+        fail(f"words block at {words.start()} precedes the pretest at {pre.start()} — "
+             "the term list leaks the pretest; it goes after the guess")
+    ok("words block follows the pretest")
+    block = text[words.end():words.end() + 1800]
+    nxt = EXPLANATION_RE.search(block)
+    if nxt:
+        block = block[:nxt.start()]
+    terms = TERM_LINE_RE.findall(block)
+    if not 3 <= len(terms) <= 6:
+        fail(f"words block lists {len(terms)} bolded/backticked terms ({terms}); the rule is 3–6, "
+             "one plain line each")
+    ok(f"{len(terms)} terms previewed: {terms}")
+    prose = assistant_prose(transcript)
+    m = BARE_LEVEL_RE.search(prose)
+    if m:
+        fail(f"learner-facing text quotes a bare level/box ({m.group(0)!r})")
+    ok("no bare Bloom/Box numbers in learner-facing text")
+    assert_revision_sheet(project, must_mention=("Write-ahead logging",))
+    today = datetime.date.today().isoformat()
+    rev = os.path.join(project, "revision")
+    sheet = next(f for f in sorted(os.listdir(rev)) if f.startswith(today))
+    with open(os.path.join(rev, sheet)) as f:
+        sheet_text = f.read()
+    if "## Words" not in sheet_text:
+        fail("revision sheet has no '## Words' section — the previewed terms did not "
+             "reach the take-home (references/revision-sheet.md)")
+    section = sheet_text.split("## Words", 1)[1].split("\n## ", 1)[0]
+    carried = [t for t in terms if t.strip().lower() in section.lower()]
+    if len(carried) < 2:
+        fail(f"revision sheet's Words section carries {len(carried)} of the {len(terms)} "
+             f"previewed terms — expected the lesson's list")
+    ok(f"revision sheet Words section carries {len(carried)}/{len(terms)} previewed terms")
+
+
+# Syllabus view (1.24.0): /plan view renders the script's rows in plan order
+# with the position line, and never a bare level or box.
+PLAN_POSITION_RE = re.compile(r"Module\s+(\d+)\s+of\s+(\d+)", re.I)
+SYLLABUS_CALL_RE = re.compile(r"bodhi-state[^\n\]]*\bsyllabus\b")
+
+
+def assert_plan_view(project, transcript):
+    text = assistant_text(transcript)
+    if not text.strip():
+        fail("empty transcript — run did not produce assistant output")
+    if not SYLLABUS_CALL_RE.search(text):
+        fail("no `bodhi-state syllabus` call — /plan view rebuilt the table from the "
+             "phase files instead of the script's rows")
+    ok("bodhi-state syllabus was run")
+    prose = assistant_prose(transcript)
+    pos = PLAN_POSITION_RE.search(prose)
+    if not pos or (pos.group(1), pos.group(2)) != ("3", "3"):
+        fail(f"position line missing or wrong ({pos.group(0) if pos else None!r}); "
+             "the fixture's current module is the 3rd of 3")
+    ok("position line reads Module 3 of 3")
+    # Order is read from the table, not from the position line above it,
+    # which names the current module first by design.
+    table = re.search(r"^\s*\|", prose, re.M)
+    start = table.start() if table else 0
+    order = [prose.lower().find(n, start) for n in ("schema design", "indexing", "query optimization")]
+    if min(order) < 0:
+        fail(f"a plan module is missing from the view (positions {order})")
+    if order != sorted(order):
+        fail(f"modules are not in plan order (positions {order})")
+    ok("all three modules present, in plan order")
+    m = BARE_LEVEL_RE.search(prose)
+    if m:
+        fail(f"learner-facing text quotes a bare level/box ({m.group(0)!r})")
+    ok("no bare Bloom/Box numbers in learner-facing text")
+
+
 def main():
     name, project = sys.argv[1], sys.argv[2]
     transcript = sys.argv[3] if len(sys.argv) > 3 else None
@@ -999,7 +1094,9 @@ def main():
                        "continue-discovery": assert_continue_discovery,
                        "continue-gate": assert_continue_gate,
                        "kb-load": assert_kb_load,
-                       "quiz-unlabelled": assert_quiz_unlabelled}
+                       "quiz-unlabelled": assert_quiz_unlabelled,
+                       "teach-vocabulary": assert_teach_vocabulary,
+                       "plan-view": assert_plan_view}
     if name in with_transcript:
         if not transcript:
             fail(f"scenario {name} requires a transcript path")

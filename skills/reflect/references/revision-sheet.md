@@ -22,6 +22,9 @@ Project: <project> · Module: <module> · Session <N>
 ## The key idea, in plain words
 <2-4 sentences in the learner's own framing from today — the analogy that landed, the WHY. No undefined jargon.>
 
+## Words
+- **<term>** — <one plain line; the learner's own restatement when they gave one> (the terms previewed in the lesson — `difficulty-calibration` KB *Vocabulary Preview*; omit the section only when no lesson ran today)
+
 ## The example we worked through
 ```<lang>
 <the example actually shown or built today, annotated inline — split-attention rule>

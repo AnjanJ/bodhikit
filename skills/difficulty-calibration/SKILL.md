@@ -111,6 +111,19 @@ A special case of generation: asking the learner a question **before** the mater
 
 `/teach` Phase 2 opens with a pretest before the I-Do explanation.
 
+### Vocabulary Preview (Marzano; Beck, McKeown & Kucan; Ausubel)
+
+**Evidence tier: strong** for direct vocabulary instruction — teaching the words a passage uses, before the passage, raises comprehension of that passage with a large effect (Stahl & Fairbanks, *The effects of vocabulary instruction: a model-based meta-analysis*, 1986) — and **moderate** for the advance-organizer framing (Ausubel, *The use of advance organizers in the learning and retention of meaningful verbal material*, 1960; Luiten, Ames & Ackerson's 1980 meta-analysis finds a small, consistent benefit). Marzano's six-step process (Marzano & Pickering, *Building Academic Vocabulary*, 2005) is the classroom form: the teacher describes the term with an example, the learner restates it in their own words, then uses it. Beck, McKeown & Kucan (*Bringing Words to Life*, 2002) sort words into tiers; the ones worth previewing here are the domain's own (*Tier 3*: `index`, `planner`, `isolation level`), not everyday words.
+
+Why it matters for code: a lesson that introduces six new terms in passing asks working memory to hold the words *and* the idea — extraneous load in Sweller's sense. Naming the words first turns them into labelled slots the explanation fills. Rules:
+
+- **After the pretest, before the explanation.** The pretest needs the learner not to have seen the material; a term list would leak the answer. The preview is the bridge from the guess into the I-Do.
+- **Three to six terms, one plain line each,** every one a word the explanation will actually use, defined without another new term. Mark the ones the learner has met before (`progress.md`, the session brief). A module's `**Key terms:**` line in the plan, when `/learn` wrote one, is the starting list.
+- **Then use exactly those words.** A term that was not previewed is defined at its first use, not after.
+- **The checkpoint retrieves a word, not a definition:** "use *X* in a sentence about your own code" (Marzano step 2). A recited definition is the parrot the `feynman-technique` KB already grades; a sentence about their code is the word in use.
+- **The revision sheet carries the list** (`## Words`), with the learner's own restatement where they gave one, so tomorrow's reading has the labels.
+- **On a re-teach, preview only the terms the learner stumbled on.** Nothing is recorded; this is instruction, not assessment.
+
 ### Application
 
 - Never present 10 problems of the same type in a row (interleave)

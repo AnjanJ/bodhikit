@@ -116,6 +116,17 @@ assistant transcript:
   (`> Q1: …` or `**Question 1.** …`, up to the learner's reply) may name the
   concept it tests (stems for the three due fixture concepts), and both
   graded reviews land in the tracking file.
+- `teach-vocabulary` (1.24.0) — first-exposure `/teach` must list the words
+  for today after the pretest and before the explanation (3–6 bolded or
+  backticked terms, one line each), keep levels off the screen, and leave a
+  revision sheet whose `## Words` section carries the previewed terms (file
+  state). Detector exercised on synthetic transcripts: pass; words-before-
+  pretest, no block, and a two-term block each FAIL.
+- `plan-view` (1.24.0) — `/plan view` must run `bodhi-state syllabus`, print
+  the position line (`Module 3 of 3` on the fixture), list the three plan
+  modules in plan order, and quote no bare level or box. Read-only skill, so
+  transcript-only. Detector exercised on synthetic transcripts: pass; no
+  script call, modules out of order, and a Box leak each FAIL.
 - `teach-pretest` — first-exposure `/teach` must open with the ungraded
   guess-first question before the explanation, and must not record it.
 - `teach-hint-discipline` — after 3 failed hints and a demand for the full
@@ -165,6 +176,7 @@ a test. The run header prints the model; a pass certifies that executor only.
 | grade-pushback, grade-misconception | grading | 2026-09-29, `BODHI_EVAL_RUNS=3` each on the 1.23.0 tree (fable-5): pushback 3/3 PASS, `partial` at 1/1/1, box held; misconception 3/3 PASS, `incorrect` at 2/2/2 (box 3 → 1). Previously 2026-09-14, `BODHI_EVAL_RUNS=3` on the 1.21.0 tree (fable-5): pushback 3/3 PASS, `partial` at 1/1/1 with the box held through the escalation; misconception 3/3 PASS across two sweeps (2/3 then 1/1 after a usage-limit cut; the cut run had already recorded `incorrect` at 2, box 3 → 1, like the others). Previously 2026-09-03, both PASS (fable-5), first run since the 1.19.0 rubric rewrite: pushback held at tested-bloom 1 through the escalation, misconception not passed. Previously 1.14.0 sweep (sonnet-5) |
 | grade-understand-band | grading | 2026-09-29, `BODHI_EVAL_RUNS=3` on the 1.23.0 tree (fable-5), 3/3 PASS: `correct` at 2/2/2 (box 3 → 4). Previously 2026-09-14, `BODHI_EVAL_RUNS=3` on the 1.21.0 tree (fable-5), 3/3 PASS: `correct` at 2/2/2 (box 3 → 4), gate threshold not crossed. Previously 2026-09-04, single pass, PASS (fable-5): tested-bloom 2, gate threshold not crossed. Previously 2026-08-26, `BODHI_EVAL_RUNS=3`, 3/3 PASS (fable-5): tested-bloom 2/2/2, gate threshold not crossed (1.18.0 first run: 2) |
 | quiz-unlabelled | fidelity | 2026-09-30, first live runs on the 1.23.0 tree (fable-5): 2 PASS. A run between them FAILED on the detector, not the skill: it printed each question once as "**Question n.**" with the reply beneath and never re-quoted it as "> Qn:", so 0 questions were found; the detector now reads question blocks, and that transcript passes. Every run's questions stated a situation (an ignored index in an EXPLAIN plan; which of two queries can use an index) and named the concept only in the verdict. |
+| teach-vocabulary, plan-view | fidelity | never run against a live model (added 1.24.0; detectors exercised on synthetic transcripts only) |
 | teach-pretest | fidelity | 2026-09-30 PASS on the 1.23.0 tree (fable-5). The two runs before it (09-29, 09-30) were refused on turn 1 by the API safeguards (`[reasoning_extraction]`); the prompt no longer asks for the dialogue "verbatim". Previously 2026-09-04 PASS (fable-5) on the 1.20.0 tree (first attempt on 2026-09-03 was cut off by the usage limit). Previously 1.18.0 PASS (fable-5) |
 | teach-hint-discipline | fidelity | 2026-09-30 PASS on the 1.23.0 tree (fable-5), after the same safeguard refusal and prompt rewording as teach-pretest. Previously 2026-09-04 PASS (fable-5) on the 1.20.0 tree: re-teach signal, artifacts shown, no unearned `correct`. Previously 1.18.0 PASS (fable-5) after the "hint turn shows its artifact" detector was anchored to line-initial `Hint N` (first sample matched the word in the closing recap) |
 | continue-discovery | discovery | 1.14.1 (sonnet-5) |
