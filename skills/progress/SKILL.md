@@ -36,10 +36,12 @@ Parse `$ARGUMENTS` after stripping any `--invoked-from=<caller>` flag. The first
 Run ONE command — `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> snapshot` — and render from its `project`, `cadence`, and `review` sections. Zero tracking-file reads. No agents, no progress.md, no plans, no archives.
 
 ```
-📍 [project-name] | [current-module-name] | [overallCompletion]% complete
+📍 [project-name] | Module [k] of [n]: [current-module-name] | [overallCompletion]% complete
 🔥 Streak: [N] days | [N] concepts due for review today
 📅 Last session: [relative time, e.g., "yesterday", "2 days ago"]
 ```
+
+`Module [k] of [n]` comes from the snapshot's `project.position` (`index`, `of`); when it is `null` (no plan on disk, or the current module is not in it) print the bare `[current-module-name]` instead.
 
 If multiple projects exist (and not chained), add one line: "(You have [N] other learning projects — `/bodhikit:progress all` for the cross-project view.)"
 
@@ -75,11 +77,12 @@ If multiple projects exist (and not chained), add one line: "(You have [N] other
 Run ONE command for all numbers (per the `state-ops` KB write path) instead of hand-computing from tracking files:
 
 - `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> snapshot` — position + Bloom maps (`project`), session cadence (`cadence`), due lists + box distribution + 3-tier retention rollup (`review`), per-module mastery % + `blockedOnFeynman` + `blockedOnApplied` (`mastery`), and confidence calibration (`calibration`), in one JSON.
+- `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> syllabus` — the plan's modules in order with each one's status and evidence row; the Module Breakdown renders these rows per `references/module-row.md` in this skill's directory (`${CLAUDE_PLUGIN_ROOT}/skills/progress/references/module-row.md`), read when you reach that section.
 
 Then read ONE file:
 - `.bodhi/progress.md` — the live entry plus the "Summary of earlier sessions" block (do NOT follow archive pointers into `progress/archive/` by default — the summary block is the per-session digest). This is the narrative; the snapshot is the numbers.
 
-**Fallback:** if `bodhi-state` is unavailable, read `.bodhi/state.json` and `.bodhi/spaced-review.json` directly and compute per the `state-ops` KB mastery formula and legacy display rule.
+**Fallback:** if `bodhi-state` is unavailable, read `.bodhi/state.json`, `.bodhi/spaced-review.json` and the `### Module` headings of `.bodhi/plan/phase-*.md` directly and compute per the `state-ops` KB mastery formula and legacy display rule.
 
 **Reach into the archive only when justified.** If the learner asks for a long-view trajectory ("how have I progressed this year?", "what was happening in Module 1?"), follow the relevant pointers in the summary block and read those specific archive files. Announce which archive files you load.
 
@@ -96,16 +99,16 @@ Present the dashboard in this format:
 
 ### Current Position
 **Phase [N]:** [phase name]
-**Module:** [current module name]
+**Module:** [k] of [n] — [current module name]
 **Last Activity:** [description] ([date])
 
 ---
 
 ### Module Breakdown
 
-| Module | Status | Where you are | Mastered |
-|--------|--------|--------------|---------|
-| [name] | [Completed/In Progress/Upcoming] | [tier — outcome] | [N]/[M] |
+| # | Module | Status | Where you are | Mastered | Next review |
+|---|--------|--------|--------------|---------|-------------|
+| [id] | [name] | [Done / ◀ Current / Upcoming / Skipped] | [tier — outcome] | [N]/[M] | [date] |
 
 ---
 
@@ -140,25 +143,10 @@ Notes on the sections:
 - **If the snapshot's `mastery` section reports a non-empty `blockedOnFeynman` list**, render one line under the Module Breakdown: *"[N] concept(s) meet every mastery criterion except the explain-back gate: [names]. One `/teach <concept>` session (understanding-only is enough) completes each."* A quiz-only learner otherwise watches mastery sit at 0% with no visible reason.
 - **If it reports a non-empty `blockedOnApplied` list**, render one line beside it: *"[N] concept(s) you have explained and recalled to every bar but not yet built with since your last slip: [names]. One `/practice <concept>` exercise that runs completes each."* Same reason: a learner who only talks otherwise cannot see why *Solid* never arrives.
 - **If it reports a non-empty `masteredDueForCheck` list**, render one line: *"[N] solid concept(s) not checked in a while: [names]. A `/quiz` confirms they still hold — and if one has slipped, it comes back faster than it came the first time."* These stay solid in every count; the line is the prompt, not a demotion.
-- **Mastered `N/M`** comes from the snapshot's `mastery` section (computed by the script): `N` = that module's `mastered`, `M` = its `concepts`. The underlying predicate is the canonical formula from the `state-ops` KB (`mastered === true` requires `bloomLevel >= 4` AND `consecutiveCorrectAtL4Plus >= 3` AND `box >= 4` AND an explain-back and one working-code correct since the last miss; see `blooms-taxonomy` KB for the criteria). Render the count, not the percentage — `0/3` states a position, where `0%` reads as a score on a test the learner did not know they were taking. When the script reports `masteryPct: null`, display `—` in BOTH this column and *Where you are* — the legacy display rule: no v3 writer has classified the module's concepts yet, and any value would falsely imply the learner tried and fell short.
+- **The Module Breakdown is the `syllabus` output rendered row for row** per `references/module-row.md` — plan order, the script's `status`, then `unplanned` rows as `Not in plan`. Do not take its rows from the snapshot's `mastery.modules` (unordered, keyed by raw spelling) and do not infer a status from the files.
+- **Mastered `N/M`** comes from the module's evidence row (the same tally as the snapshot's `mastery` section, computed by the script): `N` = that module's `mastered`, `M` = its `concepts`. The underlying predicate is the canonical formula from the `state-ops` KB (`mastered === true` requires `bloomLevel >= 4` AND `consecutiveCorrectAtL4Plus >= 3` AND `box >= 4` AND an explain-back and one working-code correct since the last miss; see `blooms-taxonomy` KB for the criteria). Render the count, not the percentage — `0/3` states a position, where `0%` reads as a score on a test the learner did not know they were taking. When the script reports `masteryPct: null`, display `—` in BOTH this column and *Where you are* — the legacy display rule: no v3 writer has classified the module's concepts yet, and any value would falsely imply the learner tried and fell short.
 
-- **Where you are** names the learner's position in outcome terms. The plugin's internal scales (Bloom levels, Leitner boxes) are instructor-facing instruments — they belong in the KBs and the tracking files, not in a dashboard the learner reads. A number tells a learner they were graded; an outcome tells them what they can now do.
-
-  Read the module's `tiers` object from the snapshot's `mastery` section — `{unclassified, introduced, familiar, mastered}`, computed per concept by the script (`state-ops` KB, "Per-module tiers"; the ladder itself is canonical in the `blooms-taxonomy` KB, which also carries the tier→word mapping used below). Do NOT re-derive a tier from `mastered`/`classified`/`masteryPct`: those are rollups, the ladder is per concept, and inferring one from the other is what made this column coarser than its own data (1.14.x, follow-up F-1).
-
-  Render the module at its **lowest non-empty tier above `unclassified`** — the honest summary of a mixed module is where its weakest classified concept sits, not its best — and when more than one tier is occupied, name the spread:
-
-  | Module's `tiers` | Render |
-  |---|---|
-  | all `unclassified` (`masteryPct: null`) | `—` |
-  | `mastered == concepts`, `dueForCheck == 0` | `**Solid** — can debug it and explain the trade-offs` |
-  | `mastered == concepts`, `dueForCheck > 0` | `**Solid, due for a check** — can debug it and explain the trade-offs` |
-  | some `introduced` | `**Introduced** — can explain what it does` |
-  | otherwise (`familiar` is the floor) | `**Working** — can use it with guidance` |
-
-  Then append the spread when the module is not uniform: `(2 solid, 1 working)`, counting only classified concepts and using the learner-facing words. When the row's `applied` count is below its `classified` count, add `; built with N of M` from those two numbers, so explained-but-never-run concepts are visible without a level. A module reading `**Working** — can use it with guidance (2 solid, 1 working)` tells the learner both where the module stands and that most of it is further along — which the old single-tier column could not say.
-
-  Always render the tier WITH its outcome clause. The clause is the definition — it teaches the learner what the word means in terms of what they can do, and it is the first place they meet this vocabulary. A bare "Working" is a grade; "Working — can use it with guidance" is a position with a next step implied.
+- **Where you are** names the learner's position in outcome terms. The plugin's internal scales (Bloom levels, Leitner boxes) are instructor-facing instruments — they belong in the KBs and the tracking files, not in a dashboard the learner reads. A number tells a learner they were graded; an outcome tells them what they can now do. The column renders the row's `summaryTier` (the script's lowest-occupied-tier reading; `state-ops` KB *Per-module tiers*; the ladder and the tier→word mapping are the `blooms-taxonomy` KB's) with its spread and its `built with N of M` per `references/module-row.md`. Do NOT re-derive a tier from `mastered`/`classified`/`masteryPct`: those are rollups, the ladder is per concept, and inferring one from the other is what made this column coarser than its own data.
 
   Per-concept positions elsewhere in the dashboard are outcome clauses (`bloomOutcome`), not rung names. The full dashboard prints the `bloomScale` legend from `snapshot` once, as one compact line per rung (`**Apply** — you can apply it in working code with some guidance`), so the words have a definition the one time they appear; that legend and the growth line below are the only places `/progress` speaks a rung's name (`blooms-taxonomy` KB *Learner-Facing Rendering*). `quick` and `all` print neither.
 

@@ -1767,6 +1767,39 @@ def read_plan_modules(project):
     return phases, modules
 
 
+def plan_position(state, plan):
+    """Index of the current module in the plan's order: state.json
+    currentModule by name or id, else currentModuleIndex, else None. The
+    second and third cases carry a warning. Shared by `syllabus` and
+    `snapshot` (whose `project.position` is what /continue's check-in
+    prints), so "Module 3 of 8" has one home."""
+    warnings = []
+    cur_name = norm_module_name(state.get("currentModule"))
+    for i, m in enumerate(plan):
+        if cur_name and (norm_module_name(m["name"]) == cur_name
+                         or m["id"] == str(state.get("currentModule", "")).strip()):
+            return i, warnings
+    if plan:
+        idx = state.get("currentModuleIndex")
+        if isinstance(idx, int) and not isinstance(idx, bool) and 0 <= idx < len(plan):
+            if cur_name:
+                warnings.append(f"state.json currentModule {state.get('currentModule')!r} "
+                                f"is not a plan module; position taken from "
+                                f"currentModuleIndex {idx}")
+            return idx, warnings
+        warnings.append("state.json names no plan module as current; every "
+                        "undeclared module reads as upcoming")
+    return None, warnings
+
+
+def position_row(plan, idx):
+    """The learner-facing position: 1-based index over all plan modules."""
+    if idx is None:
+        return None
+    return {"index": idx + 1, "of": len(plan),
+            "module": plan[idx]["name"], "phase": plan[idx]["phase"]}
+
+
 def summary_tier(tiers):
     """The /progress rendering rule in code: a mixed module reads at its
     lowest occupied tier above `unclassified`; all-unclassified is None."""
@@ -1843,25 +1876,8 @@ def cmd_syllabus(args):
         out["parked"] = entry["parked"]
         return out
 
-    # Position: the current module by name, else by index, else unknown.
-    cur_name = norm_module_name(state.get("currentModule"))
-    cur_idx = None
-    for i, m in enumerate(plan):
-        if cur_name and (norm_module_name(m["name"]) == cur_name
-                         or m["id"] == str(state.get("currentModule", "")).strip()):
-            cur_idx = i
-            break
-    if cur_idx is None and plan:
-        idx = state.get("currentModuleIndex")
-        if isinstance(idx, int) and not isinstance(idx, bool) and 0 <= idx < len(plan):
-            cur_idx = idx
-            if cur_name:
-                warnings.append(f"state.json currentModule {state.get('currentModule')!r} "
-                                f"is not a plan module; position taken from "
-                                f"currentModuleIndex {idx}")
-        else:
-            warnings.append("state.json names no plan module as current; every "
-                            "undeclared module reads as upcoming")
+    cur_idx, pos_warnings = plan_position(state, plan)
+    warnings.extend(pos_warnings)
 
     modules, matched_keys = [], set()
     for i, m in enumerate(plan):
@@ -1899,9 +1915,7 @@ def cmd_syllabus(args):
         "project": state.get("projectName"),
         "plan": phases is not None and bool(plan),
         "phases": phases,
-        "position": ({"index": cur_idx + 1, "of": len(plan),
-                      "module": plan[cur_idx]["name"], "phase": plan[cur_idx]["phase"]}
-                     if cur_idx is not None else None),
+        "position": position_row(plan, cur_idx),
         "currentPhase": state.get("currentPhase"),
         "overallCompletion": state.get("overallCompletion", 0),
         "counts": {"modules": len(plan),
@@ -1994,6 +2008,8 @@ def cmd_snapshot(args):
     calibration = calibration_summary(data)
     calibration.pop("overconfidentEvents", None)
     calibration.pop("underconfidentEvents", None)
+    _, plan = read_plan_modules(args.project)
+    plan_idx, _ = plan_position(state, plan)
 
     emit({
         "project": {
@@ -2003,6 +2019,7 @@ def cmd_snapshot(args):
             "currentPhase": state.get("currentPhase"),
             "currentModule": state.get("currentModule"),
             "currentModuleIndex": state.get("currentModuleIndex"),
+            "position": position_row(plan, plan_idx),
             "lastActivity": state.get("lastActivity"),
             "overallCompletion": state.get("overallCompletion", 0),
             "initialBloomLevel": state.get("initialBloomLevel", {}),

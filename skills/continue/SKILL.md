@@ -49,10 +49,12 @@ Which path shall we walk today?
 Run ONE command — `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> snapshot` — and render the check-in from its `project`, `cadence`, and `review` sections. No skill load, no tracking-file reads, no flourishes (this is `/progress quick`'s format; the skill itself is not invoked here — a 14 KB load to print three lines):
 
 ```
-📍 [project-name] | [current-module-name] | [overallCompletion]% complete
+📍 [project-name] | Module [k] of [n]: [current-module-name] | [overallCompletion]% complete
 🔥 Streak: [N] days | [N] concepts due for review today
 📅 Last session: [relative time, e.g., "yesterday", "2 days ago"]
 ```
+
+`Module [k] of [n]` is the snapshot's `project.position` (`index`, `of`); when it is `null` print the bare `[current-module-name]`. The learner sees where today sits in the whole syllabus before choosing what to do; `/bodhikit:plan` shows the full table.
 
 ---
 
