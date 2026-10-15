@@ -1677,6 +1677,244 @@ def slugify(text, limit=40):
     return out[:limit].rstrip("-") or "session"
 
 
+# --- syllabus (1.24.0) ------------------------------------------------------
+# The plan says the order; the review file says the evidence; state.json says
+# the position. No skill could join the three reliably in prose: /plan view
+# read every phase file and showed order with no performance, /progress
+# showed per-module tiers with no order (its modules come from the review
+# file), and "where am I and how did I do" needs both. One read-only call.
+
+PHASE_FILE_RE = re.compile(r"^phase-(\d+)\.md$")
+MODULE_HEADING_RE = re.compile(r"^###\s+Module\s+(\d+)\.(\d+)\s*(?:[—–:-]+\s*)?(.*?)\s*$")
+MODULE_LINE_RE = re.compile(
+    r"^\s*\*\*(Status|Target Bloom(?:'s)?(?: level)?|Concepts)\s*:?\*\*\s*:?\s*(.+?)\s*$",
+    re.IGNORECASE)
+MODULE_STATUS_WORDS = {"skipped": "skipped", "completed": "done", "done": "done",
+                       "complete": "done"}
+
+
+def norm_module_name(s):
+    """Join key for a module name: a `Module 1.2 — ` prefix dropped, whitespace
+    collapsed, case folded. Concept rows carry whatever `--module` was passed,
+    so the join tolerates the executor's spelling."""
+    if not isinstance(s, str):
+        return ""
+    s = re.sub(r"^\s*module\s+\d+\.\d+\s*[—–:-]*\s*", "", s, flags=re.IGNORECASE)
+    return re.sub(r"\s+", " ", s).strip().casefold()
+
+
+def parse_bloom_target(val):
+    """`3`, `3 (Apply)`, `Apply` → 3; anything else None."""
+    m = re.search(r"\b([1-6])\b", val)
+    if m:
+        return int(m.group(1))
+    low = val.casefold()
+    for lvl, label in BLOOM_LABELS.items():
+        if label and label.casefold() in low:
+            return lvl
+    return None
+
+
+def read_plan_modules(project):
+    """The plan's module order from plan/phase-*.md (state-schema KB *plan/*):
+    `### Module <N>.<M> — <name>` headings in phase-number order, with the
+    optional `**Status:**`, `**Target Bloom's:**` and `**Concepts:**` lines
+    of each section. Returns (phases, modules) or (None, []) with no plan/."""
+    pdir = os.path.join(project, ".bodhi", "plan")
+    if not os.path.isdir(pdir):
+        return None, []
+    files = []
+    for f in os.listdir(pdir):
+        m = PHASE_FILE_RE.match(f)
+        if m:
+            files.append((int(m.group(1)), f))
+    phases, modules = [], []
+    for n, f in sorted(files):
+        try:
+            with open(os.path.join(pdir, f), encoding="utf-8") as fh:
+                text = fh.read()
+        except OSError:
+            continue
+        title = next((ln[2:].strip() for ln in text.splitlines()
+                      if ln.startswith("# ")), f"Phase {n}")
+        cur, count = None, 0
+        for line in text.splitlines():
+            m = MODULE_HEADING_RE.match(line)
+            if m:
+                mid = f"{m.group(1)}.{m.group(2)}"
+                cur = {"phase": n, "id": mid, "name": m.group(3) or f"Module {mid}",
+                       "file": f, "declaredStatus": None, "targetBloom": None,
+                       "plannedConcepts": []}
+                modules.append(cur)
+                count += 1
+                continue
+            if line.startswith("## ") or line.startswith("# "):
+                cur = None
+            if cur is None:
+                continue
+            ml = MODULE_LINE_RE.match(line)
+            if not ml:
+                continue
+            key, val = ml.group(1).casefold(), ml.group(2)
+            if key == "status":
+                word = val.split()[0].strip(" .,;:()").casefold() if val.split() else ""
+                cur["declaredStatus"] = MODULE_STATUS_WORDS.get(word)
+            elif key.startswith("target bloom"):
+                cur["targetBloom"] = parse_bloom_target(val)
+            elif key == "concepts":
+                cur["plannedConcepts"] = [x.strip() for x in val.split(",") if x.strip()]
+        phases.append({"phase": n, "title": title, "file": f, "modules": count})
+    return phases, modules
+
+
+def summary_tier(tiers):
+    """The /progress rendering rule in code: a mixed module reads at its
+    lowest occupied tier above `unclassified`; all-unclassified is None."""
+    for key in ("introduced", "familiar", "mastered"):
+        if tiers.get(key, 0) > 0:
+            return key
+    return None
+
+
+def cmd_syllabus(args):
+    """Plan order × review evidence × state position, one read-only call.
+    Every module the plan declares, in order, with its status (declared
+    `skipped`/`done`, else `done`/`current`/`upcoming` from the position the
+    plugin already tracks), the review file's module row, the earliest next
+    review and today's due count. Modules on either side that the other side
+    does not know are reported, never dropped: `untracked` names plan modules
+    no concept was tracked under (not reached yet, or a spelling the review
+    file does not use); `unplanned` carries the rows of tracked modules the
+    plan does not declare, so no evidence disappears from a dashboard."""
+    state = state_if_present(args.project, {})
+    _, data = load_spaced_review(args.project, create=True)
+    t = today()
+    concepts = data.get("concepts", [])
+    warnings = []
+
+    phases, plan = read_plan_modules(args.project)
+    if phases is None:
+        warnings.append("no .bodhi/plan/ directory — a pre-1.7.0 monolithic "
+                        "plan.md is not read; /housekeep migrate converts it")
+        phases = []
+    elif not plan:
+        warnings.append("plan/ has no `### Module N.M — name` headings; "
+                        "nothing to order")
+
+    # Evidence per tracked module, by join key — the same tally `mastery`
+    # and `snapshot` use, re-keyed so "schema design" and "Schema Design"
+    # are one module here (the rollup keys by the raw spelling).
+    tracked = {}
+    for c in concepts:
+        raw = c.get("module", "(none)")
+        entry = tracked.setdefault(norm_module_name(raw),
+                                   {"module": raw, "aliases": [], "row": new_module_row(),
+                                    "nextDue": None, "dueToday": 0, "parked": 0})
+        if raw != entry["module"] and raw not in entry["aliases"]:
+            entry["aliases"].append(raw)
+        tally_module(entry["row"], c, t)
+        if c.get("parked") is True:
+            entry["parked"] += 1
+            continue
+        nr = parse_date(c.get("nextReview"))
+        if nr is None:
+            continue
+        if nr <= t:
+            entry["dueToday"] += 1
+        if entry["nextDue"] is None or nr < entry["nextDue"]:
+            entry["nextDue"] = nr
+    finalize_module_rows({k: e["row"] for k, e in tracked.items()})
+
+    def evidence(entry):
+        if entry is None:
+            return {"tracked": False, "concepts": 0, "classified": 0, "applied": 0,
+                    "mastered": 0, "dueForCheck": 0, "masteryPct": None,
+                    "tiers": new_module_row()["tiers"], "summaryTier": None,
+                    "nextDue": None, "dueToday": 0, "parked": 0}
+        row = entry["row"]
+        out = {"tracked": True, "trackedAs": entry["module"]}
+        if entry["aliases"]:
+            out["trackedAlso"] = entry["aliases"]
+        out.update({k: row[k] for k in ("concepts", "classified", "applied", "mastered",
+                                        "dueForCheck", "masteryPct", "tiers")})
+        out["summaryTier"] = summary_tier(row["tiers"])
+        out["nextDue"] = iso(entry["nextDue"]) if entry["nextDue"] else None
+        out["dueToday"] = entry["dueToday"]
+        out["parked"] = entry["parked"]
+        return out
+
+    # Position: the current module by name, else by index, else unknown.
+    cur_name = norm_module_name(state.get("currentModule"))
+    cur_idx = None
+    for i, m in enumerate(plan):
+        if cur_name and (norm_module_name(m["name"]) == cur_name
+                         or m["id"] == str(state.get("currentModule", "")).strip()):
+            cur_idx = i
+            break
+    if cur_idx is None and plan:
+        idx = state.get("currentModuleIndex")
+        if isinstance(idx, int) and not isinstance(idx, bool) and 0 <= idx < len(plan):
+            cur_idx = idx
+            if cur_name:
+                warnings.append(f"state.json currentModule {state.get('currentModule')!r} "
+                                f"is not a plan module; position taken from "
+                                f"currentModuleIndex {idx}")
+        else:
+            warnings.append("state.json names no plan module as current; every "
+                            "undeclared module reads as upcoming")
+
+    modules, matched_keys = [], set()
+    for i, m in enumerate(plan):
+        key = norm_module_name(m["name"])
+        entry = tracked.get(key) or tracked.get(m["id"])
+        if entry is not None:
+            matched_keys.add(norm_module_name(entry["module"]))
+        if m["declaredStatus"]:
+            status, source = m["declaredStatus"], "declared"
+        elif cur_idx is None:
+            status, source = "upcoming", "unknown-position"
+        elif i < cur_idx:
+            status, source = "done", "plan-order"
+        elif i == cur_idx:
+            status, source = "current", "plan-order"
+        else:
+            status, source = "upcoming", "plan-order"
+        row = {"index": i + 1, "phase": m["phase"], "id": m["id"], "name": m["name"],
+               "status": status, "statusSource": source,
+               "targetBloom": m["targetBloom"], "plannedConcepts": m["plannedConcepts"],
+               "file": m["file"]}
+        if m["targetBloom"] is not None:
+            tb = bloom_render(m["targetBloom"])
+            row["targetBloomLabel"] = tb["bloomLabel"]
+            row["targetBloomOutcome"] = tb["bloomOutcome"]
+        row["evidence"] = evidence(entry)
+        modules.append(row)
+
+    untracked = [m["name"] for m in modules if not m["evidence"]["tracked"]]
+    unplanned = [{"module": e["module"], **{k: v for k, v in evidence(e).items()
+                                            if k not in ("tracked", "trackedAs")}}
+                 for k, e in tracked.items() if k not in matched_keys]
+
+    emit({
+        "project": state.get("projectName"),
+        "plan": phases is not None and bool(plan),
+        "phases": phases,
+        "position": ({"index": cur_idx + 1, "of": len(plan),
+                      "module": plan[cur_idx]["name"], "phase": plan[cur_idx]["phase"]}
+                     if cur_idx is not None else None),
+        "currentPhase": state.get("currentPhase"),
+        "overallCompletion": state.get("overallCompletion", 0),
+        "counts": {"modules": len(plan),
+                   "done": sum(1 for m in modules if m["status"] == "done"),
+                   "skipped": sum(1 for m in modules if m["status"] == "skipped"),
+                   "upcoming": sum(1 for m in modules if m["status"] == "upcoming")},
+        "modules": modules,
+        "untracked": untracked,
+        "unplanned": unplanned,
+        "warnings": warnings,
+    })
+
+
 def cmd_revision_brief(args):
     """What today's revision sheet is about (1.18.0). Read-only.
 
@@ -2503,7 +2741,8 @@ def cmd_verify(args):
 
 READ_ONLY_COMMANDS = {cmd_due, cmd_mastery, cmd_calibration, cmd_retention,
                       cmd_export_anonymized, cmd_session_brief, cmd_snapshot,
-                      cmd_gate_check, cmd_verify, cmd_revision_brief}
+                      cmd_gate_check, cmd_verify, cmd_revision_brief,
+                      cmd_syllabus}
 
 def main():
     p = argparse.ArgumentParser(prog="bodhi-state", description=__doc__,
@@ -2668,6 +2907,10 @@ def main():
     s = sub.add_parser("snapshot",
                        help="single-call dashboard rollup for /progress: position, cadence, due, mastery, calibration (read-only)")
     s.set_defaults(fn=cmd_snapshot)
+
+    s = sub.add_parser("syllabus",
+                       help="plan order × review evidence × position: every plan module in order with status and module evidence (read-only)")
+    s.set_defaults(fn=cmd_syllabus)
 
     s = sub.add_parser("revision-brief",
                        help="today's studied concepts + the revision sheet file to write (read-only)")

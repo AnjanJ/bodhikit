@@ -2330,6 +2330,155 @@ def t_revision_brief():
         check("brief: read-only (no lock file created)", not os.path.exists(lock))
 
 
+def write_plan(proj, files):
+    pdir = os.path.join(proj, ".bodhi", "plan")
+    os.makedirs(pdir, exist_ok=True)
+    for name, text in files.items():
+        with open(os.path.join(pdir, name), "w") as f:
+            f.write(text)
+
+
+SYLLABUS_PLAN = {
+    "README.md": "# Learning Plan — testing\n\n**Current phase:** 1\n",
+    "phase-2.md": (
+        "# Phase 2 — Deeper\n\n## Spiral Revisits\n\n- **Joins** — again.\n\n## Modules\n\n"
+        "### Module 2.1: Transactions\n**Target Bloom's:** 4 (Analyze)\n"
+        "**Concepts:** Isolation levels, Deadlocks\n\n"
+        "### Module 2.2 — Replication\n**Target Bloom's:** Evaluate\n\n"
+        "### Not a module heading 2.3 — Sharding\n"),
+    "phase-1.md": (
+        "# Phase 1 — Foundations\n\n## Modules\n\n"
+        "### Module 1.1 — Schema Design\nProse only.\n\n"
+        "### Module 1.2 — Indexing\n**Status:** skipped (verified 2026-03-01)\n\n"
+        "**Prerequisites for next module:** B-tree indexes\n\n"
+        "### Module 1.3 — Query   Optimization\n**Status:** in progress\n"),
+}
+
+
+def t_syllabus():
+    with tempfile.TemporaryDirectory() as root:
+        sr = {"version": 3, "sessionHistory": [], "concepts": [
+            # Schema Design: one introduced, one familiar → summary "introduced"
+            {"name": "Normalization", "module": "schema design", "box": 1, "bloomLevel": 2,
+             "nextReview": "2026-01-03", "lastReviewed": "2026-01-02", "feynmanPassed": False,
+             "consecutiveCorrectAtL4Plus": 0, "reviewHistory": []},
+            {"name": "Denormalization", "module": "Schema Design", "box": 3, "bloomLevel": 3,
+             "nextReview": "2026-01-01", "lastReviewed": "2025-12-25", "feynmanPassed": False,
+             "consecutiveCorrectAtL4Plus": 0, "reviewHistory": []},
+            # Indexing (skipped in the plan) still carries evidence; one parked.
+            {"name": "B-tree indexes", "module": "Module 1.2 — Indexing", "box": 2, "bloomLevel": 3,
+             "nextReview": "2026-01-10", "lastReviewed": "2026-01-07", "feynmanPassed": False,
+             "consecutiveCorrectAtL4Plus": 0, "reviewHistory": []},
+            {"name": "Hash indexes", "module": "Indexing", "box": 1, "bloomLevel": 0,
+             "nextReview": "2026-01-01", "parked": True, "feynmanPassed": False,
+             "consecutiveCorrectAtL4Plus": 0, "reviewHistory": []},
+            # A module the plan never declared.
+            {"name": "Window functions", "module": "Analytics", "box": 1, "bloomLevel": 1,
+             "nextReview": "2026-01-05", "feynmanPassed": False,
+             "consecutiveCorrectAtL4Plus": 0, "reviewHistory": []},
+        ]}
+        state = {"version": 2, "projectName": "proj", "sessionDates": [],
+                 "currentPhase": "1", "currentModule": "Query Optimization",
+                 "currentModuleIndex": 2, "overallCompletion": 40}
+        proj = make_project(root, spaced_review=sr, state=state)
+        write_plan(proj, SYLLABUS_PLAN)
+        out = run(proj, "syllabus", on="2026-01-02")
+        names = [m["name"] for m in out["modules"]]
+        check("syllabus: modules in phase-file order, headings parsed with any separator",
+              names == ["Schema Design", "Indexing", "Query   Optimization",
+                        "Transactions", "Replication"], names)
+        check("syllabus: a line that is not a `### Module N.M` heading is ignored",
+              "Sharding" not in json.dumps(out), names)
+        check("syllabus: phases summarised in order with module counts",
+              [(p["phase"], p["modules"]) for p in out["phases"]] == [(1, 3), (2, 2)],
+              out["phases"])
+        statuses = [(m["name"], m["status"], m["statusSource"]) for m in out["modules"]]
+        check("syllabus: position from currentModule; before=done, after=upcoming",
+              statuses == [("Schema Design", "done", "plan-order"),
+                           ("Indexing", "skipped", "declared"),
+                           ("Query   Optimization", "current", "plan-order"),
+                           ("Transactions", "upcoming", "plan-order"),
+                           ("Replication", "upcoming", "plan-order")], statuses)
+        check("syllabus: an unknown Status word does not override plan-order status",
+              out["modules"][2]["status"] == "current", out["modules"][2])
+        check("syllabus: position is 1-based over all plan modules",
+              out["position"] == {"index": 3, "of": 5, "module": "Query   Optimization", "phase": 1},
+              out["position"])
+        check("syllabus: counts", out["counts"] == {"modules": 5, "done": 1, "skipped": 1, "upcoming": 2},
+              out["counts"])
+        sd = out["modules"][0]["evidence"]
+        check("syllabus: join is case- and whitespace-insensitive and merges both spellings",
+              sd["tracked"] and sd["concepts"] == 2 and sd["classified"] == 2, sd)
+        check("syllabus: summaryTier is the lowest occupied tier above unclassified",
+              sd["summaryTier"] == "introduced" and sd["tiers"]["familiar"] == 1, sd)
+        check("syllabus: nextDue is the earliest schedule; dueToday counts due-or-overdue",
+              sd["nextDue"] == "2026-01-01" and sd["dueToday"] == 1, sd)
+        ix = out["modules"][1]["evidence"]
+        check("syllabus: a `Module 1.2 — ` prefix on a concept's module still joins",
+              ix["tracked"] and ix["concepts"] == 2 and ix["trackedAs"] in ("Module 1.2 — Indexing", "Indexing"), ix)
+        check("syllabus: parked concepts counted, excluded from nextDue/dueToday",
+              ix["parked"] == 1 and ix["nextDue"] == "2026-01-10" and ix["dueToday"] == 0, ix)
+        tr = out["modules"][3]
+        check("syllabus: target Bloom parsed from a number and rendered with label and outcome",
+              tr["targetBloom"] == 4 and tr["targetBloomLabel"] == "Analyze"
+              and tr["targetBloomOutcome"].startswith("you can reason"), tr)
+        check("syllabus: target Bloom parsed from a label word",
+              out["modules"][4]["targetBloom"] == 5, out["modules"][4])
+        check("syllabus: planned concepts list parsed",
+              tr["plannedConcepts"] == ["Isolation levels", "Deadlocks"], tr)
+        check("syllabus: an untracked plan module has an empty, shaped evidence block",
+              tr["evidence"]["tracked"] is False and tr["evidence"]["concepts"] == 0
+              and tr["evidence"]["tiers"] == {"unclassified": 0, "introduced": 0, "familiar": 0, "mastered": 0},
+              tr["evidence"])
+        check("syllabus: untracked names the plan modules with no concepts",
+              out["untracked"] == ["Query   Optimization", "Transactions", "Replication"], out["untracked"])
+        check("syllabus: unplanned carries the tracked module the plan never declared, with its row",
+              [u["module"] for u in out["unplanned"]] == ["Analytics"]
+              and out["unplanned"][0]["concepts"] == 1 and out["unplanned"][0]["nextDue"] == "2026-01-05",
+              out["unplanned"])
+        check("syllabus: no warnings on a well-formed project", out["warnings"] == [], out["warnings"])
+        check("syllabus: read-only — no lock file, review file unchanged",
+              not any(n.endswith(".lock") for n in os.listdir(os.path.join(proj, ".bodhi")))
+              and read_sr(proj) == sr, os.listdir(os.path.join(proj, ".bodhi")))
+
+        # Position fallbacks.
+        state2 = dict(state, currentModule="Something Else", currentModuleIndex=1)
+        with open(os.path.join(proj, ".bodhi", "state.json"), "w") as f:
+            json.dump(state2, f)
+        out = run(proj, "syllabus", on="2026-01-02")
+        check("syllabus: unknown currentModule falls back to currentModuleIndex with a warning",
+              out["position"]["index"] == 2 and out["modules"][1]["status"] == "skipped"
+              and out["modules"][0]["status"] == "done" and out["modules"][2]["status"] == "upcoming"
+              and any("currentModuleIndex" in w for w in out["warnings"]), out)
+        state3 = dict(state, currentModule=None, currentModuleIndex=None)
+        with open(os.path.join(proj, ".bodhi", "state.json"), "w") as f:
+            json.dump(state3, f)
+        out = run(proj, "syllabus", on="2026-01-02")
+        check("syllabus: no position → position null, undeclared modules upcoming, warned",
+              out["position"] is None
+              and [m["status"] for m in out["modules"]] == ["upcoming", "skipped", "upcoming", "upcoming", "upcoming"]
+              and any("no plan module as current" in w for w in out["warnings"]), out)
+        state4 = dict(state, currentModule="1.2")
+        with open(os.path.join(proj, ".bodhi", "state.json"), "w") as f:
+            json.dump(state4, f)
+        out = run(proj, "syllabus", on="2026-01-02")
+        check("syllabus: currentModule may be the module id",
+              out["position"]["index"] == 2, out["position"])
+
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review=json.loads(json.dumps(V2_SR)))
+        out = run(proj, "syllabus")
+        check("syllabus: no plan/ directory → plan false, every tracked module unplanned, warned",
+              out["plan"] is False and out["modules"] == [] and out["position"] is None
+              and [u["module"] for u in out["unplanned"]] == ["Module A"]
+              and any("no .bodhi/plan/" in w for w in out["warnings"]), out)
+        write_plan(proj, {"phase-1.md": "# Phase 1\n\nNo headings here.\n"})
+        out = run(proj, "syllabus")
+        check("syllabus: plan/ without module headings → warned, nothing ordered",
+              out["plan"] is False and out["phases"] == [{"phase": 1, "title": "Phase 1", "file": "phase-1.md", "modules": 0}]
+              and any("no `### Module" in w for w in out["warnings"]), out)
+
+
 def t_due_shape():
     """`due` is the surface skills narrate from: it carries dueSince /
     overdueDays / bloomOutcome / priority and never a box or Bloom number
@@ -2794,7 +2943,8 @@ def main():
               t_due_shape, t_same_day_promotion, t_due_gated_promotion,
               t_mastered_due_for_check, t_feynman_after_last_miss,
               t_gate_seeded_module, t_exposure_routes, t_add_concept_bloom,
-              t_verify_implies_readers, t_history_cap_keeps_facts):
+              t_verify_implies_readers, t_history_cap_keeps_facts,
+              t_syllabus):
         print(f"-- {t.__name__}")
         try:
             t()

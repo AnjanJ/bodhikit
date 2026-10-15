@@ -28,7 +28,7 @@ The learner's accumulated work is sacred — nothing is deleted, nothing is gate
 
 ## Fallback Discipline (script unavailable, or a declared manual carve-out)
 
-Only after BOTH the `${CLAUDE_PLUGIN_ROOT}` path and the `find ~/.claude/plugins` lookup come up empty (per the `state-ops` KB), say so plainly, then perform the minimal write by hand following this KB's shapes — Read the file, mutate the parsed JSON in place preserving every unknown field, fill the three v3 per-concept defaults on any concept missing them and set `version: 3` (read-tolerance — the eval harness caught a manual fallback skipping exactly this), Write it back, re-read to verify. Never re-serialize from a schema template.
+Only after BOTH the `${CLAUDE_PLUGIN_ROOT}` path and the `find ~/.claude/plugins` lookup come up empty (per the `state-ops` KB), say so plainly, then perform the minimal write by hand following this KB's shapes — Read the file, mutate the parsed JSON in place preserving every unknown field, fill the three v3 per-concept defaults on any concept missing them and set `version: 3` (read-tolerance), Write it back, re-read to verify. Never re-serialize from a schema template.
 
 The same read → mutate-in-place → write → verify discipline applies to the declared manual carve-outs even when the script is available.
 
@@ -105,7 +105,7 @@ Sectional. Generated at plan creation; rewritten only by `/plan regenerate`.
 
 `plan/README.md`: arc overview — current phase pointer, target arc, pace, bulleted phase list with `→ phase-<N>.md` pointers.
 
-`plan/phase-{N}.md`: per-phase goals, duration, success criteria, then `### Module <N>.<M> — <name>` sections with concepts, exercises, success markers. From Module 2 onward each module section carries a `**Prerequisites for next module:**` line naming the concepts the next module builds on (feeds `gate-check --prereqs`).
+`plan/phase-{N}.md`: per-phase goals, duration, success criteria, then `### Module <N>.<M> — <name>` sections with concepts, exercises, success markers. From Module 2 onward each module section carries a `**Prerequisites for next module:**` line naming the concepts the next module builds on (feeds `gate-check --prereqs`). `bodhi-state syllabus` reads the headings in phase order and, inside each section, the optional `**Status:** skipped|completed`, `**Target Bloom's:**` and `**Concepts:**` lines; `spaced-review.json[].module` joins on the heading name (case and spacing ignored).
 
 ### `learningWithBodhi/<project>/.bodhi/spaced-review.json`
 
@@ -160,7 +160,7 @@ Whole JSON; written exclusively through `bodhi-state`. `/housekeep` does not rot
 
 These fields, plus one `applied` correct since the last miss, feed the canonical mastery formula, computed by `bodhi-state mastery` and documented in the `state-ops` KB. Skills MUST NOT redefine it inline; see `blooms-taxonomy` KB for the underlying criteria.
 
-**Legacy fallthrough (v2 → v3).** A concept with `bloomLevel: 0` has never been classified by a v3 writer — regardless of `lastReviewed` (real v2 data routinely has populated `lastReviewed` from pre-v3 quizzes; the 1.10.0 rule that also required `lastReviewed: null` was wrong and was corrected in 1.10.7). Gates treat `bloomLevel: 0` as "no opinion yet, allow advancement"; `/progress` displays `—` (not 0%) for modules where every concept is at `bloomLevel: 0`. `bodhi-state` implements both rules.
+**Legacy fallthrough (v2 → v3).** A concept with `bloomLevel: 0` has never been classified by a v3 writer — regardless of `lastReviewed`, which real v2 data populates from pre-v3 quizzes. Gates treat `bloomLevel: 0` as "no opinion yet, allow advancement"; `/progress` displays `—` (not 0%) for modules where every concept is at `bloomLevel: 0`. `bodhi-state` implements both rules.
 
 ### `learningWithBodhi/<project>/.bodhi/assessment-history.json`
 
@@ -261,7 +261,7 @@ Per-project metadata, loaded only by cross-project skills (`/mentor`, `/evaluate
 }
 ```
 
-Writers: since 1.16.0 the project-list mutations go through `bodhi-state` — `profile-add-project` (`/learn` append on project start; creates this file if missing), `profile-update-project` (`/evaluate` refresh of the active entry), `profile-complete-project` (`/evaluate` on confirmed completion; `/learn` Phase 1.5(c) replace-archive via `--status`). `/mentor` writes career fields in the parent profile only. The entry shapes above are constructed by those subcommands and checked by `verify`; hand-editing these files is fallback-only (script unavailable — apply the Fallback discipline above).
+Writers: since 1.16.0 the project-list mutations go through `bodhi-state` — `profile-add-project` (`/learn` append on project start; creates this file if missing), `profile-update-project` (`/evaluate` refresh of the active entry), `profile-complete-project` (`/evaluate` on confirmed completion; `/learn` Phase 1.5(c) replace-archive via `--status`). `/mentor` writes career fields in the parent profile only. The entry shapes above are constructed by those subcommands and checked by `verify`; hand-editing is fallback-only (apply the Fallback discipline above).
 
 ## Schema-Evolution Rules
 
