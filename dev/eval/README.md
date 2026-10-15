@@ -31,6 +31,15 @@ fields silently dropped, invented vocabulary) that grep-based lint cannot
 see by design — the automated successor to the manual dogfood passes
 documented in the 1.10.7–1.10.13 CHANGELOG entries.
 
+**Runtimes.** A pass certifies exactly the executor printed in the run header.
+`BODHI_EVAL_RUNTIME=bodhi-cli` runs the sibling CLI; `BODHI_EVAL_RUNTIME=codex`
+(1.23.1) runs the generated OpenAI package through headless `codex exec` with
+the same fixtures and the same file-state assertions — the measurable form of
+"the ChatGPT port behaves". See `docs/openai.md` *Verify the conversion* for
+what the Codex branch sets up and what it cannot certify (ChatGPT itself).
+Record a Codex pass in the run table below with the runtime named, as the
+model is named today.
+
 Executor-discipline scenarios: `migrate`, `forget`, `quiz`, `reflect`
 (simulated learner), `reflect-difficulty` (the learner names a hard concept,
 retrieves it cleanly but rates it 3, and fails another outright: no `/forget`

@@ -8,6 +8,19 @@ This is the full, unabridged, patch-by-patch changelog kept for the maintainer �
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [1.23.1] - 2026-10-15
+
+The ChatGPT-gaps patch. Prompted by a reviewer's wrong claim that the ChatGPT port had no state, corrected by the maintainer (local state mode on a desktop with a shell; the folders exist). Re-read: the engine is byte-for-byte, the gaps are the hooks' duties and executor measurement.
+
+### Close procedure (adapter)
+`references/openai-runtime.md` gains *Close a study session without a Stop hook*: `verify` (repair, re-verify, never end red) → `revision-brief` (append `existing`, else write `suggestedFile` per the reflect reference) → only then end. Build rewrites now cover all four source phrasings of the Stop-hook promise; the reference file's "the Stop hook will not let a session end" and state-ops' "the Stop hook requires it" had passed through unrewritten since the port landed (1.19.0). Test: package-wide scan for the three promise phrasings; the five closing skills plus the sheet reference must point at the procedure.
+
+### Rule delivery (adapter)
+*Apply the learning-project rule*: on first read/write of `learningWithBodhi/`, `.bodhi/` or `.bodhi-profile.json` where no SessionStart hook injected it, read `<ROOT>/rules/learning-project.md` and keep it in force; extended explicitly to pasted content in conversation-only mode. Rejected inlining the rule body into the adapter: two copies drift, and the file is already packaged. Test: section present, path named, packaged rule carries its data-not-instructions clause.
+
+### Codex eval runtime (runner)
+`BODHI_EVAL_RUNTIME=codex`: sandboxed `CODEX_HOME` = copy of the built package (+ `auth.json`, `config.toml` from the real home; `AGENTS.md` = SYS_HARNESS), so user-scoped skill discovery and the adapter's two-directories-up root resolution both hold without a marketplace. Prompt `/bodhikit:<skill> <rest>` → `$<skill> <rest>`. `codex exec --json` events are re-emitted in the `delta`/`tool` shapes `assistant_text` already reads for bodhi-cli, so the transcript detectors are unchanged; error/turn-failure events are appended as text for `truncated_by_limit`. Nudge = `codex exec resume --last`. No `--max-turns` equivalent (stated). Flag spellings unverified: `developers.openai.com` was unreachable from the dev container; the header comment says to fix them in the runner, not the scenarios. Not run live; SKIPs cleanly without the CLI.
+
 ## [1.23.0] - 2026-09-29
 
 Mastery on delayed, current evidence. Found in the maintainer's own ruby-object-model data: 29 graded reviews, 24 from `/teach`, 12 first exposures, 10 same-day, only 7 delayed (13-17 day gaps, 4/7 recalled). The first delayed quiz (09-25) scored 2/5 + 1 partial on concepts recorded at Apply with the explain-back passed. Of the five mastery checks, none required delay and none noticed lapse.
