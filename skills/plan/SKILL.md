@@ -36,13 +36,13 @@ Present:
 
 **Where you are:** Module [position.index] of [position.of] — [position.module] (Phase [position.phase]) · [overallCompletion]% complete
 
-| # | Module | Status | How it went | Mastered | Next review |
-|---|--------|--------|-------------|----------|-------------|
+| # | Module | Status | Where you are | Mastered | Next review |
+|---|--------|--------|---------------|----------|-------------|
 | [id] | [name] | [Done / ◀ Current / Upcoming / Skipped] | [tier — outcome, per the reference] | [N]/[M] | [date] |
 [… one row per `modules[]` entry, then any `unplanned[]` rows as `Not in plan`]
 
 ### Spiral Revisits
-- [Concepts from earlier phases that reappear in later phases at a higher target Bloom level — surface them from the per-phase plan files. Each line: "<concept>: phase {N} (Bloom <X>) → phase {M} (Bloom <Y>)". This is the constructivism KB's spiral-curriculum mechanic made visible.]
+- [Concepts from earlier phases that reappear in later phases at a higher target level — surface them from the per-phase plan files. Each line: "<concept>: phase {N} (<outcome clause reached>) → phase {M} (<outcome clause targeted>)", the clauses from the `blooms-taxonomy` KB *Learner-Facing Rendering* table — the plan file stores the number, the learner reads what they will be able to do. This is the constructivism KB's spiral-curriculum mechanic made visible.]
 ```
 
 When `position` is `null`, say so in one line ("The plan does not name your current module — `/bodhikit:plan adjust` can set it") and render the table anyway. When `untracked` names a module that is `done`, note it once: nothing was recorded for it, so its row shows `—`. Surface any `warnings` in one line each.

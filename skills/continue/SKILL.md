@@ -54,7 +54,7 @@ Run ONE command — `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <proj
 📅 Last session: [relative time, e.g., "yesterday", "2 days ago"]
 ```
 
-`Module [k] of [n]` is the snapshot's `project.position` (`index`, `of`); when it is `null` print the bare `[current-module-name]`. The learner sees where today sits in the whole syllabus before choosing what to do; `/bodhikit:plan` shows the full table.
+`Module [k] of [n]` is the snapshot's `project.position` (`index`, `of`) and `[current-module-name]` its `module`; when `position` is `null` print the bare `currentModule`. The learner sees where today sits in the whole syllabus before choosing what to do; `/bodhikit:plan` shows the full table.
 
 ---
 

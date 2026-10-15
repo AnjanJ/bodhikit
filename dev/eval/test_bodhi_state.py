@@ -2479,6 +2479,61 @@ def t_syllabus():
         check("syllabus: currentModule may be the module id",
               out["position"]["index"] == 2, out["position"])
 
+    # Review findings on the first cut (2026-10-15): robustness of the plan reader.
+    with tempfile.TemporaryDirectory() as root:
+        sr = {"version": 3, "sessionHistory": [], "concepts": [
+            {"name": "B-tree indexes", "module": "Indexing", "box": 2, "bloomLevel": 3,
+             "nextReview": "2026-01-10", "lastReviewed": "2026-01-07", "feynmanPassed": False,
+             "consecutiveCorrectAtL4Plus": 0, "reviewHistory": []},
+            {"name": "Unscheduled thing", "module": "Indexing", "box": 1, "bloomLevel": 0,
+             "nextReview": None, "feynmanPassed": False,
+             "consecutiveCorrectAtL4Plus": 0, "reviewHistory": []},
+        ]}
+        state = {"version": 2, "projectName": "proj", "sessionDates": [],
+                 "currentPhase": "2", "currentModule": "Indexing", "currentModuleIndex": "3",
+                 "overallCompletion": 0}
+        proj = make_project(root, spaced_review=sr, state=state)
+        write_plan(proj, {
+            "phase-1.md": ("# Phase 1 \xe9 caf\xe9\n\n## Modules\n\n### Module 1.1 — Schema Design\n"
+                           "```markdown\n### Module 9.9 — In Fence\n```\n"
+                           "### Module 1.2 — Indexing\n- **Status:** ✅ completed\n\n### Module 1.3\n"),
+            "phase-2.md": "# Phase 2\n\n## Modules\n\n### Module 2.1 — Indexing\n(spiral revisit)\n",
+        })
+        # A Latin-1 byte in a plan file: write it raw.
+        with open(os.path.join(proj, ".bodhi", "plan", "phase-1.md"), "rb") as f:
+            raw = f.read().replace(b"\\xe9", b"\xe9")
+        with open(os.path.join(proj, ".bodhi", "plan", "phase-1.md"), "wb") as f:
+            f.write(raw)
+        out = run(proj, "syllabus", on="2026-01-02")
+        names = [m["name"] for m in out["modules"]]
+        check("syllabus: a non-UTF-8 byte in a plan file is replaced, never a crash",
+              "Schema Design" in names, out.get("_raw", names))
+        check("syllabus: a heading inside a fenced code block is not a module",
+              "In Fence" not in names, names)
+        check("syllabus: a bulleted Status line with an emoji before the word is read",
+              out["modules"][1]["status"] == "done" and out["modules"][1]["statusSource"] == "declared",
+              out["modules"][1])
+        check("syllabus: a nameless heading keeps 'Module 1.3' as its name",
+              out["modules"][2]["name"] == "Module 1.3", out["modules"][2])
+        check("syllabus: a repeated module name resolves to the current phase's occurrence",
+              out["position"] == {"index": 4, "of": 4, "module": "Indexing", "phase": 2}
+              and [m["status"] for m in out["modules"]] == ["done", "done", "done", "current"],
+              out)
+        check("syllabus: a digit-string currentModuleIndex is accepted as a fallback",
+              run(proj, "syllabus", on="2026-01-02")["warnings"] == [], out["warnings"])
+        snap = run(proj, "snapshot", on="2026-01-02")
+        check("snapshot: a concept with no nextReview is counted as unscheduled, so the rows sum to concepts",
+              snap["review"]["unscheduled"] == 1
+              and snap["review"]["unscheduled"] + snap["review"]["waitingForReviewDay"]
+              + snap["review"]["dueToday"] + snap["review"]["parked"]
+              + snap["review"]["unparseableDates"] == snap["review"]["concepts"], snap["review"])
+        state2 = dict(state, currentModule="Module 1.3", currentPhase="1")
+        with open(os.path.join(proj, ".bodhi", "state.json"), "w") as f:
+            json.dump(state2, f)
+        out = run(proj, "syllabus", on="2026-01-02")
+        check("syllabus: currentModule 'Module 1.3' matches the nameless heading by id",
+              out["position"]["index"] == 3, out["position"])
+
     with tempfile.TemporaryDirectory() as root:
         proj = make_project(root, spaced_review=json.loads(json.dumps(V2_SR)))
         out = run(proj, "syllabus")

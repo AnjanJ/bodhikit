@@ -41,7 +41,7 @@ Run ONE command — `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <proj
 📅 Last session: [relative time, e.g., "yesterday", "2 days ago"]
 ```
 
-`Module [k] of [n]` comes from the snapshot's `project.position` (`index`, `of`); when it is `null` (no plan on disk, or the current module is not in it) print the bare `[current-module-name]` instead.
+`Module [k] of [n]` comes from the snapshot's `project.position` (`index`, `of`), and `[current-module-name]` is its `module` (the plan's spelling); when `position` is `null` (no plan on disk, or the current module is not in it) print the bare `currentModule` instead.
 
 If multiple projects exist (and not chained), add one line: "(You have [N] other learning projects — `/bodhikit:progress all` for the cross-project view.)"
 
@@ -99,7 +99,7 @@ Present the dashboard in this format:
 
 ### Current Position
 **Phase [N]:** [phase name]
-**Module:** [k] of [n] — [current module name]
+**Module:** [k] of [n] — [position.module]  (when `position` is `null`: the bare `currentModule`)
 **Last Activity:** [description] ([date])
 
 ---
