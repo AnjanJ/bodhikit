@@ -2446,6 +2446,11 @@ def t_syllabus():
         snap = run(proj, "snapshot", on="2026-01-02")
         check("snapshot: project.position is the syllabus position (one home for 'Module k of n')",
               snap["project"]["position"] == out["position"], snap["project"])
+        check("snapshot: waitingForReviewDay counts scheduled-later concepts, not due or parked ones",
+              snap["review"]["waitingForReviewDay"] == 3 and snap["review"]["dueToday"] == 1
+              and snap["review"]["parked"] == 1
+              and snap["review"]["waitingForReviewDay"] + snap["review"]["dueToday"]
+              + snap["review"]["parked"] == snap["review"]["concepts"], snap["review"])
         check("syllabus: read-only — no lock file, review file unchanged",
               not any(n.endswith(".lock") for n in os.listdir(os.path.join(proj, ".bodhi")))
               and read_sr(proj) == sr, os.listdir(os.path.join(proj, ".bodhi")))

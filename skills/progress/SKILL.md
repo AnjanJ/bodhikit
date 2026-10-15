@@ -121,6 +121,7 @@ Present the dashboard in this format:
 | Strong retention (Box 4-5) | [N] | [list] |
 | Building retention (Box 2-3) | [N] | [list] |
 | Needs review (Box 1) | [N] | [list] |
+| Waiting for their review day | [N] | — |
 
 ---
 
@@ -154,6 +155,7 @@ Notes on the sections:
 
   Do NOT surface raw Bloom numbers or box numbers anywhere in learner-facing output. The one exception is `/evaluate`'s self-prediction question, which needs a shared numeric scale to compute `predictionDelta` — and it anchors the scale in the same breath.
 - **Spaced Repetition Health** uses the canonical 3-tier rollup from the `spaced-repetition` KB ("Retention Rollup Views"). Do not invent bucket boundaries.
+- **Waiting for their review day** is the snapshot's `review.waitingForReviewDay`: concepts scheduled later than today. When it is above zero and nothing is due, add one line: *"[N] concept(s) are between reviews — a correct answer before the review day is recorded but does not move anything, so a quiet dashboard here means the schedule is doing its job, not that you are stuck."* A learner who only teaches otherwise reads a flat board as failure (`spaced-repetition` KB: only a due review moves the box).
 - **Calibration** shows only when the script reports `taggedAnswers > 0`; reference the `metacognition` KB for framing — where confidence and outcomes disagree is the signal, never a scolding (e.g. "Your 'sure' answers on indexing held up; on the planner they did not. That gap, not the misses themselves, is the thing to watch.").
 - **Progress bar:** `[####........................]` at 0-25%, `[############................]` at 26-50%, `[####################........]` at 51-75%, `[############################]` at 76-100%.
 
