@@ -159,13 +159,27 @@ def neutralize(text: str, user_skill_names: set[str]) -> str:
     text = text.replace(
         "A session that studied something does not end without one — the Stop hook checks.",
         "A session that studied something should not end without one. Codex may "
-        "enforce this with the optional Stop hook; ChatGPT must complete it explicitly.",
+        "enforce this with the optional Stop hook; ChatGPT must complete it explicitly "
+        "(OpenAI runtime adapter, *Close a study session without a Stop hook*).",
     )
     text = text.replace(
         "The Stop hook will not let this session end without it once its bookkeeping "
         "(`touch-state`) has run.",
         "Codex may enforce this with the optional Stop hook after `touch-state`; "
-        "ChatGPT must complete it explicitly before ending.",
+        "ChatGPT must complete it explicitly before ending (OpenAI runtime adapter, "
+        "*Close a study session without a Stop hook*).",
+    )
+    text = text.replace(
+        "the Stop hook will not let a session end without it once this session has "
+        "closed the project's bookkeeping (`touch-state`).",
+        "Codex may enforce this with the optional Stop hook once this session has "
+        "closed the project's bookkeeping (`touch-state`); ChatGPT must complete it "
+        "explicitly (OpenAI runtime adapter, *Close a study session without a Stop hook*).",
+    )
+    text = text.replace(
+        "the Stop hook requires it on a day that studied something",
+        "the Stop hook (Codex) or the runtime adapter's close procedure (ChatGPT) "
+        "requires it on a day that studied something",
     )
     return text
 
