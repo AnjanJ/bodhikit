@@ -177,6 +177,16 @@ def neutralize(text: str, user_skill_names: set[str]) -> str:
         "explicitly (OpenAI runtime adapter, *Close a study session without a Stop hook*).",
     )
     text = text.replace(
+        "(`sessionToday`, `suggestedFile`, `existing`); the Stop hook reads it.",
+        "(`sessionToday`, `suggestedFile`, `existing`); the Stop hook (Codex) or the "
+        "runtime adapter's close procedure (ChatGPT) reads it.",
+    )
+    text = text.replace(
+        "the schema check the Stop hook and `dev/check.sh` run.",
+        "the schema check the Stop hook (Codex), the runtime adapter's close procedure "
+        "(ChatGPT) and `dev/check.sh` run.",
+    )
+    text = text.replace(
         "the Stop hook requires it on a day that studied something",
         "the Stop hook (Codex) or the runtime adapter's close procedure (ChatGPT) "
         "requires it on a day that studied something",

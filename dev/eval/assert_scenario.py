@@ -688,7 +688,10 @@ def assistant_prose(transcript_path):
                 texts.append(RECAP_RE.split(ev["result"], 1)[0])
             elif ev.get("type") == "delta" and isinstance(ev.get("text"), str):
                 texts.append(ev["text"])
-    return "\n".join(texts)
+    # bodhi-cli and codex transcripts stream one delta per message, so the
+    # recap can only be cut from the joined text (per-block above is right
+    # for claude's whole-message blocks).
+    return RECAP_RE.split("\n".join(texts), 1)[0]
 
 
 BARE_LEVEL_RE = re.compile(r"\b(Bloom(?:'s)?(?: level)?|Level|Box)\s*[0-6]\b")
@@ -981,8 +984,11 @@ def assert_quiz_unlabelled(project, transcript):
 # before the explanation, carries 3-6 bolded terms, and the day's sheet has a
 # `## Words` section. The transcript checks are drift detectors; the sheet
 # check is file state.
-WORDS_BLOCK_RE = re.compile(r"^\s*(?:#{1,4}\s*|\*\*)?\s*(Words (for|you.ll meet|to know) today|Words for this (lesson|session)|Today.s words|Vocabulary( preview)?)\b.*$", re.M | re.I)
-TERM_LINE_RE = re.compile(r"^\s*(?:[-*]|\d+\.)\s+(?:\*\*|`)([^*`\n]{2,60})(?:\*\*|`)\s*[—–:-]", re.M)
+WORDS_BLOCK_RE = re.compile(r"(Words (for|you.ll meet|to know) today|Words for this (lesson|session)|Today.s words|Vocabulary( preview)?)\b", re.I)
+# One term per line: a list marker, the term in bold or backticks (code
+# inside bold allowed), an optional short mark such as "(met before)" or
+# "✓", then the separator before the plain-words line.
+TERM_LINE_RE = re.compile(r"^\s*(?:[-*]|\d+\.)\s+(?:\*\*`?|`)([^*`\n]{2,60}?)(?:`?\*\*|`)[^\n—–:-]{0,40}?[—–:-]", re.M)
 EXPLANATION_RE = re.compile(r"(?i)(^\s*#{1,4}\s*(I Do|Why|The idea|Explanation)\b|```)", re.M)
 
 

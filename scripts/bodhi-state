@@ -1364,7 +1364,7 @@ def review_rollup(concepts, t):
     rollup = {"strong": [], "building": [], "needs_review": []}
     due_today, due_week, parked, due_check = [], [], [], []
     boxes = {str(b): 0 for b in range(1, MAX_BOX + 1)}
-    overdue10 = unparseable = waiting = 0
+    overdue10 = unparseable = waiting = unscheduled = 0
     for c in concepts:
         tally_module(modules.setdefault(c.get("module", "(none)"),
                                         new_module_row()), c, t)
@@ -1380,6 +1380,8 @@ def review_rollup(concepts, t):
         if nr is None:
             if c.get("nextReview") is not None:
                 unparseable += 1
+            else:
+                unscheduled += 1
             continue
         if nr <= t:
             due_today.append(c["name"])
@@ -1398,6 +1400,7 @@ def review_rollup(concepts, t):
     return {"modules": modules, "rollup": rollup, "dueToday": due_today,
             "dueThisWeek": due_week, "parked": parked, "boxes": boxes,
             "dueForCheck": due_check, "waiting": waiting,
+            "unscheduled": unscheduled,
             "overdue10": overdue10, "unparseable": unparseable}
 
 
@@ -1694,10 +1697,11 @@ def slugify(text, limit=40):
 PHASE_FILE_RE = re.compile(r"^phase-(\d+)\.md$")
 MODULE_HEADING_RE = re.compile(r"^###\s+Module\s+(\d+)\.(\d+)\s*(?:[—–:-]+\s*)?(.*?)\s*$")
 MODULE_LINE_RE = re.compile(
-    r"^\s*\*\*(Status|Target Bloom(?:'s)?(?: level)?|Concepts|Key terms?)\s*:?\*\*\s*:?\s*(.+?)\s*$",
+    r"^\s*(?:[-*]\s+)?\*\*(Status|Target Bloom(?:'s)?(?: level)?|Concepts|Key terms?)\s*:?\*\*\s*:?\s*(.+?)\s*$",
     re.IGNORECASE)
 MODULE_STATUS_WORDS = {"skipped": "skipped", "completed": "done", "done": "done",
                        "complete": "done"}
+MODULE_STATUS_RE = re.compile(r"\b(skipped|completed|complete|done)\b", re.IGNORECASE)
 
 
 def norm_module_name(s):
@@ -1706,7 +1710,9 @@ def norm_module_name(s):
     so the join tolerates the executor's spelling."""
     if not isinstance(s, str):
         return ""
-    s = re.sub(r"^\s*module\s+\d+\.\d+\s*[—–:-]*\s*", "", s, flags=re.IGNORECASE)
+    stripped = re.sub(r"^\s*module\s+\d+\.\d+\s*[—–:-]*\s*", "", s, flags=re.IGNORECASE)
+    if stripped.strip():
+        s = stripped
     return re.sub(r"\s+", " ", s).strip().casefold()
 
 
@@ -1731,21 +1737,33 @@ def read_plan_modules(project):
     if not os.path.isdir(pdir):
         return None, []
     files = []
-    for f in os.listdir(pdir):
+    try:
+        names = os.listdir(pdir)
+    except OSError:
+        names = []
+    for f in names:
         m = PHASE_FILE_RE.match(f)
         if m:
             files.append((int(m.group(1)), f))
     phases, modules = [], []
     for n, f in sorted(files):
         try:
-            with open(os.path.join(pdir, f), encoding="utf-8") as fh:
+            # A plan is prose the learner pastes into; one Latin-1 byte must
+            # not take `snapshot` (and with it /continue) down. Replace, skip
+            # nothing readable.
+            with open(os.path.join(pdir, f), encoding="utf-8", errors="replace") as fh:
                 text = fh.read()
         except OSError:
             continue
         title = next((ln[2:].strip() for ln in text.splitlines()
                       if ln.startswith("# ")), f"Phase {n}")
-        cur, count = None, 0
+        cur, count, fenced = None, 0, False
         for line in text.splitlines():
+            if line.lstrip().startswith("```"):
+                fenced = not fenced
+                continue
+            if fenced:
+                continue
             m = MODULE_HEADING_RE.match(line)
             if m:
                 mid = f"{m.group(1)}.{m.group(2)}"
@@ -1764,8 +1782,8 @@ def read_plan_modules(project):
                 continue
             key, val = ml.group(1).casefold(), ml.group(2)
             if key == "status":
-                word = val.split()[0].strip(" .,;:()").casefold() if val.split() else ""
-                cur["declaredStatus"] = MODULE_STATUS_WORDS.get(word)
+                sw = MODULE_STATUS_RE.search(val)
+                cur["declaredStatus"] = MODULE_STATUS_WORDS.get(sw.group(1).casefold()) if sw else None
             elif key.startswith("target bloom"):
                 cur["targetBloom"] = parse_bloom_target(val)
             elif key == "concepts":
@@ -1784,12 +1802,19 @@ def plan_position(state, plan):
     prints), so "Module 3 of 8" has one home."""
     warnings = []
     cur_name = norm_module_name(state.get("currentModule"))
-    for i, m in enumerate(plan):
-        if cur_name and (norm_module_name(m["name"]) == cur_name
-                         or m["id"] == str(state.get("currentModule", "")).strip()):
-            return i, warnings
+    cur_id = re.sub(r"(?i)^\s*module\s+", "", str(state.get("currentModule") or "")).strip()
+    cur_phase = str(state.get("currentPhase") or "").strip()
+    matches = [i for i, m in enumerate(plan)
+               if cur_name and (norm_module_name(m["name"]) == cur_name or m["id"] == cur_id)]
+    if matches:
+        # A spiral revisit may declare the same name in a later phase; the
+        # phase the state names breaks the tie, else the first occurrence.
+        in_phase = [i for i in matches if str(plan[i]["phase"]) == cur_phase]
+        return (in_phase or matches)[0], warnings
     if plan:
         idx = state.get("currentModuleIndex")
+        if isinstance(idx, str) and idx.strip().isdigit():
+            idx = int(idx)
         if isinstance(idx, int) and not isinstance(idx, bool) and 0 <= idx < len(plan):
             if cur_name:
                 warnings.append(f"state.json currentModule {state.get('currentModule')!r} "
@@ -2048,6 +2073,7 @@ def cmd_snapshot(args):
             "dueThisWeek": len(r["dueThisWeek"]), "dueThisWeekConcepts": r["dueThisWeek"],
             "overdue10dPlus": r["overdue10"],
             "waitingForReviewDay": r["waiting"],
+            "unscheduled": r["unscheduled"],
             "boxDistribution": r["boxes"],
             "retentionRollup": {k: len(v) for k, v in r["rollup"].items()},
             "retentionConcepts": r["rollup"],

@@ -254,7 +254,20 @@ def test_build_and_structure():
         # is the duty. The reference file carried one such sentence unrewritten
         # from 1.19.0 to 1.23.0.
         stop_promises = ("the Stop hook checks", "Stop hook will not let",
-                         "the Stop hook requires it")
+                         "the Stop hook requires it", "the Stop hook reads it",
+                         "the Stop hook and `dev/check.sh` run")
+        # A reworded promise would slip past exact phrases: any sentence that
+        # has "Stop hook" doing something must also name the ChatGPT path.
+        hook_lines = [
+            (str(path.relative_to(output)), line.strip()[:120])
+            for path in output.rglob("*.md")
+            if path.name != "openai-runtime.md"   # the adapter IS the ChatGPT path
+            for line in path.read_text(encoding="utf-8").splitlines()
+            if "Stop hook" in line and "ChatGPT" not in line
+            and "Codex" not in line and "source platform" not in line
+        ]
+        check("ChatGPT: every packaged mention of the Stop hook names the ChatGPT path too",
+              not hook_lines, hook_lines)
         unrewritten = {
             str(path.relative_to(output)): [p for p in stop_promises if p in path.read_text(encoding="utf-8")]
             for path in output.rglob("*.md")
