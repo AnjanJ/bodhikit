@@ -8,6 +8,22 @@ This is the full, unabridged, patch-by-patch changelog kept for the maintainer �
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [1.24.0] - 2026-10-15
+
+The learner-request release. Two asks reported by other learners (the freeze's clause (a)): see the vocabulary up front; see the syllabus with position and performance in one place. Plus one follow-through on 1.23.0.
+
+### `bodhi-state syllabus` (`1285966`)
+Read-only join of three surfaces. Plan order from `plan/phase-*.md` (`### Module N.M — name`, any separator; optional `**Status:**`, `**Target Bloom's:**`, `**Concepts:**`, later `**Key terms:**`); evidence by re-tallying concepts per normalized module key with `tally_module`/`finalize_module_rows` (re-keying the rollup silently dropped a second spelling — caught by the first test run); position from `plan_position()` (currentModule by name or id → currentModuleIndex → None, warned). `summaryTier` puts the /progress lowest-occupied-tier rule in code. `untracked`/`unplanned` instead of dropping. KB first: state-schema's plan contract, state-ops reader line; both KBs were at the ceiling, so restated history (the 1.10.7 lastReviewed correction) and two redundant clauses were condensed. 25 new checks.
+
+### Rendering (`48478d6`)
+`/plan view` → the table + Spiral Revisits (phase files read only for that section). `/progress` Module Breakdown = the same rows (+ position and next-review columns); `references/module-row.md` holds the rendering table both skills load, a dedupe of what `/progress` had inline (−600 B). `snapshot.project.position` via the shared helper so `/continue`'s check-in prints *Module k of n* with no second call. Lint 18/52 still hold.
+
+### Vocabulary preview (`0756350`)
+`difficulty-calibration` KB *Vocabulary Preview*: Stahl & Fairbanks 1986 (strong), Ausubel 1960 / Luiten et al. 1980 (moderate), Marzano & Pickering 2005, Beck, McKeown & Kucan 2002. Rules: after the pretest (a list before it leaks the guess), 3–6 Tier-3 terms, one plain line, met ones marked, use exactly those words, checkpoint = the word in use not its definition, sheet `## Words`, re-teach previews only the stumbled terms, nothing recorded. `/teach` +~440 B (18.2 of 18.4 KB). `/learn` optional `**Key terms:**`; `syllabus` parses `keyTerms`. Rejected: a per-concept `terms` field (freeze; the plan line and the sheet carry it). Evals `teach-vocabulary` (sheet section is file state; block position a detector) and `plan-view` (transcript-only; the order check reads the table, not the position line — first synthetic run caught that). Both exercised pass/fail on synthetic transcripts; not run live.
+
+### Waiting, not stuck (`cf1a994`)
+`review_rollup` counts scheduled-later concepts; `snapshot.review.waitingForReviewDay`; `/progress` row + one line when nothing is due. The 1.23.0 review flagged that 24/29 real reviews were teach checks, which now never promote; without the line a flat board is indistinguishable from being stuck. Test: waiting + dueToday + parked == concepts.
+
 ## [1.23.1] - 2026-10-15
 
 The ChatGPT-gaps patch. Prompted by a reviewer's wrong claim that the ChatGPT port had no state, corrected by the maintainer (local state mode on a desktop with a shell; the folders exist). Re-read: the engine is byte-for-byte, the gaps are the hooks' duties and executor measurement.

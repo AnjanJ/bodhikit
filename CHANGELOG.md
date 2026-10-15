@@ -2,6 +2,16 @@
 
 Notable changes to BodhiKit, summarized for readers. Patch-level development notes live in `dev/changelog-journal.md`.
 
+## [1.24.0] - 2026-10-15
+
+Two things learners asked for. The feature freeze (1.13.0) lifts for a request from a second real user; both of these were.
+
+- **The syllabus, in one place.** `/plan view` now prints one table: every module in plan order, which are done, which you are on, how the finished ones went (the same *Solid / Working / Introduced* reading `/progress` uses), the mastered count, and when each comes up for review. `/progress`'s Module Breakdown is the same rows, and both the dashboard and `/continue`'s check-in say *Module 3 of 8* rather than only the module's name. Behind it is one read-only `bodhi-state syllabus` call that joins the plan files, the review file and the position, so the two skills cannot disagree and neither re-derives order or status from the files. Modules the plan declares but nothing was tracked under, and tracked modules the plan never declared, are reported rather than dropped.
+- **Words for today.** A first-exposure `/teach` names the three to six terms the lesson will use, one plain line each, right after the guess-first question and before the explanation, then uses exactly those words; the checkpoint asks you to use one in a sentence about your own code, and the revision sheet carries the list under *Words*. `/learn` can write a *Key terms* line per module in the plan, which the lesson starts from. The `difficulty-calibration` KB and the README cite Stahl & Fairbanks (1986), Marzano & Pickering (2005), Beck, McKeown & Kucan (2002) and Ausubel (1960).
+- **A quiet board reads as waiting.** Since 1.23.0 only a due review moves a box, so a learner who mostly teaches sees no movement. `/progress` now counts the concepts waiting for their review day and says, when nothing is due, that the schedule is doing its job.
+- **State layer.** `syllabus` (new, read-only); `snapshot.project.position` and `snapshot.review.waitingForReviewDay`; the plan-file contract in `state-schema` names the module lines the reader recognises. 514 deterministic tests pass. Two new fidelity scenarios, `teach-vocabulary` and `plan-view`, with detectors exercised on synthetic transcripts; not yet run against a live model.
+- No tracking-file migration: no new fields in any tracking file. Update the plugin and restart Claude Code. ChatGPT users get it when the listing is re-uploaded.
+
 ## [1.23.1] - 2026-10-15
 
 The ChatGPT gaps. A review of the port claimed ChatGPT had no state at all; the maintainer, who runs it on a desktop with a shell, corrected that — the folders are there and the engine is the same script. What the port did lack was the two hooks' duties and any measurement of its executor.
