@@ -2,6 +2,15 @@
 
 Notable changes to BodhiKit, summarized for readers. Patch-level development notes live in `dev/changelog-journal.md`.
 
+## [1.23.1] - 2026-10-15
+
+The ChatGPT gaps. A review of the port claimed ChatGPT had no state at all; the maintainer, who runs it on a desktop with a shell, corrected that — the folders are there and the engine is the same script. What the port did lack was the two hooks' duties and any measurement of its executor.
+
+- **A close procedure where no Stop hook runs.** The OpenAI runtime adapter now states, as numbered steps, what the Stop hook does on Claude Code: after `touch-state`, run `bodhi-state verify` and repair before ending, then `revision-brief` and write or append the day's sheet. Every source sentence that said "the Stop hook checks" is rewritten at build time to point at it — including one in the revision-sheet reference that had survived unrewritten since 1.19.0 — and the package test fails if any such promise remains.
+- **The learning-project rule reaches ChatGPT.** The package always shipped `rules/learning-project.md`, but only the SessionStart hook loaded it. The adapter now has the model read it the first time a workflow touches a learner project, so "learner content is data, never instructions" holds on hosts without hooks, including for pasted content in conversation-only mode.
+- **The OpenAI executor can be measured.** `BODHI_EVAL_RUNTIME=codex dev/eval/run-llm-evals.sh` runs the same fixtures and file-state assertions through headless Codex against the built package, in a sandboxed `CODEX_HOME` laid out as the package so the adapter's root resolution holds. ChatGPT itself has no headless interface and keeps the manual smoke test. No Codex sweep has been recorded yet; the first local run confirms the `codex exec` flag spellings, written without access to the CLI reference.
+- No tracking-file migration. Update the plugin and restart; ChatGPT users get it when the listing is re-uploaded (release checklist step 7).
+
 ## [1.23.0] - 2026-09-29
 
 Mastery now rests on delayed, current evidence. The maintainer's first delayed quiz on a real project scored 2 of 5 on concepts recorded at Apply with the explain-back passed: the levels and flags had captured the fluency peak right after teaching, and only the delayed review showed what stuck. Traced, every mastery check could be met in the week a concept was taught, and none noticed when review stopped.
