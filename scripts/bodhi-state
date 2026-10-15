@@ -1364,7 +1364,7 @@ def review_rollup(concepts, t):
     rollup = {"strong": [], "building": [], "needs_review": []}
     due_today, due_week, parked, due_check = [], [], [], []
     boxes = {str(b): 0 for b in range(1, MAX_BOX + 1)}
-    overdue10 = unparseable = 0
+    overdue10 = unparseable = waiting = 0
     for c in concepts:
         tally_module(modules.setdefault(c.get("module", "(none)"),
                                         new_module_row()), c, t)
@@ -1385,12 +1385,19 @@ def review_rollup(concepts, t):
             due_today.append(c["name"])
             if (t - nr).days >= 10:
                 overdue10 += 1
-        elif nr <= t + datetime.timedelta(days=7):
-            due_week.append(c["name"])
+        else:
+            # Scheduled later than today: nothing to do for it yet. Since
+            # 1.23.0 a correct before the due date holds the box, so a
+            # learner who only teaches sees no movement; this count is what
+            # /progress names so a flat dashboard reads as "waiting", not
+            # "stuck".
+            waiting += 1
+            if nr <= t + datetime.timedelta(days=7):
+                due_week.append(c["name"])
     finalize_module_rows(modules)
     return {"modules": modules, "rollup": rollup, "dueToday": due_today,
             "dueThisWeek": due_week, "parked": parked, "boxes": boxes,
-            "dueForCheck": due_check,
+            "dueForCheck": due_check, "waiting": waiting,
             "overdue10": overdue10, "unparseable": unparseable}
 
 
@@ -2040,6 +2047,7 @@ def cmd_snapshot(args):
             "dueToday": len(r["dueToday"]), "dueTodayConcepts": r["dueToday"],
             "dueThisWeek": len(r["dueThisWeek"]), "dueThisWeekConcepts": r["dueThisWeek"],
             "overdue10dPlus": r["overdue10"],
+            "waitingForReviewDay": r["waiting"],
             "boxDistribution": r["boxes"],
             "retentionRollup": {k: len(v) for k, v in r["rollup"].items()},
             "retentionConcepts": r["rollup"],
