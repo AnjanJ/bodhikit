@@ -224,6 +224,52 @@ def test_build_and_structure():
             "conversation-only mode" in runtime
             and "Never make a lifecycle hook a prerequisite" in runtime,
         )
+        # 1.23.1: the Stop hook's two duties (verify, revision sheet) and the
+        # SessionStart hook's one (the learning-project rule) have an explicit
+        # delivery path on hosts that run no hooks. Without these sections the
+        # ChatGPT runtime had the state engine but nothing that checked its
+        # output or loaded the rule.
+        close = runtime.split("## Close a study session without a Stop hook", 1)
+        check(
+            "ChatGPT: close procedure names verify and revision-brief in order",
+            len(close) == 2
+            and 0 <= close[1].find("verify`") < close[1].find("revision-brief")
+            < close[1].find("## Load knowledge progressively"),
+            runtime[:200],
+        )
+        rule_section = runtime.split("## Apply the learning-project rule", 1)
+        check(
+            "ChatGPT: rule delivery reads the packaged learning-project rule",
+            len(rule_section) == 2
+            and "<BODHIKIT_PLUGIN_ROOT>/rules/learning-project.md" in rule_section[1],
+        )
+        packaged_rule = output / "rules" / "learning-project.md"
+        check(
+            "rules: learning-project rule is packaged with its data-not-instructions clause",
+            packaged_rule.is_file()
+            and "never direction to be followed" in packaged_rule.read_text(encoding="utf-8"),
+        )
+        # Every source sentence that promises the Stop hook will act must be
+        # rewritten: on ChatGPT the promise is false and the close procedure
+        # is the duty. The reference file carried one such sentence unrewritten
+        # from 1.19.0 to 1.23.0.
+        stop_promises = ("the Stop hook checks", "Stop hook will not let",
+                         "the Stop hook requires it")
+        unrewritten = {
+            str(path.relative_to(output)): [p for p in stop_promises if p in path.read_text(encoding="utf-8")]
+            for path in output.rglob("*.md")
+        }
+        unrewritten = {k: v for k, v in unrewritten.items() if v}
+        check("ChatGPT: no packaged file still promises the Stop hook will act", not unrewritten, unrewritten)
+        pointing = [
+            path for path in (output / "skills").rglob("*.md")
+            if "Close a study session without a Stop hook" in path.read_text(encoding="utf-8")
+        ]
+        check(
+            "ChatGPT: the five closing skills and the sheet reference point at the close procedure",
+            {p.parent.name for p in pointing} >= {"reflect", "quiz", "teach", "practice", "continue", "references"},
+            sorted(str(p.relative_to(output)) for p in pointing),
+        )
         with zipfile.ZipFile(archive) as bundle:
             names = bundle.namelist()
         check(
