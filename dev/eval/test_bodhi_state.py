@@ -2345,7 +2345,8 @@ SYLLABUS_PLAN = {
     "phase-2.md": (
         "# Phase 2 — Deeper\n\n## Spiral Revisits\n\n- **Joins** — again.\n\n## Modules\n\n"
         "### Module 2.1: Transactions\n**Target Bloom's:** 4 (Analyze)\n"
-        "**Concepts:** Isolation levels, Deadlocks\n\n"
+        "**Concepts:** Isolation levels, Deadlocks\n"
+        "**Key terms:** `isolation level`, *dirty read*, write skew\n\n"
         "### Module 2.2 — Replication\n**Target Bloom's:** Evaluate\n\n"
         "### Not a module heading 2.3 — Sharding\n"),
     "phase-1.md": (
@@ -2428,6 +2429,9 @@ def t_syllabus():
               out["modules"][4]["targetBloom"] == 5, out["modules"][4])
         check("syllabus: planned concepts list parsed",
               tr["plannedConcepts"] == ["Isolation levels", "Deadlocks"], tr)
+        check("syllabus: key terms parsed with code/emphasis marks stripped; absent → []",
+              tr["keyTerms"] == ["isolation level", "dirty read", "write skew"]
+              and out["modules"][0]["keyTerms"] == [], tr)
         check("syllabus: an untracked plan module has an empty, shaped evidence block",
               tr["evidence"]["tracked"] is False and tr["evidence"]["concepts"] == 0
               and tr["evidence"]["tiers"] == {"unclassified": 0, "introduced": 0, "familiar": 0, "mastered": 0},

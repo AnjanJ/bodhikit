@@ -105,7 +105,7 @@ Sectional. Generated at plan creation; rewritten only by `/plan regenerate`.
 
 `plan/README.md`: arc overview — current phase pointer, target arc, pace, bulleted phase list with `→ phase-<N>.md` pointers.
 
-`plan/phase-{N}.md`: per-phase goals, duration, success criteria, then `### Module <N>.<M> — <name>` sections with concepts, exercises, success markers. From Module 2 onward each module section carries a `**Prerequisites for next module:**` line naming the concepts the next module builds on (feeds `gate-check --prereqs`). `bodhi-state syllabus` reads the headings in phase order and, inside each section, the optional `**Status:** skipped|completed`, `**Target Bloom's:**` and `**Concepts:**` lines; `spaced-review.json[].module` joins on the heading name (case and spacing ignored).
+`plan/phase-{N}.md`: per-phase goals, duration, success criteria, then `### Module <N>.<M> — <name>` sections with concepts, exercises, success markers. From Module 2 onward each module section carries a `**Prerequisites for next module:**` line naming the concepts the next module builds on (feeds `gate-check --prereqs`). `bodhi-state syllabus` reads the headings in phase order and, inside each section, the optional `**Status:** skipped|completed`, `**Target Bloom's:**`, `**Concepts:**` and `**Key terms:**` lines; `spaced-review.json[].module` joins on the heading name (case and spacing ignored).
 
 ### `learningWithBodhi/<project>/.bodhi/spaced-review.json`
 

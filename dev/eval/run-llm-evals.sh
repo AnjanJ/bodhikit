@@ -733,6 +733,27 @@ if [ "$want" = "all" ] || [ "$want" = "fidelity" ] || [ "$want" = "teach-hint-di
     teach-hint-discipline "" transcript
 fi
 
+# --- Vocabulary preview (1.24.0) ---------------------------------------------
+# A first-exposure /teach names the words the lesson will use after the
+# pretest and before the explanation (difficulty-calibration KB *Vocabulary
+# Preview*), asks the learner to use one at the checkpoint, and the day's
+# sheet carries them under `## Words`. The sheet is file state; the block
+# position is a transcript detector — read the transcript before judging.
+if [ "$want" = "all" ] || [ "$want" = "fidelity" ] || [ "$want" = "teach-vocabulary" ]; then
+  run_scenario teach-vocabulary \
+    "/bodhikit:teach Write-ahead logging — headless eval run. Simulate my responses: to your opening question my guess is 'maybe the database writes changes to a log before applying them, so it can recover after a crash?'. When you list the words for today I read them. At the checkpoint I explain back cleanly in my own words, and when you ask me to use one of the words in a sentence about my own code I say: 'In my app the order insert is durable once its log record is flushed, even if the table page is still only in memory.' I decline any exercise and decline /reflect — understanding only is fine today, so write the revision sheet yourself before ending. Complete ALL tracking updates exactly as the skill specifies. Run the session turn by turn in your messages — each question you ask, then my scripted reply to it — rather than summarising it at the end." \
+    teach-vocabulary "" transcript
+fi
+
+# --- Syllabus view (1.24.0) ---------------------------------------------------
+# /plan view renders bodhi-state syllabus: every plan module in order, the
+# position line, no bare levels. Read-only skill, so transcript-only.
+if [ "$want" = "all" ] || [ "$want" = "fidelity" ] || [ "$want" = "plan-view" ]; then
+  run_scenario plan-view \
+    "/bodhikit:plan view — headless eval run. Show me my learning plan: where I am in it and how the modules I have done went. Print the table the skill specifies." \
+    plan-view "" transcript
+fi
+
 # --- Gate-on-chain scenario (review finding 2a/2b) ---------------------------
 # /continue -> /teach must run the prerequisite gate at a module boundary.
 # Before this scenario, /teach skipped the gate for ANY concept passed via

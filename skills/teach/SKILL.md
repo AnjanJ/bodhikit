@@ -52,6 +52,10 @@ Skip the gate only when the learner themselves typed a topic — `/teach <topic>
 - **`isReteach: true`** (a demoted concept, or re-entry after 3 failed hints) — the pretest does not apply; the research covers untaught material only, and "you have not seen this yet" would be false. Open instead with a genuine retrieval attempt, graded and recorded per Phase 5 step 1 (`--source teach`); its outcome calibrates how much of the re-explanation is needed.
 - **Neither** — a routine continuation on a known concept; open by bridging from the last outcome (the brief's `lastResult` and `daysSinceLastReview`).
 
+### Words for today
+
+After the opening — the pretest guess is captured first, a term list would leak it — list the 3–6 terms this explanation will use, one plain line each, marking the ones already met, per the `difficulty-calibration` KB *Vocabulary Preview* (the module's `**Key terms:**` line in `plan/phase-{N}.md`, when present, is the starting list). Use exactly those words below; a term not previewed is defined at its first use. On a re-teach, only the terms the learner stumbled on.
+
 Follow Gradual Release of Responsibility: **I Do → We Do → You Do.**
 
 ### I Do (Modeling)
@@ -68,6 +72,7 @@ After explaining, verify understanding before continuing:
 - "In one sentence, what does [concept] do?"
 - "What would this code output?" (small snippet — shown in this message, labeled `Example B`, even if it is the step-4 example again)
 - "How is this different from [related concept they know]?"
+- "Use [one previewed term] in a sentence about your own code." (the word in use, not its definition — *Vocabulary Preview*)
 
 If they struggle, apply the **Analogy-Escalation Protocol** from the `feynman-technique` KB: read `.bodhi-profile.json` `learnerBackground.domains[]` + `analogyHistory[]`, climb the 4-rung ladder (learner-domain → ask-once → universal-physical → code-restatement), cap at two analogies before decomposing to a smaller sub-concept. Do not repeat the same explanation.
 

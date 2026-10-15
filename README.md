@@ -317,6 +317,11 @@ Fencing the weak claims is what lets you trust the strong ones.
 - **Pretesting** — Attempting a question *before* instruction improves learning of the material that follows
   - Nate Kornell, Matthew Hays, and Robert Bjork, *[Unsuccessful retrieval attempts enhance subsequent learning](https://psycnet.apa.org/record/2009-09556-006)* (2009)
 
+- **Vocabulary Preview** — Name the words a lesson will use before the lesson, then have the learner use them (1.24.0)
+  - Steven Stahl and Marilyn Fairbanks, *[The effects of vocabulary instruction: A model-based meta-analysis](https://journals.sagepub.com/doi/10.3102/00346543056001072)* (1986)
+  - Robert Marzano and Debra Pickering, *[Building Academic Vocabulary](https://www.ascd.org/books/building-academic-vocabulary)* (2005); Isabel Beck, Margaret McKeown, and Linda Kucan, *[Bringing Words to Life](https://www.guilford.com/books/Bringing-Words-to-Life/Beck-McKeown-Kucan/9781462508167)* (2002)
+  - David Ausubel, *[The use of advance organizers in the learning and retention of meaningful verbal material](https://psycnet.apa.org/record/1961-04006-001)* (1960)
+
 - **Cognitive Load Theory** — Worked examples and faded scaffolding for novices; expertise reversal for the rest
   - John Sweller, *[Cognitive load during problem solving](https://onlinelibrary.wiley.com/doi/10.1207/s15516709cog1202_4)* (1988)
   - Sweller, Ayres, and Kalyuga, *[Cognitive Load Theory](https://link.springer.com/book/10.1007/978-1-4419-8126-4)* (2011)
