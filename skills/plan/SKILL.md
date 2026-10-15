@@ -25,32 +25,29 @@ Determine mode from `$ARGUMENTS`:
 
 ## Mode: View (Default)
 
-Read `.bodhi/plan/README.md` AND every `.bodhi/plan/phase-*.md` file (this skill's job is to show the full arc). Also read `.bodhi/progress.md` for current-state context.
+Run ONE command — `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> syllabus` — and render it per `references/module-row.md` in the `/progress` skill directory (`${CLAUDE_PLUGIN_ROOT}/skills/progress/references/module-row.md`): the plan's modules in order, each with the script's `status`, its evidence row and its next review. This is the view learners asked for — the syllabus, where they are in it, and how the finished parts went — and the same rows `/progress` renders, so the two never disagree. Do not read the phase files to build the table; read them only for the Spiral Revisits section below. Read `.bodhi/progress.md`'s live entry for one line of narrative context, nothing more.
 
-Present a clear summary:
+**Fallback:** if `bodhi-state` is unavailable, read `.bodhi/plan/README.md`, the `### Module` headings of every `.bodhi/plan/phase-*.md`, and `.bodhi/state.json`'s `currentModule`, and render the table with status from plan order and `—` in every evidence column.
+
+Present:
 
 ```
 ## Learning Plan: [Project Name]
 
-### Overall Progress: [N]% complete
+**Where you are:** Module [position.index] of [position.of] — [position.module] (Phase [position.phase]) · [overallCompletion]% complete
 
-### Completed
-- [Module names with checkmarks, Bloom's level achieved]
-
-### Current
-- **[Current module]** — [status, what is next]
-
-### Upcoming
-- [Module names with target Bloom's levels]
+| # | Module | Status | How it went | Mastered | Next review |
+|---|--------|--------|-------------|----------|-------------|
+| [id] | [name] | [Done / ◀ Current / Upcoming / Skipped] | [tier — outcome, per the reference] | [N]/[M] | [date] |
+[… one row per `modules[]` entry, then any `unplanned[]` rows as `Not in plan`]
 
 ### Spiral Revisits
 - [Concepts from earlier phases that reappear in later phases at a higher target Bloom level — surface them from the per-phase plan files. Each line: "<concept>: phase {N} (Bloom <X>) → phase {M} (Bloom <Y>)". This is the constructivism KB's spiral-curriculum mechanic made visible.]
-
-### Spaced Review Schedule
-- [N] concepts due for review this week
 ```
 
-**Spiral Revisits source.** Read each `plan/phase-{N}.md` file and extract any concept that appears in more than one phase. Compare the target Bloom levels in the module success criteria of each phase. List only the upward revisits (higher target in a later phase). If the per-phase files do not declare target Bloom levels for revisited concepts, note "Spiral revisits not declared in current plan — run `/plan regenerate` to apply the constructivism principle." rather than omitting the section silently.
+When `position` is `null`, say so in one line ("The plan does not name your current module — `/bodhikit:plan adjust` can set it") and render the table anyway. When `untracked` names a module that is `done`, note it once: nothing was recorded for it, so its row shows `—`. Surface any `warnings` in one line each.
+
+**Spiral Revisits source.** Read only the `## Spiral Revisits` section of each `plan/phase-{N}.md` file and extract any concept that appears in more than one phase. Compare the target Bloom levels in the module success criteria of each phase. List only the upward revisits (higher target in a later phase). If the per-phase files do not declare target Bloom levels for revisited concepts, note "Spiral revisits not declared in current plan — run `/plan regenerate` to apply the constructivism principle." rather than omitting the section silently.
 
 If the learner is ahead of schedule: "You are moving with good momentum."
 If the learner is on track: "Steady progress. The path is clear."

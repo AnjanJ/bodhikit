@@ -1182,6 +1182,8 @@ def t_snapshot():
                                                    "needs_review": 1}
               and out["review"]["retentionConcepts"]["building"] == ["B-tree indexes"],
               out["review"])
+        check("snapshot: position is null when the project has no plan/",
+              out["project"]["position"] is None, out["project"])
         check("snapshot: bloom maps carried for growth trajectory",
               "initialBloomLevel" in out["project"]
               and "currentBloomLevel" in out["project"], out["project"])
@@ -2437,6 +2439,9 @@ def t_syllabus():
               and out["unplanned"][0]["concepts"] == 1 and out["unplanned"][0]["nextDue"] == "2026-01-05",
               out["unplanned"])
         check("syllabus: no warnings on a well-formed project", out["warnings"] == [], out["warnings"])
+        snap = run(proj, "snapshot", on="2026-01-02")
+        check("snapshot: project.position is the syllabus position (one home for 'Module k of n')",
+              snap["project"]["position"] == out["position"], snap["project"])
         check("syllabus: read-only — no lock file, review file unchanged",
               not any(n.endswith(".lock") for n in os.listdir(os.path.join(proj, ".bodhi")))
               and read_sr(proj) == sr, os.listdir(os.path.join(proj, ".bodhi")))
