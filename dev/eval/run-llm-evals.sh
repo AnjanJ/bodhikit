@@ -177,10 +177,10 @@ NUDGE_MSG="(headless harness — the learner has left the session: no live reply
 #   writes only the final result; a superset is harmless to the assertions).
 #
 # Known limits, stated rather than hidden: Codex has no --max-turns, so the
-# scenario turn cap is not enforced on this runtime; the exact `codex exec`
-# flag spellings below were written without network access to the Codex CLI
-# reference and are to be confirmed on the first local run (adjust here, not
-# in the scenarios).
+# scenario turn cap is not enforced on this runtime. The `codex exec` flag
+# spellings below were confirmed against codex-cli 0.162.1 on the first local
+# run (2026-10-15); if a later CLI renames one, adjust here, not in the
+# scenarios.
 CODEX_EVAL_HOME=""
 codex_prepare_home() {
   CODEX_EVAL_HOME="$1/codex-home"

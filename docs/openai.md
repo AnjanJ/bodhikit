@@ -165,12 +165,13 @@ The runner builds `dist/openai/bodhikit` if it is missing, lays a sandboxed
 as the adapter prescribes, with no marketplace registration), copies only
 `auth.json` and `config.toml` from the real `CODEX_HOME`, and asserts the same
 file state as the Claude runs. `BODHI_EVAL_MODEL` is optional; unset, Codex's
-configured default runs and the header says so. The `codex exec` flag spellings
-in the runner were written without access to the Codex CLI reference and are
-to be confirmed on the first local run. Until a Codex sweep is recorded in
-`dev/eval/README.md`, no grading, executor-discipline, or fidelity scenario has
-passed on an OpenAI executor; the byte-for-byte state engine says nothing about
-whether the executor calls it.
+configured default runs and the header says so. The runner's `codex exec`
+flags were confirmed against codex-cli 0.162.1 on the first local run
+(2026-10-15). The run table in `dev/eval/README.md` is the record of what has
+passed on an OpenAI executor: the executor-discipline group and the two 1.24.0
+fidelity scenarios as of that date, no grading scenario yet. The byte-for-byte
+state engine says nothing about whether the executor calls it; only those runs
+do.
 
 ChatGPT has no headless interface, so it stays on the manual smoke test: before
 re-uploading a release, run one writing skill such as `$quiz` against a copy of
