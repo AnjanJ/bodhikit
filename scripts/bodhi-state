@@ -2350,7 +2350,14 @@ def cmd_gate_check(args):
         return
     seeded_only = len(in_module)
 
-    # First session on a new module: identify prerequisites.
+    # First session on a new module: identify prerequisites. A plan may
+    # declare `none` — a module that builds on nothing tracked. Read as a
+    # concept name it matched nothing and reported a vacuous "clear".
+    if args.prereqs and re.match(r"\s*none\b", args.prereqs, re.IGNORECASE):
+        emit({"fires": False,
+              "reason": "the plan declares no prerequisites for this module",
+              "currentModule": current, "prerequisiteSource": "declared"})
+        return
     if args.prereqs:
         names = [n.strip().lower() for n in args.prereqs.split(",") if n.strip()]
         prereqs = [c for c in concepts

@@ -155,7 +155,7 @@ The `/teach` Phase 1 gate fires only on the first session of a new module (detec
 
 Each prerequisite row also carries `evidenceAt3Plus` (count of level-3+ corrects since the last miss), `appliedEvidence` (built corrects since the last miss) and `bloomLabel`/`bloomOutcome` for learner-facing phrasing (`blooms-taxonomy` KB rendering rule).
 
-Prerequisites come from the plan's `**Prerequisites for next module:**` declaration (passed via `--prereqs`) or, as fallback, all concepts of the tracked `previousModule` (the verdict JSON reports `prerequisiteSource: "declared" | "prior-module"` so the skill can tell the learner which mapping it used). When neither is available the gate declines to fire (`fires: false` with the reason) — it never infers a prerequisite module from concept dates; a guessed gate generates false reconfirm questions, which cost more trust than no gate.
+Prerequisites come from the plan's `**Prerequisites for next module:**` declaration (passed via `--prereqs`; a declared `none` → `fires: false`) or, as fallback, all concepts of the tracked `previousModule` (the verdict JSON reports `prerequisiteSource: "declared" | "prior-module"` so the skill can tell the learner which mapping it used). When neither is available the gate declines to fire (`fires: false` with the reason) — it never infers a prerequisite module from concept dates; a guessed gate generates false reconfirm questions, which cost more trust than no gate.
 
 ## Update Rules
 

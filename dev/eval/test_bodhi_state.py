@@ -3067,6 +3067,34 @@ def t_module_prefix_join():
               [p["name"] for p in gate["prerequisites"]] == ["need-sensitive allocation"], gate)
 
 
+def t_gate_declared_none():
+    # /learn required every module to name concepts the NEXT module builds on,
+    # which forced a chain on courses whose modules do not build on their
+    # neighbour (Module 26 "French and Haitian revolutions" needed
+    # "intergenerational justice" from the ecology module). A plan may now
+    # declare `none`; the gate must read that as a declaration, not as a
+    # concept called "none" that silently matches nothing and reports clear.
+    with tempfile.TemporaryDirectory() as root:
+        sr = {"version": 3, "sessionHistory": [], "concepts": [
+            {"name": "intergenerational justice", "module": "Ecology", "box": 1, "bloomLevel": 1,
+             "nextReview": "2026-01-05", "feynmanPassed": False,
+             "consecutiveCorrectAtL4Plus": 0, "reviewHistory": []}]}
+        state = {"version": 2, "projectName": "proj", "sessionDates": [],
+                 "currentModule": "French and Haitian revolutions", "previousModule": "Ecology"}
+        proj = make_project(root, spaced_review=sr, state=state)
+        for declared in ("none", "None (final module)", "  NONE  "):
+            out = run(proj, "gate-check", "--prereqs", declared)
+            check(f"gate-check: --prereqs {declared!r} is a declaration of no prerequisites",
+                  out["fires"] is False and "declares no prerequisites" in out.get("reason", ""), out)
+        out = run(proj, "gate-check", "--prereqs", "intergenerational justice")
+        check("gate-check: a named prerequisite still gates",
+              out["fires"] is True and out["prerequisiteSource"] == "declared"
+              and out["gaps"] == ["intergenerational justice"], out)
+        out = run(proj, "gate-check", "--prereqs", "nonexistent concept")
+        check("gate-check: a name that starts with 'none' but is not 'none' is a concept",
+              out["fires"] is True, out)
+
+
 def main():
     for t in (t_migrate, t_record_review, t_sessions_and_forget,
               t_touch_state_and_profile, t_gate_check,
@@ -3091,7 +3119,8 @@ def main():
               t_mastered_due_for_check, t_feynman_after_last_miss,
               t_gate_seeded_module, t_exposure_routes, t_add_concept_bloom,
               t_verify_implies_readers, t_history_cap_keeps_facts,
-              t_syllabus, t_plan_single_number_headings, t_module_prefix_join):
+              t_syllabus, t_plan_single_number_headings, t_module_prefix_join,
+              t_gate_declared_none):
         print(f"-- {t.__name__}")
         try:
             t()

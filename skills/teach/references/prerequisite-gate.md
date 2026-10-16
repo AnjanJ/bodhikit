@@ -12,7 +12,7 @@ Otherwise, run:
 "${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> gate-check --prereqs "<declared list>"
 ```
 
-passing `--prereqs` from the prior module's `**Prerequisites for next module:**` line in `plan/phase-{N}.md` when it exists (omit the flag when it does not; the script falls back to the tracked `previousModule`, or declines to gate when neither exists — it never guesses).
+passing `--prereqs` from the prior module's `**Prerequisites for next module:**` line in `plan/phase-{N}.md` when it exists (omit the flag when it does not; the script falls back to the tracked `previousModule`, or declines to gate when neither exists — it never guesses). Pass the line as written: `none` is a declaration that the module builds on nothing earlier, and the script answers it with `fires: false`.
 
 Act on the verdict JSON:
 

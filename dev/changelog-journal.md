@@ -18,6 +18,9 @@ The OpenAI build's `/learn` numbered modules once across the course (`### Module
 ### A renumbered plan keeps its review rows
 After the plan moved to `Module 0.2 — name`, the six review rows and `state.json` still said `Module 2 — name`. `norm_module_name` dropped only an `N.M` prefix, so no row joined its module and the position fell back to `currentModuleIndex` with a warning. It now drops a one-number prefix too, and `gate-check` uses the same key for in-module and prior-module matches instead of a raw lowercase compare (which would also have missed a heading-name vs prefixed-row pair). Test: `t_module_prefix_join`, 3 checks, failing against the previous commit's script. The real project now reads 6 joined concepts, no unplanned modules, no warnings.
 
+### A plan may declare `none` for the next module's prerequisites
+`/learn` and `/plan` required every module to list concepts *from this module* that the next one builds on. On a course whose modules do not all build on their neighbour, that produced invented chains (the French and Haitian revolutions needed "intergenerational justice" from the ecology module). The line now names the next module's real prerequisites from any earlier module, or `none`. `gate-check --prereqs none` returns `fires: false` with the reason; before, "none" was read as a concept name, matched nothing, and reported a vacuous `clear`. KB lines (state-ops, state-schema) and the gate reference say so. Test: `t_gate_declared_none`, 3 checks failing before the fix. Noted, not changed: any declared name that matches no tracked concept is still dropped silently.
+
 ## [1.24.0] - 2026-10-15
 
 The learner-request release. Two asks reported by other learners (the freeze's clause (a)): see the vocabulary up front; see the syllabus with position and performance in one place. Plus one follow-through on 1.23.0.
