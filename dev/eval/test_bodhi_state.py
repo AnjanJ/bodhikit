@@ -2989,6 +2989,50 @@ def t_verify_implies_readers():
               read_sr(proj)["concepts"][1]["reviewHistory"][-1]["days"] == 3)
 
 
+# A plan as the OpenAI build's /learn wrote it in a real session (16 October
+# 2026, a political-theory project): modules numbered once across the whole
+# course, `### Module 7 — name`, not `### Module 1.2 — name`. syllabus read
+# zero modules, so /plan, /continue's position line and /progress were empty.
+SINGLE_NUMBER_PLAN = {
+    "phase-0.md": ("# Phase 0 — Tools\n\n### Module 1 — Claims and values\n"
+                   "**Concepts:** descriptive claims, normative claims\n\n"
+                   "### Module 2 — Freedom and equality\n**Target Bloom's:** 3\n"),
+    "phase-1.md": "# Phase 1 — Markets\n\n### Module 3: Scarcity\n\n### Module 4\n",
+}
+
+
+def t_plan_single_number_headings():
+    with tempfile.TemporaryDirectory() as root:
+        state = {"version": 2, "projectName": "proj", "sessionDates": [],
+                 "currentPhase": "0", "currentModule": "Freedom and equality",
+                 "currentModuleIndex": 1, "overallCompletion": 0}
+        proj = make_project(root, spaced_review={"version": 3, "sessionHistory": [],
+                                                 "concepts": []}, state=state)
+        write_plan(proj, SINGLE_NUMBER_PLAN)
+        out = run(proj, "syllabus", on="2026-01-02")
+        check("syllabus: `### Module N — name` headings with one number are modules",
+              [(m["id"], m["name"]) for m in out["modules"]]
+              == [("1", "Claims and values"), ("2", "Freedom and equality"),
+                  ("3", "Scarcity"), ("4", "Module 4")], out.get("modules", out))
+        check("syllabus: single-number modules count per phase and carry their lines",
+              [(p["phase"], p["modules"]) for p in out["phases"]] == [(0, 2), (1, 2)]
+              and out["modules"][0]["plannedConcepts"] == ["descriptive claims", "normative claims"]
+              and out["modules"][1]["targetBloom"] == 3, out)
+        check("syllabus: position found by name in a single-number plan, no warnings",
+              out["position"] == {"index": 2, "of": 4, "module": "Freedom and equality", "phase": 0}
+              and out["warnings"] == [], out)
+        check("verify: a readable single-number plan raises no plan warning",
+              not any("plan/" in w for w in run(proj, "verify")["warnings"]))
+
+        # A plan nothing can read (level-2 module headings) is a verify warning,
+        # not silence: the Stop hook and the evals run verify, not syllabus.
+        write_plan(proj, {"phase-0.md": "# Phase 0\n\n## Module 0.1: Claims\n",
+                          "phase-1.md": "# Phase 1\n\n## Module 1.1: Markets\n"})
+        warnings = run(proj, "verify")["warnings"]
+        check("verify: phase files with no readable module headings are flagged",
+              any("plan/" in w and "### Module" in w for w in warnings), warnings)
+
+
 def main():
     for t in (t_migrate, t_record_review, t_sessions_and_forget,
               t_touch_state_and_profile, t_gate_check,
@@ -3013,7 +3057,7 @@ def main():
               t_mastered_due_for_check, t_feynman_after_last_miss,
               t_gate_seeded_module, t_exposure_routes, t_add_concept_bloom,
               t_verify_implies_readers, t_history_cap_keeps_facts,
-              t_syllabus):
+              t_syllabus, t_plan_single_number_headings):
         print(f"-- {t.__name__}")
         try:
             t()

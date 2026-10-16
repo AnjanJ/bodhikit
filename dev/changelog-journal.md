@@ -8,6 +8,13 @@ This is the full, unabridged, patch-by-patch changelog kept for the maintainer â
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [Unreleased]
+
+Fixes from the maintainer's first non-code project: a political-theory course generated through the ChatGPT listing (1.23.0) on 14 October and reviewed on 16 October. These are bug fixes, so the feature freeze does not apply.
+
+### The plan reader sees single-number module headings
+The OpenAI build's `/learn` numbered modules once across the course (`### Module 7 â€” name`). `MODULE_HEADING_RE` required `N.M`, so `syllabus` read zero modules and `/plan`, `/progress` and `/continue`'s position line were all empty, silently. The reader now accepts one number (the id is the number as written; a nameless heading is still named `Module 7`), and `verify` warns when phase files exist but no heading parses, because the Stop hook and the evals run `verify`, not `syllabus`. The KB still documents `N.M` as the form to write. Test: `t_plan_single_number_headings`, written from the real plan's shape and failing (4 checks) before the fix.
+
 ## [1.24.0] - 2026-10-15
 
 The learner-request release. Two asks reported by other learners (the freeze's clause (a)): see the vocabulary up front; see the syllabus with position and performance in one place. Plus one follow-through on 1.23.0.

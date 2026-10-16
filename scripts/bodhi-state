@@ -1695,7 +1695,14 @@ def slugify(text, limit=40):
 # file), and "where am I and how did I do" needs both. One read-only call.
 
 PHASE_FILE_RE = re.compile(r"^phase-(\d+)\.md$")
-MODULE_HEADING_RE = re.compile(r"^###\s+Module\s+(\d+)\.(\d+)\s*(?:[—–:-]+\s*)?(.*?)\s*$")
+# `### Module 1.2 — name` is canonical; `### Module 7 — name` (one number,
+# counted across the course) is what the OpenAI build's /learn wrote in a
+# real session, and a plan the reader cannot see empties /plan, /progress and
+# /continue's position line. The id is the number(s) as written.
+MODULE_HEADING_RE = re.compile(r"^###\s+Module\s+(\d+)(?:\.(\d+))?\s*(?:[—–:-]+\s*)?(.*?)\s*$")
+PLAN_UNREADABLE = ("plan/ has phase files but no `### Module N.M — name` (or "
+                   "`### Module N — name`) headings; /plan, /progress and the "
+                   "position line read an empty plan")
 MODULE_LINE_RE = re.compile(
     r"^\s*(?:[-*]\s+)?\*\*(Status|Target Bloom(?:'s)?(?: level)?|Concepts|Key terms?)\s*:?\*\*\s*:?\s*(.+?)\s*$",
     re.IGNORECASE)
@@ -1766,7 +1773,7 @@ def read_plan_modules(project):
                 continue
             m = MODULE_HEADING_RE.match(line)
             if m:
-                mid = f"{m.group(1)}.{m.group(2)}"
+                mid = f"{m.group(1)}.{m.group(2)}" if m.group(2) else m.group(1)
                 cur = {"phase": n, "id": mid, "name": m.group(3) or f"Module {mid}",
                        "file": f, "declaredStatus": None, "targetBloom": None,
                        "plannedConcepts": [], "keyTerms": []}
@@ -1865,8 +1872,7 @@ def cmd_syllabus(args):
                         "plan.md is not read; /housekeep migrate converts it")
         phases = []
     elif not plan:
-        warnings.append("plan/ has no `### Module N.M — name` headings; "
-                        "nothing to order")
+        warnings.append(PLAN_UNREADABLE)
 
     # Evidence per tracked module, by join key — the same tally `mastery`
     # and `snapshot` use, re-keyed so "schema design" and "Schema Design"
@@ -2730,6 +2736,11 @@ def cmd_verify(args):
     elif os.path.exists(os.path.join(bdir, "state.json")):
         warnings.append("spaced-review.json missing while state.json exists — "
                         "the review schedule may have been deleted")
+
+    # Phase files nothing can parse: syllabus would read an empty plan.
+    phases, plan = read_plan_modules(project)
+    if phases and not plan:
+        warnings.append(PLAN_UNREADABLE)
 
     pp = find_profile(project)
     if pp:
