@@ -1712,12 +1712,14 @@ MODULE_STATUS_RE = re.compile(r"\b(skipped|completed|complete|done)\b", re.IGNOR
 
 
 def norm_module_name(s):
-    """Join key for a module name: a `Module 1.2 — ` prefix dropped, whitespace
-    collapsed, case folded. Concept rows carry whatever `--module` was passed,
-    so the join tolerates the executor's spelling."""
+    """Join key for a module name: a `Module 1.2 — ` or `Module 2 — ` prefix
+    dropped, whitespace collapsed, case folded. Concept rows carry whatever
+    `--module` was passed, so the join tolerates the executor's spelling —
+    including a plan renumbered from `Module 2` to `Module 0.2` after rows
+    were written."""
     if not isinstance(s, str):
         return ""
-    stripped = re.sub(r"^\s*module\s+\d+\.\d+\s*[—–:-]*\s*", "", s, flags=re.IGNORECASE)
+    stripped = re.sub(r"^\s*module\s+\d+(?:\.\d+)?\s*[—–:-]*\s*", "", s, flags=re.IGNORECASE)
     if stripped.strip():
         s = stripped
     return re.sub(r"\s+", " ", s).strip().casefold()
@@ -2332,7 +2334,7 @@ def cmd_gate_check(args):
     # seeded module a continuation session before it was ever taught and
     # the gate never fired on the journey it exists for (review finding 2b).
     in_module = [c for c in concepts
-                 if c.get("module", "").strip().lower() == current.strip().lower()]
+                 if norm_module_name(c.get("module", "")) == norm_module_name(current)]
     started = [c for c in in_module if any(
         not h.get("deferred") and h.get("result") in ("correct", "incorrect", "partial")
         for h in c.get("reviewHistory", []) if isinstance(h, dict))]
@@ -2372,7 +2374,7 @@ def cmd_gate_check(args):
                   "currentModule": current})
             return
         prereqs = [c for c in concepts
-                   if c.get("module", "").strip().lower() == str(prior).strip().lower()]
+                   if norm_module_name(c.get("module", "")) == norm_module_name(str(prior))]
         source = "prior-module"
 
     report = []

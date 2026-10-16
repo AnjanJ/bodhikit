@@ -15,6 +15,9 @@ Fixes from the maintainer's first non-code project: a political-theory course ge
 ### The plan reader sees single-number module headings
 The OpenAI build's `/learn` numbered modules once across the course (`### Module 7 — name`). `MODULE_HEADING_RE` required `N.M`, so `syllabus` read zero modules and `/plan`, `/progress` and `/continue`'s position line were all empty, silently. The reader now accepts one number (the id is the number as written; a nameless heading is still named `Module 7`), and `verify` warns when phase files exist but no heading parses, because the Stop hook and the evals run `verify`, not `syllabus`. The KB still documents `N.M` as the form to write. Test: `t_plan_single_number_headings`, written from the real plan's shape and failing (4 checks) before the fix.
 
+### A renumbered plan keeps its review rows
+After the plan moved to `Module 0.2 — name`, the six review rows and `state.json` still said `Module 2 — name`. `norm_module_name` dropped only an `N.M` prefix, so no row joined its module and the position fell back to `currentModuleIndex` with a warning. It now drops a one-number prefix too, and `gate-check` uses the same key for in-module and prior-module matches instead of a raw lowercase compare (which would also have missed a heading-name vs prefixed-row pair). Test: `t_module_prefix_join`, 3 checks, failing against the previous commit's script. The real project now reads 6 joined concepts, no unplanned modules, no warnings.
+
 ## [1.24.0] - 2026-10-15
 
 The learner-request release. Two asks reported by other learners (the freeze's clause (a)): see the vocabulary up front; see the syllabus with position and performance in one place. Plus one follow-through on 1.23.0.

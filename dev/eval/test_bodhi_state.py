@@ -3033,6 +3033,40 @@ def t_plan_single_number_headings():
               any("plan/" in w and "### Module" in w for w in warnings), warnings)
 
 
+def t_module_prefix_join():
+    # The same project after its plan was renumbered to `0.1, 0.2, …`: the
+    # concept rows and state.json still carry the old `Module 2 — ` spelling.
+    # The join key dropped only a `Module N.M — ` prefix, so these rows never
+    # joined and the position fell back to currentModuleIndex with a warning.
+    with tempfile.TemporaryDirectory() as root:
+        row = {"box": 1, "bloomLevel": 3, "nextReview": "2026-01-05", "feynmanPassed": False,
+               "consecutiveCorrectAtL4Plus": 0, "reviewHistory": []}
+        sr = {"version": 3, "sessionHistory": [], "concepts": [
+            dict(row, name="need-sensitive allocation", module="Module 2 — Freedom and equality"),
+            dict(row, name="ownership versus control", module="module 3: Scarcity"),
+        ]}
+        state = {"version": 2, "projectName": "proj", "sessionDates": [],
+                 "currentPhase": "Phase 0 — Tools",
+                 "currentModule": "Module 2 — Freedom and equality",
+                 "currentModuleIndex": 0, "overallCompletion": 0}
+        proj = make_project(root, spaced_review=sr, state=state)
+        write_plan(proj, {
+            "phase-0.md": ("# Phase 0 — Tools\n\n### Module 0.1 — Claims and values\n\n"
+                           "### Module 0.2 — Freedom and equality\n"),
+            "phase-1.md": "# Phase 1 — Markets\n\n### Module 1.1 — Scarcity\n",
+        })
+        out = run(proj, "syllabus", on="2026-01-02")
+        check("syllabus: a concept's `Module 2 — ` prefix joins the plan module by name",
+              out["modules"][1]["evidence"]["tracked"] and out["modules"][1]["evidence"]["concepts"] == 1
+              and out["modules"][2]["evidence"]["concepts"] == 1 and out["unplanned"] == [],
+              out)
+        check("syllabus: currentModule `Module 2 — name` resolves by name, not by index fallback",
+              out["position"]["index"] == 2 and out["warnings"] == [], out)
+        gate = run(proj, "gate-check", "--module", "Scarcity", "--prior-module", "Freedom and equality")
+        check("gate-check: the prior module's concepts are found under their old `Module 2 — ` spelling",
+              [p["name"] for p in gate["prerequisites"]] == ["need-sensitive allocation"], gate)
+
+
 def main():
     for t in (t_migrate, t_record_review, t_sessions_and_forget,
               t_touch_state_and_profile, t_gate_check,
@@ -3057,7 +3091,7 @@ def main():
               t_mastered_due_for_check, t_feynman_after_last_miss,
               t_gate_seeded_module, t_exposure_routes, t_add_concept_bloom,
               t_verify_implies_readers, t_history_cap_keeps_facts,
-              t_syllabus, t_plan_single_number_headings):
+              t_syllabus, t_plan_single_number_headings, t_module_prefix_join):
         print(f"-- {t.__name__}")
         try:
             t()
