@@ -57,12 +57,21 @@ Every classified concept sits in exactly one tier. The ladder is ordered and eva
 
 | Tier | Criteria | Learner-facing word |
 |---|---|---|
-| **mastered** | Bloom 4+ AND 3 consecutive correct at Level 4+ AND Box 4-5 AND Feynman check passed AND built with it in working code, both since the last miss | *Solid* — can find where it breaks and explain the trade-offs |
+| **mastered** | Bloom 4+ AND 3 consecutive correct at Level 4+ AND Box 4-5 AND Feynman check passed AND applied it in work the tutor read (*Applied Evidence* below), both since the last miss | *Solid* — can find where it breaks and explain the trade-offs |
 | **familiar** | Bloom 3+ AND Box 2+ (not yet mastered) | *Working* — can use it with guidance |
 | **introduced** | classified (Bloom 1+), everything below familiar | *Introduced* — can explain it |
 | **unclassified** | Bloom 0 — no v3 writer has classified it yet | *—* (not "introduced": nothing has been observed) |
 
-**`mastered` is the predicate; *Solid* is the display word.** The five-conjunct formula is the canonical one from the `state-ops` KB (`is_mastered`) — this table names its tier, it does not restate or fork it. The fifth conjunct (1.20.0) exists because the other four can all be earned in conversation: a level is graded from an explanation, the box from recall, the streak from quiz answers, the Feynman flag from an explain-back. *Solid* claims the learner can debug it; one exercise that ran is the least that claim can rest on. The right-hand column is display vocabulary for module rollups in any skill (`/progress`, `/evaluate`, `/mentor`): the plugin's internal scales are instructor-facing instruments, and a learner reads a position ("can use it with guidance"), not a number. Always render the word with its outcome clause; the clause is what makes the word mean something.
+**`mastered` is the predicate; *Solid* is the display word.** The five-conjunct formula is the canonical one from the `state-ops` KB (`is_mastered`) — this table names its tier, it does not restate or fork it. The fifth conjunct (1.20.0) exists because the other four can all be earned in conversation: a level is graded from an explanation, the box from recall, the streak from quiz answers, the Feynman flag from an explain-back. *Solid* claims the learner can find where it breaks; one piece of applied work is the least that claim can rest on.
+
+### Applied Evidence (canonical — what `--applied` means)
+
+`record-review --applied` (stored as `reviewHistory[].applied`) says the learner used the concept in work the tutor read, not only explained or recalled it. It is the evidence the prerequisite gate and the fifth conjunct accept. What counts depends on the topic:
+
+- **A topic with code:** code the learner wrote that ran — a `/teach` or `/practice` exercise, a piece they drove in `/pair`. Code that never ran does not count.
+- **A topic without code** (political theory, history, philosophy, writing): a written piece saved in the project that applies the concept to a case it was not taught on — an argument map, a short analysis, an essay, a comparison table. It is a file the tutor read, not a chat reply, and the case is new: restating the lesson's own example is recall.
+
+Never applied evidence, on any topic: an explanation, a quiz answer, or work the tutor wrote or dictated. From 1.20.0 until this section was added, the rule said "working code" only, so on a topic without code the fifth conjunct could never hold and no concept could reach *Solid*. The right-hand column is display vocabulary for module rollups in any skill (`/progress`, `/evaluate`, `/mentor`): the plugin's internal scales are instructor-facing instruments, and a learner reads a position ("can use it with guidance"), not a number. Always render the word with its outcome clause; the clause is what makes the word mean something.
 
 **Solid is a claim about now, so it carries a date.** A mastered concept whose review is overdue by more than its box interval (`masteredDueForCheck`) renders *Solid, due for a check*. It stays `mastered` — access to a well-learned concept fades while its storage persists, and relearning it is fast (Bjork & Bjork, *A new theory of disuse*, 1992) — but the word stops asserting what no recent recall has shown. Tutoring systems that certify mastery re-test it on the same logic (ASSISTments' reassessment system: Wang & Heffernan, EDM 2011).
 

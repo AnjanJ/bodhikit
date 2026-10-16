@@ -659,9 +659,9 @@ def apply_review(concept, result, tested_bloom, confidence=None, note=None,
                  tomorrow's review stand; no box/counter/bloom movement.
     bloomLevel only ever ratchets up (demotion is /forget's job, and even
     /forget demotes the box, not the Bloom classification).
-    `applied` marks the entry as demonstrated in working code the tutor read
-    (an exercise, a driven piece) rather than in an explanation or a quiz
-    answer. It is a separate axis from the level: the rubric still sets
+    `applied` marks the entry as demonstrated in work the tutor read (code
+    that ran, or a written application on a non-code topic; blooms-taxonomy
+    KB *Applied Evidence*) rather than in an explanation or a quiz answer. It is a separate axis from the level: the rubric still sets
     `--tested-bloom`, and the flag is what the gate and the mastery formula
     read for "can the learner actually build with it" (1.20.0).
     """
@@ -1244,7 +1244,7 @@ def is_mastered(c):
     """Canonical mastery formula (state-ops KB; field semantics in state-schema).
 
     Five conjuncts since 1.20.0: the fifth, one correct demonstrated in
-    working code since the last miss, is what keeps "Solid" from being
+    applied work since the last miss, is what keeps "Solid" from being
     earned entirely in conversation. Since 1.23.0 the explain-back must
     also postdate the last miss (feynman_current). Do not redefine inline.
     """
@@ -2181,10 +2181,10 @@ def archive_history(c, archived):
 
 
 def applied_evidence(c):
-    """Correct results demonstrated in working code (`applied: true`) SINCE
-    THE LAST MISS, the same reset as evidence_at_3_plus. The level says how
-    well the learner can *talk about* a concept; this says whether they have
-    *built* with it. Every recorded level before 1.20.0 came from an
+    """Correct results demonstrated in applied work (`applied: true`: code
+    that ran, or a written application on a non-code topic) SINCE THE LAST
+    MISS, the same reset as evidence_at_3_plus. The level says how well the
+    learner can *talk about* a concept; this says whether they have *used* it. Every recorded level before 1.20.0 came from an
     explanation or a quiz answer, so the gate and the mastery formula could
     be satisfied without the learner ever writing a line: the learner
     finding that motivated the flag. Deferred entries are skipped; archived
@@ -2845,9 +2845,10 @@ def main():
     s.add_argument("--note", default=None, help="short lastResult note")
     s.add_argument("--source", default=None, help="which skill produced this review")
     s.add_argument("--applied", action="store_true",
-                   help="the outcome was demonstrated in working code the tutor "
-                        "read (exercise, driven piece), not an explanation or "
-                        "quiz answer; feeds the gate and the mastery formula")
+                   help="the outcome was demonstrated in work the tutor read: "
+                        "code that ran, or a written application on a non-code "
+                        "topic; not an explanation or quiz answer. Feeds the "
+                        "gate and the mastery formula")
     s.add_argument("--retry", action="store_true",
                    help="successive-relearning retry: history entry only, no "
                         "box/counter/bloom movement (the original demotion stands)")

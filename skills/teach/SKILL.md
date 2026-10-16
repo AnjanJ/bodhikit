@@ -178,7 +178,7 @@ The session is invisible to every future skill until these land. Per the `state-
      --module "<current module>" --source teach
    ```
 
-   Add `--applied` only when Phase 4 produced working code you read (the exercise ran, or the deepening question was answered in code that ran). It is a second axis, not a level: the row still comes from the explanation, and the flag is the only evidence the gate and the mastery formula accept for "can build with it" (`state-ops` KB). An understanding-only session, a prose-only completion, or code that never ran gets no flag.
+   Add `--applied` only when Phase 4 produced applied work you read (`blooms-taxonomy` KB *Applied Evidence*): code that ran, or, on a topic without code, the exercise's written application saved in the project. It is a second axis, not a level: the row still comes from the explanation, and the flag is the only evidence the gate and the mastery formula accept for "can build with it" (`state-ops` KB). An understanding-only session, a chat-only answer, or code that never ran gets no flag.
 
    (`--module` auto-creates the concept if this was its first session.) `--tested-bloom` is the row the answer reached, not the row the learner claims for it (`blooms-taxonomy` KB); it ratchets and feeds the prerequisite gate. Tell the learner where they stand as the output's `bloomOutcome` clause; only if it reports `crossedLevel: true` name the rung too ("That moves you to **<bloomLabel>** — <bloomOutcome>") — the `blooms-taxonomy` KB rendering rule. Under the rubric's check-5 condition: `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> set-feynman --concept "<concept>"`.
 
