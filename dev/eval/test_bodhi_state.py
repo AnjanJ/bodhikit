@@ -1627,6 +1627,12 @@ def t_bloom_render():
               scale)
         check("render: every rung has an outcome clause in second person",
               all(r["outcome"].startswith("you can") for r in scale), scale)
+        # A political-theory learner was told "you can apply it in working
+        # code with some guidance" about protest rights (16 October 2026).
+        # One wording serves every topic: no rung may assume the subject is code.
+        coded = [r["outcome"] for r in scale
+                 if any(w in r["outcome"] for w in ("code", "debug", "design"))]
+        check("render: no outcome clause assumes the topic is code", coded == [], coded)
 
 
 def t_gate_evidence():
@@ -2424,7 +2430,7 @@ def t_syllabus():
         tr = out["modules"][3]
         check("syllabus: target Bloom parsed from a number and rendered with label and outcome",
               tr["targetBloom"] == 4 and tr["targetBloomLabel"] == "Analyze"
-              and tr["targetBloomOutcome"].startswith("you can reason"), tr)
+              and tr["targetBloomOutcome"].startswith("you can work out"), tr)
         check("syllabus: target Bloom parsed from a label word",
               out["modules"][4]["targetBloom"] == 5, out["modules"][4])
         check("syllabus: planned concepts list parsed",

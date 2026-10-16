@@ -148,7 +148,7 @@ The writes are the product of the quiz; the results table is the receipt. Per th
 | Concept | Result | Confidence | What you showed | Next review |
 |---------|--------|------------|-----------------|-------------|
 
-`What you showed` is the `record-review` output's `bloomOutcome` clause (e.g. *you can apply it in working code with some guidance*), never the number and not the bare label. If the output reports `crossedLevel: true`, add one sentence after the table naming the rung: "That moves `<concept>` to **<bloomLabel>** — <bloomOutcome>." — the one place a quiz speaks a rung's name.
+`What you showed` is the `record-review` output's `bloomOutcome` clause (e.g. *you can apply it to a real case with some guidance*), never the number and not the bare label. If the output reports `crossedLevel: true`, add one sentence after the table naming the rung: "That moves `<concept>` to **<bloomLabel>** — <bloomOutcome>." — the one place a quiz speaks a rung's name.
 
 ### What is growing well
 ### What needs more sunlight

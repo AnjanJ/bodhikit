@@ -95,15 +95,15 @@ BodhiKit then runs **Cross-Project Reconciliation** — since this is her first 
 
 Next, the **skill-assessor agent** takes over for 8–10 adaptive questions. It starts at the Apply rung ("can you use this in working code?") and adjusts up or down per topic. Priya answers questions on ownership, lifetimes, traits, async, error handling. She knows ownership conceptually but cannot write it; lifetimes are a blank wall; traits feel like Python's duck-typing-meets-interfaces; async she knows from Python. The agent returns a structured assessment:
 
-> Ownership: **Understand** — you can explain what it does in your own words (you rated yourself higher: that's the gap we'll close first).
+> Ownership: **Understand** — you can explain it in your own words (you rated yourself higher: that's the gap we'll close first).
 > Borrowing: **Remember** — you can recall the terms and what they refer to.
 > Lifetimes: nothing observed yet — a blank wall, and that is a fine place to start.
-> Traits: **Understand** — you can explain what it does in your own words (your duck-typing analogy gets you partway; I am less sure of this one).
+> Traits: **Understand** — you can explain it in your own words (your duck-typing analogy gets you partway; I am less sure of this one).
 > Generics: **Remember** — you can recall the terms and what they refer to.
 > Error handling (Result/?): **Remember** — you can recall the terms and what they refer to.
-> Async: **Understand** — you can explain what it does in your own words (carried over from Python).
+> Async: **Understand** — you can explain it in your own words (carried over from Python).
 > Tokio: nothing observed yet.
-> Testing: you can apply it in working code with some guidance (transferred from Python).
+> Testing: you can apply it to a real case with some guidance (transferred from Python).
 
 BodhiKit uses this to generate a **personalized learning plan**: 3 phases over ~10 weeks, with modules calibrated to Priya's starting points. Phase 0 (Week 1–2): ownership, borrowing, lifetimes — the hard foundation. Phase 1 (Week 3–6): traits, generics, error handling, modules. Phase 2 (Week 7–10): async runtime, tokio, the TCP server capstone project. The plan is written to `learningWithBodhi/rust-network-services/.bodhi/plan/README.md` plus per-phase files.
 
@@ -425,7 +425,7 @@ These three skills let you see what you know, what you have planned, and where y
 
 #### `/bodhikit:progress [quick|all|project-name]`
 
-**What it does.** Three views on the same question, at three depths. **`quick`**: a flourish-free 3-line check-in (project, *Module 3 of 8* with its name and completion, streak, concepts due today) — this is what `/continue` shows first. **No argument** (or a project name): the full dashboard — the syllabus in plan order with each module's status, a per-module tier (**Solid** / **Working** / **Introduced**), mastered count and next review (the same rows `/plan view` shows), a *waiting for their review day* count so a quiet board reads as the schedule working rather than you being stuck, per-concept positions as outcome clauses (e.g. *you can apply it in working code with some guidance*) with a one-line legend of the rung names, spaced-review retention by box, confidence calibration once you have tagged quiz answers, and a growth-trajectory closing. **`all`**: a one-line-per-project table across active, stale, and dormant tracks with health flags (unmigrated files, broken JSON, incomplete layouts).
+**What it does.** Three views on the same question, at three depths. **`quick`**: a flourish-free 3-line check-in (project, *Module 3 of 8* with its name and completion, streak, concepts due today) — this is what `/continue` shows first. **No argument** (or a project name): the full dashboard — the syllabus in plan order with each module's status, a per-module tier (**Solid** / **Working** / **Introduced**), mastered count and next review (the same rows `/plan view` shows), a *waiting for their review day* count so a quiet board reads as the schedule working rather than you being stuck, per-concept positions as outcome clauses (e.g. *you can apply it to a real case with some guidance*) with a one-line legend of the rung names, spaced-review retention by box, confidence calibration once you have tagged quiz answers, and a growth-trajectory closing. **`all`**: a one-line-per-project table across active, stale, and dormant tracks with health flags (unmigrated files, broken JSON, incomplete layouts).
 
 **When to use.** `quick` when you want "where am I?" without committing to a session. The dashboard weekly or bi-weekly to take stock, or before deciding whether to push forward or shore up foundations. `all` when you run multiple projects and want the portfolio view.
 
@@ -569,7 +569,7 @@ These three go beyond the routine when you need depth, materials, or a code-leve
 ```
 /bodhikit:practice error handling
 ```
-> "Write a function `parse_config(path: &str) -> Result<Config, ConfigError>` that handles file-not-found, invalid TOML, and missing-required-field cases distinctly. No starter code — on error handling you can apply it in working code with some guidance, and this time the guidance is the test file. Tests are in `exercises/error-handling/tests.rs`. When you have a working version, say so and I will look at it."
+> "Write a function `parse_config(path: &str) -> Result<Config, ConfigError>` that handles file-not-found, invalid TOML, and missing-required-field cases distinctly. No starter code — on error handling you can apply it to a real case with some guidance, and this time the guidance is the test file. Tests are in `exercises/error-handling/tests.rs`. When you have a working version, say so and I will look at it."
 
 **Pedagogy:** [Deliberate Practice](#5-deliberate-practice-ericsson), [Constructivism](#9-constructivism--spiral-curriculum-piaget-bruner-papert), [Bloom](#1-blooms-taxonomy) (calibration).
 
@@ -817,11 +817,11 @@ BodhiKit tracks your skill level per concept using Bloom's Taxonomy, and shows i
 | Label | What it means |
 |-------|---------------|
 | **Remember** | you can recall the terms and what they refer to |
-| **Understand** | you can explain what it does in your own words |
-| **Apply** | you can apply it in working code with some guidance |
-| **Analyze** | you can reason about why it behaves as it does and debug it on your own |
-| **Evaluate** | you can weigh approaches and defend a design choice |
-| **Create** | you can design something new with it and teach it |
+| **Understand** | you can explain it in your own words |
+| **Apply** | you can apply it to a real case with some guidance |
+| **Analyze** | you can work out why it works as it does and find where it breaks, on your own |
+| **Evaluate** | you can weigh the alternatives and defend a choice between them |
+| **Create** | you can create something new with it and teach it |
 | *(nothing observed yet)* | the concept has not been assessed or taught — not rendered as a level |
 
 The clause is what you see day to day; the label appears when it motivates — at the moment you earn it — and is otherwise a grade, so it stays out of the way. Underneath, each rung is a number from 1 to 6 — an instructor-facing instrument that BodhiKit does not quote to you, except in `/evaluate`'s self-prediction question, where you and the tutor need a shared scale. Module tiers (**Solid** / **Working** / **Introduced**) shown by `/progress` are a separate, coarser summary of how a whole module's concepts are doing.

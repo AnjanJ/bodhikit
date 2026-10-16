@@ -20,19 +20,19 @@ user-invocable: false
 
 ## Learner-Facing Rendering (canonical — every skill, not just `/progress`)
 
-The number is an instructor-facing instrument and so, by default, is the label. A learner reads the **outcome clause** — what they can do, phrased as application and reasoning — on its own: "you can apply it in working code with some guidance" is a position with a next step implied; "**Apply**" is a grade. The rung's name is spoken in exactly two places: (a) at the moment a learner **crosses** a rung (`record-review` reports `crossedLevel: true`; `/progress`'s growth line names a movement), because a named rung earned just now motivates, and (b) the `/progress` full dashboard's one-line legend (`bloomScale`), so the words mean something when they do appear. Everywhere else: the clause alone.
+The number is an instructor-facing instrument and so, by default, is the label. A learner reads the **outcome clause** — what they can do, phrased as application and reasoning — on its own: "you can apply it to a real case with some guidance" is a position with a next step implied; "**Apply**" is a grade. The rung's name is spoken in exactly two places: (a) at the moment a learner **crosses** a rung (`record-review` reports `crossedLevel: true`; `/progress`'s growth line names a movement), because a named rung earned just now motivates, and (b) the `/progress` full dashboard's one-line legend (`bloomScale`), so the words mean something when they do appear. Everywhere else: the clause alone.
 
 | Level | Label | Outcome clause (second person) |
 |---|---|---|
 | 0 | — | nothing observed yet (not rendered as a level — see *Unclassified is not a zero*) |
 | 1 | **Remember** | you can recall the terms and what they refer to |
-| 2 | **Understand** | you can explain what it does in your own words |
-| 3 | **Apply** | you can apply it in working code with some guidance |
-| 4 | **Analyze** | you can reason about why it behaves as it does and debug it on your own |
-| 5 | **Evaluate** | you can weigh approaches and defend a design choice |
-| 6 | **Create** | you can design something new with it and teach it |
+| 2 | **Understand** | you can explain it in your own words |
+| 3 | **Apply** | you can apply it to a real case with some guidance |
+| 4 | **Analyze** | you can work out why it works as it does and find where it breaks, on your own |
+| 5 | **Evaluate** | you can weigh the alternatives and defend a choice between them |
+| 6 | **Create** | you can create something new with it and teach it |
 
-Rendering rule: the clause alone — `you can apply it in working code with some guidance` — from `bloomOutcome`. At a crossing, the label joins it: "That moves you to **Apply** — you can apply it in working code with some guidance." Movement reads as words, never "2 → 3". `bodhi-state` returns `bloomLabel` and `bloomOutcome` next to every `bloomLevel` it emits (`record-review`, `session-brief`, `gate-check`, and a `bloomScale` legend in `snapshot`) — render those fields; do not maintain a translation table in a skill.
+Rendering rule: the clause alone — `you can apply it to a real case with some guidance` — from `bloomOutcome`. At a crossing, the label joins it: "That moves you to **Apply** — you can apply it to a real case with some guidance." Movement reads as words, never "2 → 3". `bodhi-state` returns `bloomLabel` and `bloomOutcome` next to every `bloomLevel` it emits (`record-review`, `session-brief`, `gate-check`, and a `bloomScale` legend in `snapshot`) — render those fields; do not maintain a translation table in a skill.
 
 Where a bare number is still allowed (three sanctioned exceptions): (1) `/evaluate`'s self-prediction question, because `predictionDelta` needs learner and tutor on one numeric scale — anchor each number with its clause in the same breath; (2) the **Bloom adjustments** line of a `progress.md` entry, written as `Label (N)` so the prose can be checked against the tracking JSON; (3) script invocations (`--tested-bloom N`), which the learner never sees.
 
@@ -57,9 +57,9 @@ Every classified concept sits in exactly one tier. The ladder is ordered and eva
 
 | Tier | Criteria | Learner-facing word |
 |---|---|---|
-| **mastered** | Bloom 4+ AND 3 consecutive correct at Level 4+ AND Box 4-5 AND Feynman check passed AND built with it in working code, both since the last miss | *Solid* — can debug it and explain the trade-offs |
+| **mastered** | Bloom 4+ AND 3 consecutive correct at Level 4+ AND Box 4-5 AND Feynman check passed AND built with it in working code, both since the last miss | *Solid* — can find where it breaks and explain the trade-offs |
 | **familiar** | Bloom 3+ AND Box 2+ (not yet mastered) | *Working* — can use it with guidance |
-| **introduced** | classified (Bloom 1+), everything below familiar | *Introduced* — can explain what it does |
+| **introduced** | classified (Bloom 1+), everything below familiar | *Introduced* — can explain it |
 | **unclassified** | Bloom 0 — no v3 writer has classified it yet | *—* (not "introduced": nothing has been observed) |
 
 **`mastered` is the predicate; *Solid* is the display word.** The five-conjunct formula is the canonical one from the `state-ops` KB (`is_mastered`) — this table names its tier, it does not restate or fork it. The fifth conjunct (1.20.0) exists because the other four can all be earned in conversation: a level is graded from an explanation, the box from recall, the streak from quiz answers, the Feynman flag from an explain-back. *Solid* claims the learner can debug it; one exercise that ran is the least that claim can rest on. The right-hand column is display vocabulary for module rollups in any skill (`/progress`, `/evaluate`, `/mentor`): the plugin's internal scales are instructor-facing instruments, and a learner reads a position ("can use it with guidance"), not a number. Always render the word with its outcome clause; the clause is what makes the word mean something.

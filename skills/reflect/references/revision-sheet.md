@@ -16,7 +16,7 @@ Loaded on demand by the skill that closes the session (`/reflect` Phase 4; or `/
 Project: <project> · Module: <module> · Session <N>
 
 ## What we covered
-- **<concept>** — <bloomOutcome clause, e.g. you can apply it in working code with some guidance>
+- **<concept>** — <bloomOutcome clause, e.g. you can apply it to a real case with some guidance>
 (one line per concept; outcome clauses only — no Bloom numbers, no box numbers)
 
 ## The key idea, in plain words

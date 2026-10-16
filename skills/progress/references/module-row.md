@@ -19,11 +19,11 @@ The learner reads a position in outcome terms, never a Bloom number or a Leitner
 | `evidence` | Render |
 |---|---|
 | `tracked: false`, or `summaryTier: null` (`masteryPct: null`) | `—` (nothing observed; never `0%`) |
-| `mastered == concepts`, `dueForCheck == 0` | `**Solid** — can debug it and explain the trade-offs` |
-| `mastered == concepts`, `dueForCheck > 0` | `**Solid, due for a check** — can debug it and explain the trade-offs` |
-| `summaryTier: introduced` | `**Introduced** — can explain what it does` |
+| `mastered == concepts`, `dueForCheck == 0` | `**Solid** — can find where it breaks and explain the trade-offs` |
+| `mastered == concepts`, `dueForCheck > 0` | `**Solid, due for a check** — can find where it breaks and explain the trade-offs` |
+| `summaryTier: introduced` | `**Introduced** — can explain it` |
 | `summaryTier: familiar` | `**Working** — can use it with guidance` |
-| `summaryTier: mastered`, `mastered < concepts` (the rest are unclassified seeds) | `**Solid** — can debug it and explain the trade-offs (N solid; M not yet observed)` |
+| `summaryTier: mastered`, `mastered < concepts` (the rest are unclassified seeds) | `**Solid** — can find where it breaks and explain the trade-offs (N solid; M not yet observed)` |
 
 Then, when the module is not uniform, append the spread from `tiers` using the learner-facing words and counting classified concepts only: `(2 solid, 1 working)`. When `applied` is below `classified`, add `; built with N of M`, so explained-but-never-run concepts are visible without a level. Always render the word with its outcome clause — a bare "Working" is a grade; "Working — can use it with guidance" is a position with a next step implied. Concepts at `unclassified` are left out of the spread: nothing has been observed about them.
 

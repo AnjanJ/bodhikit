@@ -57,11 +57,11 @@ BLOOM_LABELS = {0: None, 1: "Remember", 2: "Understand", 3: "Apply",
 BLOOM_OUTCOMES = {
     0: "nothing observed yet",
     1: "you can recall the terms and what they refer to",
-    2: "you can explain what it does in your own words",
-    3: "you can apply it in working code with some guidance",
-    4: "you can reason about why it behaves as it does and debug it on your own",
-    5: "you can weigh approaches and defend a design choice",
-    6: "you can design something new with it and teach it",
+    2: "you can explain it in your own words",
+    3: "you can apply it to a real case with some guidance",
+    4: "you can work out why it works as it does and find where it breaks, on your own",
+    5: "you can weigh the alternatives and defend a choice between them",
+    6: "you can create something new with it and teach it",
 }
 
 
