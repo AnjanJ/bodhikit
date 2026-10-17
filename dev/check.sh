@@ -378,11 +378,31 @@ else
 fi
 # ---------------------------------------------------------------------------
 # 47. docs/example-project must pass bodhi-state verify with zero errors
-# (ties the in-repo example to the live schema).
+# (ties the in-repo example to the live schema), and its plan must read the
+# way the plugin's own does: `syllabus` finds the modules and the position
+# with no warning, and every review row joins a plan module. verify only
+# warns on an unreadable plan, so until 1.24.0 the example showed an empty
+# syllabus and this rule passed.
 # ---------------------------------------------------------------------------
 if [ -d docs/example-project ]; then
   if ! python3 scripts/bodhi-state --project docs/example-project verify >/dev/null 2>&1; then
     err "docs/example-project fails bodhi-state verify"
+  fi
+  example_plan_problems=$(python3 scripts/bodhi-state --project docs/example-project syllabus 2>/dev/null | python3 -c '
+import json, sys
+try:
+    d = json.load(sys.stdin)
+except ValueError:
+    sys.exit("syllabus printed no JSON")
+for w in d.get("warnings") or []:
+    print(w)
+if not d.get("modules"):
+    print("no plan module headings read")
+for u in d.get("unplanned") or []:
+    print("review rows name module %r, which is not a plan heading" % u.get("module"))
+' 2>&1)
+  if [ -n "$example_plan_problems" ]; then
+    while IFS= read -r line; do err "docs/example-project syllabus: $line"; done <<< "$example_plan_problems"
   fi
 fi
 # ---------------------------------------------------------------------------

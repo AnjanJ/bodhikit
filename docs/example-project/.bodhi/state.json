@@ -8,8 +8,8 @@
   "sessionDates": ["2026-03-08", "2026-03-10", "2026-03-12", "2026-03-13", "2026-03-14"],
   "currentStreak": 3,
   "currentPhase": 2,
-  "currentModule": "state-and-hooks",
-  "currentModuleIndex": 4,
+  "currentModule": "State and Hooks",
+  "currentModuleIndex": 3,
   "lastActivity": "Completed Module 2.1 useState exercises; built a todo list with hints on immutable updates.",
   "initialBloomLevel": {
     "html-css": 4,

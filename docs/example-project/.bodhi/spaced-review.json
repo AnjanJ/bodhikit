@@ -1,223 +1,278 @@
 {
   "version": 3,
-  "lastReviewCheck": "2026-03-14",
   "concepts": [
     {
-      "id": "jsx-syntax",
       "name": "JSX Syntax",
-      "module": "jsx-basics",
-      "box": 4,
-      "lastReviewed": "2026-03-12",
-      "nextReview": "2026-03-26",
+      "module": "JSX Basics",
+      "introduced": "2026-03-08",
+      "box": 3,
+      "nextReview": "2026-03-20",
+      "lastReviewed": "2026-03-13",
+      "question": "",
+      "lastResult": "correct",
+      "bloomLevel": 3,
+      "feynmanPassed": false,
+      "consecutiveCorrectAtL4Plus": 0,
       "reviewHistory": [
         {
           "date": "2026-03-08",
           "result": "correct",
           "boxBefore": 1,
-          "boxAfter": 2
+          "bloomLevel": 3,
+          "source": "teach",
+          "applied": true
         },
         {
           "date": "2026-03-10",
           "result": "correct",
-          "boxBefore": 2,
-          "boxAfter": 3
+          "boxBefore": 1,
+          "bloomLevel": 3,
+          "confidence": "sure",
+          "source": "quiz"
         },
         {
-          "date": "2026-03-12",
+          "date": "2026-03-13",
           "result": "correct",
-          "boxBefore": 3,
-          "boxAfter": 4
+          "boxBefore": 2,
+          "bloomLevel": 3,
+          "confidence": "sure",
+          "source": "quiz"
         }
-      ],
-      "relatedExercise": "exercises/01-hello-jsx/",
-      "bloomLevel": 0,
-      "feynmanPassed": false,
-      "consecutiveCorrectAtL4Plus": 0,
-      "question": "",
-      "lastResult": ""
+      ]
     },
     {
-      "id": "component-functions",
       "name": "Component Functions",
-      "module": "components",
-      "box": 3,
-      "lastReviewed": "2026-03-13",
-      "nextReview": "2026-03-20",
+      "module": "Components",
+      "introduced": "2026-03-10",
+      "box": 2,
+      "nextReview": "2026-03-15",
+      "lastReviewed": "2026-03-12",
+      "question": "",
+      "lastResult": "correct",
+      "bloomLevel": 3,
+      "feynmanPassed": false,
+      "consecutiveCorrectAtL4Plus": 0,
       "reviewHistory": [
         {
           "date": "2026-03-10",
           "result": "correct",
           "boxBefore": 1,
-          "boxAfter": 2
+          "bloomLevel": 3,
+          "source": "teach",
+          "applied": true
         },
         {
-          "date": "2026-03-13",
+          "date": "2026-03-12",
           "result": "correct",
-          "boxBefore": 2,
-          "boxAfter": 3
+          "boxBefore": 1,
+          "bloomLevel": 3,
+          "confidence": "mostly",
+          "source": "quiz"
         }
-      ],
-      "relatedExercise": "exercises/02-first-component/",
-      "bloomLevel": 0,
-      "feynmanPassed": false,
-      "consecutiveCorrectAtL4Plus": 0,
-      "question": "",
-      "lastResult": ""
+      ]
     },
     {
-      "id": "props-passing",
       "name": "Passing Props",
-      "module": "props",
-      "box": 3,
-      "lastReviewed": "2026-03-13",
-      "nextReview": "2026-03-20",
-      "reviewHistory": [
-        {
-          "date": "2026-03-10",
-          "result": "incorrect",
-          "boxBefore": 1,
-          "boxAfter": 1
-        },
-        {
-          "date": "2026-03-12",
-          "result": "correct",
-          "boxBefore": 1,
-          "boxAfter": 2
-        },
-        {
-          "date": "2026-03-13",
-          "result": "correct",
-          "boxBefore": 2,
-          "boxAfter": 3
-        }
-      ],
-      "relatedExercise": "exercises/03-user-card/",
-      "bloomLevel": 0,
-      "feynmanPassed": false,
-      "consecutiveCorrectAtL4Plus": 0,
-      "question": "",
-      "lastResult": ""
-    },
-    {
-      "id": "props-destructuring",
-      "name": "Props Destructuring",
-      "module": "props",
+      "module": "Props",
+      "introduced": "2026-03-12",
       "box": 2,
-      "lastReviewed": "2026-03-13",
       "nextReview": "2026-03-16",
+      "lastReviewed": "2026-03-13",
+      "question": "",
+      "lastResult": "correct",
+      "bloomLevel": 3,
+      "feynmanPassed": false,
+      "consecutiveCorrectAtL4Plus": 0,
       "reviewHistory": [
         {
           "date": "2026-03-12",
           "result": "correct",
           "boxBefore": 1,
-          "boxAfter": 2
-        },
-        {
-          "date": "2026-03-13",
-          "result": "incorrect",
-          "boxBefore": 2,
-          "boxAfter": 1
+          "bloomLevel": 2,
+          "source": "teach"
         },
         {
           "date": "2026-03-13",
           "result": "correct",
           "boxBefore": 1,
-          "boxAfter": 2
+          "bloomLevel": 3,
+          "source": "teach",
+          "applied": true
         }
-      ],
-      "relatedExercise": "exercises/03-user-card/",
-      "bloomLevel": 0,
-      "feynmanPassed": false,
-      "consecutiveCorrectAtL4Plus": 0,
-      "question": "",
-      "lastResult": ""
+      ]
     },
     {
-      "id": "usestate-basics",
+      "name": "Props Destructuring",
+      "module": "Props",
+      "introduced": "2026-03-12",
+      "box": 2,
+      "nextReview": "2026-03-17",
+      "lastReviewed": "2026-03-14",
+      "question": "",
+      "lastResult": "correct",
+      "bloomLevel": 2,
+      "feynmanPassed": false,
+      "consecutiveCorrectAtL4Plus": 0,
+      "reviewHistory": [
+        {
+          "date": "2026-03-13",
+          "result": "incorrect",
+          "boxBefore": 1,
+          "bloomLevel": 3,
+          "confidence": "mostly",
+          "source": "quiz"
+        },
+        {
+          "date": "2026-03-14",
+          "result": "correct",
+          "boxBefore": 1,
+          "bloomLevel": 2,
+          "confidence": "mostly",
+          "source": "quiz"
+        }
+      ]
+    },
+    {
       "name": "useState Hook",
-      "module": "state-and-hooks",
-      "box": 2,
+      "module": "State and Hooks",
+      "introduced": "2026-03-13",
+      "box": 1,
+      "nextReview": "2026-03-15",
       "lastReviewed": "2026-03-14",
-      "nextReview": "2026-03-17",
+      "question": "",
+      "lastResult": "correct",
+      "bloomLevel": 3,
+      "feynmanPassed": false,
+      "consecutiveCorrectAtL4Plus": 0,
       "reviewHistory": [
         {
-          "date": "2026-03-13",
+          "date": "2026-03-14",
           "result": "correct",
           "boxBefore": 1,
-          "boxAfter": 2
+          "bloomLevel": 3,
+          "source": "teach",
+          "applied": true
         },
         {
           "date": "2026-03-14",
           "result": "correct",
-          "boxBefore": 2,
-          "boxAfter": 2
-        }
-      ],
-      "relatedExercise": "exercises/04-counter/",
-      "bloomLevel": 0,
-      "feynmanPassed": false,
-      "consecutiveCorrectAtL4Plus": 0,
-      "question": "",
-      "lastResult": ""
-    },
-    {
-      "id": "immutable-state-updates",
-      "name": "Immutable State Updates",
-      "module": "state-and-hooks",
-      "box": 1,
-      "lastReviewed": "2026-03-14",
-      "nextReview": "2026-03-15",
-      "reviewHistory": [
-        {
-          "date": "2026-03-14",
-          "result": "incorrect",
           "boxBefore": 1,
-          "boxAfter": 1
+          "bloomLevel": 3,
+          "confidence": "sure",
+          "source": "quiz"
         }
-      ],
-      "relatedExercise": "exercises/05-todo-list/",
-      "bloomLevel": 0,
-      "feynmanPassed": false,
-      "consecutiveCorrectAtL4Plus": 0,
-      "question": "",
-      "lastResult": ""
+      ]
     },
     {
-      "id": "event-handlers",
-      "name": "Event Handlers in React",
-      "module": "state-and-hooks",
-      "box": 2,
+      "name": "Immutable State Updates",
+      "module": "State and Hooks",
+      "introduced": "2026-03-14",
+      "box": 1,
+      "nextReview": "2026-03-15",
       "lastReviewed": "2026-03-14",
-      "nextReview": "2026-03-17",
+      "question": "",
+      "lastResult": "mutated the array instead of spreading",
+      "bloomLevel": 2,
+      "feynmanPassed": false,
+      "consecutiveCorrectAtL4Plus": 0,
       "reviewHistory": [
         {
           "date": "2026-03-14",
           "result": "correct",
           "boxBefore": 1,
-          "boxAfter": 2
+          "bloomLevel": 2,
+          "source": "practice"
+        },
+        {
+          "date": "2026-03-14",
+          "result": "incorrect",
+          "boxBefore": 1,
+          "bloomLevel": 3,
+          "confidence": "mostly",
+          "source": "quiz"
         }
-      ],
-      "relatedExercise": "exercises/05-todo-list/",
-      "bloomLevel": 0,
-      "feynmanPassed": false,
-      "consecutiveCorrectAtL4Plus": 0,
-      "question": "",
-      "lastResult": ""
+      ]
     },
     {
-      "id": "conditional-rendering",
-      "name": "Conditional Rendering",
-      "module": "rendering-patterns",
+      "name": "Event Handlers in React",
+      "module": "State and Hooks",
+      "introduced": "2026-03-14",
       "box": 1,
-      "lastReviewed": null,
       "nextReview": "2026-03-15",
-      "reviewHistory": [],
-      "relatedExercise": null,
+      "lastReviewed": "2026-03-14",
+      "question": "",
+      "lastResult": "correct",
+      "bloomLevel": 3,
+      "feynmanPassed": false,
+      "consecutiveCorrectAtL4Plus": 0,
+      "reviewHistory": [
+        {
+          "date": "2026-03-14",
+          "result": "correct",
+          "boxBefore": 1,
+          "bloomLevel": 3,
+          "confidence": "sure",
+          "source": "quiz"
+        }
+      ]
+    },
+    {
+      "name": "Conditional Rendering",
+      "module": "Rendering Patterns",
+      "introduced": "2026-03-14",
+      "box": 1,
+      "nextReview": "2026-03-15",
+      "lastReviewed": null,
+      "question": "",
+      "lastResult": "",
       "bloomLevel": 0,
       "feynmanPassed": false,
       "consecutiveCorrectAtL4Plus": 0,
-      "question": "",
-      "lastResult": ""
+      "reviewHistory": []
     }
-  ]
+  ],
+  "sessionHistory": [
+    {
+      "date": "2026-03-10",
+      "type": "spaced-review",
+      "conceptsReviewed": 1,
+      "passes": 1,
+      "misses": 0,
+      "partials": 0
+    },
+    {
+      "date": "2026-03-12",
+      "type": "spaced-review",
+      "conceptsReviewed": 1,
+      "passes": 1,
+      "misses": 0,
+      "partials": 0
+    },
+    {
+      "date": "2026-03-13",
+      "type": "spaced-review",
+      "conceptsReviewed": 2,
+      "passes": 1,
+      "misses": 1,
+      "partials": 0
+    },
+    {
+      "date": "2026-03-14",
+      "type": "spaced-review",
+      "conceptsReviewed": 1,
+      "passes": 1,
+      "misses": 0,
+      "partials": 0
+    },
+    {
+      "date": "2026-03-14",
+      "type": "quiz",
+      "conceptsReviewed": 3,
+      "passes": 2,
+      "misses": 1,
+      "partials": 0,
+      "notes": "Module 2.1 quiz, 4/6; controlled inputs and the re-render trigger are not tracked concepts yet"
+    }
+  ],
+  "lastReviewCheck": "2026-03-14T21:58:08"
 }

@@ -3,6 +3,7 @@
 ## 2026-03-14 — Session 5 (Module 2.1 quiz + useState practice)
 
 **Activities:**
+- Due review: Props Destructuring, missed yesterday — answered correctly today.
 - Completed Module 2.1 useState exercises in `exercises/05-todo-list/`.
 - Built a todo list component using `useState` and event handlers.
 - Took a 6-question quiz on Module 2.1 (`useState`, immutable updates, event handler binding, re-render trigger, controlled inputs).
@@ -12,9 +13,10 @@
 - Confidence self-rating: 6/10 on `useState`.
 
 **Bloom adjustments:**
-- `state`: 2 (Understand) — held; immutable-update pattern needs reinforcement.
-- `event-handling`: 1 → 2 (Understand).
-- `hooks`: 2 (Understand) — held; ready to push toward 3 with Module 2.2.
+- `useState Hook`: — → Apply (3).
+- `Immutable State Updates`: — → Understand (2); the quiz miss at the apply level leaves it there — reteach first.
+- `Event Handlers in React`: — → Apply (3).
+- `Props Destructuring`: — → Understand (2); yesterday's miss on spread syntax recovered in today's review.
 
 **Next:** Brief re-teach of immutable state patterns + controlled inputs, then Module 2.2 (Rendering Patterns).
 
