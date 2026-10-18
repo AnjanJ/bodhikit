@@ -1099,6 +1099,47 @@ def assert_plan_view(project, transcript):
     ok("no bare Bloom/Box numbers in learner-facing text")
 
 
+
+# Applied evidence on a topic without code (f7f42ea; blooms-taxonomy KB
+# *Applied Evidence*). The pair holds the analysis fixed and varies only where
+# it lives, so both must be graded correct and only the flag may differ.
+APPLIED_CONCEPT = "Descriptive and normative claims"
+
+
+def applied_review(project, where):
+    sr = load(project, ".bodhi", "spaced-review.json")
+    c = concept(sr, APPLIED_CONCEPT)
+    entries = todays_entries(c)
+    if not entries:
+        fail(f"no review recorded for the analysis {where} — the exercise must land tracking")
+    last = entries[-1]
+    if last.get("result") != "correct":
+        fail(f"the analysis {where} graded {last.get('result')!r}; it applies the distinction "
+             "correctly to a new case, and the two scenarios differ only in where the work lives, "
+             "so a lower grade here would be grading the place, not the work")
+    ok(f"analysis {where} graded correct")
+    return last
+
+
+def assert_applied_essay(project):
+    """A written application saved in the project earns --applied."""
+    last = applied_review(project, "saved in exercises/")
+    if last.get("applied") is not True:
+        fail("the learner's analysis is saved in exercises/ and was read, but the review carries "
+             "no applied flag — on a topic without code that file is the applied evidence "
+             "(blooms-taxonomy KB, Applied Evidence)")
+    ok("applied evidence recorded for the saved analysis")
+
+
+def assert_applied_chat(project):
+    """The same analysis given only in chat is never applied evidence."""
+    last = applied_review(project, "given in the chat")
+    if last.get("applied"):
+        fail("a chat-only answer was recorded as applied evidence — an explanation or a chat "
+             "reply never counts, however good (blooms-taxonomy KB, Applied Evidence)")
+    ok("no applied flag for the chat-only analysis")
+
+
 def main():
     name, project = sys.argv[1], sys.argv[2]
     transcript = sys.argv[3] if len(sys.argv) > 3 else None
@@ -1115,7 +1156,9 @@ def main():
                   "learn-scaffold": assert_learn_scaffold,
                   "reflect-difficulty": assert_reflect_difficulty,
                   "plan-regenerate": assert_plan_regenerate,
-                  "evaluate": assert_evaluate}
+                  "evaluate": assert_evaluate,
+                  "applied-essay": assert_applied_essay,
+                  "applied-chat": assert_applied_chat}
     with_transcript = {"teach-pretest": assert_teach_pretest,
                        "teach-hint-discipline": assert_teach_hint_discipline,
                        "continue-discovery": assert_continue_discovery,

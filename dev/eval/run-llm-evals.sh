@@ -17,6 +17,7 @@
 #   dev/eval/run-llm-evals.sh grading    # the grading-calibration scenarios
 #   dev/eval/run-llm-evals.sh fidelity   # the transcript-fidelity scenarios (incl. kb-load)
 #   dev/eval/run-llm-evals.sh lifecycle  # /learn, /plan regenerate, /evaluate
+#   dev/eval/run-llm-evals.sh applied    # applied evidence on a topic without code
 #
 #   BODHI_EVAL_RUNS=8 dev/eval/run-llm-evals.sh grade-apply-band
 #                                        # sample a grading scenario N times and
@@ -47,6 +48,13 @@ set -u
 cd "$(dirname "$0")/../.." || exit 2
 REPO="$PWD"
 FIXTURE="$REPO/dev/eval/fixtures/v2-project"
+# A project on a topic without code (political theory), for the scenarios that
+# depend on the topic having no code: applied evidence is a saved written piece
+# there, not code that ran. run_scenario reads BODHI_EVAL_FIXTURE and
+# BODHI_EVAL_PROJECT, so a scenario can point at it as the held-out ones point
+# BODHI_EVAL_CONCEPT at another concept.
+NONCODE_FIXTURE="$REPO/dev/eval/fixtures/non-code-project"
+NONCODE_PROJECT="political-theory"
 FAIL=0
 
 # Harness authority (1.14.0). The first Fable 5 sweep showed that in-PROMPT
@@ -376,9 +384,10 @@ run_scenario() {
   else
     tmp=$(mktemp -d "/tmp/bodhi-eval-$name.XXXXXX")
   fi
-  cp -r "$FIXTURE" "$tmp/learningWithBodhi"
+  proj="${BODHI_EVAL_PROJECT:-sql-deep-dive}"
+  cp -r "${BODHI_EVAL_FIXTURE:-$FIXTURE}" "$tmp/learningWithBodhi"
   echo "== scenario: $name  (workdir $tmp)"
-  if [ -n "$prep" ]; then "$prep" "$tmp/learningWithBodhi/sql-deep-dive" || { echo "FAIL: $name prep"; FAIL=1; return; }; fi
+  if [ -n "$prep" ]; then "$prep" "$tmp/learningWithBodhi/$proj" || { echo "FAIL: $name prep"; FAIL=1; return; }; fi
   # --dangerously-skip-permissions is safe here: the run is confined to a
   # throwaway temp copy of the fixture. Without it, headless runs cannot
   # execute bodhi-state via Bash and silently degrade to the manual fallback
@@ -393,11 +402,11 @@ run_scenario() {
   # assertions need every assistant turn.
   if [ -n "$transcript_mode" ]; then
     transcript="$tmp/transcript.jsonl"
-    run_headless "$tmp" "$tmp/learningWithBodhi/sql-deep-dive" "$prompt" "$maxturns" "$transcript" stream
+    run_headless "$tmp" "$tmp/learningWithBodhi/$proj" "$prompt" "$maxturns" "$transcript" stream
     if truncated_by_limit "$transcript"; then
       echo "INCONCLUSIVE: $name — $(inconclusive_reason "$transcript") (transcript at $transcript)"; FAIL=1; return
     fi
-    if python3 "$REPO/dev/eval/assert_scenario.py" "$assert" "$tmp/learningWithBodhi/sql-deep-dive" "$transcript"; then
+    if python3 "$REPO/dev/eval/assert_scenario.py" "$assert" "$tmp/learningWithBodhi/$proj" "$transcript"; then
       echo "PASS: $name"
     else
       echo "FAIL: $name — transcript at $transcript, project left at $tmp"
@@ -406,13 +415,13 @@ run_scenario() {
       return
     fi
   else
-    run_headless "$tmp" "$tmp/learningWithBodhi/sql-deep-dive" "$prompt" "$maxturns" "$tmp/transcript.txt"
+    run_headless "$tmp" "$tmp/learningWithBodhi/$proj" "$prompt" "$maxturns" "$tmp/transcript.txt"
     if truncated_by_limit "$tmp/transcript.txt"; then
       echo "INCONCLUSIVE: $name — $(inconclusive_reason "$tmp/transcript.txt") (transcript at $tmp/transcript.txt)"; FAIL=1; return
     fi
     nudges=0
     while true; do
-      assert_out=$(python3 "$REPO/dev/eval/assert_scenario.py" "$assert" "$tmp/learningWithBodhi/sql-deep-dive" 2>&1)
+      assert_out=$(python3 "$REPO/dev/eval/assert_scenario.py" "$assert" "$tmp/learningWithBodhi/$proj" 2>&1)
       assert_rc=$?
       printf '%s\n' "$assert_out"
       if [ "$assert_rc" -eq 0 ]; then
@@ -425,7 +434,7 @@ run_scenario() {
           && printf '%s' "$assert_out" | grep -qi "no review"; then
         nudges=$((nudges + 1))
         echo "  -- session ended awaiting a live reply; sending learner-departure nudge"
-        run_headless_continue "$tmp" "$tmp/learningWithBodhi/sql-deep-dive" "$maxturns" "$tmp/transcript.txt"
+        run_headless_continue "$tmp" "$tmp/learningWithBodhi/$proj" "$maxturns" "$tmp/transcript.txt"
       else
         echo "FAIL: $name — transcript at $tmp/transcript.txt, project left at $tmp"
         FAIL=1
@@ -525,7 +534,7 @@ repeat_scenario() {
   echo "   (rate is for a human to judge; sweeps do not set the exit status)"
   echo "   recorded levels per run:"
   for i in $(seq 1 "$EVAL_RUNS"); do
-    d="$sweep/run-$i/learningWithBodhi/sql-deep-dive"
+    d="$sweep/run-$i/learningWithBodhi/${BODHI_EVAL_PROJECT:-sql-deep-dive}"
     [ -d "$d" ] || { echo "     run $i: (workdir missing)"; continue; }
     python3 - "$d" "$i" <<'PY'
 import json, sys, os, datetime
@@ -541,7 +550,8 @@ for c in data.get("concepts", []):
     for h in c.get("reviewHistory", []):
         if str(h.get("date", "")).startswith(t):
             rows.append(f"{c['name']}: result={h.get('result')} "
-                        f"bloom={h.get('bloomLevel')} box={h.get('boxBefore')}->{c.get('box')}")
+                        f"bloom={h.get('bloomLevel')} box={h.get('boxBefore')}->{c.get('box')}"
+                        + (" applied" if h.get("applied") else ""))
 print(f"     run {i}: " + ("; ".join(rows) if rows else "(no review recorded today)"))
 PY
   done
@@ -660,6 +670,32 @@ if [ "$want" = "all" ] || [ "$want" = "grading" ] || [ "$want" = "grade-parrot-f
   repeat_scenario grade-parrot-fails-probe \
     "/bodhikit:teach B-tree indexes — $SIM_CONTRACT Understanding-only session: I just want to understand, no exercise. Simulate my responses. Whenever you ask me to explain back, define a term, or answer a checkpoint, my answer is always this exact sentence, recited verbatim: 'A B-tree index is a self-balancing tree data structure that maintains sorted data and allows searches, sequential access, insertions, and deletions in logarithmic time.' If you probe, ask for an analogy, or ask me to say it differently, I produce the same sentence again word for word, say 'that is how I learned it', and offer nothing else. If you then give me a concrete case and ask what happens — for example inserting a new key and asking which existing key it ends up next to — I get it wrong: I guess a key that is not actually adjacent, or say 'I am not sure, maybe the first one in the tree.' My final full explanation is the original sentence once more. Grade me honestly and complete ALL tracking updates exactly as the skill specifies." \
     grade-jargon "" "" nudge
+fi
+
+# --- Applied evidence on a topic without code (f7f42ea) ---------------------
+# blooms-taxonomy KB *Applied Evidence*: on a topic without code, a written
+# piece saved in the project that applies the concept to a new case is the
+# applied evidence; an explanation or a chat reply never is. The pair holds the
+# work's quality fixed (the same analysis, dev/eval/fixtures/applied/) and
+# varies only where it lives: a file in exercises/ must earn --applied, the
+# same text in the chat must not. Both must be graded correct, so a pass
+# cannot come from grading the chat version down instead.
+APPLIED_CONCEPT="Descriptive and normative claims"
+APPLIED_TEXT=$(cat "$REPO/dev/eval/fixtures/applied/claims-analysis.md")
+prep_applied_essay() {
+  mkdir -p "$1/exercises/02-claims-in-a-new-case"
+  cp "$REPO/dev/eval/fixtures/applied/claims-analysis.md" "$1/exercises/02-claims-in-a-new-case/my-analysis.md"
+}
+if [ "$want" = "all" ] || [ "$want" = "applied" ] || [ "$want" = "applied-essay" ]; then
+  BODHI_EVAL_FIXTURE="$NONCODE_FIXTURE" BODHI_EVAL_PROJECT="$NONCODE_PROJECT" repeat_scenario applied-essay \
+    "/bodhikit:practice $APPLIED_CONCEPT — $SIM_CONTRACT Simulate my responses. Whatever exercise you set, I do it on my own and hand in a written analysis that applies the distinction to a case the lesson never used. I saved it as a file: exercises/02-claims-in-a-new-case/my-analysis.md. I wrote it myself. Read it there; I do not paste it into the chat. If you ask follow-up questions about it, I answer briefly and consistently with what I wrote. Grade the work honestly and complete ALL tracking updates exactly as the skill specifies." \
+    applied-essay prep_applied_essay "" nudge
+fi
+
+if [ "$want" = "all" ] || [ "$want" = "applied" ] || [ "$want" = "applied-chat" ]; then
+  BODHI_EVAL_FIXTURE="$NONCODE_FIXTURE" BODHI_EVAL_PROJECT="$NONCODE_PROJECT" repeat_scenario applied-chat \
+    "/bodhikit:practice $APPLIED_CONCEPT — $SIM_CONTRACT Simulate my responses. Whatever exercise you set, I answer it here in the chat. I do not save a file anywhere, and if you suggest saving it I say I would rather leave it in the chat. My answer, which applies the distinction to a case the lesson never used, is: <<<$APPLIED_TEXT>>> If you ask follow-up questions about it, I answer briefly and consistently with what I wrote. Grade the work honestly and complete ALL tracking updates exactly as the skill specifies." \
+    applied-chat "" "" nudge
 fi
 
 # --- Held-out grading (review, 2026-09-07) -----------------------------------

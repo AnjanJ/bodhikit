@@ -103,6 +103,25 @@ resulting file state:
   `correct`, Feynman held, tested-bloom < 3) because both fields are one-way
   writes: `feynmanPassed` is set-never-unset and `bloomLevel` only ratchets up.
 
+**Applied evidence on a topic without code** (`run-llm-evals.sh applied`,
+2026-10-18) — the bound `f7f42ea` drew, on a second fixture: a political-theory
+project, `fixtures/non-code-project/political-theory`, whose review data was
+written through `bodhi-state`. Both scenarios run `/practice` on *Descriptive
+and normative claims* and hand in the same analysis
+(`fixtures/applied/claims-analysis.md`), which applies the distinction to a
+congestion-charge debate the lesson never used:
+
+- `applied-essay` — the analysis is saved in `exercises/`; it must be graded
+  `correct` **with** `applied`.
+- `applied-chat` — the same text, given only in the chat; it must be graded
+  `correct` **without** `applied`.
+
+The work's quality is fixed and only where it lives varies, so the chat side
+can't pass by being graded down. Detector exercised on synthetic outcomes
+written by `bodhi-state`: each assertion passes only its own case, and a
+`partial` grade or a missing review fails both. `BODHI_EVAL_FIXTURE` and
+`BODHI_EVAL_PROJECT` point any scenario at another fixture project.
+
 This class doubles as the **model-drift detector**: the mastery formula is
 exactly as trustworthy as these gradings, and every model change can shift
 them under identical prompts. Rerun `grading` on every model change, not just
@@ -180,6 +199,7 @@ a test. The run header prints the model; a pass certifies that executor only.
 | teach-pretest | fidelity | 2026-09-30 PASS on the 1.23.0 tree (fable-5). The two runs before it (09-29, 09-30) were refused on turn 1 by the API safeguards (`[reasoning_extraction]`); the prompt no longer asks for the dialogue "verbatim". Previously 2026-09-04 PASS (fable-5) on the 1.20.0 tree (first attempt on 2026-09-03 was cut off by the usage limit). Previously 1.18.0 PASS (fable-5) |
 | teach-hint-discipline | fidelity | 2026-09-30 PASS on the 1.23.0 tree (fable-5), after the same safeguard refusal and prompt rewording as teach-pretest. Previously 2026-09-04 PASS (fable-5) on the 1.20.0 tree: re-teach signal, artifacts shown, no unearned `correct`. Previously 1.18.0 PASS (fable-5) after the "hint turn shows its artifact" detector was anchored to line-initial `Hint N` (first sample matched the word in the closing recap) |
 | continue-discovery | discovery | 1.14.1 (sonnet-5) |
+| applied-essay, applied-chat | applied | Never run against a live model. |
 | reflect-difficulty | executor-discipline | **Codex** (gpt-6.1-sol, `ultra`): 2026-10-15, 2/2 PASS on the 1.24.0 tree. **Claude:** 2026-09-29 PASS on the 1.23.0 tree (fable-5). Previously 2026-09-08 PASS (fable-5), first live run: no `/forget`, hard-and-low-rated clean retrieval promoted to Box 5, failed retrieval recorded `incorrect` at Box 1, sheet written. |
 | continue-gate | fidelity | 2026-09-30 PASS on the 1.23.0 tree (fable-5). The run before it FAILED on a detector false positive — a "Box 1" inside a `progress.md` Write that preserved the fixture's old entry; the bare-number check now reads learner-facing text only. Previously 2026-09-08 PASS (fable-5), first live run: `/continue` → option 1 → chained `/teach` ran `gate-check`, surfaced `Query planning` as a gap in outcome terms, learner carried on, no unearned correct. (The first attempt was refused by the API's safeguards before any turn ran — now labelled INCONCLUSIVE, not FAIL.) |
 | kb-load | fidelity | 2026-09-30 PASS on the 1.23.0 tree (fable-5). Previously 2026-09-04 PASS (fable-5) after a real catch: the first 1.20.0 sample printed "review recorded (Box 1 → 2, …)" in `/quiz`'s closing bookkeeping line — the skill had asked for "the box movement to report"; it now asks for the `nextReview` date, and the re-run is clean. Previously 1.18.0 (sonnet-5 first pass; then fable-5 ×4): KB always loaded. The bare-number detector caught one **real** miss ("Query planning — Box 1", read off the `due` output) — fixed by removing box/level numbers from `due` itself — and two recap false positives (now excluded). Learner-facing text clean in every sample after the reshape |

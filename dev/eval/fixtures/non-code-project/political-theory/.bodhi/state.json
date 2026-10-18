@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "projectName": "political-theory",
+  "topic": "Political theory from first principles",
+  "createdAt": "2026-10-06T09:00:00",
+  "lastSessionAt": "2026-10-08T19:00:00",
+  "totalSessions": 2,
+  "sessionDates": ["2026-10-06", "2026-10-08"],
+  "currentStreak": 1,
+  "currentPhase": "0",
+  "currentModule": "Claims, reasons, and facts versus values",
+  "currentModuleIndex": 1,
+  "lastActivity": "Taught descriptive and normative claims with a worked example about school textbooks.",
+  "initialBloomLevel": { "political-reasoning": 0 },
+  "currentBloomLevel": { "political-reasoning": 2 },
+  "overallCompletion": 5
+}
