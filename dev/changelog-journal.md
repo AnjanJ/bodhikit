@@ -8,7 +8,7 @@ This is the full, unabridged, patch-by-patch changelog kept for the maintainer â
 
 All notable changes to BodhiKit will be documented in this file.
 
-## [Unreleased]
+## [1.24.1] - 2026-10-18
 
 Fixes from the maintainer's first non-code project: a political-theory course generated through the ChatGPT listing (1.23.0) on 14 October and reviewed on 16 October. These are bug fixes, so the feature freeze does not apply.
 

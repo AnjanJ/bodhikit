@@ -2,6 +2,18 @@
 
 Notable changes to BodhiKit, summarized for readers. Patch-level development notes live in `dev/changelog-journal.md`.
 
+## [1.24.1] - 2026-10-18
+
+Fixes from the maintainer's first project on a topic without code: a political-theory course generated through the ChatGPT listing and reviewed on 16 October. They are bug fixes, so the feature freeze doesn't apply.
+
+- **Plans that number modules once are read.** `### Module 7 — name` now parses like `### Module 1.2 — name`. Before, `/plan`, `/progress` and the position line came out empty, with no warning. `verify` now warns when phase files exist but no heading parses. A renumbered plan keeps joining its review rows, and the prerequisite gate uses the same join.
+- **A module can need nothing from the one before it.** A plan's *Prerequisites for next module* line names real prerequisites from any earlier module, or `none`. The gate honours `none` instead of reading it as a concept name and reporting a vacuous all-clear.
+- **One outcome wording for every topic.** Levels read as code even for political theory: "apply it in working code with some guidance". They now say what any topic can mean: explain it in your own words; apply it to a real case with some guidance; work out why it works as it does and find where it breaks, on your own; weigh the alternatives and defend a choice between them; create something new with it and teach it.
+- **Applied evidence without code.** On a topic without code, a written piece saved in the project that applies the concept to a case it wasn't taught on (an analysis, an argument map, an essay) now counts as applied work, so concepts there can reach *Solid*. An explanation, a quiz answer or a chat reply still never counts. A new eval pair, `run-llm-evals.sh applied`, holds both sides of that line: the same analysis earns the flag when saved in `exercises/` and doesn't when given in the chat.
+- **The example project reads like a real one.** Its plan and data now have the shape the plugin writes, rebuilt through `bodhi-state`, and check rule 47 fails on any syllabus warning there.
+- **State layer.** 536 deterministic tests pass. The eval harness takes `BODHI_EVAL_FIXTURE` and `BODHI_EVAL_PROJECT`, and gains a second fixture, a political-theory project.
+- No tracking-file migration. Update the plugin and restart Claude Code. ChatGPT users get it when the listing is re-uploaded; the OpenAI portal isn't accepting skills-only submissions at the moment.
+
 ## [1.24.0] - 2026-10-15
 
 Two things learners asked for. The feature freeze (1.13.0) lifts for a request from a second real user; both of these were.
