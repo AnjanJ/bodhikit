@@ -52,7 +52,7 @@ def main(paths):
     w("")
     w("## Per project")
     w("")
-    w("| | Days active | Sessions | Concepts | Classified | Mastered | Feynman passed | Reviews | Overall recall | Delayed recall |")
+    w("| | Days since start | Sessions | Concepts | Classified | Mastered | Feynman passed | Reviews | Overall recall | Delayed recall |")
     w("|---|---|---|---|---|---|---|---|---|---|")
     tot = {"sessions": 0, "concepts": 0, "classified": 0, "mastered": 0,
            "feynman": 0, "reviews": 0, "correct": 0,
@@ -90,10 +90,12 @@ def main(paths):
       "a self-report and is excluded. _Delayed recall_ further drops same-day "
       "reviews (immediate post-instruction performance) and is the number that "
       "answers whether the intervals are working. "
-      "_Classified_ = concepts a teaching or review session has actually graded "
-      "(Bloom ≥ 1); the rest were scaffolded by the plan and never reached. "
-      "_Mastered_ uses the four-part formula (Analyze-level or above, three "
-      "consecutive correct at that level, Box 4-5, Feynman explain-back passed).")
+      "_Classified_ = concepts with a level on record (Bloom ≥ 1), from a graded "
+      "session or, since 1.21.0, the starting assessment; the rest were scaffolded "
+      "by the plan and never reached. "
+      "_Mastered_ uses the five-part formula (Analyze-level or above, three "
+      "consecutive correct at that level on due reviews, Box 4-5, an explain-back "
+      "passed after the last miss, one correct in applied work since the last miss).")
     w("")
     w("## Retention by gap since the previous review (all projects pooled)")
     w("")

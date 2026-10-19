@@ -1,6 +1,6 @@
 # BodhiKit outcomes — what the tracking data actually shows
 
-_Generated 2026-08-22 by `dev/outcomes.py` from `bodhi-state export-anonymized`. No concept names, topic names, or free text leave the learner's machine — only counts, distributions, and rates._
+_Generated 2026-10-19 by `dev/outcomes.py` from `bodhi-state export-anonymized`. No concept names, topic names, or free text leave the learner's machine — only counts, distributions, and rates._
 
 ## Read this first
 
@@ -8,16 +8,16 @@ This is **one learner, 5 projects**. It is published because a project whose the
 
 ## Per project
 
-| | Days active | Sessions | Concepts | Classified | Mastered | Feynman passed | Reviews | Overall recall |
-|---|---|---|---|---|---|---|---|---|
-| P1 | 13 | 3 | 8 | 3 | 0 | 1 | 8 | 50% |
-| P2 | — | 1 | 8 | 0 | 0 | 0 | 0 | — |
-| P3 | 45 | 2 | 6 | 1 | 0 | 1 | 1 | 100% |
-| P4 | 45 | 3 | 6 | 1 | 0 | 2 | 3 | 67% |
-| P5 | 45 | 2 | 8 | 1 | 0 | 0 | 1 | 100% |
-| **All** | | 11 | 36 | 6 | 0 | 4 | 13 | 62% |
+| | Days since start | Sessions | Concepts | Classified | Mastered | Feynman passed | Reviews | Overall recall | Delayed recall |
+|---|---|---|---|---|---|---|---|---|---|
+| P1 | 103 | 3 | 6 | 1 | 0 | 1 | 2 | 100% | 100% |
+| P2 | 103 | 3 | 6 | 1 | 0 | 2 | 3 | 67% | — |
+| P3 | 103 | 2 | 8 | 1 | 0 | 0 | 1 | 100% | 100% |
+| P4 | 46 | 8 | 17 | 13 | 0 | 10 | 32 | 88% | 62% |
+| P5 | 5 | 1 | 6 | 4 | 0 | 0 | 0 | — | — |
+| **All** | | 17 | 43 | 20 | 0 | 13 | 38 | 87% | 73% |
 
-_Classified_ = concepts a teaching or review session has actually graded (Bloom ≥ 1); the rest were scaffolded by the plan and never reached. _Mastered_ uses the four-part formula (Analyze-level or above, three consecutive correct at that level, Box 4-5, Feynman explain-back passed).
+_Reviews_ and _Overall recall_ count tested outcomes only — a `/forget` is a self-report and is excluded. _Delayed recall_ further drops same-day reviews (immediate post-instruction performance) and is the number that answers whether the intervals are working. _Classified_ = concepts with a level on record (Bloom ≥ 1), from a graded session or, since 1.21.0, the starting assessment; the rest were scaffolded by the plan and never reached. _Mastered_ uses the five-part formula (Analyze-level or above, three consecutive correct at that level on due reviews, Box 4-5, an explain-back passed after the last miss, one correct in applied work since the last miss).
 
 ## Retention by gap since the previous review (all projects pooled)
 
@@ -25,37 +25,37 @@ The Leitner literature targets roughly 80-90% recall at each scheduled review. B
 
 | Gap | Reviews | Correct | Partial | Incorrect | Recall |
 |---|---|---|---|---|---|
-| same-day | 8 | 4 | 2 | 2 | 50% |
-| 1d | 0 | 0 | 0 | 0 | — |
+| same-day | 27 | 25 | 2 | 0 | 93% |
+| 1d | 2 | 2 | 0 | 0 | 100% |
 | 2-3d | 0 | 0 | 0 | 0 | — |
-| 4-7d | 3 | 2 | 0 | 1 | 67% |
-| 8-14d | 1 | 1 | 0 | 0 | 100% |
-| 15-30d | 0 | 0 | 0 | 0 | — |
-| 31d+ | 1 | 1 | 0 | 0 | 100% |
+| 4-7d | 1 | 1 | 0 | 0 | 100% |
+| 8-14d | 2 | 2 | 0 | 0 | 100% |
+| 15-30d | 4 | 1 | 1 | 2 | 25% |
+| 31d+ | 2 | 2 | 0 | 0 | 100% |
 
 ## Where concepts sit
 
 | Bloom rung | Concepts |
 |---|---|
-| — (not yet observed) | 30 |
+| — (not yet observed) | 23 |
 | Remember | 0 |
-| Understand | 0 |
-| Apply | 3 |
-| Analyze | 3 |
+| Understand | 4 |
+| Apply | 15 |
+| Analyze | 1 |
 | Evaluate | 0 |
 | Create | 0 |
 
 | Leitner box | Concepts |
 |---|---|
-| Box 1 | 30 |
-| Box 2 | 4 |
-| Box 3 | 2 |
-| Box 4 | 0 |
+| Box 1 | 29 |
+| Box 2 | 9 |
+| Box 3 | 4 |
+| Box 4 | 1 |
 | Box 5 | 0 |
 
 ## Confidence calibration
 
-9 answers carried a confidence tag. Too few to report a rate.
+6 answers carried a confidence tag. Too few to report a rate.
 
 ## Session mix
 
@@ -64,7 +64,9 @@ Counts only sessions that wrote a `sessionHistory` entry (reviews, quizzes, prac
 | Session type | Count |
 |---|---|
 | spaced-review | 3 |
-| practice | 1 |
+| diagnostic-after-gap | 1 |
+| targeted-reteach | 1 |
+| other | 1 |
 
 ## What this does and does not say
 
