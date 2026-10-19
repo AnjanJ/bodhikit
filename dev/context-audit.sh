@@ -75,8 +75,15 @@ top_of_body() {
 # Tracking-file names this audit knows about. v2 schema (1.7.0).
 tracking_files="state.json progress.md spaced-review.json resources.md plan plan.md assessment.md assessments assessment-history.json .bodhi-profile.json .bodhi-profile.projects.json"
 
+# Two kinds of SKILL.md live under skills/ since 1.18.0: commands
+# (`user-invocable: true`) and knowledge bases (`user-invocable: false`).
+# Every per-skill section loops over USER_SKILLS; only section 2 loops over
+# KB_SKILLS. Before this split existed, skills/*/SKILL.md meant commands only.
+USER_SKILLS=$(grep -l '^user-invocable: true' skills/*/SKILL.md)
+KB_SKILLS=$(grep -l '^user-invocable: false' skills/*/SKILL.md)
+
 # KB names declared in skills/.
-kb_names=$(for f in $(grep -l '^user-invocable: false' skills/*/SKILL.md); do basename "$(dirname "$f")"; done)
+kb_names=$(for f in $KB_SKILLS; do basename "$(dirname "$f")"; done)
 
 # ---------------------------------------------------------------------------
 # 1. SKILLS — per-skill breakdown (cold-fire load)
@@ -87,7 +94,7 @@ emit "$(printf '%-22s %6s %6s %6s %6s %10s' SKILL LINES BYTES TOP_KB PHASE_KB CO
 emit "$(printf '%-22s %6s %6s %6s %6s %10s' ------ ----- ----- ------ -------- ---------)"
 
 tmpsort=$(mktemp)
-for f in $(grep -l '^user-invocable: false' skills/*/SKILL.md); do
+for f in $USER_SKILLS; do
   name=$(basename "$(dirname "$f")")
   lines=$(wc -l < "$f" | tr -d ' ')
   bytes=$(wc -c < "$f" | tr -d ' ')
@@ -140,11 +147,11 @@ emit "$(printf '%-32s %6s %6s %5s' KB LINES BYTES IN_REF)"
 emit "$(printf '%-32s %6s %6s %5s' --- ----- ----- ------)"
 
 tmpsort=$(mktemp)
-for f in skills/*/SKILL.md; do
+for f in $KB_SKILLS; do
   name=$(basename "$(dirname "$f")")
   lines=$(wc -l < "$f" | tr -d ' ')
   bytes=$(wc -c < "$f" | tr -d ' ')
-  inref=$(grep -lE "\`$name\`" skills/*/SKILL.md agents/*.md rules/*.md 2>/dev/null | wc -l | tr -d ' ')
+  inref=$(grep -lE "\`$name\`" $USER_SKILLS agents/*.md rules/*.md 2>/dev/null | wc -l | tr -d ' ')
   printf '%010d|%-32s %6d %6d %5d\n' "$bytes" "$name" "$lines" "$bytes" "$inref" >> "$tmpsort"
 done
 
@@ -286,7 +293,7 @@ classify_skill() {
   echo "$row"
 }
 
-for f in skills/*/SKILL.md; do
+for f in $USER_SKILLS; do
   name=$(basename "$(dirname "$f")")
   row=$(classify_skill "$f")
   emit "$(printf '%-22s%s' "$name" "$row")"
@@ -302,7 +309,7 @@ emit "## 6. Demotion candidates — KBs declared top-of-file but referenced only
 emit ""
 
 found_demotion=0
-for f in skills/*/SKILL.md; do
+for f in $USER_SKILLS; do
   name=$(basename "$(dirname "$f")")
   top=$(top_of_body "$f")
   rest=$(body_after_frontmatter "$f" | tail -n +26)
@@ -581,7 +588,7 @@ if [ -d "$tracking_root" ]; then
 fi
 
 tmpsort=$(mktemp)
-for f in skills/*/SKILL.md; do
+for f in $USER_SKILLS; do
   name=$(basename "$(dirname "$f")")
   bytes=$(wc -c < "$f" | tr -d ' ')
 
@@ -648,10 +655,10 @@ emit ""
 # ---------------------------------------------------------------------------
 # 10. Stdout summary
 # ---------------------------------------------------------------------------
-total_skills=$(grep -l '^user-invocable: true' skills/*/SKILL.md | wc -l | tr -d ' ')
-total_kbs=$(grep -l '^user-invocable: false' skills/*/SKILL.md | wc -l | tr -d ' ')
-total_skill_bytes=$(cat $(grep -l '^user-invocable: true' skills/*/SKILL.md) | wc -c | tr -d ' ')
-total_kb_bytes=$(cat $(grep -l '^user-invocable: false' skills/*/SKILL.md) | wc -c | tr -d ' ')
+total_skills=$(printf '%s\n' $USER_SKILLS | wc -l | tr -d ' ')
+total_kbs=$(printf '%s\n' $KB_SKILLS | wc -l | tr -d ' ')
+total_skill_bytes=$(cat $USER_SKILLS | wc -c | tr -d ' ')
+total_kb_bytes=$(cat $KB_SKILLS | wc -c | tr -d ' ')
 
 echo ""
 echo "Report written to: $out"
