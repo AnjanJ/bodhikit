@@ -12,6 +12,7 @@ Claude Code loads `skills/`, `agents/`, `hooks/`, and the `.claude-plugin/` mani
 - Do NOT reintroduce the retired 1.10.12 CHECKPOINT-before/after-writes prose — its reappearance means someone is hand-writing JSON again. Lint fails on it.
 - Schema changes go: `state-schema` KB first → `scripts/bodhi-state` + `dev/eval/test_bodhi_state.py` in the same PR → then the skills (and `state-ops` if the operational surface changed). The lint pins the Leitner table (spaced-repetition KB) and the session-type vocabulary (state-ops KB) between KB and script.
 - New executor-discipline bug found in the wild? Reproduce it as a `dev/eval/` fixture + assertion FIRST, then fix. Do not fix it with louder markdown.
+- `verify` and the readers keep one contract: whatever `verify` accepts, every read subcommand handles without crashing; whatever a reader cannot compute on, `verify` reports. `t_verify_implies_readers` runs every reader against every state `verify` passes.
 
 ## Sub-skill chaining (context efficiency)
 

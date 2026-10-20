@@ -9,11 +9,11 @@ This KB is what a skill needs to *operate* on tracking state: find the project, 
 
 Load the `state-schema` KB only when:
 
-- performing one of the **manual carve-outs** — `/learn` project scaffolding, `/evaluate` profile writes, the `currentBloomLevel` / `initialBloomLevel` maps;
+- performing one of the **manual carve-outs** (*Update Rules* below);
 - running the **script-unavailable fallback** (see below);
 - you are `/housekeep` (rotation and migration need the full shapes).
 
-See also: `spaced-repetition` KB (box→interval mapping and update rules, implemented by `bodhi-state`), `state-lifecycle` KB (loaded by `/housekeep` only), `state-migration` KB (loaded by `/housekeep migrate` only).
+See also: `spaced-repetition` KB (intervals and update rules), `state-lifecycle` and `state-migration` KBs (`/housekeep` only).
 
 ## The Write Path: `scripts/bodhi-state` (canonical for ALL JSON writes)
 
@@ -53,7 +53,6 @@ Every skill carries its own exact invocation; `bodhi-state <subcommand> --help` 
 
 - `migrate-spaced-review` — v1/v2 → v3 once: backup, in-place field fill, marker, verification.
 - `normalize` — idempotent repair of executor drift (invented result/type vocabulary, nested bookkeeping, the lossless type fixes: a numeric-string box or level, a string boolean — on the concept and on every `reviewHistory[]` entry), both files backed up first. `verify` names it only when it can perform the repair.
-- The contract between the two: whatever `verify` accepts, every read subcommand handles without crashing; whatever a reader cannot compute on, `verify` reports (the deterministic suite runs every reader against every state `verify` passes).
 - `verify` — the schema check the Stop hook and `dev/check.sh` run.
 
 The script preserves unknown fields by mutating parsed JSON in place, writes atomically, and rejects invalid `sessionHistory` types in code. The skill's job is the pedagogical judgment (which result, which Bloom level, which confidence tag); the script's job is the file.
@@ -135,11 +134,11 @@ mastered = (bloomLevel >= 4)
 
 `appliedEvidence` counts `applied` corrects since the most recent miss; `feynmanCurrent` is an explain-back dated after it (`state-schema` KB). Without it every other conjunct can be met in conversation. `mastery` and `snapshot` report `blockedOnApplied` (every criterion but this one) beside `blockedOnFeynman`, and each module row carries `applied` (concepts with at least one build since the last miss). `masteredDueForCheck` (per module: `dueForCheck`) names mastered concepts overdue by more than their box interval: still mastered — a skipped check is unverified, not forgotten — and `/progress` renders them *Solid, due for a check*.
 
-Skills MUST NOT redefine this formula inline. Field semantics (the Bloom ratchet, the counter rules, the Feynman flag) live in the `state-schema` KB; the underlying criteria in the `blooms-taxonomy` KB.
+Skills MUST NOT redefine this formula inline; the underlying criteria are the `blooms-taxonomy` KB's.
 
 **Per-module tiers.** `mastery` and `snapshot` also return, per module, `tiers: {unclassified, introduced, familiar, mastered}` — each concept classified against the `blooms-taxonomy` KB's ordered tier ladder (that KB is the canonical definition; `mastered` reuses the formula above, so there is still one home for it). The counts always sum to the module's `concepts`. Skills render these counts and MUST NOT infer a tier from `mastered`/`classified`/`masteryPct` — deriving one from a rollup loses the distribution.
 
-**Legacy display rule:** a concept with `bloomLevel: 0` has never been classified by a v3 writer — gates treat it as "no opinion yet, allow advancement"; `/progress` displays `—` (not 0%) for modules where every concept is at `bloomLevel: 0`. `bodhi-state` implements both rules (the script reports `masteryPct: null` for such modules).
+**Legacy display rule:** `bloomLevel: 0` = never classified by a v3 writer. The gate passes it (`no-opinion`); a module whose concepts are all at 0 shows `—`, not 0% (`masteryPct: null`).
 
 ## Prerequisite Gate (canonical, computed by `bodhi-state gate-check`)
 
@@ -159,8 +158,7 @@ Prerequisites come from the plan's `**Prerequisites for next module:**` declarat
 
 ## Update Rules
 
-- **JSON writes go through `bodhi-state`.** Hand-editing tracking JSON is the fallback of last resort, per the `state-schema` KB *Fallback discipline*.
 - Markdown live docs: compose the new entry at the top; preserve existing content verbatim; never rotate (that is `/housekeep`'s job, per the `state-lifecycle` KB).
 - Skills MUST NOT introduce new top-level fields, files, or directories under `.bodhi/` without updating the `state-schema` KB (and `bodhi-state`) first.
 - Skills MUST NOT stuff long narrative into JSON fields — narrative belongs in `progress.md` / `assessments/latest.md`. `lastActivity` is one short sentence (≤120 chars).
-- The per-topic Bloom maps in `state.json` (`initialBloomLevel` / `currentBloomLevel`) are an explicit **manual carve-out** — no script subcommand owns them. `/learn` seeds both; `/assess` and `/evaluate` may update `currentBloomLevel` by loading the `state-schema` KB and following its *Fallback discipline* (read → mutate in place → write → verify).
+- **Manual carve-outs**, the only hand-edits of tracking JSON — load the `state-schema` KB and follow its *Fallback discipline* (read → mutate in place → write → verify): `/learn` project scaffolding, `/evaluate` profile writes, and the per-topic Bloom maps in `state.json` (`initialBloomLevel` / `currentBloomLevel`), which no subcommand owns — `/learn` seeds both; `/assess` and `/evaluate` may update `currentBloomLevel`.

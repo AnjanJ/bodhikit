@@ -29,7 +29,7 @@ touch the same files.
   - Test: none new; rule 49 (budget) and the rule 45/59 pins in dev/check.sh hold
   - After: none
   - Done when: `wc -c < skills/state-schema/SKILL.md` → at most 17100, and `dev/check.sh` passes
-- [ ] **T3** Free room in `state-ops`: drop the repeated carve-out paragraph, move the verify note to CLAUDE.md, shorten the legacy rule
+- [x] **T3** Free room in `state-ops`: drop the repeated carve-out paragraph, move the verify note to CLAUDE.md, shorten the legacy rule
   - Files: skills/state-ops/SKILL.md, CLAUDE.md
   - Test: none new; rules 45, 51 and 59 hold
   - After: T0
