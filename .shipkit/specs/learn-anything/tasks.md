@@ -152,7 +152,7 @@ touch the same files.
   - Test: dev/eval/assert_scenario.py::assert_safety_canning, ::assert_safety_medical
   - After: T20
   - Done when: `dev/eval/run-llm-evals.sh safety` → pass; `dev/check.sh` passes including the cap
-- [ ] **T27** The OpenAI package carries the KB, the basis fields and the safety rule, and every packaged path exists → REQ-40
+- [x] **T27** The OpenAI package carries the KB, the basis fields and the safety rule, and every packaged path exists → REQ-40
   - Files: dev/eval/test_openai_plugin.py, platforms/openai/build_plugin.py
   - Test: dev/eval/test_openai_plugin.py::test_learn_anything_packaged, ::test_packaged_paths_exist
   - After: T26

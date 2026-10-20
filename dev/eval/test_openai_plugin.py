@@ -335,8 +335,79 @@ def test_build_and_structure():
         )
 
         test_hooks(output, temp_path)
+        test_learn_anything_packaged(output)
+        test_packaged_paths_exist(output)
 
     check("isolation: build does not modify Claude surfaces", surface_digest() == before)
+
+
+def test_learn_anything_packaged(output):
+    """learn-anything/REQ-40: the OpenAI package carries the evidence kinds,
+    the applied-work basis and the safety rule."""
+    kb = output / "references" / "knowledge" / "evidence-kinds.md"
+    text = kb.read_text(encoding="utf-8") if kb.is_file() else ""
+    check(
+        "learn-anything: the evidence-kinds KB is packaged whole",
+        all(f"`{word}`" in text for word in ("code", "problems", "writing", "performed",
+                                             "observed", "inspected", "reported"))
+        and all(section in text for section in ("## The exercise and its key",
+                                                "## Practice reps and the debrief",
+                                                "## Photos", "## Safety")),
+        str(kb),
+    )
+    teach = (output / "skills" / "teach" / "SKILL.md").read_text(encoding="utf-8")
+    check(
+        "learn-anything: /teach routes off code to the packaged KB",
+        "evidence-kinds" in teach and "evidenceKind" in teach,
+    )
+    ops = (output / "references" / "knowledge" / "state-ops.md").read_text(encoding="utf-8")
+    check(
+        "learn-anything: the state-ops reference names the kind and basis writes",
+        "set-evidence-kind" in ops and "--applied inspected|reported" in ops
+        and "--evidence" in ops,
+    )
+    engine = (output / "scripts" / "bodhi-state").read_text(encoding="utf-8")
+    check(
+        "learn-anything: the packaged engine has the kinds, the bases and the writer",
+        'EVIDENCE_KINDS = ("code", "problems", "writing", "performed")' in engine
+        and 'APPLIED_BASES = ("observed", "inspected", "reported")' in engine
+        and '"set-evidence-kind"' in engine,
+    )
+    rule = (output / "rules" / "learning-project.md").read_text(encoding="utf-8")
+    check(
+        "learn-anything: the learning-project rule carries the safety section",
+        "## Safety First" in rule and "No personal medical advice" in rule,
+    )
+
+
+def test_packaged_paths_exist(output):
+    """Every `<BODHIKIT_PLUGIN_ROOT>/...` path the package's text names is a
+    file in the package: an instruction pointing at a missing file is the
+    1.0-1.17 failure (KBs the runtime could not load) in a new host."""
+    import re
+    path_re = re.compile(r"<BODHIKIT_PLUGIN_ROOT>/([A-Za-z0-9_./-]+)")
+    kb_re = re.compile(r"`([a-z][a-z-]+)` KB")
+    # The KB sentence's `references/knowledge/name.md` is a template for any
+    # KB; each KB the text actually names is checked by name below.
+    template = "references/knowledge/name.md"
+    missing, kbs = [], set()
+    for path in sorted(output.rglob("*")):
+        if not path.is_file() or path.suffix not in (".md", ".json", ".toml"):
+            continue
+        text = path.read_text(encoding="utf-8")
+        for rel in path_re.findall(text):
+            rel = rel.rstrip(".,;:)")
+            if rel and rel != template and not (output / rel).exists():
+                missing.append(f"{path.relative_to(output)} -> {rel}")
+        kbs.update(kb_re.findall(text))
+    kbs.discard("name")
+    missing += [f"KB {kb} -> {template.replace('name', kb)}" for kb in sorted(kbs)
+                if not (output / "references" / "knowledge" / f"{kb}.md").is_file()]
+    check(
+        "package: every <BODHIKIT_PLUGIN_ROOT>/ path and every named KB exists",
+        not missing and "evidence-kinds" in kbs,
+        "; ".join(sorted(set(missing))[:8]) or f"KBs named: {sorted(kbs)}",
+    )
 
 
 def test_hooks(output, temp_path):
