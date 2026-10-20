@@ -2,6 +2,17 @@
 
 Upgrading the plugin itself is `/plugin update bodhikit@bodhikit` (or reinstall) followed by a Claude Code restart. Your `learningWithBodhi/` folders are never touched by an install. This page covers the one thing that *can* need attention: the tracking files inside existing learning projects.
 
+## 1.25.0
+
+No tracking-file migration. A project with no evidence kind recorded reads as `code`, exactly as before, so every existing code project is untouched. For an existing project on a subject that isn't code, `/continue` offers once to record its kind, and every review is kept either way. To set it yourself, from the project folder:
+
+```
+"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project . set-evidence-kind --kind writing
+"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project . set-evidence-kind --kind performed --module "Speaking"
+```
+
+The kinds are `code`, `problems`, `writing` and `performed`; `--clear` removes one. Reviews you recorded before 1.25.0 count as observed work, as they always did.
+
 ## 1.18.0
 
 No tracking-file change. Run `/plugin update bodhikit@bodhikit` (or reinstall) and **restart Claude Code** — the knowledge bases are now registered skills and the learning-project rule arrives through a SessionStart hook, and both take effect on the next session start. If you had been enabling the plugin per-project, nothing else changes.

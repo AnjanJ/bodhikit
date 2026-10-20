@@ -1,6 +1,6 @@
 # BodhiKit
 
-[![Version](https://img.shields.io/badge/version-1.24.1-blue)](./CHANGELOG.md) [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow?logo=buymeacoffee)](https://buymeacoffee.com/anjanj) [![Sponsor](https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ea4aaa?logo=githubsponsors)](https://github.com/sponsors/AnjanJ)
+[![Version](https://img.shields.io/badge/version-1.25.0-blue)](./CHANGELOG.md) [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow?logo=buymeacoffee)](https://buymeacoffee.com/anjanj) [![Sponsor](https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ea4aaa?logo=githubsponsors)](https://github.com/sponsors/AnjanJ)
 
 **Research-informed interactive coding tutor for Claude Code, Codex, and ChatGPT.**
 
@@ -341,6 +341,15 @@ Fencing the weak claims is what lets you trust the strong ones.
 - **Mastery-Based Learning** — Demonstrate competence before advancing, not time-based
   - Benjamin Bloom, *[Learning for Mastery](https://en.wikipedia.org/wiki/Mastery_learning)* (1968)
   - Robert Bjork and Elizabeth Bjork, *[A new theory of disuse and an old theory of stimulus fluctuation](https://www.researchgate.net/publication/281322665_A_new_theory_of_disuse_and_an_old_theory_of_stimulus_fluctuation)* (1992) — why a long-unchecked *Solid* concept is flagged for a check, not revoked (1.23.0)
+
+- **Teaching beyond code: evidence kinds** — the same retrieval and spacing for every subject, and honest evidence where nothing runs (1.25.0)
+  - Chunliang Yang, Liang Luo, Miguel Vadillo, Rongjun Yu and David Shanks, *Testing (quizzing) boosts classroom learning: A systematic and meta-analytic review*, Psychological Bulletin (2021) — quizzing helps across 18 subject areas, g = 0.50
+  - Jeffrey Karpicke and Henry Roediger, *The critical importance of retrieval for learning*, Science (2008), on Swahili–English vocabulary; Shana Carpenter, Harold Pashler and Nicholas Cepeda, *Using tests to enhance 8th grade students' retention of U.S. history facts*, Applied Cognitive Psychology (2009)
+  - Carol-Anne Moulton et al., *Teaching surgical skills: What kind of practice makes perfect? A randomized, controlled trial*, Annals of Surgery (2006); Timothy Lee and Elizabeth Genovese, *Distribution of practice in motor skill acquisition*, Research Quarterly for Exercise and Sport (1988) — why a performed skill gets spaced practice reps
+  - Scott Tannenbaum and Christopher Cerasoli, *Do team and individual debriefs enhance performance? A meta-analysis*, Human Factors (2013), d = 0.67 — why a rep is debriefed and the debrief is graded
+  - Ethan Zell and Zlatan Krizan, *Do people have insight into their abilities? A metasynthesis*, Perspectives on Psychological Science (2014); John Dunlosky and Katherine Rawson, *Overconfidence produces underachievement*, Learning and Instruction (2012) — why the debrief asks specific questions, and why the learner's word counts only toward "used it in practice" and is labelled as theirs
+  - Seonmin Kim and Stuart Webb, *The effects of spaced practice on second language learning: A meta-analysis*, Language Learning (2022); Merrill Swain's output hypothesis (1985) — vocabulary is spaced like problems, speaking is practised by speaking
+  - Kept with a caveat: interleaving reps of different motor skills is contested (Ammar et al., 2023), so the tutor offers it and never imposes it; and no controlled study shows that feedback on a still photo improves cooking or drawing, so a photo is weighed lightly
 
 - **Metacognition** — Teach learners HOW to learn, not just WHAT to learn
   - John Flavell, who coined the term in *[Metacognition and Cognitive Monitoring](https://psycnet.apa.org/record/1980-09388-001)* (1979)

@@ -8,6 +8,37 @@ This is the full, unabridged, patch-by-patch changelog kept for the maintainer �
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [1.25.0] - 2026-10-21
+
+Release 1 of the learn-anything spec (`.shipkit/specs/learn-anything/`, REQ-1–38 and REQ-40; decision 0001 lifts the freeze for it). One commit per task, T0–T30, each with `dev/check.sh` green. Every engine task kept `t_golden_code_path` passing.
+
+### The tripwire first (T0, T1)
+CLAUDE.md's freeze section names what decision 0001 admits. `dev/eval/make_golden.py` replays 196 calls of `cfe290b`'s engine over four code projects: the SQL fixture (v2, migrated mid-run), the political-theory fixture as it is (kind-less, so code), a synthetic v3 project carrying every evidence path and gate reason, and the drift shapes. It saves stdout, stderr, exit codes and the files left behind. `t_golden_code_path` compares reader JSON minus an allowlist of new keys, which on code must read `code`, 0, empty or observed. Writer output and files are compared byte for byte, apart from the time of day on the three `now_iso()` stamps, since BODHI_TODAY pins only the date. Checked once by hand-editing a golden file and by changing the box-2 interval.
+
+### Room without moving KB text (T2–T4)
+state-schema (18,427 → 16,998), state-ops (18,427 → 17,676) and /teach (18,274 → 17,704) lost duplication only. The progressive-disclosure principle moved to state-lifecycle, and the verify/readers contract moved to CLAUDE.md. Nothing went to `references/`, which the OpenAI build drops.
+
+### The engine (T5–T12)
+- The state-schema fields come first (T5).
+- The resolver, installed once in `main()` (T6). `read_kinds` never fails a reader, and a bad kind reads as code. `admits(kind, basis)` takes observed work everywhere and the unseen bases on performed only. verify reports errors for invalid kinds and bases, and warnings for an orphaned override, a bare-plan-id row and a basis without applied. Lint 45(g) pins the constants.
+- `set-evidence-kind` (T7). Lint 45(h): every parser subcommand is named in state-ops.
+- One reader of the `applied` flag (T8, renamed `entry_basis` in T12), with per-basis counts through `_evidence_counts`, `archive_history` and `exposure_of`. The archive keeps appliedInspected, appliedReported and builtBy, so a later kind change re-reads archived work. `t_single_applied_reader` parses the script.
+- `record-review --applied [basis] --evidence` (T9). Bare `--applied` is byte-identical. The unseen bases are refused off performed, naming the kind. Observed work off code needs a real file beside answers.md or criteria.md, never the key, a README, .bodhi/ or a path outside the project.
+- The kind on every read surface (T10). Solid by report in mastery, snapshot and, later, syllabus rows (T11). byKind and byBasis in retention and the export (T12).
+
+### Teaching it (T13–T26)
+- The evidence-kinds KB (12 KB) and the KB count 18 → 19 (T13).
+- Applied Evidence by kind and basis (T14). It keeps the 1.24.1 bullets word for word, so a kind-less non-code topic still counts a saved written piece.
+- Fixtures for problems (genetics), writing (a copy of political theory), performed (cooking, drawing) and a perspective drawing PNG, built by `make_kind_fixtures.py` through bodhi-state and byte-stable on rebuild (T15, T18).
+- Detectors (T16–T19): the kind-fidelity, kind-grading, performed, photo and safety groups, and the code-path guard on every code transcript scenario. `test_detectors.py` runs each detector on a good and a bad synthetic transcript (66 checks, now in check.sh).
+- The skills (T20–T26): /teach, /practice, /quiz, /continue, /reflect, /learn, /assess, /resources, the agents (never naming the KB, because of lint rule 2), /review, /progress, and the learning-project rule (safety, the key exception; capped at 4,096 bytes). Lint rule 60 fails an orphaned KB, and rule 54 requires `--applied <basis>` and `--evidence` writers to cite evidence-kinds.
+
+### Platforms (T27–T29)
+The OpenAI package test asserts the KB, the basis writes and the safety rule are packaged, and that every `<BODHIKIT_PLUGIN_ROOT>/` path and named KB exists. `platforms/cowork/build_plugin.py` and `test_cowork_plugin.py` (18 checks) build and check the Cowork `.plugin`. docs/cowork-probe.md is the manual probe, not yet run.
+
+### Not done before the tag
+The live sweep: the new groups on both sides of each grading boundary, the code groups at their recorded levels, and Codex executor-discipline. Then the Cowork probe. The T17 and T20–T26 boxes in tasks.md stay open until the sweep, and T29's until the probe.
+
 ## [1.24.1] - 2026-10-18
 
 Fixes from the maintainer's first non-code project: a political-theory course generated through the ChatGPT listing (1.23.0) on 14 October and reviewed on 16 October. These are bug fixes, so the feature freeze does not apply.

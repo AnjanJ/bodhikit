@@ -18,7 +18,7 @@ The learner's accumulated work is theirs. Every skill MAY read every file when t
 | `/progress quick` / `all` | `state.json` (per project; `all` also reads `.bodhi-profile.projects.json`) | never |
 | `/continue` | `state.json`, `progress.md` (live + summary block), `plan/README.md`, `plan/phase-{currentPhase}.md`, `spaced-review.json.concepts` | learner has been gone >30 days (then last few `progress/archive/` entries for re-onboarding) |
 | `/teach` | `state.json`, `plan/phase-{currentPhase}.md`, `progress.md` (understanding-only sessions skip the plan file) | building explicitly on a prior session the learner names |
-| `/practice` | `state.json`, `plan/phase-{currentPhase}.md`, `spaced-review.json.concepts` | calibrating against a past struggle the learner references |
+| `/practice` | `state.json`, `plan/phase-{currentPhase}.md`, `spaced-review.json.concepts`, `bodhi-state session-brief` (the concept's evidence kind, 1.25.0) | calibrating against a past struggle the learner references |
 | `/quiz` | `state.json`, due list via `bodhi-state due` | never |
 | `/reflect` | `state.json`, `progress.md`, today's `reviewHistory[]` entries (same-day guard), `bodhi-state revision-brief` + `.bodhi/resources.md` for the revision sheet | rarely |
 | `/forget` | `spaced-review.json` | never |
@@ -27,12 +27,14 @@ The learner's accumulated work is theirs. Every skill MAY read every file when t
 | `/mentor` | `.bodhi-profile.json`, `.bodhi-profile.projects.json`, `state.json` for active project | learner asks about cross-track patterns or multi-month trajectory |
 | `/plan` (view) | `plan/README.md` + all `plan/phase-*.md` | regenerating |
 | `/assess` | `state.json`, `assessments/latest.md` | re-baselining against a prior assessment the learner names |
-| `/review` | `state.json`, current code path under review | reviewing a past session's code |
+| `/review` | `state.json`, current code path (or problem set or written piece) under review; `bodhi-state snapshot` for the project's evidence kind (1.25.0) | reviewing a past session's code |
 | `/resources` | `state.json`, `resources.md` | never |
 | `/learn` | `.bodhi-profile.json` (for context), then writes new project | reading `.bodhi-profile.projects.json` to detect overlapping projects |
 | `/debug-together` | `state.json`, current code | never (scoped to current bug) |
 | `/pair` | `state.json`, `plan/phase-{currentPhase}.md` | learner asks to revisit a past pairing pattern |
 | `/housekeep` | all live docs + most recent archive entry per surface | implementation detail; reads to rotate |
+
+**Evidence kinds (1.25.0).** On a concept whose `evidenceKind` is not `code`, `/teach`, `/practice`, `/quiz`, `/learn`, `/assess`, `/resources` and `/review` also load the `evidence-kinds` KB. The kind comes from the read surfaces they already call (`session-brief`, `due`, `snapshot`, a `gate-check` row), so no new file is read. A code session never loads it; the `kind-fidelity` code-path guard asserts that.
 
 ## What the Audit Measures
 
