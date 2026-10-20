@@ -193,6 +193,13 @@ assistant transcript:
   learner's own lines and never rewrites the piece). The headless learner
   cannot write files, so the scripted learner dictates their work and asks
   for it to be saved verbatim; the key detector checks the key came first.
+- `kind-grading` (learn-anything REQ-20) — the code grading boundaries on a
+  `problems` concept (Monohybrid crosses) and a `writing` concept
+  (Descriptive and normative claims), with the same assertions:
+  `kind-grade-parrot-*` (`grade-jargon`: `partial`, Feynman held),
+  `kind-grade-apply-band-*` (`correct`, 3-4) and `kind-grade-genuine-*`
+  (`correct`, 4-5, promoted). Sweep with `BODHI_EVAL_RUNS=3` and compare the
+  recorded levels with the code bands, both sides of each boundary.
 - Code-path guard (learn-anything REQ-1): every code-topic transcript
   scenario also asserts no `evidence-kinds` load and no `set-evidence-kind`
   call, and `learn-scaffold` asserts the new code project records `code`.
@@ -231,6 +238,7 @@ a test. The run header prints the model; a pass certifies that executor only.
 | continue-gate | fidelity | 2026-09-30 PASS on the 1.23.0 tree (fable-5). The run before it FAILED on a detector false positive — a "Box 1" inside a `progress.md` Write that preserved the fixture's old entry; the bare-number check now reads learner-facing text only. Previously 2026-09-08 PASS (fable-5), first live run: `/continue` → option 1 → chained `/teach` ran `gate-check`, surfaced `Query planning` as a gap in outcome terms, learner carried on, no unearned correct. (The first attempt was refused by the API's safeguards before any turn ran — now labelled INCONCLUSIVE, not FAIL.) |
 | kb-load | fidelity | 2026-09-30 PASS on the 1.23.0 tree (fable-5). Previously 2026-09-04 PASS (fable-5) after a real catch: the first 1.20.0 sample printed "review recorded (Box 1 → 2, …)" in `/quiz`'s closing bookkeeping line — the skill had asked for "the box movement to report"; it now asks for the `nextReview` date, and the re-run is clean. Previously 1.18.0 (sonnet-5 first pass; then fable-5 ×4): KB always loaded. The bare-number detector caught one **real** miss ("Query planning — Box 1", read off the `due` output) — fixed by removing box/level numbers from `due` itself — and two recap false positives (now excluded). Learner-facing text clean in every sample after the reshape |
 | learn-scaffold, plan-regenerate, evaluate | lifecycle | evaluate: 2026-09-28 PASS (fable-5) on the 1.22.0 tree, 8/8 file-state asserts; the scenario is mid-journey, so it does not reach the milestone branch where the survey line appears. 1.18.0, first live runs, all PASS (fable-5). The first attempt at plan-regenerate/evaluate was cut off by the claude.ai usage limit — now labelled INCONCLUSIVE, not FAIL |
+| kind-grade-parrot-problems, kind-grade-apply-band-problems, kind-grade-genuine-problems, kind-grade-parrot-writing, kind-grade-apply-band-writing, kind-grade-genuine-writing | kind-grading | Never run against a live model (added for learn-anything). They reuse the code group's assertions. |
 | kind-teach-problems, kind-teach-writing, kind-practice-problems, kind-quiz, kind-intake, kind-legacy-proposal, kind-review | kind-fidelity | Never run against a live model (added for learn-anything). Each detector passes a good and fails a bad synthetic transcript in `test_detectors.py`. |
 
 Update the row when you run a scenario. `BODHI_EVAL_RUNS=N` sweeps report a

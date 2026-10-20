@@ -20,6 +20,8 @@
 #   dev/eval/run-llm-evals.sh applied    # applied evidence on a topic without code
 #   dev/eval/run-llm-evals.sh kind-fidelity  # non-code kinds: teach, practice, quiz,
 #                                        # intake, the legacy proposal, review
+#   BODHI_EVAL_RUNS=3 dev/eval/run-llm-evals.sh kind-grading
+#                                        # the grading boundaries on problems and writing
 #
 #   BODHI_EVAL_RUNS=8 dev/eval/run-llm-evals.sh grade-apply-band
 #                                        # sample a grading scenario N times and
@@ -768,6 +770,46 @@ if [ "$want" = "all" ] || [ "$want" = "grading" ] || [ "$want" = "grade-understa
 fi
 
 # --- Transcript-fidelity scenarios (1.12.0) -----------------------------------
+# --- Evidence kinds: grading (learn-anything REQ-20) -------------------------
+# The explain-back rubric grades every kind by the same five checks and rows.
+# The same three boundaries the code grading group pins — a parrot that fails
+# the prediction probe (partial, Feynman held), application without the
+# trade-offs (correct, 3-4), and an own-words answer that names where it
+# breaks and defends a choice (correct, 4-5) — on a problems concept and a
+# writing concept, read with the same assertions. Sweep with BODHI_EVAL_RUNS=3
+# and read the recorded levels against the code bands.
+KIND_GRADE_PROBLEMS="Monohybrid crosses"
+KIND_GRADE_WRITING="Descriptive and normative claims"
+kind_grade() {  # <name> <fixture> <project> <concept> <assert> <learner script>
+  BODHI_EVAL_FIXTURE="$2" BODHI_EVAL_PROJECT="$3" BODHI_EVAL_CONCEPT="$4" repeat_scenario "$1" \
+    "/bodhikit:teach $4 — $SIM_CONTRACT Understanding-only session: I just want to understand, no exercise. Simulate my responses. $6 Grade me honestly — including the Bloom level my answers actually demonstrated — and complete ALL tracking updates exactly as the skill specifies." \
+    "$5" "" "" nudge
+}
+if [ "$want" = "all" ] || [ "$want" = "kind-grading" ] || [ "$want" = "kind-grade-parrot-problems" ]; then
+  kind_grade kind-grade-parrot-problems "$PROBLEMS_FIXTURE" "$PROBLEMS_PROJECT" "$KIND_GRADE_PROBLEMS" grade-jargon \
+    "Whenever you ask me to explain back, define a term, or answer a checkpoint, my answer is always this exact sentence, recited verbatim: 'A monohybrid cross is a cross between two individuals that differ in a single trait, used to study the inheritance of one gene, and it typically produces a 3:1 phenotypic ratio in the F2 generation.' If you probe, ask for an analogy, or ask me to say it differently, I produce the same sentence again word for word, say 'that is how I learned it', and offer nothing else. If you then give me a concrete cross and ask what the offspring will be — for example Pp crossed with pp — I get it wrong: I say three quarters show the recessive trait, or 'I am not sure, maybe a quarter'. My final full explanation is the original sentence once more."
+fi
+if [ "$want" = "all" ] || [ "$want" = "kind-grading" ] || [ "$want" = "kind-grade-apply-band-problems" ]; then
+  kind_grade kind-grade-apply-band-problems "$PROBLEMS_FIXTURE" "$PROBLEMS_PROJECT" "$KIND_GRADE_PROBLEMS" grade-apply-band \
+    "My explain-back, in my own words: 'Each parent passes on one of its two copies of the gene, at random. For Pp crossed with Pp I draw the square: PP, Pp, Pp, pp, so three in four show the dominant purple and one in four is white.' When you ask when that ratio would not hold, what could make it come out differently, or how you would find an unknown genotype, I answer honestly: 'I do not really know — I would expect three to one every time.' If you ask again after refining, I say: 'Honestly, no, I would just draw the square.' My final full explanation is the first one again, Punnett square included."
+fi
+if [ "$want" = "all" ] || [ "$want" = "kind-grading" ] || [ "$want" = "kind-grade-genuine-problems" ]; then
+  kind_grade kind-grade-genuine-problems "$PROBLEMS_FIXTURE" "$PROBLEMS_PROJECT" "$KIND_GRADE_PROBLEMS" grade-genuine \
+    "When you ask me to explain back, I say, in my own words: 'Each parent hands on one of its two copies at random, so a cross is just counting the combinations: Pp with Pp gives PP, Pp, Pp, pp — three purple to one white, because one P is enough to make purple. But the three to one is an expectation, not a promise. If neither allele dominates, like red and white snapdragons, you see red, pink and white in one to two to one. If PP is lethal, the survivors come out two to one. And with only eight offspring you can easily get five to three by chance.' If you ask how I would find out whether a purple plant is PP or Pp, I say: 'Cross it with a white pp plant rather than with another purple — a test cross. Any white offspring prove it is Pp, and with a Pp-by-Pp cross you could not tell a PP parent from a Pp one nearly as fast.' My final full explanation is the first one again with the test cross folded in."
+fi
+if [ "$want" = "all" ] || [ "$want" = "kind-grading" ] || [ "$want" = "kind-grade-parrot-writing" ]; then
+  kind_grade kind-grade-parrot-writing "$WRITING_FIXTURE" "$WRITING_PROJECT" "$KIND_GRADE_WRITING" grade-jargon \
+    "Whenever you ask me to explain back, define a term, or answer a checkpoint, my answer is always this exact sentence, recited verbatim: 'A descriptive claim is a statement about what is the case that can in principle be verified empirically, whereas a normative claim is a statement about what ought to be the case, expressing a value judgement.' If you probe, ask for an example, or ask me to say it differently, I produce the same sentence again word for word, say 'that is how I learned it', and offer nothing else. If you then give me a concrete sentence and ask which kind it is — for example 'the charge will cut traffic by a fifth' — I get it wrong: I say it is normative because it is about the future, or 'I am not sure, maybe both'. My final full explanation is the original sentence once more."
+fi
+if [ "$want" = "all" ] || [ "$want" = "kind-grading" ] || [ "$want" = "kind-grade-apply-band-writing" ]; then
+  kind_grade kind-grade-apply-band-writing "$WRITING_FIXTURE" "$WRITING_PROJECT" "$KIND_GRADE_WRITING" grade-apply-band \
+    "My explain-back, in my own words: 'A descriptive claim says how things are, so evidence could settle it; a normative claim says how things ought to be. In the bike-lane argument, \"cycling accidents rose by a fifth\" is descriptive and \"the city should build protected lanes\" is normative.' When you ask where the distinction gets hard, which sentences are tricky to sort, or what goes wrong when people mix the two, I answer honestly: 'I do not really know — I would just sort each sentence one way or the other.' If you ask again after refining, I say: 'Honestly, no, I just sort them.' My final full explanation is the first one again, bike-lane example included."
+fi
+if [ "$want" = "all" ] || [ "$want" = "kind-grading" ] || [ "$want" = "kind-grade-genuine-writing" ]; then
+  kind_grade kind-grade-genuine-writing "$WRITING_FIXTURE" "$WRITING_PROJECT" "$KIND_GRADE_WRITING" grade-genuine \
+    "When you ask me to explain back, I say, in my own words: 'A descriptive claim says how things are, so in principle evidence could settle it — \"turnout fell to forty percent\". A normative claim says how things should be — \"everyone ought to vote\" — and no survey settles that; you need a principle. It gets hard in two places. Words like \"cruel\" or \"unfair\" describe and judge at once, so you have to pull the factual premise out from under the verdict. And a prediction is still descriptive even though it is about the future: \"the charge will cut traffic\" can be checked later.' If you ask me to use it on a case, I say: 'Take compulsory voting. \"Turnout is low\" is checkable. \"Low turnout is bad enough to compel people\" needs a principle. I would back compulsion — a small burden for a big gain in legitimacy — but someone who puts freedom from interference first would refuse it, and no turnout figure can decide between us.' My final full explanation is the first one again with the voting case folded in."
+fi
+
 # --- Evidence kinds: fidelity (learn-anything) -------------------------------
 # Off code, the tutor teaches, sets exercises and quizzes from the subject,
 # offers no code tools, names a source, saves the exercise's key before the

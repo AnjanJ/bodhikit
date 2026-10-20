@@ -1420,6 +1420,8 @@ def assert_kind_intake(project, transcript):
     about the subject, never programming; proposes the kind in plain words;
     records exactly one kind after the learner confirms."""
     prose = assistant_prose(transcript)
+    if not prose.strip():
+        fail("empty transcript — run did not produce assistant output")
     m = PROGRAMMING_Q_RE.search(prose)
     if m:
         fail(f"the intake asked about programming ({m.group(0)!r}) on a non-code subject")
