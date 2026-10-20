@@ -46,6 +46,17 @@ SESSION_TYPES = {
 
 CONFIDENCE_VALUES = {"sure", "mostly", "guessing"}
 
+# Evidence kinds (state-schema KB): what shows the learner can use a concept.
+# A project or module with no kind recorded is `code`.
+EVIDENCE_KINDS = ("code", "problems", "writing", "performed")
+# How applied work was seen: `observed` (the tutor read it in the project; the
+# absent default, never written), `inspected` (a photo or transcript the
+# learner shared), `reported` (the learner's word).
+APPLIED_BASES = ("observed", "inspected", "reported")
+# The kinds whose applied work the tutor cannot see: the two unseen bases
+# count toward the gate and Solid there and nowhere else.
+UNSEEN_BASIS_KINDS = ("performed",)
+
 # Learner-facing rendering of a Bloom level (blooms-taxonomy KB, canonical).
 # The number is an instructor-facing instrument. A learner reads the OUTCOME
 # clause on its own; the LABEL is spoken only at a rung-crossing
@@ -463,6 +474,11 @@ def history_entry_errors(h):
     for flag in ("applied", "retry", "selfReport"):
         if flag in h and not isinstance(h[flag], bool):
             errs.append((flag, h[flag], "true|false", _coerce_bool(h[flag])))
+    if "appliedBasis" in h and h["appliedBasis"] not in APPLIED_BASES:
+        errs.append(("appliedBasis", h["appliedBasis"], "|".join(APPLIED_BASES),
+                     _coerce_choice(h["appliedBasis"], APPLIED_BASES)))
+    if "evidence" in h and not isinstance(h["evidence"], str):
+        errs.append(("evidence", h["evidence"], "a project-relative path", None))
     return errs
 
 
@@ -1725,6 +1741,69 @@ def norm_module_name(s):
     return re.sub(r"\s+", " ", s).strip().casefold()
 
 
+# --- Evidence-kind resolver -------------------------------------------------
+# The kind reaches the applied-work counters through this per-process table,
+# installed once by main() (one process serves one --project), not through a
+# parameter on every reader. Uninstalled, everything reads as code: the
+# strictest reading, since code admits only observed work.
+_KINDS = {"project": "code", "modules": {}}
+
+
+def read_kinds(project):
+    """(project kind, {normalized module name: kind}) from state.json. Never
+    fails a reader: a missing or unreadable file, or a kind outside
+    EVIDENCE_KINDS, reads as code (verify reports the bad value)."""
+    try:
+        with open(state_path(project), encoding="utf-8") as f:
+            state = json.load(f)
+    except (OSError, ValueError):
+        return "code", {}
+    if not isinstance(state, dict):
+        return "code", {}
+    kind = state.get("evidenceKind")
+    modules = state.get("moduleEvidenceKinds")
+    modules = modules if isinstance(modules, dict) else {}
+    return (kind if kind in EVIDENCE_KINDS else "code",
+            {norm_module_name(name): k if k in EVIDENCE_KINDS else "code"
+             for name, k in modules.items()})
+
+
+def install_kinds(project):
+    _KINDS["project"], _KINDS["modules"] = read_kinds(project)
+
+
+def kind_of_module(module):
+    return _KINDS["modules"].get(norm_module_name(module), _KINDS["project"])
+
+
+def effective_kind(c):
+    """A concept's evidence kind: its module's override, else the project's."""
+    return kind_of_module(c.get("module"))
+
+
+def applied_basis(h):
+    """How an applied entry's work was seen. Absent is `observed`; a value
+    outside APPLIED_BASES reads as `reported`, the strictest."""
+    b = h.get("appliedBasis")
+    if b is None:
+        return "observed"
+    return b if b in APPLIED_BASES else "reported"
+
+
+def admits(kind, basis):
+    """Whether applied work on `basis` counts toward the gate and Solid for a
+    concept of `kind`: observed work everywhere, unseen work only where the
+    tutor cannot see it."""
+    return basis == "observed" or kind in UNSEEN_BASIS_KINDS
+
+
+def _coerce_choice(x, choices):
+    """The lossless vocabulary repair: case and surrounding spaces."""
+    if isinstance(x, str) and x not in choices and x.strip().casefold() in choices:
+        return x.strip().casefold()
+    return None
+
+
 def parse_bloom_target(val):
     """`3`, `3 (Apply)`, `Apply` → 3; anything else None."""
     m = re.search(r"\b([1-6])\b", val)
@@ -2532,6 +2611,14 @@ def cmd_normalize(args):
                 state[singular] = state.pop(plural)
                 changes.append(f"renamed {plural} -> {singular}")
                 state_changes += 1
+        kinds = state.get("moduleEvidenceKinds")
+        for holder, key in [(state, "evidenceKind")] + [
+                (kinds, name) for name in (kinds if isinstance(kinds, dict) else {})]:
+            fixed = _coerce_choice(holder.get(key), EVIDENCE_KINDS)
+            if fixed is not None:
+                changes.append(f"evidence kind {holder[key]!r} -> {fixed!r}")
+                holder[key] = fixed
+                state_changes += 1
 
     srp = sr_path(args.project)
     sr = load_json(srp) if os.path.exists(srp) else None
@@ -2592,6 +2679,7 @@ def cmd_normalize(args):
 def cmd_verify(args):
     """Schema sanity check. Used by dev/check.sh and the Stop hook."""
     errors, warnings = [], []
+    module_kinds, tracked_modules = {}, set()
     project = args.project
     bdir = os.path.join(project, ".bodhi")
     if not os.path.isdir(bdir):
@@ -2637,6 +2725,22 @@ def cmd_verify(args):
             if isinstance(dates, list) and len(dates) != len(set(dates)):
                 warnings.append("state.json sessionDates has duplicates — "
                                 "run `bodhi-state normalize`")
+            # Evidence kinds: readers treat a bad value as code, so it is an
+            # error only here, where it can be seen.
+            kinds = state.get("moduleEvidenceKinds")
+            if kinds is not None and not isinstance(kinds, dict):
+                errors.append(f"state.json moduleEvidenceKinds is "
+                              f"{type(kinds).__name__}, expected an object of "
+                              f"module name -> kind")
+                kinds = None
+            module_kinds = kinds or {}
+            for label, k in [("evidenceKind", state.get("evidenceKind"))] + [
+                    (f"moduleEvidenceKinds {name!r}", k) for name, k in module_kinds.items()]:
+                if k is not None and k not in EVIDENCE_KINDS:
+                    fix = _coerce_choice(k, EVIDENCE_KINDS)
+                    errors.append(f"state.json {label} {k!r} not "
+                                  f"{'|'.join(EVIDENCE_KINDS)} — readers treat it as code"
+                                  + (" — run `bodhi-state normalize`" if fix else ""))
         except (json.JSONDecodeError, OSError) as e:
             errors.append(f"state.json unreadable: {e}")
         except Exception as e:  # drift the checks above did not anticipate
@@ -2698,6 +2802,8 @@ def cmd_verify(args):
                     for k in ("bloomLevel", "feynmanPassed", "consecutiveCorrectAtL4Plus"):
                         if k not in c:
                             errors.append(f"concept {name!r} missing v3 field {k!r}")
+                if isinstance(c.get("module"), str):
+                    tracked_modules.add(c["module"])
                 rh = c.get("reviewHistory", [])
                 if not isinstance(rh, list):
                     rh = []
@@ -2708,6 +2814,11 @@ def cmd_verify(args):
                         errors.append(shape_error_text(name, f"reviewHistory {field}",
                                                        actual, expected, repair)
                                       + ("" if repair is not None else " — fix it by hand"))
+                    if "appliedBasis" in h and h.get("applied") is not True:
+                        warnings.append(f"concept {name!r} reviewHistory "
+                                        f"{h.get('date')!r} has appliedBasis "
+                                        f"{h['appliedBasis']!r} without applied: "
+                                        f"true — the basis is ignored")
                     if h.get("date") is not None and parse_date(h.get("date")) is None:
                         warnings.append(f"concept {name!r} reviewHistory date "
                                         f"{h.get('date')!r} is not an ISO date — "
@@ -2750,6 +2861,25 @@ def cmd_verify(args):
     phases, plan = read_plan_modules(project)
     if phases and not plan:
         warnings.append(PLAN_UNREADABLE)
+
+    # A module override joins on the normalized module name. Neither case
+    # below can be repaired by a subcommand, so neither blocks the Stop hook.
+    overridden = {norm_module_name(name) for name in module_kinds}
+    known = {norm_module_name(m["name"]) for m in plan} | {
+        norm_module_name(raw) for raw in tracked_modules}
+    for name in module_kinds:
+        if norm_module_name(name) not in known:
+            warnings.append(f"state.json moduleEvidenceKinds {name!r} matches no plan "
+                            f"module and no tracked concept (a renamed module?) — its "
+                            f"kind reaches nothing; record it under the current name")
+    by_id = {m["id"]: m for m in plan}
+    for raw in sorted(tracked_modules):
+        m = by_id.get(norm_module_name(raw))
+        if m and norm_module_name(raw) not in overridden \
+                and norm_module_name(m["name"]) in overridden:
+            warnings.append(f"concepts filed under plan id {raw!r} do not get module "
+                            f"{m['name']!r}'s evidence kind — the kind joins on the "
+                            f"module name")
 
     pp = find_profile(project)
     if pp:
@@ -3015,6 +3145,7 @@ def main():
     profile = find_profile(args.project)
     if profile:
         acquire_lock(os.path.dirname(profile), shared=shared)
+    install_kinds(args.project)
     args.fn(args)
 
 

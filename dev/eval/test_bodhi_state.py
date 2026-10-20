@@ -3101,6 +3101,179 @@ def t_gate_declared_none():
               out["fires"] is True, out)
 
 
+def _engine():
+    """The script loaded as a module, for checks on a function's answer that
+    no reader prints yet. Each call is a fresh module: nothing installed."""
+    from importlib.machinery import SourceFileLoader
+    import importlib.util
+    loader = SourceFileLoader("bodhi_state_engine", SCRIPT)
+    spec = importlib.util.spec_from_loader(loader.name, loader)
+    mod = importlib.util.module_from_spec(spec)
+    loader.exec_module(mod)
+    return mod
+
+
+def _set_state(proj, **fields):
+    st = read_state(proj)
+    for k, v in fields.items():
+        if v is None:
+            st.pop(k, None)
+        else:
+            st[k] = v
+    with open(os.path.join(proj, ".bodhi", "state.json"), "w") as f:
+        json.dump(st, f, indent=2)
+
+
+def t_evidence_kind_resolver():
+    """learn-anything/REQ-3: no recorded kind is code. learn-anything/REQ-6:
+    a module's kind wins over the project's. A broken kind never fails a
+    reader; it reads as code, the strictest reading for unseen work."""
+    eng = _engine()
+    check("kinds: the constants",
+          eng.EVIDENCE_KINDS == ("code", "problems", "writing", "performed")
+          and eng.APPLIED_BASES == ("observed", "inspected", "reported")
+          and eng.UNSEEN_BASIS_KINDS == ("performed",))
+    check("kinds: uninstalled, a concept reads as code",
+          eng.effective_kind({"name": "x", "module": "M"}) == "code")
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review={"version": 3, "concepts": [],
+                                                 "sessionHistory": []})
+        check("kinds: no kind recorded reads as code", eng.read_kinds(proj) == ("code", {}))
+        eng.install_kinds(proj)
+        check("kinds: a concept in a kind-less project is code",
+              eng.effective_kind({"name": "x", "module": "Module B"}) == "code")
+        _set_state(proj, evidenceKind="writing",
+                   moduleEvidenceKinds={"Cooking basics": "performed", "labs": "chemistry"})
+        eng.install_kinds(proj)
+        check("kinds: a module override wins, joined on the normalized name",
+              eng.effective_kind({"module": "Module 1.2 — Cooking  Basics"}) == "performed")
+        check("kinds: other modules take the project's kind",
+              eng.effective_kind({"module": "Essays"}) == "writing"
+              and eng.effective_kind({"name": "no module"}) == "writing")
+        check("kinds: an invalid module kind reads as code",
+              eng.effective_kind({"module": "Labs"}) == "code")
+        _set_state(proj, evidenceKind="essays", moduleEvidenceKinds=["not", "a", "map"])
+        check("kinds: an invalid project kind reads as code, a non-map override is ignored",
+              eng.read_kinds(proj) == ("code", {}))
+        with open(os.path.join(proj, ".bodhi", "state.json"), "w") as f:
+            f.write("{not json")
+        check("kinds: an unreadable state.json reads as code", eng.read_kinds(proj) == ("code", {}))
+        # The commands that never read state.json before must not start failing on it.
+        run(proj, "add-concept", "--concept", "Emulsions", "--module", "Sauces")
+        for argv in (["due"], ["mastery"], ["retention"], ["calibration"],
+                     ["record-review", "--concept", "Emulsions", "--result", "correct"]):
+            r = subprocess.run([sys.executable, SCRIPT, "--project", proj, *argv],
+                               capture_output=True, text=True)
+            check(f"kinds: {argv[0]} survives an unreadable state.json", r.returncode == 0,
+                  r.stderr[-300:])
+        os.remove(os.path.join(proj, ".bodhi", "state.json"))
+        check("kinds: no state.json reads as code", eng.read_kinds(proj) == ("code", {}))
+    check("basis: absent is observed; a value outside the set reads as reported",
+          [eng.applied_basis(h) for h in ({}, {"appliedBasis": "inspected"},
+                                          {"appliedBasis": "reported"},
+                                          {"appliedBasis": "observed"},
+                                          {"appliedBasis": "watched"})]
+          == ["observed", "inspected", "reported", "observed", "reported"])
+    check("basis: observed counts on every kind, the unseen bases on performed only",
+          all(eng.admits(k, "observed") for k in eng.EVIDENCE_KINDS)
+          and [k for k in eng.EVIDENCE_KINDS if eng.admits(k, "reported")] == ["performed"]
+          and [k for k in eng.EVIDENCE_KINDS if eng.admits(k, "inspected")] == ["performed"])
+
+
+def t_evidence_kind_shapes():
+    """learn-anything/REQ-3, REQ-6, REQ-21: verify and normalize know the new
+    shapes. An invalid kind is an error; an orphaned override and a basis
+    without `applied` are warnings, because no subcommand repairs them and
+    the Stop hook blocks on errors."""
+    def verify(proj):
+        r = subprocess.run([sys.executable, SCRIPT, "--project", proj, "verify"],
+                           capture_output=True, text=True)
+        return json.loads(r.stdout)
+    entry = {"date": "2026-03-01", "result": "correct", "bloomLevel": 3,
+             "applied": True, "appliedBasis": "reported"}
+    sr = {"version": 3, "lastReviewCheck": None, "sessionHistory": [], "concepts": [
+        {"name": "Emulsions", "module": "Sauces", "introduced": "2026-03-01", "box": 1,
+         "nextReview": "2026-03-02", "lastReviewed": "2026-03-01", "question": "",
+         "lastResult": "correct", "bloomLevel": 3, "feynmanPassed": False,
+         "consecutiveCorrectAtL4Plus": 0, "reviewHistory": [entry]}]}
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review=json.loads(json.dumps(sr)))
+        _set_state(proj, evidenceKind="performed",
+                   moduleEvidenceKinds={"sauces": "performed"})
+        v = verify(proj)
+        check("shapes: valid kinds and a reported basis verify clean",
+              v["ok"] and not v["warnings"], v)
+        _set_state(proj, evidenceKind="cooking")
+        v = verify(proj)
+        check("shapes: an invalid project kind is an error",
+              not v["ok"] and any("evidenceKind" in e for e in v["errors"]), v["errors"])
+        snap = run(proj, "snapshot")
+        check("shapes: readers still run on an invalid kind", snap.get("ok") is True)
+        _set_state(proj, evidenceKind="Performed ")
+        v = verify(proj)
+        check("shapes: a mis-cased kind names normalize",
+              any("evidenceKind" in e and "normalize" in e for e in v["errors"]), v["errors"])
+        _set_state(proj, moduleEvidenceKinds={"sauces": "Writing"})
+        out = run(proj, "normalize")
+        st = read_state(proj)
+        check("shapes: normalize folds the case of both kinds",
+              st["evidenceKind"] == "performed"
+              and st["moduleEvidenceKinds"] == {"sauces": "writing"}, out)
+        _set_state(proj, moduleEvidenceKinds={"sauces": "baking"})
+        v = verify(proj)
+        check("shapes: an invalid module kind is an error",
+              any("moduleEvidenceKinds" in e for e in v["errors"]), v["errors"])
+        _set_state(proj, moduleEvidenceKinds="sauces=performed")
+        v = verify(proj)
+        check("shapes: a non-map override is an error",
+              any("moduleEvidenceKinds" in e for e in v["errors"]), v["errors"])
+        _set_state(proj, moduleEvidenceKinds={"knife skills": "performed",
+                                              "sauces": "performed"})
+        v = verify(proj)
+        check("shapes: an override matching no module is a warning, not an error",
+              v["ok"] and any("knife skills" in w for w in v["warnings"])
+              and not any("'sauces'" in w for w in v["warnings"]), v)
+        os.makedirs(os.path.join(proj, ".bodhi", "plan"))
+        with open(os.path.join(proj, ".bodhi", "plan", "phase-1.md"), "w") as f:
+            f.write("# Phase 1\n\n### Module 1.1 — Sauces\n\n### Module 1.2 — Knife skills\n")
+        _set_state(proj, moduleEvidenceKinds={"knife skills": "performed"})
+        data = read_sr(proj)
+        data["concepts"][0]["module"] = "1.2"
+        with open(os.path.join(proj, ".bodhi", "spaced-review.json"), "w") as f:
+            json.dump(data, f)
+        v = verify(proj)
+        check("shapes: a plan heading's override matches",
+              not any("matches no plan module" in w for w in v["warnings"]), v["warnings"])
+        check("shapes: a row filed under a bare plan id gets a warning",
+              v["ok"] and any("'1.2'" in w and "Knife skills" in w for w in v["warnings"]),
+              v["warnings"])
+        data["concepts"][0]["module"] = "Sauces"
+        data["concepts"][0]["reviewHistory"] = [dict(entry, applied=False)]
+        with open(os.path.join(proj, ".bodhi", "spaced-review.json"), "w") as f:
+            json.dump(data, f)
+        _set_state(proj, moduleEvidenceKinds=None)
+        v = verify(proj)
+        check("shapes: a basis without applied is a warning",
+              v["ok"] and any("appliedBasis" in w for w in v["warnings"]), v)
+        data["concepts"][0]["reviewHistory"] = [dict(entry, appliedBasis="Reported"),
+                                                dict(entry, appliedBasis="watched"),
+                                                dict(entry, evidence=["a.md"])]
+        with open(os.path.join(proj, ".bodhi", "spaced-review.json"), "w") as f:
+            json.dump(data, f)
+        v = verify(proj)
+        errs = " | ".join(v["errors"])
+        check("shapes: an invalid basis and a non-path evidence are errors",
+              "'Reported'" in errs and "'watched'" in errs and "evidence" in errs, errs)
+        r = subprocess.run([sys.executable, SCRIPT, "--project", proj, "due"],
+                           capture_output=True, text=True)
+        check("shapes: a reader refuses the entry and names the field",
+              r.returncode == 1 and "appliedBasis" in r.stderr, r.stderr)
+        run(proj, "normalize")
+        hist = read_sr(proj)["concepts"][0]["reviewHistory"]
+        check("shapes: normalize repairs only the case-folded basis",
+              hist[0]["appliedBasis"] == "reported" and hist[1]["appliedBasis"] == "watched", hist)
+
+
 # Keys a reader may emit beyond what 1.24.1 printed, as dotted paths into its
 # JSON (`*` = every list item or dict value). Nothing else may change on the
 # code path: writer output and the files stay byte for byte.
@@ -3193,7 +3366,8 @@ def main():
               t_gate_seeded_module, t_exposure_routes, t_add_concept_bloom,
               t_verify_implies_readers, t_history_cap_keeps_facts,
               t_syllabus, t_plan_single_number_headings, t_module_prefix_join,
-              t_gate_declared_none, t_golden_code_path):
+              t_gate_declared_none, t_golden_code_path,
+              t_evidence_kind_resolver, t_evidence_kind_shapes):
         print(f"-- {t.__name__}")
         try:
             t()

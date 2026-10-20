@@ -44,7 +44,7 @@ touch the same files.
   - Test: none new; the shape pins arrive with T6
   - After: T2
   - Done when: `dev/check.sh` passes, and `wc -c < skills/state-schema/SKILL.md` → at most 18432
-- [ ] **T6** Engine: kind and basis constants, the resolver (`read_kinds`, `effective_kind`, `applied_basis`, `admits`), the shapes in verify/normalize, and lint pin 45(g) → REQ-3, REQ-6
+- [x] **T6** Engine: kind and basis constants, the resolver (`read_kinds`, `effective_kind`, `applied_basis`, `admits`), the shapes in verify/normalize, and lint pin 45(g) → REQ-3, REQ-6
   - Files: scripts/bodhi-state, dev/eval/test_bodhi_state.py, dev/check.sh
   - Test: dev/eval/test_bodhi_state.py::t_evidence_kind_resolver, ::t_evidence_kind_shapes (absent kind = code; module override wins; invalid kind degrades to code on read and is a verify error; basis without applied is a warning)
   - After: T1, T5

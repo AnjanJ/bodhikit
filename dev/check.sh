@@ -345,6 +345,21 @@ else
   if ! grep -q 'two or more correct reviews graded at Bloom 3+' skills/state-ops/SKILL.md; then
     err "skills/state-ops/SKILL.md gate table no longer states the two-review evidence rule (pins gate_verdict)"
   fi
+  # (g) Evidence kinds and applied-work bases (learn-anything). The script
+  # validates writes against these sets and the KB documents them, so a value
+  # one side lists and the other does not is a write a skill cannot make.
+  if ! grep -q '^EVIDENCE_KINDS = ("code", "problems", "writing", "performed")$' scripts/bodhi-state; then
+    err "scripts/bodhi-state EVIDENCE_KINDS drifted from the state-schema KB (code|problems|writing|performed)"
+  fi
+  if ! grep -q '^APPLIED_BASES = ("observed", "inspected", "reported")$' scripts/bodhi-state \
+     || ! grep -q '^UNSEEN_BASIS_KINDS = ("performed",)$' scripts/bodhi-state; then
+    err "scripts/bodhi-state APPLIED_BASES / UNSEEN_BASIS_KINDS drifted from the state-schema KB (observed|inspected|reported; unseen bases on performed only)"
+  fi
+  for v in code problems writing performed observed inspected reported; do
+    if ! grep -q "\`$v\`" skills/state-schema/SKILL.md; then
+      err "skills/state-schema/SKILL.md no longer names \`$v\` (pins EVIDENCE_KINDS / APPLIED_BASES)"
+    fi
+  done
 fi
 # ---------------------------------------------------------------------------
 # 46. Deterministic test suite must pass (free, every run).
