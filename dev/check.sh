@@ -418,6 +418,17 @@ if [ -f dev/eval/test_bodhi_state.py ]; then
   else
     err "dev/eval/test_cowork_plugin.py missing"
   fi
+  # docs/outcomes.md is generated; its per-kind recall and the Solid-by-report
+  # count are the measures decision 0001's reversal reads (learn-anything REQ-41).
+  if [ -f dev/eval/test_outcomes.py ]; then
+    if ! python3 dev/eval/test_outcomes.py >${TMPDIR:-/tmp}/bodhikit-outcomes-tests.log 2>&1; then
+      err "outcomes report test suite failed — see ${TMPDIR:-/tmp}/bodhikit-outcomes-tests.log"
+    else
+      ok "outcomes report test suite passed"
+    fi
+  else
+    err "dev/eval/test_outcomes.py missing"
+  fi
   # The eval detectors are only evidence if they tell a good run from a bad
   # one; this proves it on synthetic transcripts, for free.
   if [ -f dev/eval/test_detectors.py ]; then

@@ -97,6 +97,51 @@ def main(paths):
       "consecutive correct at that level on due reviews, Box 4-5, an explain-back "
       "passed after the last miss, one correct in applied work since the last miss).")
     w("")
+    w("## By evidence kind (all projects pooled)")
+    w("")
+    w("Since 1.25.0 a concept has a kind of evidence: `code`, `problems`, `writing` or "
+      "`performed` (a project with none recorded is `code`). One of the intake's goals "
+      "is delayed recall outside code within 10 points of code; this is where it shows. "
+      "On a performed skill the practice itself is the learner's report, so Solid "
+      "resting on it is counted apart.")
+    w("")
+    w("| Kind | Concepts | Mastered | By the learner's account | Reviews | Delayed reviews | Delayed recall |")
+    w("|---|---|---|---|---|---|---|")
+    kinds = {}
+    by_report = solid = 0
+    for e in exports:
+        rk = (e.get("retention") or {}).get("byKind") or {}
+        ek = e.get("byKind") or {}
+        reported = ((e.get("byBasis") or {}).get("reported") or {}).get("solid", 0)
+        by_report += reported
+        solid += e.get("mastered", 0)
+        for kind in set(rk) | set(ek):
+            k = kinds.setdefault(kind, {"concepts": 0, "mastered": 0, "report": 0,
+                                        "reviews": 0, "delayed": 0, "delayedCorrect": 0})
+            k["concepts"] += (ek.get(kind) or {}).get("concepts", 0)
+            k["mastered"] += (ek.get(kind) or {}).get("mastered", 0)
+            row = rk.get(kind) or {}
+            k["reviews"] += row.get("reviews", 0)
+            k["delayed"] += row.get("delayedReviews", 0)
+            if row.get("delayedSuccessRate") is not None:
+                k["delayedCorrect"] += round(row["delayedSuccessRate"] * row.get("delayedReviews", 0))
+        # The export's Solid-by-report count is per project; only performed
+        # admits the learner's word, so that is where it lands.
+        if reported:
+            kinds.setdefault("performed", {"concepts": 0, "mastered": 0, "report": 0, "reviews": 0,
+                                           "delayed": 0, "delayedCorrect": 0})["report"] += reported
+    order = ["code", "problems", "writing", "performed"]
+    for kind in sorted(kinds, key=lambda x: order.index(x) if x in order else len(order)):
+        k = kinds[kind]
+        rate = k["delayedCorrect"] / k["delayed"] if k["delayed"] else None
+        w(f"| `{kind}` | {k['concepts']} | {k['mastered']} | {k['report']} | {k['reviews']} | "
+          f"{k['delayed']} | {pct(rate)} |")
+    w("")
+    w(f"Solid by the learner's account: **{by_report}** of {solid} Solid concept(s). "
+      "Decision 0001 reverses the self-report half if such concepts fail their next "
+      "delayed review at least 20 points more often than Solid resting on observed work, "
+      "over the first 30 such reviews.")
+    w("")
     w("## Retention by gap since the previous review (all projects pooled)")
     w("")
     w("The Leitner literature targets roughly 80-90% recall at each scheduled "

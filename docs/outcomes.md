@@ -1,6 +1,6 @@
 # BodhiKit outcomes — what the tracking data actually shows
 
-_Generated 2026-10-19 by `dev/outcomes.py` from `bodhi-state export-anonymized`. No concept names, topic names, or free text leave the learner's machine — only counts, distributions, and rates._
+_Generated 2026-10-21 by `dev/outcomes.py` from `bodhi-state export-anonymized`. No concept names, topic names, or free text leave the learner's machine — only counts, distributions, and rates._
 
 ## Read this first
 
@@ -10,14 +10,24 @@ This is **one learner, 5 projects**. It is published because a project whose the
 
 | | Days since start | Sessions | Concepts | Classified | Mastered | Feynman passed | Reviews | Overall recall | Delayed recall |
 |---|---|---|---|---|---|---|---|---|---|
-| P1 | 103 | 3 | 6 | 1 | 0 | 1 | 2 | 100% | 100% |
-| P2 | 103 | 3 | 6 | 1 | 0 | 2 | 3 | 67% | — |
-| P3 | 103 | 2 | 8 | 1 | 0 | 0 | 1 | 100% | 100% |
-| P4 | 46 | 8 | 17 | 13 | 0 | 10 | 32 | 88% | 62% |
-| P5 | 5 | 1 | 6 | 4 | 0 | 0 | 0 | — | — |
+| P1 | 105 | 3 | 6 | 1 | 0 | 1 | 2 | 100% | 100% |
+| P2 | 105 | 3 | 6 | 1 | 0 | 2 | 3 | 67% | — |
+| P3 | 105 | 2 | 8 | 1 | 0 | 0 | 1 | 100% | 100% |
+| P4 | 48 | 8 | 17 | 13 | 0 | 10 | 32 | 88% | 62% |
+| P5 | 7 | 1 | 6 | 4 | 0 | 0 | 0 | — | — |
 | **All** | | 17 | 43 | 20 | 0 | 13 | 38 | 87% | 73% |
 
 _Reviews_ and _Overall recall_ count tested outcomes only — a `/forget` is a self-report and is excluded. _Delayed recall_ further drops same-day reviews (immediate post-instruction performance) and is the number that answers whether the intervals are working. _Classified_ = concepts with a level on record (Bloom ≥ 1), from a graded session or, since 1.21.0, the starting assessment; the rest were scaffolded by the plan and never reached. _Mastered_ uses the five-part formula (Analyze-level or above, three consecutive correct at that level on due reviews, Box 4-5, an explain-back passed after the last miss, one correct in applied work since the last miss).
+
+## By evidence kind (all projects pooled)
+
+Since 1.25.0 a concept has a kind of evidence: `code`, `problems`, `writing` or `performed` (a project with none recorded is `code`). One of the intake's goals is delayed recall outside code within 10 points of code; this is where it shows. On a performed skill the practice itself is the learner's report, so Solid resting on it is counted apart.
+
+| Kind | Concepts | Mastered | By the learner's account | Reviews | Delayed reviews | Delayed recall |
+|---|---|---|---|---|---|---|
+| `code` | 43 | 0 | 0 | 38 | 11 | 73% |
+
+Solid by the learner's account: **0** of 0 Solid concept(s). Decision 0001 reverses the self-report half if such concepts fail their next delayed review at least 20 points more often than Solid resting on observed work, over the first 30 such reviews.
 
 ## Retention by gap since the previous review (all projects pooled)
 

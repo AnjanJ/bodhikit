@@ -175,7 +175,7 @@ touch the same files.
   - Test: none, manual (REQ-39 is untested by design)
   - After: T30
   - Done when: a manual claude.ai run is recorded in docs/hosts-without-files.md, and `dev/check.sh` passes
-- [ ] **T32** `dev/outcomes.py` reports delayed recall per kind and counts *Solid* by report separately; rule 46 runs its test → REQ-41
+- [x] **T32** `dev/outcomes.py` reports delayed recall per kind and counts *Solid* by report separately; rule 46 runs its test → REQ-41
   - Files: dev/outcomes.py, dev/eval/test_outcomes.py, dev/check.sh, docs/outcomes.md
   - Test: dev/eval/test_outcomes.py::t_recall_per_kind
   - After: T28, T30
