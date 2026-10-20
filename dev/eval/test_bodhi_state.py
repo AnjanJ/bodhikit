@@ -3443,6 +3443,145 @@ def t_single_applied_reader():
           readers == {"applied_correct_basis", "cmd_verify"}, sorted(readers))
 
 
+def _kinds_project(root):
+    """A code project with one module of each other kind, a concept in each,
+    and an exercise folder per non-code kind holding its key."""
+    proj = make_project(root, spaced_review={"version": 3, "concepts": [],
+                                             "sessionHistory": []})
+    for concept, module in (("Closures", "Python"), ("Crosses", "Genetics"),
+                            ("Thesis", "Essays"), ("Emulsions", "Sauces")):
+        run(proj, "add-concept", "--concept", concept, "--module", module)
+    for module, kind in (("Genetics", "problems"), ("Essays", "writing"),
+                         ("Sauces", "performed")):
+        run(proj, "set-evidence-kind", "--kind", kind, "--module", module)
+    for folder, files in (("01-crosses", ("answers.md", "work.md", "README.md")),
+                          ("02-essay", ("criteria.md", "essay.md")),
+                          ("03-rep", ("criteria.md", "log.md", "photo.png")),
+                          ("04-no-key", ("essay.md",))):
+        os.makedirs(os.path.join(proj, "exercises", folder))
+        for name in files:
+            with open(os.path.join(proj, "exercises", folder, name), "w") as f:
+                f.write(name)
+    with open(os.path.join(root, "outside.md"), "w") as f:
+        f.write("not in the project")
+    return proj
+
+
+def t_applied_basis_write():
+    """learn-anything/REQ-2: the learner's word as applied work is refused on
+    code, problems and writing, naming the kind. learn-anything/REQ-21: the
+    basis is stored. learn-anything/REQ-22: observed work off code needs its
+    saved path, beside the exercise's key, and not the key, a README, a
+    tracking file or anything outside the project."""
+    with tempfile.TemporaryDirectory() as root:
+        proj = _kinds_project(root)
+        srp = os.path.join(proj, ".bodhi", "spaced-review.json")
+
+        def refused(label, *argv, says):
+            with open(srp, "rb") as f:
+                before = f.read()
+            r = subprocess.run([sys.executable, SCRIPT, "--project", proj, "record-review",
+                                "--result", "correct", *argv], capture_output=True, text=True)
+            with open(srp, "rb") as f:
+                after = f.read()
+            check(f"applied write: {label}", r.returncode == 1 and says in r.stderr
+                  and after == before, r.stderr.strip()[-300:])
+
+        for concept, kind in (("Closures", "code"), ("Crosses", "problems"),
+                              ("Thesis", "writing")):
+            refused(f"reported on {kind} is refused, naming the kind",
+                    "--concept", concept, "--applied", "reported", says=kind)
+            refused(f"inspected on {kind} is refused, naming the kind",
+                    "--concept", concept, "--applied", "inspected", says=kind)
+        refused("the learner's word on a new concept under a code module is refused",
+                "--concept", "Generators", "--module", "Python", "--applied", "reported",
+                says="code")
+        out = run(proj, "record-review", "--concept", "Emulsions", "--result", "correct",
+                  "--tested-bloom", "3", "--applied", "reported")
+        entry = read_sr(proj)["concepts"][3]["reviewHistory"][-1]
+        check("applied write: reported on performed is stored with its basis",
+              entry.get("applied") is True and entry.get("appliedBasis") == "reported"
+              and "evidence" not in entry and out.get("appliedBasis") == "reported", entry)
+        run(proj, "record-review", "--concept", "Emulsions", "--result", "correct",
+            "--applied", "inspected", "--evidence", "exercises/03-rep/photo.png")
+        entry = read_sr(proj)["concepts"][3]["reviewHistory"][-1]
+        check("applied write: inspected on performed keeps the photo's path",
+              entry.get("appliedBasis") == "inspected"
+              and entry.get("evidence") == "exercises/03-rep/photo.png", entry)
+
+        refused("observed on writing without a path is refused",
+                "--concept", "Thesis", "--applied", says="--evidence")
+        refused("observed on problems without a path is refused",
+                "--concept", "Crosses", "--applied", "observed", says="--evidence")
+        refused("observed on performed without a path is refused",
+                "--concept", "Emulsions", "--applied", says="--evidence")
+        refused("a path that does not exist is refused", "--concept", "Thesis", "--applied",
+                "--evidence", "exercises/02-essay/draft.md", says="does not exist")
+        refused("work with no key beside it is refused", "--concept", "Thesis", "--applied",
+                "--evidence", "exercises/04-no-key/essay.md", says="key")
+        refused("the key itself is refused", "--concept", "Crosses", "--applied",
+                "--evidence", "exercises/01-crosses/answers.md", says="key")
+        refused("the exercise README is refused", "--concept", "Crosses", "--applied",
+                "--evidence", "exercises/01-crosses/README.md", says="README")
+        refused("a tracking file is refused", "--concept", "Thesis", "--applied",
+                "--evidence", ".bodhi/state.json", says="tracking")
+        refused("a path outside the project is refused", "--concept", "Thesis", "--applied",
+                "--evidence", "../outside.md", says="outside")
+        refused("an absolute path outside the project is refused", "--concept", "Thesis",
+                "--applied", "--evidence", os.path.join(root, "outside.md"), says="outside")
+        refused("--evidence without --applied is refused", "--concept", "Thesis",
+                "--evidence", "exercises/02-essay/essay.md", says="--applied")
+
+        run(proj, "record-review", "--concept", "Thesis", "--result", "correct",
+            "--applied", "--evidence", os.path.join(proj, "exercises/02-essay/essay.md"))
+        entry = read_sr(proj)["concepts"][2]["reviewHistory"][-1]
+        check("applied write: observed writing is stored with a project-relative path",
+              entry.get("applied") is True and "appliedBasis" not in entry
+              and entry.get("evidence") == "exercises/02-essay/essay.md", entry)
+        run(proj, "record-review", "--concept", "Crosses", "--result", "correct",
+            "--applied", "observed", "--evidence", "exercises/01-crosses/work.md")
+        check("applied write: observed problems with the answers beside it",
+              read_sr(proj)["concepts"][1]["reviewHistory"][-1].get("evidence")
+              == "exercises/01-crosses/work.md")
+        run(proj, "record-review", "--concept", "Closures", "--result", "correct",
+            "--applied")
+        entry = read_sr(proj)["concepts"][0]["reviewHistory"][-1]
+        check("applied write: code still needs no path (1.24.1)",
+              entry.get("applied") is True and "evidence" not in entry
+              and "appliedBasis" not in entry, entry)
+        r = subprocess.run([sys.executable, SCRIPT, "--project", proj, "verify"],
+                           capture_output=True, text=True)
+        check("applied write: the result verifies clean",
+              json.loads(r.stdout)["ok"] and not json.loads(r.stdout)["warnings"], r.stdout)
+
+
+def t_applied_cli_back_compat():
+    """learn-anything/REQ-1: bare `--applied` is `--applied observed`, and on
+    code it writes what 1.24.1 wrote (t_golden_code_path holds the rest)."""
+    outs, files = [], []
+    for spelling in (["--applied"], ["--applied", "observed"]):
+        with tempfile.TemporaryDirectory() as root:
+            proj = make_project(root, spaced_review=json.loads(json.dumps(V2_SR)))
+            run(proj, "migrate-spaced-review")
+            outs.append(run(proj, "record-review", *spelling, "--concept", "B-tree indexes",
+                            "--result", "correct", "--tested-bloom", "3"))
+            data = read_sr(proj)
+            data["lastReviewCheck"] = None  # wall-clock stamp
+            files.append(json.dumps(data, sort_keys=True))
+    check("applied cli: bare --applied before other flags is observed",
+          outs[0] == outs[1] and files[0] == files[1], outs)
+    entry = json.loads(files[0])["concepts"][0]["reviewHistory"][-1]
+    check("applied cli: observed writes the flag and nothing else",
+          entry.get("applied") is True and "appliedBasis" not in entry
+          and "evidence" not in entry, entry)
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review=json.loads(json.dumps(V2_SR)))
+        r = subprocess.run([sys.executable, SCRIPT, "--project", proj, "record-review",
+                            "--concept", "B-tree indexes", "--result", "correct",
+                            "--applied", "watched"], capture_output=True, text=True)
+        check("applied cli: an unknown basis is a usage error", r.returncode == 2, r.stderr)
+
+
 # Keys a reader may emit beyond what 1.24.1 printed, as dotted paths into its
 # JSON (`*` = every list item or dict value). Nothing else may change on the
 # code path: writer output and the files stay byte for byte.
@@ -3537,7 +3676,8 @@ def main():
               t_syllabus, t_plan_single_number_headings, t_module_prefix_join,
               t_gate_declared_none, t_golden_code_path,
               t_evidence_kind_resolver, t_evidence_kind_shapes,
-              t_set_evidence_kind, t_basis_filter_every_reader, t_single_applied_reader):
+              t_set_evidence_kind, t_basis_filter_every_reader, t_single_applied_reader,
+              t_applied_basis_write, t_applied_cli_back_compat):
         print(f"-- {t.__name__}")
         try:
             t()

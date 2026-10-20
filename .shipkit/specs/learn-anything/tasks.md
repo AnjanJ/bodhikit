@@ -59,7 +59,7 @@ touch the same files.
   - Test: dev/eval/test_bodhi_state.py::t_basis_filter_every_reader (identical reported histories on a performed concept and a writing concept, through the gate, mastery, tiers, rollups, exposure, export, the archive cut and a later kind change), ::t_single_applied_reader
   - After: T7
   - Done when: `python3 dev/eval/test_bodhi_state.py` → "0 failed", t_golden_code_path ok
-- [ ] **T9** `record-review --applied [observed|inspected|reported] [--evidence PATH]` → REQ-2, REQ-21, REQ-22
+- [x] **T9** `record-review --applied [observed|inspected|reported] [--evidence PATH]` → REQ-2, REQ-21, REQ-22
   - Files: scripts/bodhi-state, dev/eval/test_bodhi_state.py, skills/state-ops/SKILL.md
   - Test: dev/eval/test_bodhi_state.py::t_applied_basis_write, ::t_applied_cli_back_compat
     - REQ-2: `reported`/`inspected` off performed exits 1, names the kind, leaves the file unchanged.

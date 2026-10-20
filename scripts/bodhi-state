@@ -660,7 +660,7 @@ def promotion_hold(concept, t):
 
 
 def apply_review(concept, result, tested_bloom, confidence=None, note=None,
-                 source=None, retry=False, applied=False):
+                 source=None, retry=False, applied=None, evidence=None):
     """Canonical per-concept update (spaced-repetition + state-schema KBs).
 
     correct   -> box up one (max 5), nextReview = today + new interval, when
@@ -679,7 +679,9 @@ def apply_review(concept, result, tested_bloom, confidence=None, note=None,
     that ran, or a written application on a non-code topic; blooms-taxonomy
     KB *Applied Evidence*) rather than in an explanation or a quiz answer. It is a separate axis from the level: the rubric still sets
     `--tested-bloom`, and the flag is what the gate and the mastery formula
-    read for "can the learner actually build with it" (1.20.0).
+    read for "can the learner actually build with it" (1.20.0). `applied`
+    is its basis (APPLIED_BASES); only an unseen one is written, as
+    appliedBasis, and `evidence` is the work's project-relative path.
     """
     t = today()
     old_box = concept.get("box", 1)
@@ -729,6 +731,10 @@ def apply_review(concept, result, tested_bloom, confidence=None, note=None,
         entry["source"] = source
     if applied:
         entry["applied"] = True
+    if applied in ("inspected", "reported"):
+        entry["appliedBasis"] = applied
+    if evidence:
+        entry["evidence"] = evidence
     history = concept.setdefault("reviewHistory", [])
     history.append(entry)
     if len(history) > HISTORY_CAP:
@@ -749,9 +755,46 @@ def apply_review(concept, result, tested_bloom, confidence=None, note=None,
             "crossedLevel": new_bloom > old_bloom,   # the one moment the label is spoken
             "consecutiveCorrectAtL4Plus": concept.get("consecutiveCorrectAtL4Plus", 0),
             "nextReview": concept["nextReview"]}
+    if applied in ("inspected", "reported"):
+        out["appliedBasis"] = applied
+    if evidence:
+        out["evidence"] = evidence
     if box_held:
         out["boxHeld"] = box_held
     return out
+
+
+# The exercise key the tutor saves before a non-code attempt: worked answers
+# for `problems`, the criteria for `writing` (and a performed rep's task).
+KEY_FILES = ("answers.md", "criteria.md")
+
+
+def evidence_path(project, raw, kind, basis):
+    """The checked, project-relative path of applied work (state-schema KB
+    reviewHistory[].evidence). Observed work off code is the learner's own
+    file beside the exercise's key, so neither the key, the brief nor a
+    tracking file can stand in for it."""
+    root = os.path.realpath(project)
+    full = os.path.realpath(raw if os.path.isabs(raw) else os.path.join(root, raw))
+    rel = os.path.relpath(full, root)
+    if rel == os.pardir or rel.startswith(os.pardir + os.sep):
+        die(f"--evidence {raw!r} is outside the project")
+    if not os.path.isfile(full):
+        die(f"--evidence {raw!r} does not exist in the project")
+    parts = rel.split(os.sep)
+    if parts[0] == ".bodhi":
+        die(f"--evidence {raw!r} is a tracking file, not the learner's work")
+    if kind != "code" and basis == "observed":
+        name = parts[-1].casefold()
+        if name in KEY_FILES:
+            die(f"--evidence {raw!r} is the exercise's key, not the learner's work")
+        if name == "readme.md":
+            die(f"--evidence {raw!r} is the exercise's README (the brief), not the "
+                f"learner's work")
+        if not any(os.path.isfile(os.path.join(os.path.dirname(full), k)) for k in KEY_FILES):
+            die(f"--evidence {raw!r} has no key beside it: save the exercise's "
+                f"{' or '.join(KEY_FILES)} in its folder before the attempt")
+    return "/".join(parts)
 
 
 # --- Subcommands ------------------------------------------------------------
@@ -795,10 +838,25 @@ def cmd_record_review(args):
         concept = new_concept(args.concept, args.module, args.question or "")
         data.setdefault("concepts", []).append(concept)
         created = True
+    kind = effective_kind(concept)
+    if args.evidence is not None and args.applied is None:
+        die("--evidence is the path of applied work; pass it with --applied")
+    if args.applied is not None and not admits(kind, args.applied):
+        die(f"concept {concept['name']!r} is a {kind} concept: --applied "
+            f"{args.applied} (the learner's word, or a photo the tutor examined) "
+            f"counts only on a performed concept — record it without --applied, "
+            f"or as --applied observed with the saved work")
+    evidence = None
+    if args.evidence is not None:
+        evidence = evidence_path(args.project, args.evidence, kind, args.applied)
+    elif args.applied == "observed" and kind != "code":
+        die(f"--applied observed on a {kind} concept needs --evidence <path>: the "
+            f"learner's work saved in the project, beside the exercise's key "
+            f"({' or '.join(KEY_FILES)})")
     change = apply_review(concept, args.result, args.tested_bloom,
                           confidence=args.confidence, note=args.note,
                           source=args.source, retry=args.retry,
-                          applied=args.applied)
+                          applied=args.applied, evidence=evidence)
     data["lastReviewCheck"] = now_iso()
     write_spaced_review(path, data)
     change["created"] = created
@@ -3061,11 +3119,17 @@ def main():
     s.add_argument("--question", default="")
     s.add_argument("--note", default=None, help="short lastResult note")
     s.add_argument("--source", default=None, help="which skill produced this review")
-    s.add_argument("--applied", action="store_true",
-                   help="the outcome was demonstrated in work the tutor read: "
-                        "code that ran, or a written application on a non-code "
-                        "topic; not an explanation or quiz answer. Feeds the "
-                        "gate and the mastery formula")
+    s.add_argument("--applied", nargs="?", const="observed", default=None,
+                   choices=APPLIED_BASES,
+                   help="the outcome was demonstrated in applied work, not an "
+                        "explanation or quiz answer. Bare = observed: work the "
+                        "tutor read (code that ran; off code, a saved file, with "
+                        "--evidence). inspected (a photo the tutor examined) and "
+                        "reported (the learner's word) only on a performed "
+                        "concept. Feeds the gate and the mastery formula")
+    s.add_argument("--evidence", default=None,
+                   help="project-relative path of the applied work; required for "
+                        "observed work off code, beside the exercise's key")
     s.add_argument("--retry", action="store_true",
                    help="successive-relearning retry: history entry only, no "
                         "box/counter/bloom movement (the original demotion stands)")
