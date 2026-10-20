@@ -89,7 +89,7 @@ Climb rungs in order. Do not skip. Do not reach for rung 4 first because it is e
 
 **Rung 3 — Universal physical.** Reach for a universally-shared physical analogy. Stoves, mailboxes, libraries, road maps, water flow, locks-and-keys, recipes. Use these only when rung 1 and rung 2 produced nothing — these are weakest because they are pre-cached for every learner; the magic of analogy is *novel mapping into their world*, not familiar mapping into everyone's.
 
-**Rung 4 — Code-restatement.** A second concrete code example that restates the same concept differently (different data type, different scale, different domain). This is not "an analogy" in the strict sense — it is the same concept said again with different variables. Use when analogies have failed and the next move is to retreat to a simpler sub-concept anyway.
+**Rung 4 — Code-restatement.** A second concrete code example that restates the same concept differently (different data type, different scale, different domain). This is not "an analogy" in the strict sense — it is the same concept said again with different variables. Use when analogies have failed and the next move is to retreat to a simpler sub-concept anyway. On a concept whose evidence kind is not `code`, rung 4 is a second worked case from the subject instead, never code (`evidence-kinds` KB).
 
 ### Cap and exit
 

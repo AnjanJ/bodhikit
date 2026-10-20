@@ -87,7 +87,7 @@ touch the same files.
   - Test: dev/eval/test_openai_plugin.py::test_build_and_structure (expects 19 knowledge references, including `references/knowledge/evidence-kinds.md`)
   - After: T12
   - Done when: `dev/check.sh` passes, and `wc -c < skills/evidence-kinds/SKILL.md` → at most 17408
-- [ ] **T14** `blooms-taxonomy` *Applied Evidence* names the basis and which kinds may use which; `feynman-technique` rung 4 keeps "code-restatement" for code and defers to the KB otherwise → REQ-14, REQ-21, REQ-23
+- [x] **T14** `blooms-taxonomy` *Applied Evidence* names the basis and which kinds may use which; `feynman-technique` rung 4 keeps "code-restatement" for code and defers to the KB otherwise → REQ-14, REQ-21, REQ-23
   - Files: skills/blooms-taxonomy/SKILL.md, skills/feynman-technique/SKILL.md
   - Test: none new; the Bloom label/outcome pins hold, and behaviour is checked by kind-grading (T17)
   - After: T13
