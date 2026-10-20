@@ -34,7 +34,7 @@ touch the same files.
   - Test: none new; rules 45, 51 and 59 hold
   - After: T0
   - Done when: `wc -c < skills/state-ops/SKILL.md` → at most 17700, and `dev/check.sh` passes
-- [ ] **T4** Free room in `/teach`: the gate paragraph that repeats `prerequisite-gate.md`, the duplicate chaining note, the analogy ladder deferring to the KB → REQ-1
+- [x] **T4** Free room in `/teach`: the gate paragraph that repeats `prerequisite-gate.md`, the duplicate chaining note, the analogy ladder deferring to the KB → REQ-1
   - Files: skills/teach/SKILL.md
   - Test: dev/eval/assert_scenario.py::assert_teach_pretest and ::assert_teach_hint_discipline (existing; re-run in the release sweep)
   - After: none

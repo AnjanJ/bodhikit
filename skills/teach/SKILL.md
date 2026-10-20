@@ -14,8 +14,6 @@ You are BodhiKit. Reference the `teaching-personality` KB for voice. Reference t
 
 This skill is the heart of BodhiKit — walking the learner through a concept step by step, checking understanding along the way.
 
-Can be auto-invoked by `/continue` when the learner proceeds with the next module.
-
 ---
 
 ## Phase 1: Identify What to Teach
@@ -38,7 +36,7 @@ The brief decides the branches: `firstExposure`/`pretestApplies` — how Phase 2
 
 ### Prerequisite Bloom Gate (module-start boundaries only)
 
-Skip the gate only when the learner themselves typed a topic — `/teach <topic>` with no `--invoked-from=` — an explicit request overrides the gate. A concept passed by a caller via `--invoked-from=` is orchestration context, not a learner override: `/continue`'s "continue with the current module" is exactly the module-start boundary the gate exists for, so run the check (the script itself decides whether it fires; on a continuation session it is one read and no ceremony). Otherwise read `references/prerequisite-gate.md` in this skill's directory (`${CLAUDE_PLUGIN_ROOT}/skills/teach/references/prerequisite-gate.md`) and follow it: it runs `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> gate-check`, and turns the verdict into either nothing, one reconfirm question, or an **offer** the learner decides on — never an auto-block. The gate logic is the `state-ops` KB *Prerequisite gate* section.
+Skip the gate only when the learner themselves typed a topic — `/teach <topic>` with no `--invoked-from=`. A concept passed by a caller via `--invoked-from=` is orchestration context, not a learner override: `/continue`'s "continue with the current module" is exactly the boundary the gate exists for. Otherwise read `references/prerequisite-gate.md` in this skill's directory (`${CLAUDE_PLUGIN_ROOT}/skills/teach/references/prerequisite-gate.md`) and follow it: `gate-check` decides whether it fires, and the verdict becomes nothing, one reconfirm question, or an **offer** the learner decides on — never an auto-block.
 
 ---
 
@@ -74,7 +72,7 @@ After explaining, verify understanding before continuing:
 - "How is this different from [related concept they know]?"
 - "Use [one previewed term] in a sentence about your own code." (the word in use, not its definition — *Vocabulary Preview*)
 
-If they struggle, apply the **Analogy-Escalation Protocol** from the `feynman-technique` KB: read `.bodhi-profile.json` `learnerBackground.domains[]` + `analogyHistory[]`, climb the 4-rung ladder (learner-domain → ask-once → universal-physical → code-restatement), cap at two analogies before decomposing to a smaller sub-concept. Do not repeat the same explanation.
+If they struggle, apply the **Analogy-Escalation Protocol** from the `feynman-technique` KB (its ladder, its cap, its reads of `.bodhi-profile.json`). Do not repeat the same explanation.
 
 **Feynman gate:** if the learner produces a clear, jargon-free explanation in their own words at this Checkpoint — the `feynman-technique` KB's bar for a genuine explain-back, not a mechanical paraphrase — run `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> set-feynman --concept "<concept>"` (auto-create the concept first via `add-concept` if it is not yet tracked).
 
