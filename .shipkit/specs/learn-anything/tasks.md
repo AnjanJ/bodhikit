@@ -82,7 +82,7 @@ touch the same files.
   - Test: dev/eval/test_bodhi_state.py::t_kind_breakdowns (no module or concept names; the `export.project` key set unchanged; debrief-graded entries not excluded from retention)
   - After: T11
   - Done when: `python3 dev/eval/test_bodhi_state.py` → "0 failed"
-- [ ] **T13** The `evidence-kinds` KB: four kinds, the key protocol, quiz forms, review, reconfirm, sources, the debrief and reps, photos. Pin 45(g) also against the KB; the KB count goes 18 → 19 → REQ-10, REQ-11, REQ-12, REQ-13, REQ-26, REQ-28
+- [x] **T13** The `evidence-kinds` KB: four kinds, the key protocol, quiz forms, review, reconfirm, sources, the debrief and reps, photos. Pin 45(g) also against the KB; the KB count goes 18 → 19 → REQ-10, REQ-11, REQ-12, REQ-13, REQ-26, REQ-28
   - Files: skills/evidence-kinds/SKILL.md, dev/check.sh, README.md, .claude-plugin/marketplace.json, dev/eval/test_openai_plugin.py
   - Test: dev/eval/test_openai_plugin.py::test_build_and_structure (expects 19 knowledge references, including `references/knowledge/evidence-kinds.md`)
   - After: T12

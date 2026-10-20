@@ -129,8 +129,8 @@ def test_build_and_structure():
             summary = {}
         check("build: reports 18 user skills", summary.get("skills") == 18, summary)
         check(
-            "build: reports 18 knowledge references",
-            summary.get("knowledgeReferences") == 18,
+            "build: reports 19 knowledge references",
+            summary.get("knowledgeReferences") == 19,
             summary,
         )
         check("build: reports 4 role procedures", summary.get("roleProcedures") == 4, summary)
@@ -179,7 +179,8 @@ def test_build_and_structure():
         )
         check(
             "skills: all knowledge bases preserved",
-            generated_knowledge == source_skill_names(False),
+            generated_knowledge == source_skill_names(False)
+            and "evidence-kinds" in generated_knowledge,
             sorted(generated_knowledge),
         )
         check(

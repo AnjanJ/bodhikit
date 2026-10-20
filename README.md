@@ -102,7 +102,7 @@ Three quick questions: what was hard, what you would do differently, how confide
 <details>
 <summary><strong>Tip: enable BodhiKit only in your learning folder</strong></summary>
 
-BodhiKit loads 18 knowledge bases. To avoid polluting context in unrelated projects, enable it per-project instead of globally. In your `learningWithBodhi/.claude/settings.json`:
+BodhiKit loads 19 knowledge bases. To avoid polluting context in unrelated projects, enable it per-project instead of globally. In your `learningWithBodhi/.claude/settings.json`:
 
 ```json
 {
@@ -173,11 +173,11 @@ ChatGPT can perform the procedure directly without depending on subagents.
 | resource-finder | Haiku | Web search for verified free learning resources |
 | trajectory-analyzer | Sonnet | Reads full project history (sessions, archives, assessments) and returns a structured trajectory report — used by `/evaluate` so the heavy archive load happens in the agent's context, not the parent skill's |
 
-## Knowledge Bases (18)
+## Knowledge Bases (19)
 
 Each learning methodology lives in its own focused knowledge base, loaded only when needed (progressive disclosure). Since 1.18.1 they ship as model-only skills (`skills/<kb>/SKILL.md`, `user-invocable: false`) — hidden from the `/` menu, loaded through the Skill tool at the phase that needs them:
 
-The OpenAI build converts the same 18 knowledge bases into progressively loaded
+The OpenAI build converts the same 19 knowledge bases into progressively loaded
 references, preventing them from appearing as duplicate learner commands.
 
 | Knowledge Base | Purpose |
@@ -195,6 +195,7 @@ references, preventing them from appearing as duplicate learner commands.
 | pair-programming | Strong-style, driver/navigator, ping-pong TDD, Williams & Kessler |
 | scientific-debugging | TRAFFIC method, debugging mindset, wolf fence, expert vs novice |
 | assessment-framework | Question templates by Bloom's level, exercise design |
+| evidence-kinds | Subjects whose work is not code: problems checked against saved answers, writing against saved criteria, performed skills by practice reps and a graded debrief, photos (loaded only off the code path) |
 | teaching-personality | Voice and tone — the four-teacher persona layer (patience, directness with care, "try it and see", education as empowerment); no pedagogy lives here |
 | state-ops | Operational surface: project discovery, the `bodhi-state` write path, session-type vocabulary, gate/mastery semantics — what every skill loads |
 | state-schema | Field-level reference for `.bodhi/` tracking files (loaded only by manual carve-outs, fallbacks, and `/housekeep`) |

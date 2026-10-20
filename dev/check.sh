@@ -356,9 +356,11 @@ else
     err "scripts/bodhi-state APPLIED_BASES / UNSEEN_BASIS_KINDS drifted from the state-schema KB (observed|inspected|reported; unseen bases on performed only)"
   fi
   for v in code problems writing performed observed inspected reported; do
-    if ! grep -q "\`$v\`" skills/state-schema/SKILL.md; then
-      err "skills/state-schema/SKILL.md no longer names \`$v\` (pins EVIDENCE_KINDS / APPLIED_BASES)"
-    fi
+    for kb in state-schema evidence-kinds; do
+      if ! grep -q "\`$v\`" "skills/$kb/SKILL.md"; then
+        err "skills/$kb/SKILL.md no longer names \`$v\` (pins EVIDENCE_KINDS / APPLIED_BASES)"
+      fi
+    done
   done
   # (h) state-ops calls its subcommand table the complete set, and skills
   # learn the write path from it, so a subcommand it does not name is one no
