@@ -21,12 +21,23 @@ If `$ARGUMENTS` is provided, use it as the starting topic. Otherwise, ask: "What
 Ask clarifying questions to scope the topic. A good topic is specific enough to build a plan around (e.g., "React fundamentals for someone who knows HTML/CSS/JS" not just "React"). Ask about:
 
 1. **Why** — goal, project, or job driving this?
-2. **Background** — programming experience, languages, frameworks?
+2. **Background** — in this subject: what they have read, made, played or practised (on a code topic: programming experience, languages, frameworks). Never ask about programming on a subject without code.
 3. **Timeline** — deadline or open-ended?
 4. **Learning style** — reading, watching, or building? Existing books/courses?
 5. **Depth** — solid foundation or productive quickly?
 
 Note any existing learning materials for plan integration.
+
+**How the work will be checked.** Propose the kind of evidence in plain words, then let the learner confirm or change it; Phase 4 records it.
+
+| Kind | In plain words | For |
+|---|---|---|
+| `code` | you write code, and we run it | programming, data, infrastructure |
+| `problems` | you work problems with answers, checked against answers I save before you start | maths, physics, chemistry, genetics, grammar |
+| `writing` | you write short pieces applying an idea to a new case, read against criteria I save first | history, philosophy, politics, literature |
+| `performed` | you practise away from the screen and tell me how it went; I debrief you, and it counts as your account | cooking, drawing, an instrument, speaking a language |
+
+A mixed subject takes one kind per module (music theory is `problems`, playing is `performed`). On a code topic, say it in one line and record `code` unless they object.
 
 ---
 
@@ -109,7 +120,7 @@ For (b) and (c), narrate the change in one sentence before doing it, so the lear
 
 Open with: "Before we chart the path, let me understand where you stand. Not to judge — simply to know where the journey begins."
 
-You MUST use the Agent tool to launch the `skill-assessor` agent with the scoped topic, background info, any existing code/repos, AND any Bloom priors recorded in Phase 1.5. The agent uses these priors to skip ground-zero questions on areas the learner has demonstrably engaged with, focusing its turn budget on calibration in the new sub-areas.
+You MUST use the Agent tool to launch the `skill-assessor` agent with the scoped topic, background info, any existing code/repos, AND any Bloom priors recorded in Phase 1.5. Off `code`, load the `evidence-kinds` KB and put its *Intake and assessment* bullets in the agent's prompt; the agent never loads a KB. The agent uses these priors to skip ground-zero questions on areas the learner has demonstrably engaged with, focusing its turn budget on calibration in the new sub-areas.
 
 **Fallback:** If the agent fails or hits its turn limit, conduct the assessment directly. Ask 5-6 questions starting at Bloom's Level 3, adapting up/down. Classify per sub-topic. If Phase 1.5 surfaced Bloom priors, treat those sub-areas as already calibrated and only re-test if Phase 1 responses suggest the prior is stale.
 
@@ -182,13 +193,15 @@ If Phase 1.5 already located an existing `learningWithBodhi/` root, use it — d
      - `resources.md`
    - `exercises/`, `projects/`, `notes/`
 
-3. Initialize the JSON skeletons per the shapes in the `state-schema` KB — `state.json` (`version: 2`, `initialBloomLevel` from Phase 2, counters at 0; the script fills session bookkeeping in Phase 5) and an empty `spaced-review.json` (`version: 3`). For a first-ever learner, also scaffold the parent `.bodhi-profile.json` (career/goal fields from Phase 1 scoping — manual carve-out per the KB). Then register the project via `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> profile-add-project --name <project> --topic "<topic>" --bloom <overall level from Phase 2> --pace "<pace>" --track-purpose "<purpose>"` — the script creates `.bodhi-profile.projects.json` if missing and appends a schema-complete `activeProjects` entry. For an existing profile, update `overallBloomLevels` in `.bodhi-profile.json` (manual carve-out, in-place per the KB fallback discipline).
+3. Initialize the JSON skeletons per the shapes in the `state-schema` KB — `state.json` (`version: 2`, `initialBloomLevel` from Phase 2, counters at 0; the script fills session bookkeeping in Phase 5) and an empty `spaced-review.json` (`version: 3`). For a first-ever learner, also scaffold the parent `.bodhi-profile.json` (career/goal fields from Phase 1 scoping — manual carve-out per the KB). Then register the project via `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> profile-add-project --name <project> --topic "<topic>" --bloom <overall level from Phase 2> --pace "<pace>" --track-purpose "<purpose>"` — the script creates `.bodhi-profile.projects.json` if missing and appends a schema-complete `activeProjects` entry. For an existing profile, update `overallBloomLevels` in `.bodhi-profile.json` (manual carve-out, in-place per the KB fallback discipline). Record the confirmed kind: `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> set-evidence-kind --kind <kind>`, plus `--module "<name>"` once the plan exists for each module of another kind.
 
 4. **Seed the spaced-review system from the assessment** (the first review is the most critical — `spaced-repetition` KB): for each sub-topic Phase 2 classified at Bloom ≥ 1, run `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> add-concept --concept "<sub-topic>" --module "<its module>" --bloom <the level Phase 2 classified it at>`. Assessed knowledge enters the Leitner system on Day 1 at the level the assessment observed, instead of waiting for a `/teach` to touch it — without `--bloom` the seed reads as unclassified and the gate, `/continue` and the pretest all forget what the assessment just learned.
 
 5. **Record the assessment + counters via the script**: `record-assessment --trigger learn-phase2 --data '<entry JSON from Phase 2>'` and `bump-profile --counter totalProjects`.
 
-6. Suggest git initialization and a remote repository.
+6. **Off `code`, save the sources before the first lesson:** at least two verified subject sources in `.bodhi/resources.md` (`evidence-kinds` KB *Sources*), found with the `resource-finder` agent with that rule in its prompt.
+
+7. Suggest git initialization and a remote repository.
 
 ---
 
@@ -199,6 +212,7 @@ If Phase 1.5 already located an existing `learningWithBodhi/` root, use it — d
 Give them the first micro-exercise from Module 1:
 - Achievable in 5-10 minutes with visible output
 - Directly relevant to the first module
+- Off `code`, set it as the `evidence-kinds` KB's exercise with its key saved first.
 - Calibrated to level per the `difficulty-calibration` KB: beginners (Bloom 1-2) get the faded sequence in `exercises/01-<topic>/` — a short inline-annotated worked example to study, then a completion version with 1-2 steps blanked (never a bare TODO list; a brand-new learner is at their highest cognitive load); intermediate+ get a clear description.
 
 Update tracking (this is Session 1 of the project), per the `state-ops` KB write path:

@@ -1,5 +1,5 @@
 ---
-description: "Assess your current skill level on any programming topic"
+description: "Assess your current skill level on any topic"
 user-invocable: true
 argument-hint: "<topic>"
 ---
@@ -20,6 +20,7 @@ If the topic is too broad, narrow it through questions:
 - "JavaScript" → "Which area of JavaScript? DOM manipulation, async patterns, Node.js, or something else?"
 - "Web development" → "Let us focus on one layer. Frontend, backend, or full-stack fundamentals?"
 - "Machine learning" → "Are you thinking ML theory, a specific framework like PyTorch, or applied ML?"
+- "Genetics" → "Single-gene crosses, population genetics, or the molecular side?"
 
 The goal is a topic that can be assessed in 8-12 questions. If the topic naturally has 4-8 sub-topics, it is scoped correctly.
 
@@ -35,6 +36,7 @@ You MUST use the Agent tool to launch the `skill-assessor` agent. This is not op
 - The scoped topic
 - Any context about the learner (if an active learning project exists, share their current progress)
 - Instruction to use adaptive questioning starting at Bloom's Level 3
+- On a subject without code (or a project whose `evidenceKind` is not `code`): load the `evidence-kinds` KB and put its *Intake and assessment* bullets in the prompt — the agent never loads a KB
 
 The agent will conduct the assessment through 8-12 questions, adapting difficulty based on responses.
 

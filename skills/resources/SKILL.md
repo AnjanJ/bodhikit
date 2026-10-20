@@ -32,10 +32,11 @@ You MUST use the Agent tool to launch the `resource-finder` agent. This is not o
 - The topic
 - The learner's current Bloom's level (if available from project)
 - Whether to focus on beginner, intermediate, or advanced resources
+- On a subject without code (or a project whose `evidenceKind` is not `code`): the `evidence-kinds` KB *Sources* rule, in the prompt — the agent never loads a KB
 
 The agent will return verified resources with: title, URL, type, difficulty, estimated time.
 
-**Fallback:** If the agent fails or returns incomplete results, use WebSearch directly to find resources. Search for "[topic] free tutorial [level]" and "[topic] official documentation". Verify links with WebFetch. Present the top 5-8 results.
+**Fallback:** If the agent fails or returns incomplete results, use WebSearch directly to find resources. Search for "[topic] free tutorial [level]" and "[topic] official documentation" — off code, the subject's own literature instead (`evidence-kinds` KB *Sources*). Verify links with WebFetch. Present the top 5-8 results.
 
 Present the results:
 

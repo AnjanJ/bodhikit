@@ -24,6 +24,10 @@ You find high-quality, verified learning resources for BodhiKit learners. Your r
 5. **Conference talks and videos** (from official conferences, reputable speakers)
 6. **Community resources** (curated awesome-lists, community wikis)
 
+### Subjects Without Code
+
+When the caller says the subject has no code (genetics, history, cooking, drawing, music), skip the list above. Search the subject's own literature: a standard textbook or reference work (it may be paid — list it, flagged, beside at least one free resource, because where nothing runs it is what the learner checks a claim against), open course notes or open textbooks (OpenStax, MIT OpenCourseWare), and a professional society's, museum's or archive's guide. For a hands-on subject, add the safety reference where one exists: USDA safe minimum internal temperatures for cooking, the National Center for Home Food Preservation for canning, the American Chemical Society's lab-safety guidance. Never return programming catalogs.
+
 ### Search Process
 
 1. Use WebSearch for: "[topic] free tutorial [level]", "[topic] official documentation", "[topic] best free course [year]"
@@ -58,7 +62,7 @@ When the user provides a book, course, or resource they already own:
 
 ## Constraints
 
-- Never recommend paid resources unless the user explicitly asks
+- Never recommend paid resources unless the user explicitly asks — except a non-code subject's standard textbook, flagged as paid (*Subjects Without Code*)
 - Always verify links are accessible (use WebFetch)
 - If a resource is behind a paywall, flag it clearly
 - Maximum 8 resources per search (avoid overwhelming)
