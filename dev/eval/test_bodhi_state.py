@@ -3582,23 +3582,98 @@ def t_applied_cli_back_compat():
         check("applied cli: an unknown basis is a usage error", r.returncode == 2, r.stderr)
 
 
+def t_kind_read_surfaces():
+    """learn-anything/REQ-8: the effective kind on every read surface.
+    learn-anything/REQ-9: snapshot says whether a kind was ever recorded.
+    learn-anything/REQ-15: due carries each concept's kind for /quiz.
+    learn-anything/REQ-17: a gate row carries the prerequisite's own kind."""
+    day = "2026-03-10"
+    sr = {"version": 3, "lastReviewCheck": None, "sessionHistory": [], "concepts": [
+        {"name": n, "module": m, "introduced": "2026-03-01", "box": 1,
+         "nextReview": "2026-03-02", "lastReviewed": "2026-03-01", "question": "",
+         "lastResult": "correct", "bloomLevel": 2, "feynmanPassed": False,
+         "consecutiveCorrectAtL4Plus": 0,
+         "reviewHistory": [{"date": "2026-03-01", "result": "correct", "bloomLevel": 2,
+                            "source": "teach"}]}
+        for n, m in (("Emulsions", "Sauces"), ("Thesis", "Essays"))]}
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review=sr)
+        _set_state(proj, currentModule="Plating")
+        os.makedirs(os.path.join(proj, ".bodhi", "plan"))
+        with open(os.path.join(proj, ".bodhi", "plan", "phase-1.md"), "w") as f:
+            f.write("# Phase 1\n\n### Module 1.1 — Sauces\n\n### Module 1.2 — Plating\n")
+        snap = run(proj, "snapshot", on=day)
+        check("kind surfaces: a kind-less project reads code, not recorded",
+              snap["project"]["evidenceKind"] == "code"
+              and snap["project"]["evidenceKindRecorded"] is False, snap["project"])
+        run(proj, "set-evidence-kind", "--kind", "writing")
+        run(proj, "set-evidence-kind", "--kind", "performed", "--module", "Sauces")
+        kinds = {"Emulsions": "performed", "Thesis": "writing"}
+        snap = run(proj, "snapshot", on=day)
+        check("kind surfaces: snapshot has the project's kind, recorded",
+              snap["project"]["evidenceKind"] == "writing"
+              and snap["project"]["evidenceKindRecorded"] is True, snap["project"])
+        check("kind surfaces: snapshot and mastery give each module's kind",
+              {k: v["evidenceKind"] for k, v in snap["mastery"]["modules"].items()}
+              == {"Sauces": "performed", "Essays": "writing"}
+              and run(proj, "mastery", on=day)["modules"] == snap["mastery"]["modules"],
+              snap["mastery"]["modules"])
+        for name, kind in kinds.items():
+            b = run(proj, "session-brief", "--concept", name, on=day)
+            check(f"kind surfaces: session-brief gives {name}'s kind", b["evidenceKind"] == kind, b)
+        b = run(proj, "session-brief", "--concept", "Garnish", on=day)
+        check("kind surfaces: an untracked concept takes the current module's kind",
+              b["tracked"] is False and b["evidenceKind"] == "writing", b)
+        d = run(proj, "due", on=day)
+        check("kind surfaces: due gives each concept's kind",
+              {c["name"]: c["evidenceKind"] for c in d["concepts"]} == kinds, d)
+        run(proj, "record-review", "--concept", "Emulsions", "--result", "correct",
+            "--tested-bloom", "2", on=day)
+        rb = run(proj, "revision-brief", on=day)
+        check("kind surfaces: revision-brief gives each studied concept's kind",
+              [(c["name"], c["evidenceKind"]) for c in rb["concepts"]]
+              == [("Emulsions", "performed")], rb)
+        syl = run(proj, "syllabus", on=day)
+        check("kind surfaces: syllabus gives the project's and each module's kind",
+              syl["evidenceKind"] == "writing"
+              and [(m["name"], m["evidenceKind"]) for m in syl["modules"]]
+              == [("Sauces", "performed"), ("Plating", "writing")]
+              and [(m["module"], m["evidenceKind"]) for m in syl["unplanned"]]
+              == [("Essays", "writing")], syl)
+        g = run(proj, "gate-check", "--prereqs", "Emulsions, Thesis", on=day)
+        check("kind surfaces: a gate row carries the prerequisite's own kind",
+              {p["name"]: p["evidenceKind"] for p in g["prerequisites"]} == kinds, g)
+
+
 # Keys a reader may emit beyond what 1.24.1 printed, as dotted paths into its
 # JSON (`*` = every list item or dict value). Nothing else may change on the
-# code path: writer output and the files stay byte for byte.
-GOLDEN_NEW_KEYS = {}
+# code path: writer output and the files stay byte for byte. On these code
+# projects every new key must also read as code (GOLDEN_CODE_VALUES).
+GOLDEN_NEW_KEYS = {
+    "session-brief": ["evidenceKind"],
+    "due": ["concepts.*.evidenceKind"],
+    "revision-brief": ["concepts.*.evidenceKind"],
+    "snapshot": ["project.evidenceKind", "project.evidenceKindRecorded",
+                 "mastery.modules.*.evidenceKind"],
+    "mastery": ["modules.*.evidenceKind"],
+    "syllabus": ["evidenceKind", "modules.*.evidenceKind", "unplanned.*.evidenceKind"],
+    "gate-check": ["prerequisites.*.evidenceKind"],
+}
+GOLDEN_CODE_VALUES = {"evidenceKind": "code", "evidenceKindRecorded": False}
 
 
-def _drop(obj, parts):
+def _drop(obj, parts, dropped):
     head, rest = parts[0], parts[1:]
     if isinstance(obj, dict) and head != "*":
         if not rest:
-            obj.pop(head, None)
+            if head in obj:
+                dropped.append((head, obj.pop(head)))
         elif head in obj:
-            _drop(obj[head], rest)
+            _drop(obj[head], rest, dropped)
     elif head == "*" and rest:
         for kid in (obj.values() if isinstance(obj, dict) else obj
                     if isinstance(obj, list) else []):
-            _drop(kid, rest)
+            _drop(kid, rest, dropped)
 
 
 def _golden_step_differs(readers, cmd, want, got):
@@ -3610,8 +3685,11 @@ def _golden_step_differs(readers, cmd, want, got):
         w, g = json.loads(want["stdout"]), json.loads(got["stdout"])
     except json.JSONDecodeError:
         return "output" if want["stdout"] != got["stdout"] else None
+    dropped = []
     for path in GOLDEN_NEW_KEYS.get(cmd, ()):
-        _drop(g, path.split("."))
+        _drop(g, path.split("."), dropped)
+    if any(GOLDEN_CODE_VALUES.get(k, v) != v for k, v in dropped):
+        return f"a new key does not read as code ({dropped})"
     return "output" if w != g else None
 
 
@@ -3677,7 +3755,7 @@ def main():
               t_gate_declared_none, t_golden_code_path,
               t_evidence_kind_resolver, t_evidence_kind_shapes,
               t_set_evidence_kind, t_basis_filter_every_reader, t_single_applied_reader,
-              t_applied_basis_write, t_applied_cli_back_compat):
+              t_applied_basis_write, t_applied_cli_back_compat, t_kind_read_surfaces):
         print(f"-- {t.__name__}")
         try:
             t()

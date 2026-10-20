@@ -49,6 +49,7 @@ Every skill carries its own exact invocation; `bodhi-state <subcommand> --help` 
 - `revision-brief` — today's facts for the revision sheet (`sessionToday`, `suggestedFile`, `existing`); the Stop hook reads it.
 - `syllabus` — the plan's modules in order (`plan/phase-*.md` headings) joined with each module's evidence row and the `state.json` position: `status` (`done`/`current`/`upcoming` from plan order, or a declared `skipped`), `position` (`index` of `of`), `targetBloom` with label and outcome, `evidence` (the module row plus `summaryTier`, `nextDue`, `dueToday`), `untracked`/`unplanned` for what one side lacks. `/plan view`, `/continue`'s check-in and `/progress` render it, never re-deriving order or position.
 - `gate-check` — the prerequisite verdict (*Prerequisite Gate* below).
+- Each reader also gives the effective `evidenceKind`: per concept (`due`, `session-brief`, `revision-brief`, a `gate-check` row's own), per module (`mastery`, `snapshot`, `syllabus`), and the project's (`snapshot.project`, with `evidenceKindRecorded`; `syllabus`).
 
 **Maintenance**
 

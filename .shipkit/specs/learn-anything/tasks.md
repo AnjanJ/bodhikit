@@ -67,7 +67,7 @@ touch the same files.
     - REQ-1: bare `--applied` writes the same bytes as `--applied observed`.
   - After: T8
   - Done when: `python3 dev/eval/test_bodhi_state.py` → "0 failed", t_golden_code_path ok
-- [ ] **T10** The kind on every read surface: `session-brief`, `due`, `revision-brief`, `snapshot` (with `evidenceKindRecorded`), `mastery`, `syllabus`, `gate-check` rows (the prerequisite's own kind) → REQ-8, REQ-9, REQ-15, REQ-17
+- [x] **T10** The kind on every read surface: `session-brief`, `due`, `revision-brief`, `snapshot` (with `evidenceKindRecorded`), `mastery`, `syllabus`, `gate-check` rows (the prerequisite's own kind) → REQ-8, REQ-9, REQ-15, REQ-17
   - Files: scripts/bodhi-state, dev/eval/test_bodhi_state.py, skills/state-ops/SKILL.md
   - Test: dev/eval/test_bodhi_state.py::t_kind_read_surfaces; the golden allowlist gains exactly these keys
   - After: T9

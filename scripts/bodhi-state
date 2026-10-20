@@ -1354,6 +1354,7 @@ def cmd_due(args):
                         "exposure": exposure,
                         "bloomOutcome": bloom_render(c.get("bloomLevel", 0))["bloomOutcome"],
                         "question": c.get("question", ""),
+                        "evidenceKind": effective_kind(c),
                         "_sort": (c.get("box", 1), raw)})
     due.sort(key=lambda d: d.pop("_sort"))
     for i, d in enumerate(due, 1):
@@ -1528,6 +1529,8 @@ def review_rollup(concepts, t):
             if nr <= t + datetime.timedelta(days=7):
                 due_week.append(c["name"])
     finalize_module_rows(modules)
+    for name, row in modules.items():
+        row["evidenceKind"] = kind_of_module(name)
     return {"modules": modules, "rollup": rollup, "dueToday": due_today,
             "dueThisWeek": due_week, "parked": parked, "boxes": boxes,
             "dueForCheck": due_check, "waiting": waiting,
@@ -1778,7 +1781,8 @@ def cmd_session_brief(args):
         emit({"concept": args.concept, "tracked": False,
               "firstExposure": True, "pretestApplies": True,
               "isReteach": False, "dueForReview": False, "reviews": 0,
-              "currentModule": state.get("currentModule")})
+              "currentModule": state.get("currentModule"),
+              "evidenceKind": kind_of_module(state.get("currentModule"))})
         return
     history = [h for h in c.get("reviewHistory", []) if not h.get("deferred")]
     # First exposure: never classified by a v3 writer AND no real review has
@@ -1809,6 +1813,7 @@ def cmd_session_brief(args):
         "dueForReview": nr is not None and nr <= t,
         "reviews": len(history) + (c.get("reviewHistoryArchived", 0) or 0),
         "currentModule": state.get("currentModule"),
+        "evidenceKind": effective_kind(c),
     })
 
 
@@ -2140,15 +2145,18 @@ def cmd_syllabus(args):
             row["targetBloomLabel"] = tb["bloomLabel"]
             row["targetBloomOutcome"] = tb["bloomOutcome"]
         row["evidence"] = evidence(entry)
+        row["evidenceKind"] = kind_of_module(m["name"])
         modules.append(row)
 
     untracked = [m["name"] for m in modules if not m["evidence"]["tracked"]]
     unplanned = [{"module": e["module"], **{k: v for k, v in evidence(e).items()
-                                            if k not in ("tracked", "trackedAs")}}
+                                            if k not in ("tracked", "trackedAs")},
+                  "evidenceKind": kind_of_module(e["module"])}
                  for k, e in tracked.items() if k not in matched_keys]
 
     emit({
         "project": state.get("projectName"),
+        "evidenceKind": _KINDS["project"],
         "plan": phases is not None and bool(plan),
         "phases": phases,
         "position": position_row(plan, cur_idx),
@@ -2192,6 +2200,7 @@ def cmd_revision_brief(args):
             **bloom_render(c.get("bloomLevel", 0)),
             "question": c.get("question", ""),
             "feynmanPassed": c.get("feynmanPassed", False),
+            "evidenceKind": effective_kind(c),
         })
     # the sheet is named after the taught concept when there is one
     studied.sort(key=lambda d: (0 if "teach" in d["sourcesToday"] else 1,
@@ -2260,6 +2269,9 @@ def cmd_snapshot(args):
             "overallCompletion": state.get("overallCompletion", 0),
             "initialBloomLevel": state.get("initialBloomLevel", {}),
             "currentBloomLevel": state.get("currentBloomLevel", {}),
+            "evidenceKind": _KINDS["project"],
+            # /continue proposes a kind once when none was ever recorded.
+            "evidenceKindRecorded": state.get("evidenceKind") in EVIDENCE_KINDS,
         },
         "cadence": {
             "totalSessions": state.get("totalSessions", 0),
@@ -2616,6 +2628,7 @@ def cmd_gate_check(args):
                        "box": c.get("box", 1), "lastReviewed": c.get("lastReviewed"),
                        "evidenceAt3Plus": evidence_at_3_plus(c),
                        "appliedEvidence": applied_evidence(c),
+                       "evidenceKind": effective_kind(c),
                        "status": status, "reason": reason})
     gaps = [r for r in report if r["status"] == "gap"]
     stale = [r for r in report if r["status"] == "stale-reconfirm"]
