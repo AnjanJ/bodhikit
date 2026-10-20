@@ -1496,6 +1496,167 @@ def assert_kind_practice(project, transcript):
     assert_kind_key_before_attempt(project, transcript)
 
 
+# --- Performed skills and photos (learn-anything) ---------------------------
+# A rep happens away from the screen; the tutor grades its debrief, records
+# the rep as the learner's account, and never records a rep nobody talked
+# through. A photo is examined, its limits said, then recorded as inspected.
+
+DEBRIEF_RES = (("what did you do", re.compile(
+                   r"(?i)(what did you do|walk me through|step by step|how did you (?:make|do|go about))")),
+               ("what went wrong or surprised you", re.compile(
+                   r"(?i)(went wrong|surprised you|surprise|did(?:n't| not) go)")),
+               ("what would you change, and why", re.compile(
+                   r"(?i)(what would you (?:change|do differently)|next time|differently)")))
+
+
+def review_calls(items, concept, applied=None):
+    """Indices of record-review tool items for `concept`; `applied` filters
+    on whether the call carries --applied."""
+    out = []
+    for i, it in enumerate(items):
+        if it[0] != "tool":
+            continue
+        cmd = json.dumps(it[2])
+        if "record-review" not in cmd or _key(concept) not in _key(cmd):
+            continue
+        if applied is not None and ("--applied" in cmd) != applied:
+            continue
+        out.append(i)
+    return out
+
+
+def text_before(items, i):
+    return "\n".join(it[1] for it in items[:i] if it[0] == "text")
+
+
+def assert_performed_debrief_first(project, transcript, concept="Emulsions"):
+    """learn-anything/REQ-28: the three debrief questions come before the rep
+    is recorded. learn-anything/REQ-29: the rep is recorded as reported
+    applied work on the debrief's grade."""
+    items = stream_items(transcript)
+    reps = review_calls(items, concept, applied=True)
+    if not reps:
+        fail(f"no applied review recorded for the {concept} rep the learner reported")
+    before = text_before(items, reps[0])
+    for label, rx in DEBRIEF_RES:
+        if not rx.search(before):
+            fail(f"the debrief question '{label}' was not asked before the rep was recorded")
+    ok("all three debrief questions came before the rep was recorded")
+    entries = [h for h in todays_entries(concept_or_fail(project, concept)) if h.get("applied")]
+    if not entries or entries[-1].get("appliedBasis") not in ("reported", "inspected"):
+        fail(f"the rep's entry is {entries[-1] if entries else None}; a rep the tutor did not "
+             "see is recorded as --applied reported (or inspected, for a photo)")
+    if entries[-1].get("result") not in ("correct", "incorrect", "partial"):
+        fail("the rep's entry carries no graded result; the debrief's grade is the review's")
+    ok(f"rep recorded as {entries[-1]['appliedBasis']} on a graded debrief "
+       f"({entries[-1]['result']})")
+
+
+def concept_or_fail(project, name):
+    return concept(load(project, ".bodhi", "spaced-review.json"), name)
+
+
+COUNTS_LATER_RE = re.compile(
+    r"(?i)(once (?:it'?s |it is |you'?ve |you have |we'?ve )?(?:talked it through|debriefed|"
+    r"been debriefed)|when(?:ever)? you(?:'re| are) ready|counts? once|goes on the record|"
+    r"(?:on|onto) the record (?:once|when|after)|after (?:a|the) debrief)")
+
+
+def assert_performed_no_debrief_no_record(project, transcript, concept="Emulsions"):
+    """learn-anything/REQ-30: a declined debrief records nothing for the rep,
+    and the tutor says it counts once debriefed."""
+    today = todays_entries(concept_or_fail(project, concept))
+    if today:
+        fail(f"{len(today)} entr(ies) recorded for {concept} today after the learner declined "
+             f"the debrief: {today}")
+    ok("nothing recorded for the undebriefed rep")
+    if review_calls(stream_items(transcript), concept, applied=True):
+        fail("an applied record-review was attempted for the undebriefed rep")
+    m = COUNTS_LATER_RE.search(assistant_prose(transcript))
+    if not m:
+        fail("the tutor never said the rep will count once it is debriefed")
+    ok(f"the learner was told how the rep counts ({m.group(0)!r})")
+
+
+OFFER_REP_RE = re.compile(
+    r"(?i)(have you (?:made|cooked|practi[sc]ed|tried|done|drawn|played)|since (?:we last|last time|"
+    r"the last)|a (?:practice )?rep\b|practice rep)")
+
+
+def assert_performed_repless_review(project, transcript, concept="Emulsions"):
+    """learn-anything/REQ-31: a due performed concept gets a rep offered.
+    learn-anything/REQ-32: no rep since the last review means the knowledge
+    question alone, recorded without --applied."""
+    items = stream_items(transcript)
+    graded = review_calls(items, concept)
+    if not graded:
+        fail(f"no review recorded for the due {concept}; the knowledge question still runs")
+    if not OFFER_REP_RE.search(text_before(items, graded[0])):
+        fail("the tutor never asked about or offered a practice rep before reviewing")
+    ok("a practice rep was offered or asked about first")
+    today = todays_entries(concept_or_fail(project, concept))
+    if not any(h.get("result") in ("correct", "incorrect", "partial") for h in today):
+        fail("no graded entry for the knowledge question")
+    if any(h.get("applied") for h in today):
+        fail("applied work recorded although the learner did no rep since the last review")
+    ok("the knowledge question was recorded without --applied")
+
+
+def assert_performed_by_your_account(project, transcript, concept="Knife grip"):
+    """learn-anything/REQ-25: Solid resting on the learner's word says so."""
+    prose = assistant_prose(transcript)
+    if not prose.strip():
+        fail("empty transcript — run did not produce assistant output")
+    hits = [m for m in re.finditer(re.escape(concept), prose, re.I)
+            if re.search(r"(?i)your (?:own )?account|you(?:'ve| have) reported|"
+                         r"by your report", prose[max(0, m.start() - 250):m.end() + 250])]
+    if not hits:
+        fail(f"{concept} is Solid on the learner's word alone, and no mention of it says so "
+             "(\"by your account\")")
+    ok(f"{concept} shown as Solid by the learner's account")
+    m = BARE_LEVEL_RE.search(prose)
+    if m:
+        fail(f"learner-facing text quotes a bare level/box ({m.group(0)!r})")
+    ok("no bare Bloom/Box numbers in learner-facing text")
+
+
+CAN_JUDGE_RE = re.compile(r"(?i)(I can see|from the (?:photo|image|picture|drawing)|in the "
+                          r"(?:photo|image|picture)|the (?:photo|image) shows|looking at (?:the|your))")
+CANNOT_JUDGE_RE = re.compile(
+    r"(?i)(can(?:no|')t (?:tell|judge|see|know)|(?:not|isn't|is not) (?:visible|in (?:the )?frame|"
+    r"something I can)|(?:a|one|the) (?:still |single )?(?:photo|image|picture) (?:can(?:no|')t|"
+    r"does(?:n't| not)|won't)|what I can(?:no|')t)")
+
+
+def assert_photo_inspected(project, transcript, concept="One-point perspective",
+                           photo="exercises/01-box-and-road/my-drawing.png"):
+    """learn-anything/REQ-26: the photo is examined, what it can and cannot
+    show is said, and only then is the work recorded as inspected."""
+    items = stream_items(transcript)
+    reps = review_calls(items, concept, applied=True)
+    if not reps:
+        fail("no applied review recorded for the photographed rep")
+    looked = [i for i, it in enumerate(items[:reps[0]]) if it[0] == "tool"
+              and os.path.basename(photo) in json.dumps(it[2]) and it[1] in ("Read", "Bash", "View")]
+    if not looked:
+        fail(f"the photo {photo} was never opened before the rep was recorded")
+    ok("the photo was opened before recording")
+    before = text_before(items, reps[0])
+    if not CAN_JUDGE_RE.search(before):
+        fail("the tutor never said what it could judge from the image")
+    if not CANNOT_JUDGE_RE.search(before):
+        fail("the tutor never said what the image cannot show")
+    if not re.search(r"(?i)vanishing point|converg", before):
+        fail("the examination never mentioned the vanishing point — a perspective drawing "
+             "was not actually looked at")
+    ok("said what the image shows and what it cannot, about the perspective itself")
+    entries = [h for h in todays_entries(concept_or_fail(project, concept)) if h.get("applied")]
+    if not entries or entries[-1].get("appliedBasis") != "inspected":
+        fail(f"the photographed rep's entry is {entries[-1] if entries else None}; a photo the "
+             "tutor examined is --applied inspected")
+    ok("recorded as inspected")
+
+
 # Code-topic transcript scenarios: each also proves the code path never
 # branched (learn-anything/REQ-1).
 CODE_TRANSCRIPT_SCENARIOS = {"teach-pretest", "teach-hint-discipline", "continue-discovery",
@@ -1536,7 +1697,12 @@ def main():
                        "kind-quiz": assert_kind_quiz_no_code,
                        "kind-intake": assert_kind_intake,
                        "kind-legacy-proposal": assert_kind_legacy_proposal,
-                       "kind-review": assert_kind_review_no_rewrite}
+                       "kind-review": assert_kind_review_no_rewrite,
+                       "performed-debrief-first": assert_performed_debrief_first,
+                       "performed-no-debrief": assert_performed_no_debrief_no_record,
+                       "performed-repless-review": assert_performed_repless_review,
+                       "performed-by-your-account": assert_performed_by_your_account,
+                       "photo-inspected": assert_photo_inspected}
     if name in with_transcript:
         if not transcript:
             fail(f"scenario {name} requires a transcript path")

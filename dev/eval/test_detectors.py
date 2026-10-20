@@ -14,6 +14,7 @@ import io
 import json
 import os
 import shutil
+import subprocess
 import sys
 import tempfile
 
@@ -228,11 +229,120 @@ def t_review_no_rewrite(root):
          (proj, good), (edited, good))
 
 
+def state(proj, *argv):
+    """A real bodhi-state write, dated today: the detectors read today's entries."""
+    env = {k: v for k, v in os.environ.items() if k != "BODHI_TODAY"}
+    r = subprocess.run([sys.executable, os.path.join(REPO, "scripts", "bodhi-state"),
+                        "--project", proj, *argv], capture_output=True, text=True, env=env)
+    if r.returncode != 0:
+        raise AssertionError(f"bodhi-state {argv}: {r.stderr}")
+
+
+def fresh(root, workspace, name, label):
+    """A private copy of one fixture project, for one detector's file side."""
+    dest = os.path.join(root, label)
+    shutil.copytree(os.path.join(FIXTURES, workspace), dest)
+    return os.path.join(dest, name)
+
+
+DEBRIEF = [("text", "Before I record anything: what did you do, step by step?"),
+           ("text", "What went wrong, or surprised you?"),
+           ("text", "What would you change next time, and why?")]
+REP = bash(BS + 'record-review --concept "Emulsions" --result correct --tested-bloom 3 '
+           "--applied reported --source quiz")
+
+
+def t_performed_debrief_first(root):
+    proj = fresh(root, "performed-project", "cooking", "reported")
+    state(proj, "record-review", "--concept", "Emulsions", "--result", "correct",
+          "--tested-bloom", "3", "--applied", "reported", "--source", "quiz")
+    good = transcript(root, "debrief-good", *DEBRIEF, REP)
+    bad = transcript(root, "debrief-bad", DEBRIEF[0], REP, *DEBRIEF[1:])
+    pair("performed debrief first (order)", A.assert_performed_debrief_first,
+         (proj, good), (proj, bad))
+    observed = fresh(root, "performed-project", "cooking", "observed")
+    write(os.path.join(observed, "exercises", "02-mayonnaise", "log.md"), "my notes")
+    state(observed, "record-review", "--concept", "Emulsions", "--result", "correct",
+          "--applied", "--evidence", "exercises/02-mayonnaise/log.md")
+    pair("performed debrief first (basis)", A.assert_performed_debrief_first,
+         (proj, good), (observed, good))
+
+
+def t_performed_no_debrief(root):
+    clean = fresh(root, "performed-project", "cooking", "clean")
+    said = ("text", "That's fine. The rep goes on the record once we've talked it through — "
+                    "tell me about it whenever you're ready.")
+    good = transcript(root, "nodebrief-good", said)
+    recorded = fresh(root, "performed-project", "cooking", "recorded")
+    state(recorded, "record-review", "--concept", "Emulsions", "--result", "correct",
+          "--applied", "reported")
+    pair("performed no debrief (nothing recorded)", A.assert_performed_no_debrief_no_record,
+         (clean, good), (recorded, good))
+    bad = transcript(root, "nodebrief-bad", ("text", "OK, see you next time."))
+    pair("performed no debrief (says how it counts)", A.assert_performed_no_debrief_no_record,
+         (clean, good), (clean, bad))
+
+
+def t_performed_repless_review(root):
+    proj = fresh(root, "performed-project", "cooking", "repless")
+    state(proj, "record-review", "--concept", "Emulsions", "--result", "correct",
+          "--tested-bloom", "3", "--source", "quiz")
+    offer = ("text", "Have you made mayonnaise since last time? If you have, we'll debrief it.")
+    question = ("text", "**Q1.** Your mayonnaise splits halfway. What happened, and how do you "
+                        "bring it back?")
+    review = bash(BS + 'record-review --concept "Emulsions" --result correct --tested-bloom 3 '
+                  "--source quiz")
+    good = transcript(root, "repless-good", offer, question, review)
+    bad = transcript(root, "repless-bad", question, review)
+    pair("performed repless review (offer)", A.assert_performed_repless_review,
+         (proj, good), (proj, bad))
+    applied = fresh(root, "performed-project", "cooking", "repless-applied")
+    state(applied, "record-review", "--concept", "Emulsions", "--result", "correct",
+          "--tested-bloom", "3", "--applied", "reported")
+    pair("performed repless review (no applied)", A.assert_performed_repless_review,
+         (proj, good), (applied, good))
+
+
+def t_performed_by_your_account(root):
+    good = transcript(root, "account-good", ("text", "**Knife skills** — Knife grip: *Solid, "
+                                             "due for a check* — by your account of your "
+                                             "practice reps."))
+    bad = transcript(root, "account-bad", ("text", "**Knife skills** — Knife grip: *Solid*."))
+    pair("performed by your account (said)", A.assert_performed_by_your_account,
+         (None, good), (None, bad))
+    bad = transcript(root, "account-bad-2", ("text", "Knife grip — Solid by your account, Box 4."))
+    pair("performed by your account (no numbers)", A.assert_performed_by_your_account,
+         (None, good), (None, bad))
+
+
+def t_photo_inspected(root):
+    proj = fresh(root, "performed-project", "drawing", "photo")
+    photo = "exercises/01-box-and-road/my-drawing.png"
+    shutil.copyfile(os.path.join(FIXTURES, "photo", "one-point-perspective.png"),
+                    os.path.join(proj, photo))
+    state(proj, "record-review", "--concept", "One-point perspective", "--result", "correct",
+          "--tested-bloom", "3", "--applied", "inspected", "--evidence", photo)
+    look = ("tool", "Read", {"file_path": f"{proj}/{photo}"})
+    said = ("text", "Looking at your drawing, I can see the road runs cleanly to the vanishing "
+                    "point, but the box's top-right edge misses it. What I can't tell from a "
+                    "photo is how you constructed it, or how long it took.")
+    record = bash(BS + 'record-review --concept "One-point perspective" --result correct '
+                  f"--tested-bloom 3 --applied inspected --evidence {photo}")
+    good = transcript(root, "photo-good", look, said, record)
+    bad = transcript(root, "photo-bad", said, record, look)
+    pair("photo inspected (opened first)", A.assert_photo_inspected, (proj, good), (proj, bad))
+    bad = transcript(root, "photo-bad-2", look, ("text", "Looking at your drawing, I can see the "
+                                                 "vanishing point is right."), record)
+    pair("photo inspected (says what it cannot judge)", A.assert_photo_inspected,
+         (proj, good), (proj, bad))
+
+
 def main():
     with tempfile.TemporaryDirectory() as root:
         for t in (t_code_never_loads_kinds, t_teach_no_code, t_quiz_no_code, t_offers,
                   t_sources, t_key_before_attempt, t_intake, t_legacy_proposal,
-                  t_review_no_rewrite):
+                  t_review_no_rewrite, t_performed_debrief_first, t_performed_no_debrief,
+                  t_performed_repless_review, t_performed_by_your_account, t_photo_inspected):
             print(f"-- {t.__name__}")
             sub = os.path.join(root, t.__name__)
             os.makedirs(sub)

@@ -1,0 +1,24 @@
+{
+  "version": 2,
+  "projectName": "drawing",
+  "topic": "Drawing: perspective",
+  "createdAt": "2026-09-20T09:00:00",
+  "lastSessionAt": "2026-09-20T18:00:00",
+  "totalSessions": 1,
+  "sessionDates": [
+    "2026-09-20"
+  ],
+  "currentStreak": 1,
+  "currentPhase": "0",
+  "currentModule": "Perspective",
+  "currentModuleIndex": 0,
+  "lastActivity": "Taught one-point perspective with a road and a box.",
+  "initialBloomLevel": {
+    "drawing": 0
+  },
+  "currentBloomLevel": {
+    "drawing": 2
+  },
+  "overallCompletion": 10,
+  "evidenceKind": "performed"
+}

@@ -107,7 +107,7 @@ touch the same files.
   - Test: dev/eval/assert_scenario.py::assert_grade_apply_band, ::assert_grade_genuine, ::assert_grade_jargon run with the kind fixtures through `BODHI_EVAL_FIXTURE`/`BODHI_EVAL_PROJECT`/`BODHI_EVAL_CONCEPT`
   - After: T16
   - Done when: `BODHI_EVAL_RUNS=3 dev/eval/run-llm-evals.sh kind-grading` → 18/18, and the recorded levels match the code-topic bands
-- [ ] **T18** Eval groups `performed` and `photo` → REQ-25, REQ-26, REQ-28, REQ-29, REQ-30, REQ-31, REQ-32
+- [x] **T18** Eval groups `performed` and `photo` → REQ-25, REQ-26, REQ-28, REQ-29, REQ-30, REQ-31, REQ-32
   - Files: dev/eval/assert_scenario.py, dev/eval/run-llm-evals.sh, dev/eval/README.md
   - Test: dev/eval/assert_scenario.py::assert_performed_debrief_first, ::assert_performed_no_debrief_no_record, ::assert_performed_repless_review, ::assert_performed_by_your_account, ::assert_photo_inspected
   - After: T17

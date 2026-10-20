@@ -11,6 +11,17 @@
       "pace": "steady",
       "status": "active",
       "trackPurpose": "depth"
+    },
+    {
+      "name": "drawing",
+      "topic": "Drawing: perspective",
+      "startedAt": "2026-09-20",
+      "currentPhase": "0",
+      "currentModule": "Perspective",
+      "bloomLevel": 2,
+      "pace": "steady",
+      "status": "active",
+      "trackPurpose": "breadth"
     }
   ],
   "completedProjects": []

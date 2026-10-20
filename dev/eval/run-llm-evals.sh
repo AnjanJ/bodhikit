@@ -22,6 +22,8 @@
 #                                        # intake, the legacy proposal, review
 #   BODHI_EVAL_RUNS=3 dev/eval/run-llm-evals.sh kind-grading
 #                                        # the grading boundaries on problems and writing
+#   dev/eval/run-llm-evals.sh performed  # practice reps, debriefs, "by your account"
+#   dev/eval/run-llm-evals.sh photo      # a photo examined, then recorded as inspected
 #
 #   BODHI_EVAL_RUNS=8 dev/eval/run-llm-evals.sh grade-apply-band
 #                                        # sample a grading scenario N times and
@@ -869,6 +871,47 @@ if [ "$want" = "all" ] || [ "$want" = "kind-fidelity" ] || [ "$want" = "kind-rev
   BODHI_EVAL_FIXTURE="$WRITING_FIXTURE" BODHI_EVAL_PROJECT="$WRITING_PROJECT" run_scenario kind-review \
     "/bodhikit:review exercises/02-claims-in-a-new-case/my-analysis.md — $SIM_CONTRACT I wrote this myself. Review what it shows about my understanding. If you ask me questions, I answer briefly and consistently with what I wrote. Complete ALL tracking updates exactly as the skill specifies." \
     kind-review prep_kind_review transcript
+fi
+
+# --- Performed skills and photos (learn-anything) ---------------------------
+# A rep happens away from the screen. The tutor debriefs it before recording
+# anything, grades the debrief, records the rep as the learner's account, and
+# records nothing for a rep nobody talked through. A due performed concept
+# with no rep since the last review gets the knowledge question alone.
+# /progress says "by your account" for Solid that rests on the learner's word.
+# A photo is examined and its limits said before it is recorded as inspected.
+if [ "$want" = "all" ] || [ "$want" = "performed" ] || [ "$want" = "performed-debrief-first" ]; then
+  BODHI_EVAL_FIXTURE="$PERFORMED_FIXTURE" BODHI_EVAL_PROJECT="$PERFORMED_PROJECT" run_scenario performed-debrief-first \
+    "/bodhikit:quiz Emulsions — $SIM_CONTRACT Scripted replies: I made mayonnaise twice since we last spoke. When you ask what I did: one yolk, a teaspoon of mustard and lemon juice, then 200 ml of sunflower oil, the first part drop by drop while whisking, then a thin stream; about eight minutes. When you ask what went wrong or surprised me: the first batch split when I poured too fast after it thickened; I rescued it by whisking it slowly into a fresh yolk. When you ask what I would change: keep the stream thin for longer, because the yolk can only coat so much oil at a time until the emulsion is established. To any knowledge question, I answer correctly in my own words, tagged 'mostly'. Complete ALL tracking updates exactly as the skill specifies. Run the session turn by turn in your messages — each question you ask, then my scripted reply." \
+    performed-debrief-first "" transcript
+fi
+
+if [ "$want" = "all" ] || [ "$want" = "performed" ] || [ "$want" = "performed-no-debrief" ]; then
+  BODHI_EVAL_FIXTURE="$PERFORMED_FIXTURE" BODHI_EVAL_PROJECT="$PERFORMED_PROJECT" run_scenario performed-no-debrief \
+    "/bodhikit:practice Emulsions — $SIM_CONTRACT Scripted replies: I made mayonnaise yesterday. I do not want to go through how it went — just log the rep. If you ask me anything about it, or any other question, I decline and say I have to go. Then close the session and complete ALL tracking updates exactly as the skill specifies." \
+    performed-no-debrief "" transcript
+fi
+
+if [ "$want" = "all" ] || [ "$want" = "performed" ] || [ "$want" = "performed-repless-review" ]; then
+  BODHI_EVAL_FIXTURE="$PERFORMED_FIXTURE" BODHI_EVAL_PROJECT="$PERFORMED_PROJECT" run_scenario performed-repless-review \
+    "/bodhikit:quiz Emulsions — $SIM_CONTRACT Scripted replies: I have not made anything since we last spoke — no practice at all. To any knowledge question, I answer correctly in my own words, tagged 'mostly'. Complete ALL tracking updates exactly as the skill specifies. Run the session turn by turn in your messages — each question you ask, then my scripted reply." \
+    performed-repless-review "" transcript
+fi
+
+if [ "$want" = "all" ] || [ "$want" = "performed" ] || [ "$want" = "performed-by-your-account" ]; then
+  BODHI_EVAL_FIXTURE="$PERFORMED_FIXTURE" BODHI_EVAL_PROJECT="$PERFORMED_PROJECT" run_scenario performed-by-your-account \
+    "/bodhikit:progress — headless eval run. Show me my full dashboard for this project, as the skill specifies." \
+    performed-by-your-account "" transcript
+fi
+
+prep_photo() {
+  mkdir -p "$1/exercises/01-box-and-road"
+  cp "$REPO/dev/eval/fixtures/photo/one-point-perspective.png" "$1/exercises/01-box-and-road/my-drawing.png"
+}
+if [ "$want" = "all" ] || [ "$want" = "photo" ] || [ "$want" = "photo-inspected" ]; then
+  BODHI_EVAL_FIXTURE="$PERFORMED_FIXTURE" BODHI_EVAL_PROJECT="drawing" run_scenario photo-inspected \
+    "/bodhikit:practice One-point perspective — $SIM_CONTRACT Scripted replies: I did the practice task on paper — a road and a box beside it — and photographed it: the photo is saved at exercises/01-box-and-road/my-drawing.png. Look at it. When you ask what I did: I drew the horizon, marked one vanishing point, ruled the road edges to it, drew the box's front face, then ruled the receding edges. When you ask what went wrong or surprised me: the box looked a bit off but I could not see why. When you ask what I would change: rule every receding edge from the corner to the point before drawing the back face. To any knowledge question, I answer correctly in my own words. Complete ALL tracking updates exactly as the skill specifies. Run the session turn by turn in your messages — each question you ask, then my scripted reply." \
+    photo-inspected prep_photo transcript
 fi
 
 # Protocol gates with no file trace (the pretest is deliberately unrecorded;

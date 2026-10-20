@@ -13,6 +13,7 @@ it stays kind-less for REQ-3. Rebuild only on purpose; the evals read
 these files."""
 import json
 import os
+import re
 import shutil
 import struct
 import subprocess
@@ -74,6 +75,21 @@ def state(proj, name, topic, created, phase, module, index, activity, area):
         "lastActivity": activity,
         "initialBloomLevel": {area: 0}, "currentBloomLevel": {area: 2},
         "overallCompletion": 10})
+
+
+def settle_times(ws):
+    """bodhi-state stamps lastSessionAt, lastUpdated and lastReviewCheck with
+    the wall clock; BODHI_TODAY pins only the date. Fix the time of day so a
+    rebuild writes the same bytes."""
+    stamp = re.compile(r'("(?:lastReviewCheck|lastSessionAt|lastUpdated)": "\d{4}-\d{2}-\d{2})T\d{2}:\d{2}:\d{2}"')
+    for root, _, names in os.walk(ws):
+        for n in names:
+            if n.endswith(".json"):
+                path = os.path.join(root, n)
+                with open(path, encoding="utf-8") as f:
+                    body = f.read()
+                with open(path, "w", encoding="utf-8") as f:
+                    f.write(stamp.sub(r'\1T18:00:00"', body))
 
 
 def fresh(ws):
@@ -340,15 +356,62 @@ text(os.path.join(proj, ".bodhi", "progress.md"),
      "- 2026-09-10 — Taught emulsions.\n"
      "- 2026-08-01 to 2026-08-12 — Knife skills: four debriefed knife-grip reps; Solid by the learner's account.\n")
 
+# --- performed, a second project: drawing (the photo scenario) -------------
+proj = os.path.join(ws, "drawing")
+state(proj, "drawing", "Drawing: perspective", "2026-09-20", "0", "Perspective", 0,
+      "Taught one-point perspective with a road and a box.", "drawing")
+text(os.path.join(proj, ".bodhi", "plan", "README.md"),
+     "# Learning Plan — Drawing: perspective\n\n**Current phase:** 0 (`phase-0.md`)\n"
+     "**Target arc:** 6 weeks\n**Pace:** steady\n\n## Phases\n\n"
+     "- **Phase 0 — Space on a flat page** (6 weeks) → `phase-0.md`\n")
+text(os.path.join(proj, ".bodhi", "plan", "phase-0.md"),
+     "# Phase 0 — Space on a flat page\n\n"
+     "**Goals:** Draw boxes and streets that sit in convincing space.\n**Duration:** 6 weeks\n"
+     "**Success criteria:** Can construct a scene in one- and two-point perspective and say why each line goes where it does.\n\n"
+     "## Modules\n\n### Module 0.1 — Perspective\n\n"
+     "**Concepts:** One-point perspective, Two-point perspective\n\n"
+     "**Key terms:** horizon line, vanishing point, orthogonal, picture plane\n")
+text(os.path.join(proj, ".bodhi", "resources.md"),
+     "# Resources — Drawing: perspective\n\n## Verified\n\n"
+     "- Betty Edwards, *Drawing on the Right Side of the Brain*, 4th ed. (TarcherPerigee, 2012), "
+     "the chapter on perspective.\n"
+     "- Scott Robertson with Thomas Bertling, *How to Draw* (Design Studio Press, 2013), "
+     "chapters 2 and 3 on perspective construction.\n")
+text(os.path.join(proj, "exercises", "01-box-and-road", "criteria.md"),
+     "# Practice task — One-point perspective (saved before the rep)\n\n"
+     "**The rep (30 minutes, on paper):** a road running to the horizon and a box beside it, "
+     "every receding line ruled to one vanishing point. Photograph the drawing when done.\n\n"
+     "**Watch for:** whether each receding edge actually meets the vanishing point; whether the "
+     "back edges of the box stay parallel to the front ones.\n\n"
+     "**Debrief questions (asked before anything is recorded):**\n"
+     "1. What did you do, step by step?\n"
+     "2. What went wrong or surprised you?\n"
+     "3. What would you change next time, and why?\n")
+lists_path = os.path.join(ws, ".bodhi-profile.projects.json")
+with open(lists_path, encoding="utf-8") as f:
+    lists = json.load(f)
+lists["activeProjects"].append({
+    "name": "drawing", "topic": "Drawing: perspective", "startedAt": "2026-09-20",
+    "currentPhase": "0", "currentModule": "Perspective", "bloomLevel": 2, "pace": "steady",
+    "status": "active", "trackPurpose": "breadth"})
+dump(lists_path, lists)
+bs(proj, "2026-09-20", "set-evidence-kind", "--kind", "performed")
+bs(proj, "2026-09-20", "add-concept", "--concept", "One-point perspective", "--module",
+   "Perspective", "--question", "Why do all the receding edges of a box meet at one point?")
+bs(proj, "2026-09-20", "record-review", "--concept", "One-point perspective", "--result",
+   "correct", "--tested-bloom", "2", "--source", "teach")
+bs(proj, "2026-09-20", "touch-state", "--activity", "Taught one-point perspective with a road and a box.")
+
 draw_photo(os.path.join(FIX, "photo", "one-point-perspective.png"))
 
 for ws, p in (("problems-project", "genetics"), ("writing-project", "political-theory"),
-              ("performed-project", "cooking")):
+              ("performed-project", "cooking"), ("performed-project", "drawing")):
     proj = os.path.join(FIX, ws, p)
     r = subprocess.run([sys.executable, SCRIPT, "--project", proj, "verify"],
                        capture_output=True, text=True)
     out = json.loads(r.stdout)
-    print(ws, "verify ok" if out["ok"] else "verify FAIL", out["errors"], out["warnings"])
+    print(ws, p, "verify ok" if out["ok"] else "verify FAIL", out["errors"], out["warnings"])
+    settle_times(os.path.join(FIX, ws))
     for root, _, names in os.walk(os.path.join(FIX, ws)):
         for n in names:
             if n.endswith(".lock"):
