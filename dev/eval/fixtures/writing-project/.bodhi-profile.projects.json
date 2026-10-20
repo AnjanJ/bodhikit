@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "activeProjects": [
+    {
+      "name": "political-theory",
+      "topic": "Political theory from first principles",
+      "startedAt": "2026-10-06",
+      "currentPhase": "0",
+      "currentModule": "Claims, reasons, and facts versus values",
+      "bloomLevel": 2,
+      "pace": "steady",
+      "status": "active",
+      "trackPurpose": "depth"
+    }
+  ],
+  "completedProjects": []
+}

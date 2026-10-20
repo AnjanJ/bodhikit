@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "careerGoal": "Understand political ideas well enough to argue them fairly",
+  "whyLearning": "Fixture for LLM evals: a topic without code",
+  "priorExperience": "None in political theory",
+  "learningStyle": "reading and discussion",
+  "overallBloomLevels": { "political-reasoning": 2 },
+  "cumulativeStats": {
+    "totalSessions": 2,
+    "totalExercises": 1,
+    "totalConceptsLearned": 1,
+    "totalMilestonesReached": 0,
+    "totalProjects": 1,
+    "teachBacksWritten": 0,
+    "teachBacksPublished": 0
+  },
+  "patterns": { "persistentChallenges": [], "consistentStrengths": [] },
+  "lastUpdated": "2026-10-08T19:00:00"
+}

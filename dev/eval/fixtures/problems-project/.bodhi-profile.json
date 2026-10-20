@@ -1,0 +1,24 @@
+{
+  "version": 2,
+  "careerGoal": "Learn mendelian genetics well enough to use it",
+  "whyLearning": "Fixture for LLM evals: a subject of worked problems with exact answers",
+  "priorExperience": "School biology, years ago",
+  "learningStyle": "worked examples and problem sets",
+  "overallBloomLevels": {
+    "genetics": 2
+  },
+  "cumulativeStats": {
+    "totalSessions": 3,
+    "totalExercises": 1,
+    "totalConceptsLearned": 1,
+    "totalMilestonesReached": 0,
+    "totalProjects": 1,
+    "teachBacksWritten": 0,
+    "teachBacksPublished": 0
+  },
+  "patterns": {
+    "persistentChallenges": [],
+    "consistentStrengths": []
+  },
+  "lastUpdated": "2026-09-05T00:32:42"
+}

@@ -1,0 +1,26 @@
+{
+  "version": 2,
+  "projectName": "genetics",
+  "topic": "Mendelian genetics",
+  "createdAt": "2026-09-01T09:00:00",
+  "lastSessionAt": "2026-09-05T00:32:42",
+  "totalSessions": 3,
+  "sessionDates": [
+    "2026-09-01",
+    "2026-09-02",
+    "2026-09-05"
+  ],
+  "currentStreak": 1,
+  "currentPhase": "0",
+  "currentModule": "Single-gene inheritance",
+  "currentModuleIndex": 0,
+  "lastActivity": "Quizzed a monohybrid cross on a new trait.",
+  "initialBloomLevel": {
+    "genetics": 0
+  },
+  "currentBloomLevel": {
+    "genetics": 2
+  },
+  "overallCompletion": 10,
+  "evidenceKind": "problems"
+}

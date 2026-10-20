@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "activeProjects": [
+    {
+      "name": "cooking",
+      "topic": "Home cooking: knife work and sauces",
+      "startedAt": "2026-08-01",
+      "currentPhase": "0",
+      "currentModule": "Emulsions",
+      "bloomLevel": 2,
+      "pace": "steady",
+      "status": "active",
+      "trackPurpose": "depth"
+    }
+  ],
+  "completedProjects": []
+}

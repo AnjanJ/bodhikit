@@ -92,7 +92,7 @@ touch the same files.
   - Test: none new; the Bloom label/outcome pins hold, and behaviour is checked by kind-grading (T17)
   - After: T13
   - Done when: `dev/check.sh` passes
-- [ ] **T15** Eval fixtures: genetics (`problems`), a political-theory copy with its kind recorded (`writing`; the original stays kind-less for REQ-3), cooking (`performed`), a one-point-perspective drawing PNG → REQ-20, REQ-26, REQ-33
+- [x] **T15** Eval fixtures: genetics (`problems`), a political-theory copy with its kind recorded (`writing`; the original stays kind-less for REQ-3), cooking (`performed`), a one-point-perspective drawing PNG → REQ-20, REQ-26, REQ-33
   - Files: dev/eval/fixtures/problems-project/, dev/eval/fixtures/writing-project/, dev/eval/fixtures/performed-project/, dev/eval/fixtures/photo/
   - Test: none, data; each fixture is written through `bodhi-state` and verified
   - After: T10

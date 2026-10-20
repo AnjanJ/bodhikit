@@ -1,0 +1,96 @@
+{
+  "version": 3,
+  "lastReviewCheck": "2026-09-11T00:32:42",
+  "concepts": [
+    {
+      "name": "Knife grip",
+      "module": "Knife skills",
+      "introduced": "2026-08-01",
+      "box": 4,
+      "nextReview": "2026-08-26",
+      "lastReviewed": "2026-08-12",
+      "question": "Why does the claw keep your fingers safe while still guiding the cut?",
+      "lastResult": "correct",
+      "bloomLevel": 4,
+      "feynmanPassed": true,
+      "consecutiveCorrectAtL4Plus": 3,
+      "reviewHistory": [
+        {
+          "date": "2026-08-01",
+          "result": "correct",
+          "boxBefore": 1,
+          "bloomLevel": 3,
+          "source": "teach"
+        },
+        {
+          "date": "2026-08-02",
+          "result": "correct",
+          "boxBefore": 1,
+          "bloomLevel": 4,
+          "source": "practice",
+          "applied": true,
+          "appliedBasis": "reported"
+        },
+        {
+          "date": "2026-08-05",
+          "result": "correct",
+          "boxBefore": 2,
+          "bloomLevel": 4,
+          "source": "quiz",
+          "applied": true,
+          "appliedBasis": "reported"
+        },
+        {
+          "date": "2026-08-12",
+          "result": "correct",
+          "boxBefore": 3,
+          "bloomLevel": 4,
+          "source": "quiz",
+          "applied": true,
+          "appliedBasis": "reported"
+        }
+      ],
+      "feynmanPassedAt": "2026-08-12"
+    },
+    {
+      "name": "Emulsions",
+      "module": "Emulsions",
+      "introduced": "2026-09-10",
+      "box": 2,
+      "nextReview": "2026-09-14",
+      "lastReviewed": "2026-09-11",
+      "question": "Why does mayonnaise split if the oil goes in too fast, and how do you bring it back?",
+      "lastResult": "correct",
+      "bloomLevel": 3,
+      "feynmanPassed": false,
+      "consecutiveCorrectAtL4Plus": 0,
+      "reviewHistory": [
+        {
+          "date": "2026-09-10",
+          "result": "correct",
+          "boxBefore": 1,
+          "bloomLevel": 2,
+          "source": "teach"
+        },
+        {
+          "date": "2026-09-11",
+          "result": "correct",
+          "boxBefore": 1,
+          "bloomLevel": 3,
+          "source": "practice",
+          "applied": true,
+          "appliedBasis": "reported"
+        }
+      ]
+    }
+  ],
+  "sessionHistory": [
+    {
+      "date": "2026-09-11",
+      "type": "practice",
+      "conceptsReviewed": 1,
+      "passes": 1,
+      "notes": "first mayonnaise rep, debriefed"
+    }
+  ]
+}

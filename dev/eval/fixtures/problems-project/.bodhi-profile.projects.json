@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "activeProjects": [
+    {
+      "name": "genetics",
+      "topic": "Mendelian genetics",
+      "startedAt": "2026-09-01",
+      "currentPhase": "0",
+      "currentModule": "Single-gene inheritance",
+      "bloomLevel": 2,
+      "pace": "steady",
+      "status": "active",
+      "trackPurpose": "depth"
+    }
+  ],
+  "completedProjects": []
+}

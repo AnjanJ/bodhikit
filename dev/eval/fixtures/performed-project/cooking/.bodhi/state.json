@@ -1,0 +1,29 @@
+{
+  "version": 2,
+  "projectName": "cooking",
+  "topic": "Home cooking: knife work and sauces",
+  "createdAt": "2026-08-01T09:00:00",
+  "lastSessionAt": "2026-09-11T00:32:42",
+  "totalSessions": 6,
+  "sessionDates": [
+    "2026-08-01",
+    "2026-08-02",
+    "2026-08-05",
+    "2026-08-12",
+    "2026-09-10",
+    "2026-09-11"
+  ],
+  "currentStreak": 2,
+  "currentPhase": "0",
+  "currentModule": "Emulsions",
+  "currentModuleIndex": 1,
+  "lastActivity": "Debriefed a mayonnaise rep; it held this time.",
+  "initialBloomLevel": {
+    "cooking": 0
+  },
+  "currentBloomLevel": {
+    "cooking": 2
+  },
+  "overallCompletion": 10,
+  "evidenceKind": "performed"
+}

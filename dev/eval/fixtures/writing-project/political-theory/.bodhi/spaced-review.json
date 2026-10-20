@@ -1,0 +1,43 @@
+{
+  "version": 3,
+  "lastReviewCheck": "2026-10-08T18:16:27",
+  "concepts": [
+    {
+      "name": "Descriptive and normative claims",
+      "module": "Claims, reasons, and facts versus values",
+      "introduced": "2026-10-08",
+      "box": 1,
+      "nextReview": "2026-10-09",
+      "lastReviewed": "2026-10-08",
+      "question": "What makes a claim descriptive rather than normative, and why does it matter in an argument?",
+      "lastResult": "correct",
+      "bloomLevel": 2,
+      "feynmanPassed": false,
+      "consecutiveCorrectAtL4Plus": 0,
+      "reviewHistory": [
+        {
+          "date": "2026-10-08",
+          "result": "correct",
+          "boxBefore": 1,
+          "bloomLevel": 2,
+          "source": "teach"
+        }
+      ]
+    },
+    {
+      "name": "Premises and conclusions",
+      "module": "Claims, reasons, and facts versus values",
+      "introduced": "2026-10-08",
+      "box": 1,
+      "nextReview": "2026-10-09",
+      "lastReviewed": null,
+      "question": "",
+      "lastResult": "",
+      "bloomLevel": 0,
+      "feynmanPassed": false,
+      "consecutiveCorrectAtL4Plus": 0,
+      "reviewHistory": []
+    }
+  ],
+  "sessionHistory": []
+}

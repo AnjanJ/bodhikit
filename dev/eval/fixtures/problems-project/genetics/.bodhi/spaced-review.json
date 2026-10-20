@@ -1,0 +1,67 @@
+{
+  "version": 3,
+  "lastReviewCheck": "2026-09-05T00:32:42",
+  "concepts": [
+    {
+      "name": "Monohybrid crosses",
+      "module": "Single-gene inheritance",
+      "introduced": "2026-09-01",
+      "box": 3,
+      "nextReview": "2026-09-12",
+      "lastReviewed": "2026-09-05",
+      "question": "Two heterozygous parents: what fraction of the offspring show the recessive trait, and why?",
+      "lastResult": "correct",
+      "bloomLevel": 3,
+      "feynmanPassed": false,
+      "consecutiveCorrectAtL4Plus": 0,
+      "reviewHistory": [
+        {
+          "date": "2026-09-01",
+          "result": "correct",
+          "boxBefore": 1,
+          "bloomLevel": 2,
+          "source": "teach"
+        },
+        {
+          "date": "2026-09-02",
+          "result": "correct",
+          "boxBefore": 1,
+          "bloomLevel": 3,
+          "source": "practice",
+          "applied": true,
+          "evidence": "exercises/01-monohybrid-crosses/work.md"
+        },
+        {
+          "date": "2026-09-05",
+          "result": "correct",
+          "boxBefore": 2,
+          "bloomLevel": 3,
+          "confidence": "mostly",
+          "source": "quiz"
+        }
+      ]
+    },
+    {
+      "name": "Dominance and recessiveness",
+      "module": "Single-gene inheritance",
+      "introduced": "2026-09-01",
+      "box": 1,
+      "nextReview": "2026-09-02",
+      "lastReviewed": null,
+      "question": "Why can two purple-flowered plants have a white-flowered offspring?",
+      "lastResult": "",
+      "bloomLevel": 2,
+      "feynmanPassed": false,
+      "consecutiveCorrectAtL4Plus": 0,
+      "reviewHistory": []
+    }
+  ],
+  "sessionHistory": [
+    {
+      "date": "2026-09-02",
+      "type": "practice",
+      "conceptsReviewed": 1,
+      "passes": 1
+    }
+  ]
+}

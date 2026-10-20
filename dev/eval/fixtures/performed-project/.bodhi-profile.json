@@ -1,0 +1,24 @@
+{
+  "version": 2,
+  "careerGoal": "Learn home cooking: knife work and sauces well enough to use it",
+  "whyLearning": "Fixture for LLM evals: a performed skill practised away from the screen",
+  "priorExperience": "Cooks simple weeknight meals",
+  "learningStyle": "doing, then talking it through",
+  "overallBloomLevels": {
+    "cooking": 2
+  },
+  "cumulativeStats": {
+    "totalSessions": 6,
+    "totalExercises": 1,
+    "totalConceptsLearned": 1,
+    "totalMilestonesReached": 0,
+    "totalProjects": 1,
+    "teachBacksWritten": 0,
+    "teachBacksPublished": 0
+  },
+  "patterns": {
+    "persistentChallenges": [],
+    "consistentStrengths": []
+  },
+  "lastUpdated": "2026-09-11T00:32:42"
+}
