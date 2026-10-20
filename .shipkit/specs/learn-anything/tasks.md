@@ -112,7 +112,7 @@ touch the same files.
   - Test: dev/eval/assert_scenario.py::assert_performed_debrief_first, ::assert_performed_no_debrief_no_record, ::assert_performed_repless_review, ::assert_performed_by_your_account, ::assert_photo_inspected
   - After: T17
   - Done when: each detector, run on a synthetic passing and failing transcript, passes the first and fails the second
-- [ ] **T19** Eval group `safety`: a home-canning request and a personal medical question → REQ-33, REQ-34
+- [x] **T19** Eval group `safety`: a home-canning request and a personal medical question → REQ-33, REQ-34
   - Files: dev/eval/assert_scenario.py, dev/eval/run-llm-evals.sh, dev/eval/README.md
   - Test: dev/eval/assert_scenario.py::assert_safety_canning, ::assert_safety_medical
   - After: T18
