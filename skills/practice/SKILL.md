@@ -38,6 +38,8 @@ Determine the learner's current level for exercise targeting.
 
 5. Target the exercise at the learner's ZPD: just beyond what they can do comfortably, but achievable with effort.
 
+6. **Evidence kind** (with a project): `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> session-brief --concept "<topic>"`. On `evidenceKind: code`, everything below runs as written. On `problems`, `writing` or `performed`, load the `evidence-kinds` KB and follow it wherever this file assumes code: one folder per exercise, its key (`answers.md` or `criteria.md`) written there before the learner sees the task, and for `performed` the practice task with its debrief questions.
+
 ---
 
 ## Phase 2: Exercise Delivery
@@ -133,7 +135,9 @@ The README should include:
 
 After the learner indicates they have completed (or attempted) the exercise:
 
-1. **Read their code** using the Read tool. **If no code file exists** (learner attempted verbally, gave up, or this was a thought-experiment exercise), skip the agent invocation — go to step 3 with prose-based engagement instead. Otherwise: You MUST use the Agent tool to launch the `code-reviewer` agent to perform an educational review of the code. **Fallback:** If the agent fails, conduct the educational review directly by analyzing the code yourself.
+1. **Off `code`**, read the learner's file in the exercise folder (a photo: the KB's *Photos*) and review it yourself against the key — the `code-reviewer` agent reads code only. A performed rep is debriefed before anything is recorded, and a declined debrief records nothing (*Practice reps*).
+
+   **Read their code** using the Read tool. **If no code file exists** (learner attempted verbally, gave up, or this was a thought-experiment exercise), skip the agent invocation — go to step 3 with prose-based engagement instead. Otherwise: You MUST use the Agent tool to launch the `code-reviewer` agent to perform an educational review of the code. **Fallback:** If the agent fails, conduct the educational review directly by analyzing the code yourself.
 
 2. **Review educationally** — do NOT just check if it works. Analyze:
    - What concepts did they demonstrate understanding of?
@@ -161,7 +165,7 @@ After the learner indicates they have completed (or attempted) the exercise:
 
    > "Hints can land the fix, but they teach the fix more than the debugging. Want to switch to `/bodhikit:debug-together --invoked-from=practice <brief description of what is failing>` and work through it as a hypothesis? Either way is fine; debug-together is the longer path that teaches the skill."
 
-   This is an **offer, not an auto-invocation**. If the learner accepts, control passes to `/debug-together` and they work through TRAFFIC + Reproduce + Hypothesize + Wolf Fence on the failing exercise (the sub-skill discovers the failing code from `exercises/<current-module>/` per the chain convention — do NOT pass a file path as positional argument). **Either way, control returns HERE for step 6 (Update tracking) when the exercise resolves** — an accepted handoff must not orphan the exercise's writes. If they decline, continue with Hint 3 and the existing flow.
+   This is an **offer, not an auto-invocation**. Off `code`, skip this offer. If the learner accepts, control passes to `/debug-together` and they work through TRAFFIC + Reproduce + Hypothesize + Wolf Fence on the failing exercise (the sub-skill discovers the failing code from `exercises/<current-module>/` per the chain convention — do NOT pass a file path as positional argument). **Either way, control returns HERE for step 6 (Update tracking) when the exercise resolves** — an accepted handoff must not orphan the exercise's writes. If they decline, continue with Hint 3 and the existing flow.
 
 5. **If they are stuck before starting:**
    - Break the exercise into smaller sub-problems
@@ -171,7 +175,7 @@ After the learner indicates they have completed (or attempted) the exercise:
 
      > "We could also work through it together side-by-side — `/bodhikit:pair --invoked-from=practice <topic>` will run strong-style on this exercise. The decomposition above is the solo path; pair is the collaboration path. Either works."
 
-     This is an **offer, not an auto-invocation**. The decomposition path stays available; pair is named as a peer alternative for learners who would do better with collaboration than further breakdown.
+     This is an **offer, not an auto-invocation**. The decomposition path stays available; pair is named as a peer alternative for learners who would do better with collaboration than further breakdown. Off `code`, decompose without the offer.
 
 6. **Update tracking** — per the `state-ops` KB write path and the `spaced-repetition` KB judgment rules. **No active project** (the learner asked for a one-off exercise outside a learning project): skip these writes entirely — there is nothing to write to; suggest `/learn` if they want the tracking:
 
@@ -184,7 +188,7 @@ After the learner indicates they have completed (or attempted) the exercise:
         --module "<current module>" --source practice [--applied]
       ```
 
-      `--applied` when the learner's code ran and you read it, or, on a topic without code, their written application is saved in the project and you read it (`blooms-taxonomy` KB *Applied Evidence*) — the exercise is the plugin's main source of applied evidence, and the gate and the mastery formula accept nothing else for "can build with it" (`state-ops` KB). No flag for a chat-only answer, an abandoned attempt, or code that never ran.
+      `--applied` when the learner's code ran and you read it, or, on a topic without code, their written application is saved in the project and you read it (`blooms-taxonomy` KB *Applied Evidence*) — the exercise is the plugin's main source of applied evidence, and the gate and the mastery formula accept nothing else for "can build with it" (`state-ops` KB). No flag for a chat-only answer, an abandoned attempt, or code that never ran. Off `code`: observed work adds `--evidence <the learner's file>`, which sits beside the key; a performed rep is `--applied reported`, its result and level the debrief's; a photo you examined is `--applied inspected [--evidence <photo>]` (`evidence-kinds` KB).
 
       `--tested-bloom` caps at what was demonstrated, not the exercise tier (a brute-force Advanced solve does not advance past 4; the script ratchets `bloomLevel` and never demotes) — and not at what the learner says they demonstrated, per the `blooms-taxonomy` KB; the ratcheted level feeds the prerequisite gate. Completion = `correct`; abandoned = `incorrect`; got there with heavy hints = `partial`. Do NOT call `set-feynman` here — that gate is owned by `/teach` (including its understanding-only sessions).
 
