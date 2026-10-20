@@ -3440,7 +3440,7 @@ def t_single_applied_reader():
             if get or sub:
                 readers.add(fn.name)
     check("basis: the applied flag is read by one counting helper and verify",
-          readers == {"applied_correct_basis", "cmd_verify"}, sorted(readers))
+          readers == {"entry_basis", "cmd_verify"}, sorted(readers))
 
 
 def _kinds_project(root):
@@ -3689,6 +3689,62 @@ def t_solid_by_report():
               and m["solidBasis"]["Julienne"] == "observed", m)
 
 
+def t_kind_breakdowns():
+    """learn-anything/REQ-27: retention and the anonymized export break their
+    counts down by evidence kind and by applied-work basis. A practice rep's
+    review is graded on its debrief, so retention counts it (unlike /forget's
+    self-report); the export still carries no module or concept names."""
+    def c(name, module, hist):
+        return {"name": name, "module": module, "introduced": "2026-03-01", "box": 2,
+                "nextReview": "2026-03-20", "lastReviewed": hist[-1]["date"], "question": "",
+                "lastResult": "correct", "bloomLevel": 3, "feynmanPassed": False,
+                "consecutiveCorrectAtL4Plus": 0, "reviewHistory": hist}
+    sr = {"version": 3, "lastReviewCheck": None, "sessionHistory": [], "concepts": [
+        c("Emulsions", "Sauces", [
+            {"date": "2026-03-04", "result": "correct", "bloomLevel": 3, "boxBefore": 1,
+             "applied": True, "appliedBasis": "reported", "source": "practice"},
+            {"date": "2026-03-08", "result": "incorrect", "bloomLevel": 3, "boxBefore": 2},
+            {"date": "2026-03-09", "result": "incorrect", "boxBefore": 1, "selfReport": True,
+             "note": "learner-initiated demote"}]),
+        c("Thesis", "Essays", [
+            {"date": "2026-03-04", "result": "correct", "bloomLevel": 3, "boxBefore": 1,
+             "applied": True, "evidence": "exercises/01/essay.md"},
+            {"date": "2026-03-08", "result": "partial", "bloomLevel": 2, "boxBefore": 2}])]}
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review=sr)
+        run(proj, "set-evidence-kind", "--kind", "writing")
+        run(proj, "set-evidence-kind", "--kind", "performed", "--module", "Sauces")
+        r = run(proj, "retention", on="2026-03-10")
+        check("breakdowns: retention counts the debrief-graded rep",
+              r["reviews"] == 4 and r["selfReportsExcluded"] == 1, r)
+        check("breakdowns: retention by kind",
+              {k: (v["reviews"], v["successRate"]) for k, v in r["byKind"].items()}
+              == {"performed": (2, 0.5), "writing": (2, 0.5)}, r["byKind"])
+        check("breakdowns: retention by basis",
+              {k: v["reviews"] for k, v in r["byBasis"].items()}
+              == {"reported": 1, "observed": 1, "notApplied": 2}
+              and r["byBasis"]["reported"]["successRate"] == 1.0, r["byBasis"])
+        check("breakdowns: each kind carries its delayed rate",
+              all("delayedSuccessRate" in v for v in r["byKind"].values()), r["byKind"])
+        e = run(proj, "export-anonymized", on="2026-03-10")
+        check("breakdowns: the export counts concepts by kind",
+              e["byKind"] == {"performed": {"concepts": 1, "applied": 0, "mastered": 0},
+                              "writing": {"concepts": 1, "applied": 1, "mastered": 0}},
+              e["byKind"])
+        check("breakdowns: the export counts applied corrects by basis",
+              e["byBasis"] == {"observed": {"appliedCorrects": 1, "solid": 0},
+                               "reported": {"appliedCorrects": 1, "solid": 0}}, e["byBasis"])
+        check("breakdowns: the export embeds the same retention breakdowns",
+              e["retention"]["byKind"] == r["byKind"]
+              and e["retention"]["byBasis"] == r["byBasis"])
+        text = json.dumps(e)
+        check("breakdowns: the export names no module or concept",
+              not any(n in text for n in ("Emulsions", "Sauces", "Thesis", "Essays")))
+        check("breakdowns: the export.project key set is unchanged",
+              set(e["project"]) == {"totalSessions", "currentStreak",
+                                    "overallCompletion", "daysSinceStart"}, e["project"])
+
+
 # Keys a reader may emit beyond what 1.24.1 printed, as dotted paths into its
 # JSON (`*` = every list item or dict value). Nothing else may change on the
 # code path: writer output and the files stay byte for byte. On these code
@@ -3704,6 +3760,8 @@ GOLDEN_NEW_KEYS = {
                 "solidByReport", "solidBasis"],
     "syllabus": ["evidenceKind", "modules.*.evidenceKind", "unplanned.*.evidenceKind"],
     "gate-check": ["prerequisites.*.evidenceKind"],
+    "retention": ["byKind", "byBasis"],
+    "export-anonymized": ["byKind", "byBasis", "retention.byKind", "retention.byBasis"],
 }
 GOLDEN_CODE_VALUES = {
     "evidenceKind": lambda v: v == "code",
@@ -3711,6 +3769,8 @@ GOLDEN_CODE_VALUES = {
     "masteredByReport": lambda v: v == 0,
     "solidByReport": lambda v: v == [],
     "solidBasis": lambda v: set(v.values()) <= {"observed"},
+    "byKind": lambda v: set(v) <= {"code"},
+    "byBasis": lambda v: set(v) <= {"observed", "notApplied"},
 }
 
 
@@ -3808,7 +3868,7 @@ def main():
               t_evidence_kind_resolver, t_evidence_kind_shapes,
               t_set_evidence_kind, t_basis_filter_every_reader, t_single_applied_reader,
               t_applied_basis_write, t_applied_cli_back_compat, t_kind_read_surfaces,
-              t_solid_by_report):
+              t_solid_by_report, t_kind_breakdowns):
         print(f"-- {t.__name__}")
         try:
             t()

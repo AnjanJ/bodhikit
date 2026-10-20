@@ -77,7 +77,7 @@ touch the same files.
   - Test: dev/eval/test_bodhi_state.py::t_solid_by_report
   - After: T10
   - Done when: `python3 dev/eval/test_bodhi_state.py` → "0 failed"
-- [ ] **T12** `retention` and `export-anonymized` report top-level `byKind` and `byBasis` → REQ-27
+- [x] **T12** `retention` and `export-anonymized` report top-level `byKind` and `byBasis` → REQ-27
   - Files: scripts/bodhi-state, dev/eval/test_bodhi_state.py
   - Test: dev/eval/test_bodhi_state.py::t_kind_breakdowns (no module or concept names; the `export.project` key set unchanged; debrief-graded entries not excluded from retention)
   - After: T11

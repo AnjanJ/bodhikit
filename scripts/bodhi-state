@@ -1638,6 +1638,9 @@ def retention_summary(data):
     "1 review, 0% recall"). The gap for a concept's first review runs from
     its `introduced` date. `delayedSuccessRate` drops the same-day bucket,
     which is immediate post-instruction performance, not retention.
+    `byKind` and `byBasis` split the same counts by the concept's evidence
+    kind and by the entry's applied-work basis (`notApplied` without one).
+    A practice rep's entry is graded on its debrief, so it counts here.
     """
     def new_bucket():
         return {"correct": 0, "incorrect": 0, "partial": 0}
@@ -1650,7 +1653,16 @@ def retention_summary(data):
     self_reports = 0
     legacy_no_box = 0
     delayed = new_bucket()
+    by_kind, by_basis = {}, {}
+
+    def tally(groups, key, res, is_delayed):
+        g = groups.setdefault(key, {"all": new_bucket(), "delayed": new_bucket()})
+        g["all"][res] += 1
+        if is_delayed:
+            g["delayed"][res] += 1
+
     for c in data.get("concepts", []):
+        kind = effective_kind(c)
         # After a truncation the first retained gap runs from the last
         # archived review, not from `introduced` (review finding 6).
         prev = (parse_date(archived_summary(c).get("through"))
@@ -1670,14 +1682,18 @@ def retention_summary(data):
             if h.get("retry"):
                 relearning += 1
                 continue
+            is_delayed = False
             if prev is not None:
                 bucket = bucket_for_gap((d - prev).days)
                 if bucket:
                     by_gap[bucket][res] += 1
                     if bucket != "same-day":
                         delayed[res] += 1
+                        is_delayed = True
             prev = d
             totals[res] += 1
+            tally(by_kind, kind, res, is_delayed)
+            tally(by_basis, entry_basis(h) or "notApplied", res, is_delayed)
             bb = h.get("boxBefore")
             if isinstance(bb, int) and 1 <= bb <= MAX_BOX:
                 by_box[str(bb)][res] += 1
@@ -1689,6 +1705,12 @@ def retention_summary(data):
         out["reviews"] = n
         out["successRate"] = round(bucket["correct"] / n, 2) if n else None
         return out
+    def rates(g):
+        n, dn = sum(g["all"].values()), sum(g["delayed"].values())
+        return {"reviews": n,
+                "successRate": round(g["all"]["correct"] / n, 2) if n else None,
+                "delayedReviews": dn,
+                "delayedSuccessRate": round(g["delayed"]["correct"] / dn, 2) if dn else None}
     total_n = sum(totals.values())
     delayed_n = sum(delayed.values())
     return {
@@ -1703,6 +1725,9 @@ def retention_summary(data):
         "selfReportsExcluded": self_reports,
         "entriesWithoutBoxBefore": legacy_no_box,
         "entriesSkipped": skipped,
+        "byKind": {k: rates(by_kind[k]) for k in EVIDENCE_KINDS if k in by_kind},
+        "byBasis": {b: rates(by_basis[b]) for b in APPLIED_BASES + ("notApplied",)
+                    if b in by_basis},
     }
 
 
@@ -1724,7 +1749,23 @@ def cmd_export_anonymized(args):
     feynman = 0
     mastered = 0
     applied = 0
+    # By kind and basis: counts only, keyed by vocabulary, never by a name.
+    by_kind, by_basis = {}, {}
+
+    def basis_row(basis):
+        return by_basis.setdefault(basis, {"appliedCorrects": 0, "solid": 0})
+
     for c in data.get("concepts", []):
+        row = by_kind.setdefault(effective_kind(c), {"concepts": 0, "applied": 0, "mastered": 0})
+        row["concepts"] += 1
+        row["applied"] += applied_evidence(c) >= 1
+        row["mastered"] += is_mastered(c)
+        for h in c.get("reviewHistory", []):
+            basis = applied_correct_basis(h) if isinstance(h, dict) else None
+            if basis:
+                basis_row(basis)["appliedCorrects"] += 1
+        if is_mastered(c):
+            basis_row(strongest_basis(c))["solid"] += 1
         b = c.get("box", 1)
         if isinstance(b, int) and 1 <= b <= MAX_BOX:
             boxes[str(b)] += 1
@@ -1756,6 +1797,8 @@ def cmd_export_anonymized(args):
         "sessionTypeCounts": session_types,
         "retention": retention_summary(data),
         "calibration": calibration,
+        "byKind": {k: by_kind[k] for k in EVIDENCE_KINDS if k in by_kind},
+        "byBasis": {b: by_basis[b] for b in APPLIED_BASES if b in by_basis},
     }
     state = state_if_present(args.project)
     if state is not None:
@@ -2347,13 +2390,16 @@ ARCHIVE_SEEDS = {"observed": "appliedEvidence", "inspected": "appliedInspected",
                  "reported": "appliedReported", "at3plus": "evidenceAt3Plus"}
 
 
+def entry_basis(h):
+    """The basis of an applied entry, else None: the one place the `applied`
+    flag is read for counting (t_single_applied_reader), so no reader can
+    count unseen work as observed."""
+    return applied_basis(h) if h.get("applied") is True else None
+
+
 def applied_correct_basis(h):
-    """The basis of an applied correct, else None: the one place the
-    `applied` flag is read for counting (t_single_applied_reader), so no
-    reader can count unseen work as observed."""
-    if h.get("applied") is True and h.get("result") == "correct":
-        return applied_basis(h)
-    return None
+    """The basis of an applied correct, else None."""
+    return entry_basis(h) if h.get("result") == "correct" else None
 
 
 def _evidence_counts(entries, seed):
