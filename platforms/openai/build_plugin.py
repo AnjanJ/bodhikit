@@ -344,12 +344,28 @@ def build(output: Path) -> dict[str, int | str]:
 
 
 def create_archive(output: Path, archive: Path) -> None:
+    """Create the public skills-only bundle; Codex hooks stay in local output."""
     archive = archive.resolve()
     archive.parent.mkdir(parents=True, exist_ok=True)
+    hook_scripts = {
+        Path("scripts/bodhi-session-context.py"),
+        Path("scripts/bodhi-stop-hook.py"),
+        Path("scripts/bodhi-stop-hook-core.py"),
+    }
     with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED) as bundle:
         for item in sorted(output.rglob("*")):
-            if item.is_file() and item.resolve() != archive:
-                bundle.write(item, Path("bodhikit") / item.relative_to(output))
+            relative = item.relative_to(output)
+            if (
+                not item.is_file()
+                or item.resolve() == archive
+                or relative.parts[0] == "hooks"
+                or relative in hook_scripts
+                or relative == Path(BUILD_MARKER)
+                or "__pycache__" in relative.parts
+                or item.suffix == ".pyc"
+            ):
+                continue
+            bundle.write(item, Path("bodhikit") / relative)
 
 
 def parse_args() -> argparse.Namespace:
@@ -363,7 +379,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--archive",
         type=Path,
-        help="optional ZIP path; the archive contains one top-level bodhikit directory",
+        help="public skills-only ZIP path; excludes local Codex lifecycle hooks",
     )
     return parser.parse_args()
 

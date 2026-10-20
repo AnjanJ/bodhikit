@@ -43,7 +43,8 @@ engine. Do not invent or reconstruct prior persisted records without evidence.
 
 On the source platform a `SessionStart` hook injects
 `rules/learning-project.md` whenever a session starts inside a learning
-project. Codex runs that hook once its hooks are trusted; ChatGPT never does.
+project. Local Codex builds include that optional hook, which runs after trust;
+the public-directory ZIP omits hooks, and ChatGPT never runs them.
 So, on any host where the rule was not injected at session start: the first
 time a workflow reads or writes a learner project (a `learningWithBodhi/`
 directory, a `.bodhi/` directory, or `.bodhi-profile.json`), read
@@ -58,8 +59,9 @@ mode too, for anything the learner pastes.
 
 On the source platform a `Stop` hook refuses to end a session that studied
 something until two things are true: the tracking files pass `bodhi-state
-verify`, and the day's revision sheet exists. Codex runs that hook once its
-hooks are trusted; ChatGPT never does. So, in local state mode on a host
+verify`, and the day's revision sheet exists. Local Codex builds include that
+optional hook, which runs after trust; the public-directory ZIP omits hooks,
+and ChatGPT never runs them. So, in local state mode on a host
 without the hook, every workflow that ran `touch-state` closes with this
 procedure, explicitly, before its final message:
 
@@ -107,8 +109,9 @@ context, but do not show source-platform slash-command syntax.
 
 ## Lifecycle behavior
 
-Codex can run the packaged `SessionStart` and `Stop` command hooks after the
-user reviews and trusts them. ChatGPT does not run plugin hooks. Therefore:
+Local Codex builds include optional `SessionStart` and `Stop` command hooks
+that run after the user reviews and trusts them. Public-directory packages
+omit lifecycle hooks. ChatGPT does not run plugin hooks. Therefore:
 
 - Treat injected project rules as a Codex convenience; where they were not
   injected, *Apply the learning-project rule* above is the delivery path, and

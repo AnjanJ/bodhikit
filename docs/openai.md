@@ -43,8 +43,10 @@ python3 platforms/openai/build_plugin.py \
   --archive dist/bodhikit-openai.zip
 ```
 
-The archive contains one top-level `bodhikit/` directory and the native
-`.codex-plugin/plugin.json` manifest.
+The public-directory archive contains one top-level `bodhikit/` directory and
+the native `.codex-plugin/plugin.json` manifest. It excludes lifecycle hooks,
+their helper scripts, Python caches, and the internal build marker. The
+generated directory retains the optional hooks for local Codex development.
 
 ## Install for Codex development
 
@@ -84,8 +86,9 @@ install BodhiKit from that marketplace source in the Plugin Directory.
 
 For public submission, build `dist/bodhikit-openai.zip`, then use the
 [OpenAI plugin submission portal](https://platform.openai.com/apps-manage).
-Choose **Skills only**, upload the bundle, and complete the listing, prompts,
-reviewer tests, availability, and attestations. The prepared listing copy and
+Open the existing BodhiKit listing, upload the bundle as a skills-only update,
+and complete the listing, prompts, applicable reviewer tests, availability, and
+attestations. The prepared listing copy and
 five positive plus three negative test cases are in
 [openai-submission.md](./openai-submission.md).
 
@@ -114,7 +117,7 @@ After installation, mention the plugin and state the learning goal:
 | Pedagogy knowledge | 18 model-only skills | 18 progressive references | 18 progressive references |
 | Delegated roles | 4 Claude agents | Portable procedures; delegation optional | Portable procedures in the current conversation |
 | Deterministic state | Local `bodhi-state` | Same script, copied byte-for-byte | Local when shell/files are exposed; otherwise conversation-only |
-| SessionStart/Stop hooks | Native | Native command-hook adapters after trust | Not available; the runtime adapter carries their duties explicitly (the learning-project rule on first learner-file access; `verify` and the revision sheet at close) |
+| SessionStart/Stop hooks | Native | Optional adapters in local directory builds after trust; omitted from the public ZIP | Not available; the runtime adapter carries their duties explicitly (the learning-project rule on first learner-file access; `verify` and the revision sheet at close) |
 | Cross-chat/device persistence | Local project files | Local project files | Requires a future remote MCP state service |
 
 In ChatGPT conversation-only mode, BodhiKit preserves the teaching interaction

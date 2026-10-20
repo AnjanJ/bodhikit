@@ -154,8 +154,9 @@ def test_build_and_structure():
             "logoDark",
         )
         check(
-            "manifest: marketplace policies and assets are packaged",
-            interface.get("privacyPolicyURL", "").startswith("https://")
+            "manifest: marketplace support, policies and assets are packaged",
+            interface.get("supportURL", "").startswith("https://")
+            and interface.get("privacyPolicyURL", "").startswith("https://")
             and interface.get("termsOfServiceURL", "").startswith("https://")
             and all(
                 (output / interface.get(key, "")).is_file()
@@ -285,6 +286,8 @@ def test_build_and_structure():
         )
         with zipfile.ZipFile(archive) as bundle:
             names = bundle.namelist()
+            state_info = bundle.getinfo("bodhikit/scripts/bodhi-state")
+            archived_state = bundle.read(state_info)
         check(
             "archive: has one top-level plugin directory",
             bool(names) and all(name.startswith("bodhikit/") for name in names),
@@ -297,6 +300,37 @@ def test_build_and_structure():
         check(
             "archive: includes marketplace logo",
             "bodhikit/assets/bodhikit-icon.png" in names,
+        )
+        check(
+            "archive: public bundle excludes lifecycle hooks and their adapters",
+            not any(name.startswith("bodhikit/hooks/") for name in names)
+            and not {
+                "bodhikit/scripts/bodhi-session-context.py",
+                "bodhikit/scripts/bodhi-stop-hook.py",
+                "bodhikit/scripts/bodhi-stop-hook-core.py",
+            }.intersection(names),
+        )
+        check(
+            "archive: excludes internal build and Python cache artifacts",
+            "bodhikit/.bodhikit-openai-build.json" not in names
+            and not any("__pycache__" in Path(name).parts or name.endswith(".pyc") for name in names),
+        )
+        check(
+            "archive: hook-independent runtime and learner safeguard are retained",
+            "bodhikit/references/openai-runtime.md" in names
+            and "bodhikit/rules/learning-project.md" in names,
+        )
+        check(
+            "archive: deterministic state engine is intact and executable",
+            archived_state == (REPO / "scripts" / "bodhi-state").read_bytes()
+            and bool((state_info.external_attr >> 16) & 0o111),
+        )
+        check(
+            "local output: Codex lifecycle hooks remain available",
+            (output / "hooks" / "hooks.json").is_file()
+            and all((output / "scripts" / script).is_file() for script in (
+                "bodhi-session-context.py", "bodhi-stop-hook.py", "bodhi-stop-hook-core.py",
+            )),
         )
 
         test_hooks(output, temp_path)

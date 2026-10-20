@@ -117,8 +117,43 @@ must make the final selection in the portal.
 
 ## Release notes
 
-Initial OpenAI submission of BodhiKit 1.19.0. This skills-only package adapts
-18 learner workflows, 18 research-informed knowledge references, four portable
-role procedures, deterministic local learning state, Codex lifecycle hooks,
-and a transparent conversation-only fallback for ChatGPT. The Claude Code
-plugin remains the canonical source and its runtime behavior is unchanged.
+BodhiKit 1.24.0 adds a unified syllabus view across learning plans and progress,
+module position indicators, a short vocabulary introduction for new lessons,
+and clearer feedback when concepts are waiting for their next review day.
+Session closing now explicitly verifies local learning state and prepares
+revision notes on hosts without lifecycle hooks. No learning-data migration is
+required.
+
+The skills-only package includes 18 learner workflows, 18 knowledge references,
+four portable role procedures, and the deterministic local state engine. Local
+persistence requires shell and filesystem access; otherwise learning stays in
+the conversation with a saveable summary. The public ZIP omits lifecycle hooks.
+
+## Release preparation
+
+Build the public-directory ZIP with:
+
+```bash
+python3 platforms/openai/build_plugin.py --archive dist/bodhikit-openai.zip
+```
+
+The generated directory retains optional Codex hooks for local development;
+the upload ZIP excludes hooks and their helper scripts. Its manifest includes
+the support URL above. OpenAI's current
+[submission guidance](https://developers.openai.com/plugins/deploy/submission)
+requires public-directory packages to omit lifecycle hooks.
+
+Before uploading, complete the manual ChatGPT writing-workflow smoke test in
+[openai.md](./openai.md#verify-the-conversion). Use the existing BodhiKit listing
+and upload the complete ZIP as an update.
+
+On October 15, 2026, the existing 1.24.0 draft reported three blocking metadata
+findings: lifecycle hooks in the package, a missing support URL, and
+"We are not accepting more skills-only submissions at this time." The corrected
+1.24.0 ZIP was subsequently uploaded to that draft: the hooks and support URL
+findings cleared, all 18 skills showed checks passed, and the intake restriction
+remained the only blocking finding. The submission dialog required resolving
+blocking findings and kept Submit disabled. Category confirmation and privacy
+policy review were also flagged as non-blocking findings. The intake
+restriction must be resolved through the portal or OpenAI support. Publication
+remained at 1.23.0; the corrected 1.24.0 package was not submitted or published.
