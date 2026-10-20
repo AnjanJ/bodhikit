@@ -235,6 +235,12 @@ for f in skills/*/SKILL.md; do
     err "$f is ${bytes} bytes (> 18 KB budget) — move detail into a phase-loaded KB or bodhi-state"
   fi
 done
+# The learning-project rule reaches every session inside a learning project,
+# code included, before any skill fires: its weight is paid on every turn.
+rule_bytes=$(wc -c < rules/learning-project.md | tr -d ' ')
+if [ "$rule_bytes" -gt 4096 ]; then
+  err "rules/learning-project.md is ${rule_bytes} bytes (> 4096 cap) — it loads into every learning session; move detail into a KB"
+fi
 
 # ===========================================================================
 # B. STATE LAYER — script integrity, schema, write path — structural/conditional
