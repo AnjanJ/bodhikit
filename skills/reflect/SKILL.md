@@ -61,6 +61,8 @@ For each main concept from today's session (batch the three steps per concept if
    - **Low confidence (≤ 4) never moves the box on its own.** With a clean retrieval it is underconfidence — name it, as above. With a partial it is honest calibration. Either way the rating shapes tomorrow's `/practice` offer (Phase 3), not the schedule. The `spaced-repetition` KB carries the reason: the box tracks demonstrated recall, and confidence is a separate axis the `metacognition` KB tracks for calibration.
    - **A reset the learner asks for** ("I want to see this again from scratch tomorrow") is a voluntary self-report: add it to the Phase 3 `/forget` list, never a retrieval outcome. Offer it when a learner is visibly unsettled by a concept; never impose it.
 
+Off `code` (the brief's or `due` row's `evidenceKind`), ask for the explanation through a case from the subject, never code. A learner who reports a practice rep here gets the debrief before anything is recorded (`evidence-kinds` KB *Practice reps*).
+
 The Bjork rationale: explaining before rating is itself a retrieval rep, and getting it slightly wrong is the desirable difficulty that strengthens encoding. The 30-60 seconds this adds per concept is the cheapest deliberate-practice rep in the plugin.
 
 **Q4 — Strategy (optional, skip if session was short):** "Anything you would do differently next time?"
