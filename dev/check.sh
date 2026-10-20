@@ -407,6 +407,17 @@ if [ -f dev/eval/test_bodhi_state.py ]; then
   else
     err "dev/eval/test_stop_hook.py missing"
   fi
+  # The Cowork package is the same tree zipped; this proves it carries every
+  # surface byte for byte and nothing from dev/ (learn-anything REQ-37).
+  if [ -f dev/eval/test_cowork_plugin.py ]; then
+    if ! python3 dev/eval/test_cowork_plugin.py >${TMPDIR:-/tmp}/bodhikit-cowork-tests.log 2>&1; then
+      err "Cowork plugin test suite failed — see ${TMPDIR:-/tmp}/bodhikit-cowork-tests.log"
+    else
+      ok "Cowork plugin test suite passed"
+    fi
+  else
+    err "dev/eval/test_cowork_plugin.py missing"
+  fi
   # The eval detectors are only evidence if they tell a good run from a bad
   # one; this proves it on synthetic transcripts, for free.
   if [ -f dev/eval/test_detectors.py ]; then

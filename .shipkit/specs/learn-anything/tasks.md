@@ -157,7 +157,7 @@ touch the same files.
   - Test: dev/eval/test_openai_plugin.py::test_learn_anything_packaged, ::test_packaged_paths_exist
   - After: T26
   - Done when: `python3 dev/eval/test_openai_plugin.py` → pass
-- [ ] **T28** Cowork `.plugin` build and its package test; rule 46 runs the test → REQ-37
+- [x] **T28** Cowork `.plugin` build and its package test; rule 46 runs the test → REQ-37
   - Files: platforms/cowork/build_plugin.py, dev/eval/test_cowork_plugin.py, dev/check.sh
   - Test: dev/eval/test_cowork_plugin.py::test_package_contents (skills, agents, hooks, scripts, rules and the manifest present; `${CLAUDE_PLUGIN_ROOT}` paths resolve; no `dev/` or `.shipkit/`)
   - After: T26
