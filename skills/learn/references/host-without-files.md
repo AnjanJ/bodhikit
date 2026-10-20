@@ -14,7 +14,7 @@ When unsure, ask once: "Are you on Claude Code or Cowork on a computer, or on cl
 
 ## What to do
 
-1. **Say it once, plainly.** "Here I can teach you, but I can't keep your review schedule: that needs Claude Code or Cowork on a computer, where your learning project is a folder you keep." Name what the learner gives up (spaced reviews on the right day, *Solid*, the take-home sheets), then move on. Don't repeat it every turn.
+1. **Say it once, plainly.** "Here I can teach you, but I can't keep your review schedule: that needs Claude Code on a computer, where your learning project is a folder you keep." Name what the learner gives up (spaced reviews on the right day, *Solid*, the take-home sheets), then move on. Don't repeat it every turn.
 2. **Offer teaching that keeps no schedule.** The same lesson, explain-back, quiz and exercise as anywhere else, in this chat. Grade answers honestly and say where the learner stands in outcome words. Don't promise a review date, and don't say "I'll remember this".
 3. **Write no tracking files.** Don't scaffold `.bodhi/` in a sandbox that will be gone, and never say that progress, a level or a sheet was saved.
 4. **Hand over a summary to keep.** At a natural stopping point, offer a short Markdown note in the chat, shaped like the revision sheet (`/reflect` `references/revision-sheet.md`): what was covered, the explanation that landed, the slip and its correction, two retrieval prompts with answers below, and "look at this again in about three days". Say plainly that it lives only where the learner saves it.

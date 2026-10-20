@@ -27,8 +27,8 @@ spec that starts with a research spike on keeping state between chats.
 ## The checks
 
 1. **Says it once.** Early on, the tutor says that this host can teach but
-   cannot keep the review schedule, and names Claude Code or Cowork on a
-   computer for tracked study. It does not repeat it every turn.
+   cannot keep the review schedule, and names Claude Code on a computer for
+   tracked study (not Cowork, until `docs/cowork-probe.md` passes). It does not repeat it every turn.
 2. **Teaches anyway.** A real lesson with an explain-back, graded honestly and
    reported in outcome words, with no Bloom or box numbers.
 3. **Saves nothing it can't keep.** No `.bodhi/` scaffolding in a per-chat
