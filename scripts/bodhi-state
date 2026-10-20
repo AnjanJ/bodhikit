@@ -1026,6 +1026,63 @@ def cmd_touch_state(args):
           "lastActivity": state.get("lastActivity")})
 
 
+def cmd_set_evidence_kind(args):
+    """Record the project's evidence kind, or one module's override
+    (state-schema KB). Writes state.json only: every review is kept, and a
+    kind changes how reviews are read, never what they say."""
+    if args.clear and args.kind is not None:
+        die("pass --kind to record a kind or --clear to remove one, not both")
+    if not args.clear and args.kind is None:
+        die(f"--kind is required: one of {'|'.join(EVIDENCE_KINDS)} (or --clear)")
+    if args.kind is not None and args.kind not in EVIDENCE_KINDS:
+        die(f"kind {args.kind!r} is not one of {'|'.join(EVIDENCE_KINDS)}")
+    sp, state = require_state(args.project)
+    kinds = state.get("moduleEvidenceKinds", {})
+    if not isinstance(kinds, dict):
+        die(f"{sp}: moduleEvidenceKinds is {type(kinds).__name__}, expected an "
+            f"object — fix it by hand; `bodhi-state verify` lists every problem")
+    key = None
+    if args.module is not None:
+        _, plan = read_plan_modules(args.project)
+        by_id = {m["id"]: norm_module_name(m["name"]) for m in plan}
+        key = by_id.get(norm_module_name(args.module), norm_module_name(args.module))
+        _, data = load_spaced_review(args.project, create=True)
+        known = set(by_id.values()) | {norm_module_name(c.get("module"))
+                                       for c in data.get("concepts", [])}
+        # Clearing must reach an orphan (a renamed module), so only a set
+        # is held to the typo guard.
+        if not args.clear and key not in known:
+            die(f"module {args.module!r} matches no plan module heading and no "
+                f"tracked concept's module — `syllabus` lists the plan's names")
+    if key is None and args.clear:
+        changed = state.pop("evidenceKind", None) is not None
+    elif key is None:
+        state["evidenceKind"] = args.kind
+        changed = True
+    else:
+        spellings = [k for k in kinds if norm_module_name(k) == key]
+        for k in spellings:
+            kinds.pop(k)
+        if not args.clear:
+            kinds[key] = args.kind
+        changed = bool(spellings) or not args.clear
+        if kinds:
+            state["moduleEvidenceKinds"] = kinds
+        else:
+            state.pop("moduleEvidenceKinds", None)
+    if not changed:
+        emit({"action": "noop", "reason": "no kind recorded there to clear",
+              "module": key})
+        return
+    write_json(sp, state)
+    install_kinds(args.project)
+    emit({"action": "evidence-kind-cleared" if args.clear else "evidence-kind-set",
+          "module": key, "kind": args.kind,
+          "projectKind": _KINDS["project"],
+          "projectKindRecorded": "evidenceKind" in state,
+          "moduleEvidenceKinds": state.get("moduleEvidenceKinds", {})})
+
+
 def cmd_bump_profile(args):
     if args.counter not in PROFILE_COUNTERS:
         die(f"counter must be one of {sorted(PROFILE_COUNTERS)}")
@@ -3038,6 +3095,17 @@ def main():
     s.add_argument("--phase", default=None)
     s.add_argument("--completion", type=int, default=None)
     s.set_defaults(fn=cmd_touch_state)
+
+    s = sub.add_parser("set-evidence-kind",
+                       help="record the project's evidence kind, or one module's "
+                            "(state.json only; every review is kept)")
+    s.add_argument("--kind", default=None, help="|".join(EVIDENCE_KINDS))
+    s.add_argument("--module", default=None,
+                   help="a plan module's name or id, or a tracked module; omit for the project")
+    s.add_argument("--clear", action="store_true",
+                   help="remove the kind: the project reads as code, a module "
+                        "takes the project's")
+    s.set_defaults(fn=cmd_set_evidence_kind)
 
     s = sub.add_parser("profile-add-project",
                        help="append a schema-complete activeProjects entry "

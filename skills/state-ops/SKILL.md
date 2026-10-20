@@ -38,6 +38,7 @@ Every skill carries its own exact invocation; `bodhi-state <subcommand> --help` 
 - `defer` / `park [--resume]` — scheduling, never an outcome. A deferral rolls `nextReview` and writes a history entry with **no result**; parking leaves rotation with box, bloom, Feynman and counters intact and is reported as a count, never hidden. Do not invent a `result` for a concept that was not reviewed.
 - `touch-state` — `state.json` session bookkeeping: dates, streak, `totalSessions`, module advance (`previousModule`). The first touch of a day also bumps the profile's `cumulativeStats.totalSessions` — no skill calls `bump-profile` for that.
 - `bump-profile --counter` — `cumulativeStats` increments in `.bodhi-profile.json`.
+- `set-evidence-kind --kind K [--module M]` — the project's evidence kind, or one module's (`state-schema` KB; no kind = `code`). Rejects a module matching no plan heading or tracked concept; `--clear` removes one. Writes `state.json` only: every review is kept.
 - `profile-add-project` / `profile-update-project` / `profile-complete-project` / `profile-update-patterns` — the `.bodhi-profile.projects.json` list (schema-complete entries, unknown fields preserved) and the count-based `patterns`. Completion is learner-confirmed, never inferred; the skill never tallies assessments in prose.
 
 **Readers** (no lock file, no writes)

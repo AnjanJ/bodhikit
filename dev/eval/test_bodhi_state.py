@@ -3274,6 +3274,69 @@ def t_evidence_kind_shapes():
               hist[0]["appliedBasis"] == "reported" and hist[1]["appliedBasis"] == "watched", hist)
 
 
+def t_set_evidence_kind():
+    """learn-anything/REQ-4: one kind for the project. learn-anything/REQ-6:
+    a module's own kind. learn-anything/REQ-7: a change keeps every review."""
+    sr = {"version": 3, "lastReviewCheck": None, "sessionHistory": [], "concepts": [
+        {"name": "Emulsions", "module": "Module 1.2 — Sauces", "introduced": "2026-03-01",
+         "box": 2, "nextReview": "2026-03-04", "lastReviewed": "2026-03-01", "question": "",
+         "lastResult": "correct", "bloomLevel": 3, "feynmanPassed": False,
+         "consecutiveCorrectAtL4Plus": 0,
+         "reviewHistory": [{"date": "2026-03-01", "result": "correct", "bloomLevel": 3}]}]}
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review=sr)
+        os.makedirs(os.path.join(proj, ".bodhi", "plan"))
+        with open(os.path.join(proj, ".bodhi", "plan", "phase-1.md"), "w") as f:
+            f.write("# Phase 1\n\n### Module 1.1 — Knife skills\n\n### Module 1.2 — Sauces\n")
+        srp = os.path.join(proj, ".bodhi", "spaced-review.json")
+        with open(srp, "rb") as f:
+            before = f.read()
+        out = run(proj, "set-evidence-kind", "--kind", "writing")
+        st = read_state(proj)
+        check("set-kind: records the project's kind",
+              st["evidenceKind"] == "writing" and out["projectKind"] == "writing", out)
+        check("set-kind: unknown fields survive", st.get("customField") == "must-survive")
+        out = run(proj, "set-evidence-kind", "--kind", "performed", "--module", "SAUCES ")
+        st = read_state(proj)
+        check("set-kind: a module override under the normalized name",
+              st["moduleEvidenceKinds"] == {"sauces": "performed"}
+              and out["module"] == "sauces", out)
+        out = run(proj, "set-evidence-kind", "--kind", "problems", "--module", "1.1")
+        check("set-kind: a plan id resolves to its heading's name",
+              read_state(proj)["moduleEvidenceKinds"] == {"sauces": "performed",
+                                                          "knife skills": "problems"}, out)
+        with open(srp, "rb") as f:
+            check("set-kind: spaced-review.json is byte-for-byte unchanged", f.read() == before)
+        r = subprocess.run([sys.executable, SCRIPT, "--project", proj, "set-evidence-kind",
+                            "--kind", "performed", "--module", "Sauce"],
+                           capture_output=True, text=True)
+        check("set-kind: a module matching no plan heading or concept is rejected",
+              r.returncode == 1 and "Sauce" in r.stderr
+              and "sauce" not in read_state(proj)["moduleEvidenceKinds"], r.stderr)
+        r = subprocess.run([sys.executable, SCRIPT, "--project", proj, "set-evidence-kind",
+                            "--kind", "cooking"], capture_output=True, text=True)
+        check("set-kind: an invalid kind exits 1 and names the kinds",
+              r.returncode == 1 and "performed" in r.stderr
+              and read_state(proj)["evidenceKind"] == "writing", r.stderr)
+        r = subprocess.run([sys.executable, SCRIPT, "--project", proj, "set-evidence-kind"],
+                           capture_output=True, text=True)
+        check("set-kind: --kind is required unless clearing", r.returncode == 1, r.stderr)
+        out = run(proj, "set-evidence-kind", "--module", "Knife skills", "--clear")
+        check("set-kind: --clear drops one override",
+              read_state(proj)["moduleEvidenceKinds"] == {"sauces": "performed"}, out)
+        run(proj, "set-evidence-kind", "--module", "Sauces", "--clear")
+        run(proj, "set-evidence-kind", "--clear")
+        st = read_state(proj)
+        check("set-kind: clearing the last override and the project kind removes the fields",
+              "moduleEvidenceKinds" not in st and "evidenceKind" not in st, st)
+        out = run(proj, "set-evidence-kind", "--clear")
+        check("set-kind: clearing nothing is a no-op", out.get("action") == "noop", out)
+        os.remove(os.path.join(proj, ".bodhi", "state.json"))
+        r = subprocess.run([sys.executable, SCRIPT, "--project", proj, "set-evidence-kind",
+                            "--kind", "writing"], capture_output=True, text=True)
+        check("set-kind: needs a scaffolded state.json", r.returncode == 1, r.stderr)
+
+
 # Keys a reader may emit beyond what 1.24.1 printed, as dotted paths into its
 # JSON (`*` = every list item or dict value). Nothing else may change on the
 # code path: writer output and the files stay byte for byte.
@@ -3367,7 +3430,8 @@ def main():
               t_verify_implies_readers, t_history_cap_keeps_facts,
               t_syllabus, t_plan_single_number_headings, t_module_prefix_join,
               t_gate_declared_none, t_golden_code_path,
-              t_evidence_kind_resolver, t_evidence_kind_shapes):
+              t_evidence_kind_resolver, t_evidence_kind_shapes,
+              t_set_evidence_kind):
         print(f"-- {t.__name__}")
         try:
             t()

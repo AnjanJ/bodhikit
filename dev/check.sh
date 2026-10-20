@@ -360,6 +360,14 @@ else
       err "skills/state-schema/SKILL.md no longer names \`$v\` (pins EVIDENCE_KINDS / APPLIED_BASES)"
     fi
   done
+  # (h) state-ops calls its subcommand table the complete set, and skills
+  # learn the write path from it, so a subcommand it does not name is one no
+  # skill can be told to call.
+  for cmd in $(grep -o 'sub\.add_parser("[a-z-]*"' scripts/bodhi-state | sed 's/.*("//; s/"$//'); do
+    if ! grep -qE "\`$cmd[\` ]" skills/state-ops/SKILL.md; then
+      err "skills/state-ops/SKILL.md does not name subcommand \`$cmd\` (its table is the complete set)"
+    fi
+  done
 fi
 # ---------------------------------------------------------------------------
 # 46. Deterministic test suite must pass (free, every run).

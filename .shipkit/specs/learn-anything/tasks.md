@@ -49,7 +49,7 @@ touch the same files.
   - Test: dev/eval/test_bodhi_state.py::t_evidence_kind_resolver, ::t_evidence_kind_shapes (absent kind = code; module override wins; invalid kind degrades to code on read and is a verify error; basis without applied is a warning)
   - After: T1, T5
   - Done when: `python3 dev/eval/test_bodhi_state.py` → "0 failed", t_golden_code_path ok; `dev/check.sh` passes including 45(g)
-- [ ] **T7** `set-evidence-kind --kind K [--module M] [--clear]`; lint 45(h) requires every subcommand to be named in `state-ops` → REQ-4, REQ-6, REQ-7
+- [x] **T7** `set-evidence-kind --kind K [--module M] [--clear]`; lint 45(h) requires every subcommand to be named in `state-ops` → REQ-4, REQ-6, REQ-7
   - Files: scripts/bodhi-state, dev/eval/test_bodhi_state.py, dev/check.sh, skills/state-ops/SKILL.md
   - Test: dev/eval/test_bodhi_state.py::t_set_evidence_kind (spaced-review.json bytes unchanged; normalized module key; an unmatched module is rejected; `--clear` removes an override; an invalid kind exits 1)
   - After: T6, T3
