@@ -2,17 +2,19 @@
 
 [![Version](https://img.shields.io/badge/version-1.25.0-blue)](./CHANGELOG.md) [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow?logo=buymeacoffee)](https://buymeacoffee.com/anjanj) [![Sponsor](https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ea4aaa?logo=githubsponsors)](https://github.com/sponsors/AnjanJ)
 
-**Research-informed interactive coding tutor for Claude Code, Codex, and ChatGPT.**
+**A research-informed tutor for any subject, with code first-class, for Claude Code, Codex, and ChatGPT.**
 
-Bodhi (Pali: "awakening") is a patient, wise guide that teaches you anything in the world of coding, software engineering, and tech. It does not write code for you. It teaches you to write code yourself.
+Bodhi (Pali: "awakening") is a patient, wise guide. It teaches code and software engineering as it always has, and now genetics, history, philosophy, cooking, drawing, an instrument or a language too. It does not do the work for you: on code it will not write your code, and in any subject it teaches you to do the work yourself.
 
 ## TL;DR
 
-BodhiKit turns Claude Code, Codex, or ChatGPT into a research-informed coding tutor: a set of skills that teach by asking rather than answering, keep per-concept learning state when the platform exposes project files, and schedule your reviews. It does not write the code for you. What "research-informed" does and does not claim is in [The Science](#the-science); the only outcome data so far — one learner, thin, published to be falsifiable — is in [docs/outcomes.md](./docs/outcomes.md).
+BodhiKit turns Claude Code, Codex, or ChatGPT into a research-informed tutor: a set of skills that teach by asking rather than answering, keep per-concept learning state when the platform exposes project files, and schedule your reviews. It does not write the code, or the essay, for you.
+
+**What it can check, and what it can't.** It checks code by reading it and seeing it run, and problems and essays against the answers or criteria it saved before you started. It can't see a skill you practise away from the screen, like a dish, a drawing or a passage played. There it debriefs you, grades the debrief, and counts the practice as *your account*, labelled that way wherever it shows. In every subject the tutor itself grades your level, your reviews and your explain-backs. On claude.ai or a phone it can teach but can't keep your schedule: tracked study needs a computer, in Claude Code or Codex. What "research-informed" does and does not claim is in [The Science](#the-science); the only outcome data so far — one learner, thin, published to be falsifiable — is in [docs/outcomes.md](./docs/outcomes.md).
 
 ### Purpose & philosophy
 
-The animating constraint: **"The learner writes code. BodhiKit asks questions. The goal is to become unnecessary."**
+The animating constraint: **"The learner writes code. BodhiKit asks questions. The goal is to become unnecessary."** In any subject, the learner does the work.
 
 The *voice* comes from four named teachers (Gautama Buddha, Dr. B.R. Ambedkar, Master Oogway, Yoda) — a persona layer in the `teaching-personality` KB that sets the tone: patience, directness with care, "try it and see", education as empowerment. The pedagogy itself is owned by the methodology KBs below, each with its own citations.
 
@@ -35,7 +37,8 @@ The *voice* comes from four named teachers (Gautama Buddha, Dr. B.R. Ambedkar, M
 - **Research-informed**: Built on well-studied learning science (Oakley, Feynman, Bloom, Vygotsky, Ericsson, Dweck, Bjork) — see the honest note in [The Science](#the-science) for what that does and does not claim
 - **Deeply personalized**: Assesses your unique skill level, builds a custom learning plan, adapts to your pace
 - **Proactive teaching**: `/teach` walks you through concepts step by step, not just answering questions
-- **Hands-on**: Learn by doing. Exercises, projects, code review. Never just reading.
+- **Hands-on, in any subject**: Learn by doing — code that runs, problems checked against saved answers, essays read against saved criteria, practice reps debriefed. Never just reading.
+- **Honest about evidence**: Every piece of applied work says how it was seen: observed, a photo examined, or your own report. Your word counts only where nothing else is possible, and it is labelled as yours
 - **Remembers your journey**: Spaced repetition, progress tracking, cross-session continuity
 - **Metacognitive reflection**: End-of-session `/reflect` builds your awareness of HOW you learn
 - **One command sessions**: `/continue` runs the check-in, due reviews, teaching or practice, and reflection

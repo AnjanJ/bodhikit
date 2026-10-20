@@ -1,7 +1,7 @@
 {
   "name": "bodhikit",
   "version": "1.24.0",
-  "description": "Research-informed interactive coding tutor that teaches through Socratic dialogue, deliberate practice, active recall, and reflection.",
+  "description": "A research-informed Socratic tutor for any subject, with code first-class, that teaches through dialogue, deliberate practice, active recall and reflection, and labels the evidence it cannot check.",
   "author": {
     "name": "Anjan",
     "url": "https://github.com/AnjanJ"
@@ -22,7 +22,7 @@
   "interface": {
     "displayName": "BodhiKit",
     "shortDescription": "Learn through guided practice",
-    "longDescription": "A research-informed Socratic tutor for personalized learning plans, guided coding practice, active recall, spaced repetition, reflection, and evidence-based progress tracking.",
+    "longDescription": "A research-informed Socratic tutor for any subject: personalized learning plans, guided practice (code that runs, problems and essays checked against answers or criteria saved first, practice reps debriefed and labelled as the learner's account), active recall, spaced repetition, reflection, and evidence-based progress tracking.",
     "developerName": "Anjan",
     "category": "Productivity",
     "capabilities": [
@@ -34,7 +34,7 @@
     "privacyPolicyURL": "https://github.com/AnjanJ/bodhikit/blob/master/PRIVACY.md",
     "termsOfServiceURL": "https://github.com/AnjanJ/bodhikit/blob/master/TERMS.md",
     "defaultPrompt": [
-      "Help me learn a technical topic through guided practice.",
+      "Help me learn a topic through guided practice.",
       "Quiz me on what I am currently learning.",
       "Help me reflect on today's learning session."
     ],

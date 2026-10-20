@@ -3,6 +3,7 @@
 ## Table of Contents
 
 - [Getting Started](#getting-started)
+- [Learning a Subject That Isn't Code](#learning-a-subject-that-isnt-code)
 - [Your Journey from Zero to Completion](#your-journey-from-zero-to-completion)
 - [How Teaching Works](#how-teaching-works)
 - [When BodhiKit Reaches for an Analogy](#when-bodhikit-reaches-for-an-analogy)
@@ -70,6 +71,23 @@ BodhiKit will ask you questions to understand your background, goals, and curren
 **Upgrading from an earlier version?** See [MIGRATION.md](./MIGRATION.md) — one command, `/bodhikit:housekeep migrate`, converts tracking files from any version since 1.6.
 
 ---
+
+## Learning a Subject That Isn't Code
+
+BodhiKit started as a coding tutor, and code is still taught exactly as it always was. Any other subject works too. What changes is the evidence that you can use what you learned, and who can check it. `/learn` proposes one of four kinds in plain words, and you confirm or change it (a mixed subject takes one per module):
+
+| Kind | Your applied work | Who checks it |
+|---|---|---|
+| **code** — programming, data, infrastructure | code you write | the tutor, who reads it and sees it run |
+| **problems** — genetics, physics, chemistry, maths, grammar | worked problems with answers | the tutor, against worked answers saved before you start |
+| **writing** — history, philosophy, politics, literature | a short piece applying an idea to a new case | the tutor, against criteria saved before you write |
+| **performed** — cooking, drawing, an instrument, speaking a language | a practice rep away from the screen | you: the tutor debriefs you, and the rep counts as your account |
+
+The teaching is the same in every subject: questions before answers, explain-backs, spaced reviews, reflection. Off code the lessons draw on the subject's own material and name a source you can check, since nothing runs. For a performed skill, a due review means doing it again and talking it through: what you did, what went wrong or surprised you, what you'd change and why. A photo of the work helps, and the tutor says what it can and can't judge from it.
+
+*Solid* means the same thing everywhere, and in every subject the tutor grades the level, the streak and the explain-back. The one condition that can rest on your word is "used it in practice", and only for a performed skill. When it does, `/progress` says *Solid, by your account*.
+
+Safety comes first in hands-on subjects. The tutor will not coach a hazardous procedure step by step where your own report would be the only check (mains electrics, home chemistry, foraging, canning without a tested process). It teaches the ideas and points you to qualified instruction. It gives no personal medical advice.
 
 ## Your Journey from Zero to Completion
 
