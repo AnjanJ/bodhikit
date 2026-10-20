@@ -3681,6 +3681,10 @@ def t_solid_by_report():
               snap["mastery"]["solidByReport"] == m["solidByReport"]
               and snap["mastery"]["solidBasis"] == m["solidBasis"]
               and snap["mastery"]["modules"] == m["modules"], snap["mastery"])
+        syl = run(proj, "syllabus", on=day)
+        check("solid by report: syllabus rows count it too (module-row renders from them)",
+              {m["module"]: m["masteredByReport"] for m in syl["unplanned"]}
+              == {"Knife skills": 1, "Heat": 0, "Python": 0}, syl["unplanned"])
         run(proj, "set-evidence-kind", "--kind", "code", "--module", "Python")
         run(proj, "set-evidence-kind", "--kind", "writing", "--module", "Knife skills")
         m = run(proj, "mastery", on=day)
@@ -3758,7 +3762,8 @@ GOLDEN_NEW_KEYS = {
                  "mastery.solidByReport", "mastery.solidBasis"],
     "mastery": ["modules.*.evidenceKind", "modules.*.masteredByReport",
                 "solidByReport", "solidBasis"],
-    "syllabus": ["evidenceKind", "modules.*.evidenceKind", "unplanned.*.evidenceKind"],
+    "syllabus": ["evidenceKind", "modules.*.evidenceKind", "unplanned.*.evidenceKind",
+                 "modules.*.evidence.masteredByReport", "unplanned.*.masteredByReport"],
     "gate-check": ["prerequisites.*.evidenceKind"],
     "retention": ["byKind", "byBasis"],
     "export-anonymized": ["byKind", "byBasis", "retention.byKind", "retention.byBasis"],

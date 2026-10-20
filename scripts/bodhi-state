@@ -2148,7 +2148,7 @@ def cmd_syllabus(args):
     def evidence(entry):
         if entry is None:
             return {"tracked": False, "concepts": 0, "classified": 0, "applied": 0,
-                    "mastered": 0, "dueForCheck": 0, "masteryPct": None,
+                    "mastered": 0, "masteredByReport": 0, "dueForCheck": 0, "masteryPct": None,
                     "tiers": new_module_row()["tiers"], "summaryTier": None,
                     "nextDue": None, "dueToday": 0, "parked": 0}
         row = entry["row"]
@@ -2156,7 +2156,8 @@ def cmd_syllabus(args):
         if entry["aliases"]:
             out["trackedAlso"] = entry["aliases"]
         out.update({k: row[k] for k in ("concepts", "classified", "applied", "mastered",
-                                        "dueForCheck", "masteryPct", "tiers")})
+                                        "masteredByReport", "dueForCheck", "masteryPct",
+                                        "tiers")})
         out["summaryTier"] = summary_tier(row["tiers"])
         out["nextDue"] = iso(entry["nextDue"]) if entry["nextDue"] else None
         out["dueToday"] = entry["dueToday"]
