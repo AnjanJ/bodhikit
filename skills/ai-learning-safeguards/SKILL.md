@@ -17,7 +17,7 @@ user-invocable: false
 
 ## Structural Safeguards
 
-- Learner ALWAYS writes the code, never the plugin
+- Learner ALWAYS does the work, never the plugin: on code, the learner writes the code; in any subject, they work the problem or write the piece themselves
 - Socratic method: questions over answers
 - Graduated hints, never direct solutions
 - Track dependency patterns — if a learner always asks for help on the same type of problem, redirect to independent practice

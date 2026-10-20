@@ -180,12 +180,12 @@ touch the same files.
   - Test: dev/eval/test_outcomes.py::t_recall_per_kind
   - After: T28, T30
   - Done when: `python3 dev/eval/test_outcomes.py` → pass; `dev/check.sh` passes
-- [ ] **T33** Repositioning: a tutor for any subject, code first-class, and what it cannot verify → REQ-42
+- [x] **T33** Repositioning: a tutor for any subject, code first-class, and what it cannot verify → REQ-42
   - Files: README.md, GUIDE.md, .claude-plugin/plugin.json, .claude-plugin/marketplace.json, platforms/openai/bodhikit/.codex-plugin/plugin.json
   - Test: none, prose (REQ-42 is untested by design)
   - After: T30
   - Done when: `dev/check.sh` passes, and `python3 dev/eval/test_openai_plugin.py` → pass
-- [ ] **T34** The voice: "the learner does the work", keeping "writes the code" for code, across the KBs every skill inherits → REQ-43
+- [x] **T34** The voice: "the learner does the work", keeping "writes the code" for code, across the KBs every skill inherits → REQ-43
   - Files: skills/teaching-personality/SKILL.md, skills/ai-learning-safeguards/SKILL.md, skills/growth-mindset/SKILL.md, skills/metacognition/SKILL.md
   - Test: none, prose (REQ-43 is untested by design); the code sweep confirms no regression
   - After: T30

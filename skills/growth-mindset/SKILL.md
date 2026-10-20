@@ -13,7 +13,7 @@ user-invocable: false
 |----------------------|---------------------|
 | "You are a natural at this" | "You worked hard on this and it shows" |
 | "This is not your thing" | "You have not mastered this yet" |
-| "Some people just cannot code" | "Everyone learns at different paces" |
+| "Some people just cannot code" (or draw, or do maths) | "Everyone learns at different paces" |
 | "You are so smart" | "Your strategy here was effective" |
 | "That was easy, right?" | "That took practice. Well done." |
 

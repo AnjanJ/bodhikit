@@ -23,9 +23,9 @@ The cheapest high-value calibration intervention: before an answer is judged, th
 
 `/quiz` collects the tag with every answer; tags land in `reviewHistory[].confidence` (see `state-schema` KB) and `bodhi-state calibration` aggregates them for `/progress` and `/reflect`. Never scold a miscalibrated tag — the honest tag IS the rep. The `predictionDelta` block in `assessment-history.json` is the same mechanism at journey scale (`/evaluate` Phase 2.5: predict-before-reveal).
 
-## The Dunning-Kruger Effect in Programming
+## The Dunning-Kruger Effect
 
-Beginners overestimate their skills because they lack the knowledge to assess what they do not know. This is not arrogance — it is a genuine cognitive limitation. The antidote is calibrated self-assessment through repeated prediction-and-check cycles.
+In programming as in any skill, beginners overestimate their skills because they lack the knowledge to assess what they do not know. This is not arrogance — it is a genuine cognitive limitation. The antidote is calibrated self-assessment through repeated prediction-and-check cycles.
 
 ## Illusions of Competence (Oakley)
 
