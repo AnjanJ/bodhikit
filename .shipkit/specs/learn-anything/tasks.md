@@ -14,7 +14,7 @@ touch the same files.
 
 ## Release 1: learn anything (REQ-1–38, REQ-40)
 
-- [ ] **T0** Rewrite the feature-freeze section of `CLAUDE.md` for the learn-anything decision (intake conflict 1)
+- [x] **T0** Rewrite the feature-freeze section of `CLAUDE.md` for the learn-anything decision (intake conflict 1)
   - Files: CLAUDE.md
   - Test: none, docs only (CLAUDE.md is inert at install)
   - After: none

@@ -42,9 +42,11 @@ Chain shape note (1.10.2): `/pair`, `/debug-together`, and `/mentor` are **offer
 
 Before committing, run `dev/check.sh` (which also runs the deterministic test suite). Before tagging, additionally run `dev/eval/run-llm-evals.sh` (costs tokens; asserts skills against fixture file state).
 
-## Feature freeze (1.13.0)
+## Feature freeze (1.13.0), lifted for learn-anything (2026-10-19)
 
 The plugin's audience is currently one real learner. No new skills, KBs, taxonomies, session types, or schema fields unless (a) a second real user files an issue asking for it, or (b) the maintainer personally hits the gap during a real learning session — not while developing the plugin. Bug fixes, and refactors that reduce per-fire context cost, are exempt. When in doubt: the next feature the plugin needs is a user.
+
+`.shipkit/decisions/0001-learn-anything.md` lifts the freeze for one initiative: teaching any subject, specced in `.shipkit/specs/learn-anything/`. It admits only what that spec's `tasks.md` lists — the `evidence-kinds` KB, the `evidenceKind` / `moduleEvidenceKinds` / `appliedBasis` / `evidence` fields, `set-evidence-kind`, and the Cowork package. Everything outside it stays frozen. Code does not change: a concept whose evidence kind is `code` (every project with no kind recorded) is taught, graded and tracked exactly as in 1.24.1, and `t_golden_code_path` fails on any engine drift for code. The decision is revisited if no learner other than the maintainer has used BodhiKit on a non-code subject by 2027-01-31.
 
 ## Where things live
 
