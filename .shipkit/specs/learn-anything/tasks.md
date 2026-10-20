@@ -97,7 +97,7 @@ touch the same files.
   - Test: none, data; each fixture is written through `bodhi-state` and verified
   - After: T10
   - Done when: `scripts/bodhi-state --project <each fixture project> verify` → `"ok": true` for all three
-- [ ] **T16** Eval group `kind-fidelity`, plus code-path assertions: no code scenario loads `evidence-kinds`, `learn-scaffold` records `code`, `/continue` on SQL never proposes a kind → REQ-1, REQ-9, REQ-10, REQ-11, REQ-12, REQ-13, REQ-14, REQ-15, REQ-16, REQ-18, REQ-35, REQ-36
+- [x] **T16** Eval group `kind-fidelity`, plus code-path assertions: no code scenario loads `evidence-kinds`, `learn-scaffold` records `code`, `/continue` on SQL never proposes a kind → REQ-1, REQ-9, REQ-10, REQ-11, REQ-12, REQ-13, REQ-14, REQ-15, REQ-16, REQ-18, REQ-35, REQ-36
   - Files: dev/eval/assert_scenario.py, dev/eval/run-llm-evals.sh, dev/eval/README.md
   - Test: dev/eval/assert_scenario.py::assert_code_never_loads_kinds, ::assert_kind_quiz_no_code, ::assert_kind_teach_no_code, ::assert_kind_key_before_attempt, ::assert_kind_intake, ::assert_kind_offers, ::assert_kind_legacy_proposal, ::assert_kind_review_no_rewrite, ::assert_kind_sources
   - After: T15

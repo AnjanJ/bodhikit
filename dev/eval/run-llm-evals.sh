@@ -18,6 +18,8 @@
 #   dev/eval/run-llm-evals.sh fidelity   # the transcript-fidelity scenarios (incl. kb-load)
 #   dev/eval/run-llm-evals.sh lifecycle  # /learn, /plan regenerate, /evaluate
 #   dev/eval/run-llm-evals.sh applied    # applied evidence on a topic without code
+#   dev/eval/run-llm-evals.sh kind-fidelity  # non-code kinds: teach, practice, quiz,
+#                                        # intake, the legacy proposal, review
 #
 #   BODHI_EVAL_RUNS=8 dev/eval/run-llm-evals.sh grade-apply-band
 #                                        # sample a grading scenario N times and
@@ -55,6 +57,12 @@ FIXTURE="$REPO/dev/eval/fixtures/v2-project"
 # BODHI_EVAL_CONCEPT at another concept.
 NONCODE_FIXTURE="$REPO/dev/eval/fixtures/non-code-project"
 NONCODE_PROJECT="political-theory"
+# One project per non-code evidence kind (learn-anything; built by
+# dev/eval/make_kind_fixtures.py). The writing fixture is the political-theory
+# project with its kind recorded; the original above stays kind-less.
+PROBLEMS_FIXTURE="$REPO/dev/eval/fixtures/problems-project"; PROBLEMS_PROJECT="genetics"
+WRITING_FIXTURE="$REPO/dev/eval/fixtures/writing-project"; WRITING_PROJECT="political-theory"
+PERFORMED_FIXTURE="$REPO/dev/eval/fixtures/performed-project"; PERFORMED_PROJECT="cooking"
 FAIL=0
 
 # Harness authority (1.14.0). The first Fable 5 sweep showed that in-PROMPT
@@ -481,20 +489,28 @@ run_discovery_scenario() {
 # parent and the new sibling project from it. Lifecycle flows are long
 # (multi-phase + agents), hence the raised turn cap.
 run_parent_scenario() {
-  name="$1"; prompt="$2"; assert="$3"; prep="${4:-}"; maxturns="${5:-60}"
+  name="$1"; prompt="$2"; assert="$3"; prep="${4:-}"; maxturns="${5:-60}"; transcript_mode="${6:-}"
   tmp=$(mktemp -d "/tmp/bodhi-eval-$name.XXXXXX")
   cp -r "$FIXTURE" "$tmp/learningWithBodhi"
   echo "== scenario: $name  (workdir $tmp)"
   if [ -n "$prep" ]; then "$prep" "$tmp/learningWithBodhi/sql-deep-dive" || { echo "FAIL: $name prep"; FAIL=1; return; }; fi
-  run_headless "$tmp" "$tmp" "$prompt" "$maxturns" "$tmp/transcript.txt"
-  if truncated_by_limit "$tmp/transcript.txt"; then
-    echo "INCONCLUSIVE: $name — $(inconclusive_reason "$tmp/transcript.txt") (transcript at $tmp/transcript.txt)"; FAIL=1; return
+  # A transcript-mode parent scenario (kind-intake) also hands the assertion
+  # the stream-json transcript, to read what the intake asked.
+  if [ -n "$transcript_mode" ]; then
+    out="$tmp/transcript.jsonl"
+    run_headless "$tmp" "$tmp" "$prompt" "$maxturns" "$out" stream
+  else
+    out="$tmp/transcript.txt"
+    run_headless "$tmp" "$tmp" "$prompt" "$maxturns" "$out"
   fi
-  if python3 "$REPO/dev/eval/assert_scenario.py" "$assert" "$tmp/learningWithBodhi/sql-deep-dive"; then
+  if truncated_by_limit "$out"; then
+    echo "INCONCLUSIVE: $name — $(inconclusive_reason "$out") (transcript at $out)"; FAIL=1; return
+  fi
+  if python3 "$REPO/dev/eval/assert_scenario.py" "$assert" "$tmp/learningWithBodhi/sql-deep-dive" ${transcript_mode:+"$out"}; then
     echo "PASS: $name"
     [ -n "${BODHI_EVAL_KEEP:-}" ] || rm -rf "$tmp"
   else
-    echo "FAIL: $name — transcript at $tmp/transcript.txt, project left at $tmp"
+    echo "FAIL: $name — transcript at $out, project left at $tmp"
     FAIL=1
   fi
 }
@@ -752,6 +768,67 @@ if [ "$want" = "all" ] || [ "$want" = "grading" ] || [ "$want" = "grade-understa
 fi
 
 # --- Transcript-fidelity scenarios (1.12.0) -----------------------------------
+# --- Evidence kinds: fidelity (learn-anything) -------------------------------
+# Off code, the tutor teaches, sets exercises and quizzes from the subject,
+# offers no code tools, names a source, saves the exercise's key before the
+# attempt, asks about the subject (not programming) at intake, proposes a kind
+# once for a kind-less non-code project, and reviews written work without
+# rewriting it. Transcript detectors plus file state; each detector is shown
+# to pass a good and fail a bad synthetic run by dev/eval/test_detectors.py.
+# The learner cannot write files in a headless run, so the scripted learner
+# dictates their work and asks for it to be saved verbatim; the key detector
+# checks the key was saved before that file.
+if [ "$want" = "all" ] || [ "$want" = "kind-fidelity" ] || [ "$want" = "kind-teach-problems" ]; then
+  BODHI_EVAL_FIXTURE="$PROBLEMS_FIXTURE" BODHI_EVAL_PROJECT="$PROBLEMS_PROJECT" run_scenario kind-teach-problems \
+    "/bodhikit:teach Dominance and recessiveness — $SIM_CONTRACT A full session, exercise included. Scripted replies: I follow the explanation and answer each checkpoint correctly in my own words. For the exercise I work every problem on paper, correctly, and type my working and answers into the chat; save what I typed verbatim as my work file in the exercise's folder, then check it against the answers. I decline any other way of working through it. My final explanation is clean and in my own words. Complete ALL tracking updates exactly as the skill specifies. Run the session turn by turn in your messages — each question you ask, then my scripted reply — rather than summarising it at the end." \
+    kind-teach-problems "" transcript
+fi
+
+if [ "$want" = "all" ] || [ "$want" = "kind-fidelity" ] || [ "$want" = "kind-teach-writing" ]; then
+  BODHI_EVAL_FIXTURE="$WRITING_FIXTURE" BODHI_EVAL_PROJECT="$WRITING_PROJECT" run_scenario kind-teach-writing \
+    "/bodhikit:teach Premises and conclusions — $SIM_CONTRACT A full session, exercise included. Scripted replies: to your opening question my guess is 'the conclusion is the bit you are trying to prove, and the premises are the reasons?'. I answer each checkpoint correctly in my own words. For the exercise I write a short analysis of the case you set and type it into the chat; save it verbatim as my piece in the exercise's folder, then read it against the criteria — it meets them. I decline any other way of working through it. My final explanation is clean and in my own words. Complete ALL tracking updates exactly as the skill specifies. Run the session turn by turn in your messages — each question you ask, then my scripted reply — rather than summarising it at the end." \
+    kind-teach-writing "" transcript
+fi
+
+if [ "$want" = "all" ] || [ "$want" = "kind-fidelity" ] || [ "$want" = "kind-practice-problems" ]; then
+  BODHI_EVAL_FIXTURE="$PROBLEMS_FIXTURE" BODHI_EVAL_PROJECT="$PROBLEMS_PROJECT" run_scenario kind-practice-problems \
+    "/bodhikit:practice Monohybrid crosses — $SIM_CONTRACT Scripted replies: whatever problems you set, I work them on paper, correctly, and type my working and answers into the chat; save what I typed verbatim as my work file in the exercise's folder, then check it against the answers. If you ask follow-up questions I answer briefly and correctly. Complete ALL tracking updates exactly as the skill specifies." \
+    kind-practice-problems "" transcript
+fi
+
+if [ "$want" = "all" ] || [ "$want" = "kind-fidelity" ] || [ "$want" = "kind-quiz" ]; then
+  BODHI_EVAL_FIXTURE="$PROBLEMS_FIXTURE" BODHI_EVAL_PROJECT="$PROBLEMS_PROJECT" run_scenario kind-quiz \
+    "/bodhikit:quiz current — $SIM_CONTRACT Ask exactly one question on the due concept. Scripted reply: I answer it correctly in my own words, tagged 'mostly'. Then complete ALL tracking updates exactly as the skill specifies." \
+    kind-quiz "" transcript
+fi
+
+if [ "$want" = "all" ] || [ "$want" = "kind-fidelity" ] || [ "$want" = "kind-intake" ]; then
+  run_parent_scenario kind-intake \
+    "/bodhikit:learn music theory: reading notes, intervals and chords — $SIM_CONTRACT My scripted answers for the whole flow: Scoping: I want to read lead sheets and understand why chords work; about three hours a week, steady pace; purpose: depth. My background: I played recorder at school, read treble clef slowly, cannot read bass clef, and have never studied harmony. When you surface my existing SQL project: this is unrelated — start a NEW standalone project and leave sql-deep-dive exactly as it is. Whatever you propose for how my work will be checked, I agree. Assessment: I answer honestly at the level I just described. The proposed plan looks good — no adjustments. Name the new project directory exactly music-theory inside the existing learningWithBodhi folder. I accept the first exercise. Complete ALL scaffolding and tracking writes exactly as the skill specifies." \
+    kind-intake "" 60 transcript
+fi
+
+if [ "$want" = "all" ] || [ "$want" = "kind-fidelity" ] || [ "$want" = "kind-legacy-proposal" ]; then
+  BODHI_EVAL_FIXTURE="$NONCODE_FIXTURE" BODHI_EVAL_PROJECT="$NONCODE_PROJECT" run_scenario kind-legacy-proposal \
+    "/bodhikit:continue — $SIM_CONTRACT Scripted replies: if you propose how my work in this project will be checked, I agree with your proposal. After that I want to stop for today; close the session and complete ALL tracking updates exactly as the skill specifies." \
+    kind-legacy-proposal "" transcript
+fi
+
+prep_kind_review() {
+  mkdir -p "$1/exercises/02-claims-in-a-new-case"
+  cp "$REPO/dev/eval/fixtures/applied/claims-analysis.md" "$1/exercises/02-claims-in-a-new-case/my-analysis.md"
+  printf '%s\n' "# Criteria (saved before the writing)" "" \
+    "1. Applies the descriptive/normative distinction to a case the lesson did not use." \
+    "2. Sorts at least three claims, each with a reason." \
+    "3. Says why the distinction matters in that case." \
+    > "$1/exercises/02-claims-in-a-new-case/criteria.md"
+}
+if [ "$want" = "all" ] || [ "$want" = "kind-fidelity" ] || [ "$want" = "kind-review" ]; then
+  BODHI_EVAL_FIXTURE="$WRITING_FIXTURE" BODHI_EVAL_PROJECT="$WRITING_PROJECT" run_scenario kind-review \
+    "/bodhikit:review exercises/02-claims-in-a-new-case/my-analysis.md — $SIM_CONTRACT I wrote this myself. Review what it shows about my understanding. If you ask me questions, I answer briefly and consistently with what I wrote. Complete ALL tracking updates exactly as the skill specifies." \
+    kind-review prep_kind_review transcript
+fi
+
 # Protocol gates with no file trace (the pretest is deliberately unrecorded;
 # hint discipline is conversational). Wording-tolerant regexes over the full
 # assistant transcript — drift detectors, not proofs. If one fails, read the

@@ -15,6 +15,15 @@ preservation, migration idempotency + backup, gate verdicts (including the
 1.11.0 recency rule), mastery formula, calibration. `dev/check.sh` runs this
 suite automatically.
 
+```
+python3 dev/eval/test_detectors.py
+```
+
+The transcript detectors the LLM evals rely on, run on synthetic transcripts:
+each must pass a good run and fail a bad one, for the reason it names. A
+detector that cannot tell them apart is not evidence. `dev/check.sh` runs
+this too.
+
 ## Layer 2: LLM evals (costs tokens, run before tagging)
 
 ```
@@ -170,6 +179,24 @@ assistant transcript:
   (`assistant_text` folds tool_use inputs into the matched text, so the phantom
   Bash call is caught even when the model does not narrate it.)
 
+- `kind-fidelity` (learn-anything) — the non-code kinds, on the fixtures
+  `make_kind_fixtures.py` builds: `kind-teach-problems` and
+  `kind-teach-writing` (no code anywhere in the lesson, no `/pair` or
+  `/debug-together` offer, a source from `resources.md` named, the
+  exercise's key saved before the learner's work), `kind-practice-problems`
+  (the key before the work), `kind-quiz` (a problem posed from the subject,
+  no code, no "define X"), `kind-intake` (`/learn` on music theory: no
+  programming questions, the kind proposed in plain words before the one
+  `set-evidence-kind`, two subject sources saved), `kind-legacy-proposal`
+  (`/continue` on the kind-less political-theory fixture proposes
+  `writing` once and records it), `kind-review` (`/review` quotes the
+  learner's own lines and never rewrites the piece). The headless learner
+  cannot write files, so the scripted learner dictates their work and asks
+  for it to be saved verbatim; the key detector checks the key came first.
+- Code-path guard (learn-anything REQ-1): every code-topic transcript
+  scenario also asserts no `evidence-kinds` load and no `set-evidence-kind`
+  call, and `learn-scaffold` asserts the new code project records `code`.
+
 **Honesty note on flakiness:** transcript assertions match phrase families,
 so they are drift detectors, not proofs. A failure means "read the transcript
 before judging" — run the scenario twice before treating a red as real.
@@ -204,6 +231,7 @@ a test. The run header prints the model; a pass certifies that executor only.
 | continue-gate | fidelity | 2026-09-30 PASS on the 1.23.0 tree (fable-5). The run before it FAILED on a detector false positive — a "Box 1" inside a `progress.md` Write that preserved the fixture's old entry; the bare-number check now reads learner-facing text only. Previously 2026-09-08 PASS (fable-5), first live run: `/continue` → option 1 → chained `/teach` ran `gate-check`, surfaced `Query planning` as a gap in outcome terms, learner carried on, no unearned correct. (The first attempt was refused by the API's safeguards before any turn ran — now labelled INCONCLUSIVE, not FAIL.) |
 | kb-load | fidelity | 2026-09-30 PASS on the 1.23.0 tree (fable-5). Previously 2026-09-04 PASS (fable-5) after a real catch: the first 1.20.0 sample printed "review recorded (Box 1 → 2, …)" in `/quiz`'s closing bookkeeping line — the skill had asked for "the box movement to report"; it now asks for the `nextReview` date, and the re-run is clean. Previously 1.18.0 (sonnet-5 first pass; then fable-5 ×4): KB always loaded. The bare-number detector caught one **real** miss ("Query planning — Box 1", read off the `due` output) — fixed by removing box/level numbers from `due` itself — and two recap false positives (now excluded). Learner-facing text clean in every sample after the reshape |
 | learn-scaffold, plan-regenerate, evaluate | lifecycle | evaluate: 2026-09-28 PASS (fable-5) on the 1.22.0 tree, 8/8 file-state asserts; the scenario is mid-journey, so it does not reach the milestone branch where the survey line appears. 1.18.0, first live runs, all PASS (fable-5). The first attempt at plan-regenerate/evaluate was cut off by the claude.ai usage limit — now labelled INCONCLUSIVE, not FAIL |
+| kind-teach-problems, kind-teach-writing, kind-practice-problems, kind-quiz, kind-intake, kind-legacy-proposal, kind-review | kind-fidelity | Never run against a live model (added for learn-anything). Each detector passes a good and fails a bad synthetic transcript in `test_detectors.py`. |
 
 Update the row when you run a scenario. `BODHI_EVAL_RUNS=N` sweeps report a
 rate; a single pass on a grading scenario is one sample.

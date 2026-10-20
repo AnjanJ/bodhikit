@@ -780,6 +780,10 @@ def assert_learn_scaffold(project):
     if state.get("version") != 2:
         fail(f"new state.json version is {state.get('version')}, expected 2")
     ok("state.json scaffolded at version 2")
+    if state.get("evidenceKind") != "code":
+        fail(f"new state.json evidenceKind is {state.get('evidenceKind')!r}; /learn records "
+             "exactly one kind, and React is code (learn-anything/REQ-4)")
+    ok("evidenceKind 'code' recorded for a code topic")
     sr = load(react, ".bodhi", "spaced-review.json")
     if sr.get("version") != 3:
         fail(f"new spaced-review.json version is {sr.get('version')}, expected 3")
@@ -1140,6 +1144,363 @@ def assert_applied_chat(project):
     ok("no applied flag for the chat-only analysis")
 
 
+# --- Evidence kinds (learn-anything) -----------------------------------------
+# A code session must not know these exist; a non-code session must teach,
+# set exercises and quiz from the subject, with the key saved before the
+# attempt. Every check here is a drift detector over the transcript plus file
+# state, exercised on a passing and a failing synthetic transcript by
+# dev/eval/test_detectors.py. Read the transcript before judging a failure.
+
+def tool_events(transcript_path):
+    """[(tool name, input dict)] in the order the executor ran them, across
+    the claude, bodhi-cli and codex transcript shapes."""
+    events = []
+    with open(transcript_path) as f:
+        for line in f:
+            try:
+                ev = json.loads(line.strip() or "{}")
+            except json.JSONDecodeError:
+                continue
+            if ev.get("type") == "assistant":
+                for block in ev.get("message", {}).get("content", []):
+                    if isinstance(block, dict) and block.get("type") == "tool_use":
+                        events.append((block.get("name", ""), block.get("input", {}) or {}))
+            elif ev.get("type") == "tool" and isinstance(ev.get("name"), str):
+                events.append((ev["name"], ev.get("input", {}) or {}))
+    return events
+
+
+def stream_items(transcript_path):
+    """[("text", str) | ("tool", name, input)] in transcript order: what the
+    learner read and what the executor ran, interleaved."""
+    items = []
+    with open(transcript_path) as f:
+        for line in f:
+            try:
+                ev = json.loads(line.strip() or "{}")
+            except json.JSONDecodeError:
+                continue
+            if ev.get("type") == "assistant":
+                for block in ev.get("message", {}).get("content", []):
+                    if not isinstance(block, dict):
+                        continue
+                    if block.get("type") == "text":
+                        items.append(("text", block.get("text", "")))
+                    elif block.get("type") == "tool_use":
+                        items.append(("tool", block.get("name", ""), block.get("input", {}) or {}))
+            elif ev.get("type") == "delta" and isinstance(ev.get("text"), str):
+                items.append(("text", ev["text"]))
+            elif ev.get("type") == "tool" and isinstance(ev.get("name"), str):
+                items.append(("tool", ev["name"], ev.get("input", {}) or {}))
+    return items
+
+
+WRITE_TOOLS = {"Write", "Edit", "MultiEdit", "NotebookEdit"}
+SHELL_WRITE_RE = re.compile(r">|\btee\b|\bcp\b|\bmv\b|apply_patch|cat\s*<<")
+
+
+def wrote(name, inp, path_re):
+    """Whether one tool event wrote a file whose path matches `path_re`."""
+    if name in WRITE_TOOLS:
+        return bool(path_re.search(str(inp.get("file_path") or inp.get("notebook_path") or "")))
+    if name == "Bash":
+        cmd = str(inp.get("command", ""))
+        return bool(path_re.search(cmd)) and bool(SHELL_WRITE_RE.search(cmd))
+    return False
+
+
+KINDS_KB_RE = re.compile(r"evidence-kinds")
+
+
+def assert_code_never_loads_kinds(project, transcript):
+    """learn-anything/REQ-1: a code session loads no evidence-kinds KB and
+    records no kind. Run after every code-topic transcript scenario."""
+    for name, inp in tool_events(transcript):
+        rendered = json.dumps(inp)
+        if KINDS_KB_RE.search(rendered) and "set-evidence-kind" not in rendered:
+            fail(f"a code session loaded or read the evidence-kinds KB ({name} "
+                 f"{rendered[:160]}) — the code path must not branch")
+        if "set-evidence-kind" in rendered:
+            fail(f"a code session recorded an evidence kind ({rendered[:160]}) — "
+                 "only /learn records a kind, and a code topic is never re-proposed")
+    ok("no evidence-kinds load and no set-evidence-kind call")
+
+
+CODE_LANGS = (r"(?:python|py|javascript|js|typescript|ts|sql|ruby|rb|bash|sh|shell|java|"
+              r"cpp|c\+\+|go|golang|rust|php|html|css|elixir|kotlin|swift)")
+CODE_FENCE_RE = re.compile(r"```[ \t]*" + CODE_LANGS + r"\b", re.I)
+CODE_LINE_RE = re.compile(
+    r"(?m)^\s*(?:def \w+\(|function\s*\w*\s*\(|class \w+\s*[:(]|import \w+|from \w+ import|"
+    r"(?:const|let|var) \w+\s*=|SELECT\b.+\bFROM\b|CREATE (?:TABLE|INDEX)\b|console\.log\(|"
+    r"print\(|puts \w|\w+\s*=>\s*\{)", re.I)
+CODE_TALK_RE = re.compile(
+    r"(?i)\b(?:write (?:a|the|some) (?:function|program|script|method|query)|"
+    r"in code\b|code example|(?:this|the) code\b|run (?:this|the|your) code|pseudo-?code|"
+    r"what would this (?:code|program) output)")
+
+
+def code_in(text):
+    for rx in (CODE_FENCE_RE, CODE_LINE_RE, CODE_TALK_RE):
+        m = rx.search(text)
+        if m:
+            return m.group(0)
+    return None
+
+
+def assert_kind_teach_no_code(project, transcript):
+    """learn-anything/REQ-14: a non-code /teach draws its examples, checkpoint
+    questions and analogies from the subject, never code."""
+    prose = assistant_prose(transcript)
+    if not prose.strip():
+        fail("empty transcript — run did not produce assistant output")
+    hit = code_in(prose)
+    if hit:
+        fail(f"a non-code lesson used code ({hit!r}) — examples, checkpoints and the "
+             "last analogy rung come from the subject (evidence-kinds KB)")
+    ok("the lesson used no code")
+
+
+def assert_kind_quiz_no_code(project, transcript):
+    """learn-anything/REQ-15: each question on a non-code concept is a case,
+    a problem or a situation from the subject, with no code."""
+    prose = assistant_prose(transcript)
+    if not prose.strip():
+        fail("empty transcript — run did not produce assistant output")
+    questions = question_texts(prose)
+    if not questions:
+        fail("no question marked 'Qn' / 'Question n' found; read the transcript")
+    ok(f"{len(questions)} question(s) found")
+    for n, q in sorted(questions.items()):
+        hit = code_in(q)
+        if hit:
+            fail(f"Q{n} on a non-code concept carries code ({hit!r}): {q[:120]!r}")
+        if re.match(r"(?i)\s*(?:define\b|what does .{1,40} mean\b|what is meant by\b)", q):
+            fail(f"Q{n} asks for a definition ({q[:80]!r}) — pose a case, a problem or "
+                 "a situation (evidence-kinds KB, Quiz forms)")
+    ok("every question is posed from the subject, without code")
+
+
+OFFER_RE = re.compile(r"(?i)(?:/?bodhikit:(?:pair|debug-together)|/pair\b|/debug-together\b|"
+                      r"\bdebug-together\b|\bpair[- ]programming\b|\bpair mode\b)")
+
+
+def assert_kind_offers(project, transcript):
+    """learn-anything/REQ-16: off code, the tutor offers neither /pair nor
+    /debug-together."""
+    m = OFFER_RE.search(assistant_prose(transcript))
+    if m:
+        fail(f"a non-code session offered a code tool ({m.group(0)!r})")
+    ok("no /pair or /debug-together offer")
+
+
+PROGRAMMING_CATALOG_RE = re.compile(
+    r"(?i)(freecodecamp|codecademy|leetcode|w3schools|roadmap\.sh|developer\.mozilla|"
+    r"\bMDN\b|stack ?overflow|exercism|hackerrank|the odin project)")
+
+
+def resource_names(project):
+    """The titles and lead names in .bodhi/resources.md's entries."""
+    path = os.path.join(project, ".bodhi", "resources.md")
+    if not os.path.exists(path):
+        fail(".bodhi/resources.md missing — non-code subjects save their sources "
+             "before the first lesson (evidence-kinds KB, Sources)")
+    entries = [ln for ln in open(path, encoding="utf-8").read().split("\n")
+               if re.match(r"\s*[-*]\s+\S", ln)]
+    names = set()
+    for e in entries:
+        names.update(t.strip() for t in re.findall(r"\*([^*\n]{3,80})\*", e))
+        lead = re.match(r"\s*[-*]\s+([A-Z][A-Za-z\-]+)", e)
+        if lead:
+            names.add(lead.group(1))
+    return entries, {n for n in names if len(n) > 3}
+
+
+def assert_kind_sources(project, transcript, must_name=True):
+    """learn-anything/REQ-35: verified subject sources saved before the first
+    lesson, none of them programming catalogs. learn-anything/REQ-36: the
+    lesson names one for its central claim."""
+    entries, names = resource_names(project)
+    if len(entries) < 2:
+        fail(f".bodhi/resources.md holds {len(entries)} source(s); a non-code project "
+             "starts with at least two")
+    catalog = [e for e in entries if PROGRAMMING_CATALOG_RE.search(e)]
+    if catalog:
+        fail(f"resources.md lists programming catalogs for a non-code subject: {catalog[:2]}")
+    ok(f"{len(entries)} subject sources saved, no programming catalogs")
+    if not must_name:
+        return
+    prose = assistant_prose(transcript)
+    named = sorted(n for n in names if n.lower() in prose.lower())
+    if not named:
+        fail(f"the lesson named no source from resources.md (looked for {sorted(names)[:6]})")
+    ok(f"the lesson named a source ({named[0]})")
+
+
+KEY_PATH_RE = re.compile(r"exercises/([^/\s\"']+)/(answers|criteria)\.md")
+
+
+def assert_kind_key_before_attempt(project, transcript):
+    """learn-anything/REQ-11, REQ-12: the key (answers.md or criteria.md) is
+    saved in the exercise's own folder before the learner's work exists or
+    any applied review is recorded."""
+    events = tool_events(transcript)
+    key_at = next((i for i, (n, inp) in enumerate(events) if wrote(n, inp, KEY_PATH_RE)), None)
+    if key_at is None:
+        fail("no answers.md or criteria.md was written in an exercise folder — the "
+             "exercise had no key saved before the attempt")
+    rendered = json.dumps(events[key_at][1])
+    folder = KEY_PATH_RE.search(rendered).group(1)
+    key_file = KEY_PATH_RE.search(rendered).group(0)
+    if not os.path.exists(os.path.join(project, key_file)):
+        fail(f"{key_file} was written in the transcript but is not on disk")
+    ok(f"key saved: {key_file}")
+    work_re = re.compile(r"exercises/" + re.escape(folder) + r"/(?!answers\.md|criteria\.md|README\.md)[^\s\"']+")
+    for i, (n, inp) in enumerate(events[:key_at]):
+        if wrote(n, inp, work_re):
+            fail(f"the learner's work in {folder}/ was written before the key "
+                 f"({json.dumps(inp)[:120]})")
+        if "record-review" in json.dumps(inp) and "--applied" in json.dumps(inp):
+            fail("an applied review was recorded before the key was saved")
+    ok("the key precedes the learner's work and every applied review")
+    for n, inp in events[key_at:]:
+        cmd = json.dumps(inp)
+        m = re.search(r"--evidence[ =]+\\?\"?([^\s\"\\]+)", cmd)
+        if "record-review" in cmd and m and f"exercises/{folder}/" not in m.group(1):
+            fail(f"the applied review's evidence {m.group(1)!r} is not in the exercise's "
+                 f"own folder {folder}/")
+    ok("applied evidence, if any, sits beside the key")
+
+
+PROGRAMMING_Q_RE = re.compile(
+    r"(?i)(programming (?:experience|background|languages?)|coding (?:experience|background)|"
+    r"(?:which|what) (?:programming )?languages? (?:have you|do you)|"
+    r"how (?:long|much) have you (?:been )?(?:coding|programming|coded|programmed)|"
+    r"(?:written|write) (?:any )?code before)")
+KIND_WORDS_RE = re.compile(
+    r"(?i)(worked problems?|problems? (?:with|against) (?:worked )?answers|written (?:piece|work|"
+    r"argument|analys[ie]s)|essays?|practice reps?|away from the screen|by your account|"
+    r"hands-on practice|a debrief)")
+
+
+def new_project(project):
+    """The project a parent-cwd /learn scaffolded beside the fixture's."""
+    parent = os.path.dirname(os.path.abspath(project))
+    lists = load(parent, ".bodhi-profile.projects.json")
+    new = [e for e in lists.get("activeProjects", []) if e.get("name") != os.path.basename(project)]
+    if not new:
+        fail("no new project in activeProjects — /learn scaffolded nothing")
+    path = os.path.join(parent, new[-1]["name"])
+    if not os.path.isdir(path):
+        fail(f"activeProjects names {new[-1]['name']!r} but its folder does not exist")
+    return path
+
+
+def proposal_then_record(transcript, expect):
+    """The plain-words proposal is in the prose before the one
+    set-evidence-kind call, which records `expect` (a kind or a set)."""
+    items = stream_items(transcript)
+    calls = [i for i, it in enumerate(items) if it[0] == "tool"
+             and "set-evidence-kind" in json.dumps(it[2]) and "--module" not in json.dumps(it[2])]
+    if not calls:
+        fail("no set-evidence-kind call — the kind was never recorded")
+    if len(calls) > 1:
+        fail(f"set-evidence-kind ran {len(calls)} times for the project — propose once, record once")
+    before = "\n".join(it[1] for it in items[:calls[0]] if it[0] == "text")
+    if not KIND_WORDS_RE.search(before):
+        fail("no plain-words description of how the work will be checked before the kind was "
+             "recorded — propose it to the learner first")
+    kind = re.search(r"--kind[ =]+\\?\"?(\w+)", json.dumps(items[calls[0]][2]))
+    if not kind or kind.group(1) != expect:
+        fail(f"set-evidence-kind recorded {kind.group(1) if kind else None!r}, not {expect!r}")
+    ok("the kind was proposed in plain words before it was recorded, once")
+
+
+def assert_kind_intake(project, transcript):
+    """learn-anything/REQ-4, REQ-5, REQ-10: /learn on a non-code subject asks
+    about the subject, never programming; proposes the kind in plain words;
+    records exactly one kind after the learner confirms."""
+    prose = assistant_prose(transcript)
+    m = PROGRAMMING_Q_RE.search(prose)
+    if m:
+        fail(f"the intake asked about programming ({m.group(0)!r}) on a non-code subject")
+    ok("no programming questions in the intake")
+    proj = new_project(project)
+    state = load(proj, ".bodhi", "state.json")
+    if state.get("evidenceKind") in (None, "code"):
+        fail(f"the new project's evidenceKind is {state.get('evidenceKind')!r}; a non-code "
+             "subject records problems, writing or performed")
+    ok(f"evidenceKind {state['evidenceKind']!r} recorded")
+    proposal_then_record(transcript, state["evidenceKind"])
+    assert_kind_sources(proj, transcript, must_name=False)
+
+
+def assert_kind_legacy_proposal(project, transcript):
+    """learn-anything/REQ-9: a kind-less project whose topic is not code gets
+    one proposal from /continue, recorded after the learner confirms."""
+    state = load(project, ".bodhi", "state.json")
+    if state.get("evidenceKind") != "writing":
+        fail(f"evidenceKind is {state.get('evidenceKind')!r}; political theory's applied "
+             "work is written argument, and the learner agreed to the proposal")
+    ok("evidenceKind 'writing' recorded")
+    proposal_then_record(transcript, "writing")
+
+
+REWRITE_RE = re.compile(
+    r"(?i)(here(?:'s| is) (?:a |an |my )?(?:revised|rewritten|improved|better|tightened|"
+    r"cleaner|corrected) (?:version|draft|paragraph|analysis)|i(?:'ve| have) (?:rewritten|"
+    r"revised) (?:it|your)|revised version:|rewrite(?:d)? (?:it|your \w+) (?:as|like))")
+
+
+def assert_kind_review_no_rewrite(project, transcript, piece="exercises/02-claims-in-a-new-case/my-analysis.md",
+                                  original=None):
+    """learn-anything/REQ-18: /review on written work quotes the learner's own
+    lines and points at them; it never rewrites the piece."""
+    original = original or os.path.join(REPO, "dev", "eval", "fixtures", "applied", "claims-analysis.md")
+    with open(original, encoding="utf-8") as f:
+        source = f.read()
+    path = os.path.join(project, piece)
+    if not os.path.exists(path) or open(path, encoding="utf-8").read() != source:
+        fail(f"the learner's piece {piece} was changed or removed — review never edits the work")
+    ok("the learner's file is untouched")
+    for n, inp in tool_events(transcript):
+        if wrote(n, inp, re.compile(re.escape(piece))):
+            fail(f"the executor wrote to the learner's piece ({n})")
+    prose = assistant_prose(transcript)
+    flat = " ".join(source.split())
+    quotes = [q.strip() for q in re.findall(r"(?m)^\s*>\s*(.+)$", prose)]
+    own = [q for q in quotes if len(q.split()) >= 5 and " ".join(q.strip('"*_ ').split())[:60] in flat]
+    if len(own) < 2:
+        fail(f"{len(own)} quoted line(s) from the learner's piece; a review quotes their own "
+             "lines before each point")
+    ok(f"{len(own)} of the learner's own lines quoted")
+    m = REWRITE_RE.search(prose)
+    if m:
+        fail(f"the review rewrote the work ({m.group(0)!r}) — point at the line and ask")
+    ok("no rewritten version offered")
+
+
+def assert_kind_teach(project, transcript):
+    """A non-code /teach with an exercise: no code, no code-tool offers, a
+    source named, the key before the attempt."""
+    assert_kind_teach_no_code(project, transcript)
+    assert_kind_offers(project, transcript)
+    assert_kind_sources(project, transcript)
+    assert_kind_key_before_attempt(project, transcript)
+
+
+def assert_kind_practice(project, transcript):
+    assert_kind_teach_no_code(project, transcript)
+    assert_kind_offers(project, transcript)
+    assert_kind_key_before_attempt(project, transcript)
+
+
+# Code-topic transcript scenarios: each also proves the code path never
+# branched (learn-anything/REQ-1).
+CODE_TRANSCRIPT_SCENARIOS = {"teach-pretest", "teach-hint-discipline", "continue-discovery",
+                             "continue-gate", "kb-load", "quiz-unlabelled",
+                             "teach-vocabulary", "plan-view"}
+
+
 def main():
     name, project = sys.argv[1], sys.argv[2]
     transcript = sys.argv[3] if len(sys.argv) > 3 else None
@@ -1166,11 +1527,20 @@ def main():
                        "kb-load": assert_kb_load,
                        "quiz-unlabelled": assert_quiz_unlabelled,
                        "teach-vocabulary": assert_teach_vocabulary,
-                       "plan-view": assert_plan_view}
+                       "plan-view": assert_plan_view,
+                       "kind-teach-problems": assert_kind_teach,
+                       "kind-teach-writing": assert_kind_teach,
+                       "kind-practice-problems": assert_kind_practice,
+                       "kind-quiz": assert_kind_quiz_no_code,
+                       "kind-intake": assert_kind_intake,
+                       "kind-legacy-proposal": assert_kind_legacy_proposal,
+                       "kind-review": assert_kind_review_no_rewrite}
     if name in with_transcript:
         if not transcript:
             fail(f"scenario {name} requires a transcript path")
         with_transcript[name](project, transcript)
+        if name in CODE_TRANSCRIPT_SCENARIOS:
+            assert_code_never_loads_kinds(project, transcript)
     else:
         file_state[name](project)
     sys.exit(0)

@@ -248,6 +248,7 @@ shutil.copytree(os.path.join(FIX, "non-code-project"), ws,
                 ignore=shutil.ignore_patterns("*.lock"))
 proj = os.path.join(ws, "political-theory")
 bs(proj, "2026-10-08", "set-evidence-kind", "--kind", "writing")
+text(os.path.join(proj, ".bodhi", "resources.md"), '# Resources — Political theory from first principles\n\n## Verified\n\n- Anthony Weston, *A Rulebook for Arguments*, 5th ed. (Hackett, 2017) — premises, conclusions and how an argument is put together.\n- Jonathan Wolff, *An Introduction to Political Philosophy*, 3rd ed. (Oxford University Press, 2016) — the standard introduction.\n- Stanford Encyclopedia of Philosophy, "Positive and Negative Liberty" (Ian Carter) — https://plato.stanford.edu/entries/liberty-positive-negative/\n')
 
 # --- performed: home cooking ------------------------------------------------
 ws = os.path.join(FIX, "performed-project")

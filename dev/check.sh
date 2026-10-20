@@ -389,6 +389,17 @@ if [ -f dev/eval/test_bodhi_state.py ]; then
   else
     err "dev/eval/test_stop_hook.py missing"
   fi
+  # The eval detectors are only evidence if they tell a good run from a bad
+  # one; this proves it on synthetic transcripts, for free.
+  if [ -f dev/eval/test_detectors.py ]; then
+    if ! python3 dev/eval/test_detectors.py >${TMPDIR:-/tmp}/bodhi-detector-tests.log 2>&1; then
+      err "eval detector test suite failed — see ${TMPDIR:-/tmp}/bodhi-detector-tests.log"
+    else
+      ok "eval detector test suite passed"
+    fi
+  else
+    err "dev/eval/test_detectors.py missing"
+  fi
   if [ -f dev/eval/test_openai_plugin.py ]; then
     if ! python3 dev/eval/test_openai_plugin.py >${TMPDIR:-/tmp}/bodhikit-openai-tests.log 2>&1; then
       err "OpenAI plugin test suite failed — see ${TMPDIR:-/tmp}/bodhikit-openai-tests.log"
