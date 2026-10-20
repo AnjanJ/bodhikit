@@ -34,6 +34,8 @@ Once the concept is identified, run:
 
 The brief decides the branches: `firstExposure`/`pretestApplies` — how Phase 2 opens; `isReteach` — Phase 5's targeted-reteach entry; `box`/`bloomLevel`/`feynmanCurrent`/`daysSinceLastReview` — depth. Trust the brief over your own reading of the tracking files.
 
+**Evidence kind.** On `evidenceKind: code`, run this file as written. On `problems`, `writing` or `performed`, load the `evidence-kinds` KB now and follow it wherever this file assumes code: examples and checkpoints, the exercise and its key, the reconfirm, naming a source.
+
 ### Prerequisite Bloom Gate (module-start boundaries only)
 
 Skip the gate only when the learner themselves typed a topic — `/teach <topic>` with no `--invoked-from=`. A concept passed by a caller via `--invoked-from=` is orchestration context, not a learner override: `/continue`'s "continue with the current module" is exactly the boundary the gate exists for. Otherwise read `references/prerequisite-gate.md` in this skill's directory (`${CLAUDE_PLUGIN_ROOT}/skills/teach/references/prerequisite-gate.md`) and follow it: `gate-check` decides whether it fires, and the verdict becomes nothing, one reconfirm question, or an **offer** the learner decides on — never an auto-block.
@@ -107,6 +109,8 @@ This is an **offer, not an auto-invocation**. The learner accepts (invoke `/pair
 
 Skip the offer when: (a) the concept is purely conceptual (no code to type), (b) the learner has already explicitly declined pair this session, or (c) the session is in its last 5-10 minutes.
 
+Off `code` there is nothing to pair on: make no offer.
+
 ---
 
 ## Phase 4: Independent Practice
@@ -155,6 +159,8 @@ Tell them: "Struggle is where the learning lives. Try for at least 5 minutes bef
 
    This is an **offer, not an auto-invocation**. If accepted, control passes to `/debug-together` (which discovers the failing code from `exercises/<current-module>/` per the chain convention). If declined, guide Socratically. Either path returns to Phase 5 when the exercise resolves.
 
+   Off `code`, skip the offer and guide Socratically.
+
 ---
 
 ## Phase 5: Verify and Record
@@ -176,7 +182,7 @@ The session is invisible to every future skill until these land. Per the `state-
      --module "<current module>" --source teach
    ```
 
-   Add `--applied` only when Phase 4 produced applied work you read (`blooms-taxonomy` KB *Applied Evidence*): code that ran, or, on a topic without code, the exercise's written application saved in the project. It is a second axis, not a level: the row still comes from the explanation, and the flag is the only evidence the gate and the mastery formula accept for "can build with it" (`state-ops` KB). An understanding-only session, a chat-only answer, or code that never ran gets no flag.
+   Add `--applied` only when Phase 4 produced applied work you read (`blooms-taxonomy` KB *Applied Evidence*): code that ran, or, on a topic without code, the exercise's written application saved in the project. It is a second axis, not a level: the row still comes from the explanation, and the flag is the only evidence the gate and the mastery formula accept for "can build with it" (`state-ops` KB). An understanding-only session, a chat-only answer, or code that never ran gets no flag. Off `code`, add `--evidence <the learner's file>`, which sits beside the saved key; a performed rep is `--applied reported`, after its debrief (`evidence-kinds` KB).
 
    (`--module` auto-creates the concept if this was its first session.) `--tested-bloom` is the row the answer reached, not the row the learner claims for it (`blooms-taxonomy` KB); it ratchets and feeds the prerequisite gate. Tell the learner where they stand as the output's `bloomOutcome` clause; only if it reports `crossedLevel: true` name the rung too ("That moves you to **<bloomLabel>** — <bloomOutcome>") — the `blooms-taxonomy` KB rendering rule. Under the rubric's check-5 condition: `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> set-feynman --concept "<concept>"`.
 

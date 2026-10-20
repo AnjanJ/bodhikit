@@ -142,6 +142,18 @@ for f in $KB_SKILLS; do
   fi
 done
 # ---------------------------------------------------------------------------
+# 60. No orphaned KB. A KB loads only when a command, agent or rule names it
+# (or a command's phase-loaded reference does), so one nothing names is dead
+# weight in every install — the 1.0-1.17 failure in a new shape.
+# ---------------------------------------------------------------------------
+kb_readers="$USER_SKILLS $(ls agents/*.md rules/*.md skills/*/references/*.md 2>/dev/null)"
+for f in $KB_SKILLS; do
+  kb=$(basename "$(dirname "$f")")
+  if ! grep -q "\`$kb\`" $kb_readers; then
+    err "KB \`$kb\` is named by no command, agent, rule or reference — nothing can load it (rule 60)"
+  fi
+done
+# ---------------------------------------------------------------------------
 # 11. README skill count sanity (best-effort)
 # ---------------------------------------------------------------------------
 declared=$(grep -oE 'Skills \([0-9]+\)' README.md | head -1 | grep -oE '[0-9]+')
@@ -866,6 +878,12 @@ for f in $USER_SKILLS skills/*/references/*.md; do
   # opposite of a write and must not trip this rule.
   if grep -q 'bodhi-state" --project <project> set-feynman' "$f" && ! grep -q 'feynman-technique' "$f"; then
     err "$f calls set-feynman (feynmanPassed is set-never-unset) but never references the feynman-technique KB — the grading ladder is out of scope at the write site"
+  fi
+  # learn-anything: an applied-work basis or an evidence path is a non-code
+  # write, and the rules for both (the key beside the work, the debrief before
+  # a reported rep) live in evidence-kinds.
+  if grep -qE -- '--applied (observed|inspected|reported)|--evidence' "$f" && ! grep -q 'evidence-kinds' "$f"; then
+    err "$f writes --applied <basis> or --evidence but never references the evidence-kinds KB — the key and debrief rules are out of scope at the write site"
   fi
 done
 
