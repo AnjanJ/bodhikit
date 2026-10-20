@@ -2248,10 +2248,7 @@ def evidence_at_3_plus(c):
     through any number of later misses. Deferred entries are scheduling
     notes, not observations, and are skipped; archived entries are carried
     by archivedSummary."""
-    seed = archived_summary(c)
-    return _evidence_counts(c.get("reviewHistory", []),
-                            seed.get("appliedEvidence", 0) or 0,
-                            seed.get("evidenceAt3Plus", 0) or 0)[1]
+    return _evidence_counts(c.get("reviewHistory", []), archived_summary(c))["at3plus"]
 
 
 EXPOSURE_RANK = {"seeded": 0, "quizzed-only": 1, "demonstrated": 2,
@@ -2263,22 +2260,46 @@ def archived_summary(c):
     return s if isinstance(s, dict) else {}
 
 
-def _evidence_counts(entries, applied=0, at3plus=0):
-    """(applied corrects, level-3+ corrects) since the most recent miss over
-    `entries`, continuing from the seeds — the one loop behind
-    applied_evidence, evidence_at_3_plus and archive_history."""
+def built_by_of(summary):
+    """The unseen bases archived work was built on (archivedSummary.builtBy)."""
+    b = summary.get("builtBy")
+    return [x for x in b if x in ("inspected", "reported")] if isinstance(b, list) else []
+
+
+# archivedSummary key that seeds each count (state-schema KB).
+ARCHIVE_SEEDS = {"observed": "appliedEvidence", "inspected": "appliedInspected",
+                 "reported": "appliedReported", "at3plus": "evidenceAt3Plus"}
+
+
+def applied_correct_basis(h):
+    """The basis of an applied correct, else None: the one place the
+    `applied` flag is read for counting (t_single_applied_reader), so no
+    reader can count unseen work as observed."""
+    if h.get("applied") is True and h.get("result") == "correct":
+        return applied_basis(h)
+    return None
+
+
+def _evidence_counts(entries, seed):
+    """Applied corrects per basis and level-3+ corrects, since the most
+    recent miss over `entries`, continuing from an archivedSummary `seed` —
+    the one loop behind applied_evidence, evidence_at_3_plus and
+    archive_history. Raw counts: which bases a concept admits is the
+    reader's question, asked through admits()."""
+    counts = {k: seed.get(key, 0) or 0 for k, key in ARCHIVE_SEEDS.items()}
     for h in entries:
         if not isinstance(h, dict) or h.get("deferred"):
             continue
         result = h.get("result")
         if result == "incorrect":
-            applied = at3plus = 0
+            counts = dict.fromkeys(counts, 0)
         elif result == "correct":
-            if h.get("applied") is True:
-                applied += 1
+            basis = applied_correct_basis(h)
+            if basis:
+                counts[basis] += 1
             if (h.get("bloomLevel") or 0) >= 3:
-                at3plus += 1
-    return applied, at3plus
+                counts["at3plus"] += 1
+    return counts
 
 
 def archive_history(c, archived):
@@ -2288,9 +2309,8 @@ def archive_history(c, archived):
     zero applied evidence, and to measure the first retained gap from
     `introduced`). Accumulates across repeated truncations."""
     prev = archived_summary(c)
-    applied, at3plus = _evidence_counts(
-        archived, prev.get("appliedEvidence", 0) or 0, prev.get("evidenceAt3Plus", 0) or 0)
-    summary = {"appliedEvidence": applied, "evidenceAt3Plus": at3plus}
+    counts = _evidence_counts(archived, prev)
+    summary = {"appliedEvidence": counts["observed"], "evidenceAt3Plus": counts["at3plus"]}
     dates = [h.get("date") for h in archived
              if isinstance(h, dict) and parse_date(h.get("date"))]
     through = dates[-1] if dates else prev.get("through")
@@ -2305,13 +2325,22 @@ def archive_history(c, archived):
     # recomputed from the seeds, so only these two are worth carrying.
     graded = [h for h in archived if isinstance(h, dict) and not h.get("deferred")
               and h.get("result") in ("correct", "incorrect", "partial")]
+    # `built` is the floor observed work sets; work on an unseen basis is
+    # kept as builtBy, so a later kind change can still admit or refuse it.
     exposure = prev.get("exposure")
-    if any(h.get("applied") is True and h.get("result") == "correct" for h in graded):
+    bases = {applied_correct_basis(h) for h in graded}
+    if "observed" in bases:
         exposure = "built"
     elif exposure != "built" and any(h.get("source") in INSTRUCTIONAL_SOURCES for h in graded):
         exposure = "taught"
     if exposure in ("taught", "built"):
         summary["exposure"] = exposure
+    for basis in ("inspected", "reported"):
+        if counts[basis]:
+            summary[ARCHIVE_SEEDS[basis]] = counts[basis]
+    built_by = [b for b in ("inspected", "reported") if b in bases or b in built_by_of(prev)]
+    if built_by:
+        summary["builtBy"] = built_by
     c["reviewHistoryArchived"] = (c.get("reviewHistoryArchived", 0) or 0) + len(archived)
     c["archivedSummary"] = summary
 
@@ -2325,10 +2354,9 @@ def applied_evidence(c):
     be satisfied without the learner ever writing a line: the learner
     finding that motivated the flag. Deferred entries are skipped; archived
     entries are carried by archivedSummary."""
-    seed = archived_summary(c)
-    return _evidence_counts(c.get("reviewHistory", []),
-                            seed.get("appliedEvidence", 0) or 0,
-                            seed.get("evidenceAt3Plus", 0) or 0)[0]
+    counts = _evidence_counts(c.get("reviewHistory", []), archived_summary(c))
+    kind = effective_kind(c)
+    return sum(counts[b] for b in APPLIED_BASES if admits(kind, b))
 
 
 def last_miss(c):
@@ -2388,11 +2416,13 @@ def exposure_of(c):
     graded = [h for h in c.get("reviewHistory", []) if isinstance(h, dict)
               and not h.get("deferred")
               and h.get("result") in ("correct", "incorrect", "partial")]
-    floor = archived_summary(c).get("exposure")
-    if floor == "built" or any(h.get("applied") is True and h.get("result") == "correct"
-                               for h in graded):
+    summary = archived_summary(c)
+    kind = effective_kind(c)
+    bases = [applied_correct_basis(h) for h in graded] + built_by_of(summary)
+    if summary.get("exposure") == "built" or any(b and admits(kind, b) for b in bases):
         return "built"
-    if floor == "taught" or any(h.get("source") in INSTRUCTIONAL_SOURCES for h in graded):
+    if summary.get("exposure") == "taught" or any(h.get("source") in INSTRUCTIONAL_SOURCES
+                                                  for h in graded):
         return "taught"
     if not graded and not c.get("reviewHistoryArchived"):
         return "seeded"

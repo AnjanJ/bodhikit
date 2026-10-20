@@ -3337,6 +3337,112 @@ def t_set_evidence_kind():
         check("set-kind: needs a scaffolded state.json", r.returncode == 1, r.stderr)
 
 
+def t_basis_filter_every_reader():
+    """learn-anything/REQ-23: the learner's word counts toward Solid and the
+    gate only on a performed concept. learn-anything/REQ-24: everything else
+    in Solid stays tutor-graded. learn-anything/REQ-7: a kind change re-reads
+    every review, archived ones included. Two concepts carry the same history
+    with a `reported` build; only the performed one may count it."""
+    def history():
+        start = datetime.date(2025, 10, 1)
+        out = [{"date": start.isoformat(), "result": "incorrect", "bloomLevel": 2,
+                "source": "quiz", "boxBefore": 2},
+               {"date": (start + datetime.timedelta(days=1)).isoformat(),
+                "result": "correct", "bloomLevel": 3, "source": "practice",
+                "applied": True, "appliedBasis": "reported", "boxBefore": 1}]
+        for i in range(2, 101):
+            out.append({"date": (start + datetime.timedelta(days=i)).isoformat(),
+                        "result": "correct", "bloomLevel": 4, "source": "quiz",
+                        "boxBefore": 4})
+        return out
+
+    def concept(name, module):
+        return {"name": name, "module": module, "introduced": "2025-10-01", "box": 4,
+                "nextReview": "2026-01-25", "lastReviewed": "2026-01-09", "question": "",
+                "lastResult": "correct", "bloomLevel": 4, "feynmanPassed": True,
+                "feynmanPassedAt": "2025-12-01", "consecutiveCorrectAtL4Plus": 3,
+                "reviewHistory": history()}
+
+    day = "2026-01-25"
+    sr = {"version": 3, "lastReviewCheck": None, "sessionHistory": [],
+          "concepts": [concept("Emulsions", "Sauces"), concept("Thesis", "Essays")]}
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review=sr)
+        _set_state(proj, currentModule="Plating")
+        run(proj, "set-evidence-kind", "--kind", "writing")
+        run(proj, "set-evidence-kind", "--kind", "performed", "--module", "Sauces")
+
+        def readings(label, performed, writing):
+            p_name = "Emulsions" if performed == "Sauces" else "Thesis"
+            w_name = "Thesis" if p_name == "Emulsions" else "Emulsions"
+            m = run(proj, "mastery", on=day)
+            check(f"basis {label}: mastery counts the report on performed only",
+                  m["modules"][performed]["mastered"] == 1
+                  and m["modules"][writing]["mastered"] == 0
+                  and m["blockedOnApplied"] == [w_name], m)
+            check(f"basis {label}: tiers and the applied rollup agree",
+                  m["modules"][performed]["tiers"]["mastered"] == 1
+                  and m["modules"][writing]["tiers"]["mastered"] == 0
+                  and m["modules"][performed]["applied"] == 1
+                  and m["modules"][writing]["applied"] == 0, m["modules"])
+            snap = run(proj, "snapshot", on=day)
+            check(f"basis {label}: snapshot agrees with mastery",
+                  snap["mastery"]["modules"] == m["modules"], snap["mastery"])
+            g = run(proj, "gate-check", "--prereqs", "Emulsions, Thesis", on=day)
+            rows = {p["name"]: p for p in g["prerequisites"]}
+            check(f"basis {label}: the gate passes the performed concept on the report",
+                  rows[p_name]["appliedEvidence"] == 1 and rows[p_name]["status"] == "satisfied"
+                  and rows[w_name]["appliedEvidence"] == 0
+                  and rows[w_name]["reason"] == "no-applied-evidence", g)
+            d = run(proj, "due", on="2026-12-31")
+            exp = {c["name"]: c["exposure"] for c in d["concepts"]}
+            check(f"basis {label}: exposure is built only where the report counts",
+                  exp == {p_name: "built", w_name: "taught"}, exp)
+            e = run(proj, "export-anonymized", on=day)
+            check(f"basis {label}: the export counts one applied and one mastered concept",
+                  e["applied"] == 1 and e["mastered"] == 1, e)
+
+        readings("live", "Sauces", "Essays")
+        for name in ("Emulsions", "Thesis"):
+            run(proj, "record-review", "--concept", name, "--result", "correct",
+                "--tested-bloom", "4", on=day)
+        cs = {c["name"]: c for c in read_sr(proj)["concepts"]}
+        summ = cs["Emulsions"]["archivedSummary"]
+        check("basis archive: the cut keeps the report apart from observed work",
+              summ.get("appliedEvidence") == 0 and summ.get("appliedReported") == 1
+              and summ.get("builtBy") == ["reported"] and "appliedInspected" not in summ
+              and summ.get("exposure") == "taught", summ)
+        check("basis archive: both concepts archive the same facts",
+              cs["Thesis"]["archivedSummary"] == summ, cs["Thesis"].get("archivedSummary"))
+        readings("archived", "Sauces", "Essays")
+        run(proj, "set-evidence-kind", "--kind", "writing", "--module", "Sauces")
+        run(proj, "set-evidence-kind", "--kind", "performed", "--module", "Essays")
+        readings("after a kind change", "Essays", "Sauces")
+
+
+def t_single_applied_reader():
+    """learn-anything/REQ-23: one helper reads the `applied` flag for every
+    count, so no reader can count reported work as observed. The other read
+    of the flag is verify's shape warning."""
+    import ast
+    with open(SCRIPT, encoding="utf-8") as f:
+        tree = ast.parse(f.read())
+    readers = set()
+    for fn in ast.walk(tree):
+        if not isinstance(fn, ast.FunctionDef):
+            continue
+        for n in ast.walk(fn):
+            get = (isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)
+                   and n.func.attr == "get" and n.args
+                   and isinstance(n.args[0], ast.Constant) and n.args[0].value == "applied")
+            sub = (isinstance(n, ast.Subscript) and isinstance(n.ctx, ast.Load)
+                   and isinstance(n.slice, ast.Constant) and n.slice.value == "applied")
+            if get or sub:
+                readers.add(fn.name)
+    check("basis: the applied flag is read by one counting helper and verify",
+          readers == {"applied_correct_basis", "cmd_verify"}, sorted(readers))
+
+
 # Keys a reader may emit beyond what 1.24.1 printed, as dotted paths into its
 # JSON (`*` = every list item or dict value). Nothing else may change on the
 # code path: writer output and the files stay byte for byte.
@@ -3431,7 +3537,7 @@ def main():
               t_syllabus, t_plan_single_number_headings, t_module_prefix_join,
               t_gate_declared_none, t_golden_code_path,
               t_evidence_kind_resolver, t_evidence_kind_shapes,
-              t_set_evidence_kind):
+              t_set_evidence_kind, t_basis_filter_every_reader, t_single_applied_reader):
         print(f"-- {t.__name__}")
         try:
             t()

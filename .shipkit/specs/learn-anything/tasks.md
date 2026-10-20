@@ -54,7 +54,7 @@ touch the same files.
   - Test: dev/eval/test_bodhi_state.py::t_set_evidence_kind (spaced-review.json bytes unchanged; normalized module key; an unmatched module is rejected; `--clear` removes an override; an invalid kind exits 1)
   - After: T6, T3
   - Done when: `python3 dev/eval/test_bodhi_state.py` → "0 failed"; `dev/check.sh` passes including 45(h)
-- [ ] **T8** Count applied work by basis through one helper in `_evidence_counts`, `archive_history` and `exposure_of`; per-basis archive counts → REQ-7, REQ-23, REQ-24
+- [x] **T8** Count applied work by basis through one helper in `_evidence_counts`, `archive_history` and `exposure_of`; per-basis archive counts → REQ-7, REQ-23, REQ-24
   - Files: scripts/bodhi-state, dev/eval/test_bodhi_state.py
   - Test: dev/eval/test_bodhi_state.py::t_basis_filter_every_reader (identical reported histories on a performed concept and a writing concept, through the gate, mastery, tiers, rollups, exposure, export, the archive cut and a later kind change), ::t_single_applied_reader
   - After: T7
