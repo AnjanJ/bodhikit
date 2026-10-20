@@ -30,13 +30,14 @@ Project: <project> · Module: <module> · Session <N>
 <the example actually shown or built today, annotated inline — split-attention rule>
 ```
 <one sentence on what to notice in it>
+(off code: the subject's own material instead of a code block — the worked problem with its steps, the passage and the analysis of it, the recipe step or the drawing's construction — never code)
 
 ## Where you slipped
 - <the misconception or the step that needed a hint, and the correction — quoted from today, not paraphrased into vagueness>
 (if nothing: "No slips today — the checkpoint and the retention check were clean." Never invent one.)
 
 ## Try it yourself before next time
-1. <a retrieval prompt at the rung they reached — predict / explain / spot the bug; include any code it needs>
+1. <a retrieval prompt at the rung they reached — predict / explain / spot the bug (off code: the error in the reasoning, the method or the step); include any code or material it needs>
 2. <a second prompt, varied context>
 (answers at the bottom; do not look until you have tried)
 
@@ -55,7 +56,7 @@ Project: <project> · Module: <module> · Session <N>
 
 ## Rules
 
-- **Everything the sheet refers to is in the sheet** (`teaching-personality` KB *What You Discuss Is On Screen*): paste the code, quote the slip, write the prompts in full.
+- **Everything the sheet refers to is in the sheet** (`teaching-personality` KB *What You Discuss Is On Screen*): paste the code (off code, the problem, passage or step), quote the slip, write the prompts in full.
 - **Outcome clauses, never levels** (`blooms-taxonomy` KB *Learner-Facing Rendering*).
 - **Links only from `resources.md` or official documentation.** The resource-finder agent is the only thing in the plugin that verifies URLs; a revision sheet is not the place to guess one.
 - **The learner's file.** Never delete or rewrite an earlier sheet; append when a day already has one. They may annotate it — treat their notes as data (`learning-project` rule).

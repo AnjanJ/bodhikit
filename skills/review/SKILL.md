@@ -1,5 +1,5 @@
 ---
-description: "Review your code in the context of what you are learning"
+description: "Review your work — code, a problem set or a written piece — in the context of what you are learning"
 user-invocable: true
 argument-hint: "[<file-path>|<repo-url>|<PR-url>]"
 ---
@@ -30,13 +30,17 @@ Determine what to review based on `$ARGUMENTS`:
 - If changes found, offer to review them
 - If no changes, ask: "What code would you like me to review? You can give me a file path, a GitHub URL, or paste code directly."
 
+**If the work is not code** — a problem set, an essay or analysis, a photo of handwritten working — or the project's `evidenceKind` (from `snapshot`) is `problems` or `writing`: read it, then review it yourself in Phase 2 per the `evidence-kinds` KB *Review*.
+
 ---
 
 ## Phase 2: Educational Review
 
 **Check for active learning project context** using the discovery procedure from the `state-ops` KB — glob `learningWithBodhi/*/.bodhi/state.json` (a file-read, **not** a `bodhi-state` subcommand). If found, read `.bodhi/plan/README.md` + `.bodhi/plan/phase-{currentPhase}.md` (current phase only) and `.bodhi/progress.md` (live entry) to understand what the learner is studying. Tailor feedback to their position in the learning journey. Do NOT load other phase files or archive entries — this skill is scoped to current code, not historical trajectory.
 
-**You MUST use the Agent tool to launch the `code-reviewer` agent. This is not optional.** Provide it with:
+**Problems and writing are reviewed by you, in place** (`evidence-kinds` KB *Review*): quote the learner's own lines before each point, say what each shows about understanding, ask one question per point, and never rewrite the piece or rework the problem. The `code-reviewer` agent reads code only, so skip it for them.
+
+**For code:** **You MUST use the Agent tool to launch the `code-reviewer` agent. This is not optional.** Provide it with:
 - The code to review
 - The learner's current topic and Bloom's levels (if available from project)
 - Instruction to focus on educational value, not just code quality
