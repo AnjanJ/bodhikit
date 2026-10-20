@@ -25,6 +25,8 @@ The learner reads a position in outcome terms, never a Bloom number or a Leitner
 | `summaryTier: familiar` | `**Working** — can use it with guidance` |
 | `summaryTier: mastered`, `mastered < concepts` (the rest are unclassified seeds) | `**Solid** — can find where it breaks and explain the trade-offs (N solid; M not yet observed)` |
 
+**By your account.** When `masteredByReport > 0`, some of the module's *Solid* rests on practice the learner reported (`evidence-kinds` KB): say so in the row. All of it → `**Solid, by your account** — …`; some → add `(N by your account)` after the word. The level, the reviews and the explain-back behind it were still graded; only the practice is their report, and a row that hid that would claim the tutor saw it.
+
 Then, when the module is not uniform, append the spread from `tiers` using the learner-facing words and counting classified concepts only: `(2 solid, 1 working)`. When `applied` is below `classified`, add `; built with N of M`, so explained-but-never-run concepts are visible without a level. Always render the word with its outcome clause — a bare "Working" is a grade; "Working — can use it with guidance" is a position with a next step implied. Concepts at `unclassified` are left out of the spread: nothing has been observed about them.
 
 ## Mastered (from `evidence`)
