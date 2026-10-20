@@ -39,7 +39,7 @@ touch the same files.
   - Test: dev/eval/assert_scenario.py::assert_teach_pretest and ::assert_teach_hint_discipline (existing; re-run in the release sweep)
   - After: none
   - Done when: `wc -c < skills/teach/SKILL.md` → at most 17800, and `dev/check.sh` passes
-- [ ] **T5** `state-schema` documents `evidenceKind`, `moduleEvidenceKinds`, `appliedBasis`, `evidence` and the per-basis archive fields → REQ-3, REQ-4, REQ-6, REQ-21, REQ-22
+- [x] **T5** `state-schema` documents `evidenceKind`, `moduleEvidenceKinds`, `appliedBasis`, `evidence` and the per-basis archive fields → REQ-3, REQ-4, REQ-6, REQ-21, REQ-22
   - Files: skills/state-schema/SKILL.md
   - Test: none new; the shape pins arrive with T6
   - After: T2
