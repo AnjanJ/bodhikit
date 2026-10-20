@@ -3645,6 +3645,50 @@ def t_kind_read_surfaces():
               {p["name"]: p["evidenceKind"] for p in g["prerequisites"]} == kinds, g)
 
 
+def t_solid_by_report():
+    """learn-anything/REQ-25: a Solid concept whose applied work is only the
+    learner's word is named, so every surface that shows it can say so. The
+    strongest basis on record wins: observed, then inspected, then reported."""
+    def solid(name, module, *bases):
+        hist = [{"date": "2026-03-01", "result": "correct", "bloomLevel": 4,
+                 "source": "practice", "boxBefore": 3, "applied": True,
+                 **({"appliedBasis": b} if b != "observed" else {})} for b in bases]
+        return {"name": name, "module": module, "introduced": "2026-02-01", "box": 4,
+                "nextReview": "2026-03-15", "lastReviewed": "2026-03-01", "question": "",
+                "lastResult": "correct", "bloomLevel": 4, "feynmanPassed": True,
+                "feynmanPassedAt": "2026-03-01", "consecutiveCorrectAtL4Plus": 3,
+                "reviewHistory": hist}
+    sr = {"version": 3, "lastReviewCheck": None, "sessionHistory": [], "concepts": [
+        solid("Knife grip", "Knife skills", "reported", "reported"),
+        solid("Julienne", "Knife skills", "reported", "observed"),
+        solid("Searing", "Heat", "inspected", "reported"),
+        solid("Closures", "Python", "observed")]}
+    day = "2026-03-05"
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review=sr)
+        run(proj, "set-evidence-kind", "--kind", "performed")
+        m = run(proj, "mastery", on=day)
+        check("solid by report: only the concept resting on the learner's word",
+              m["solidByReport"] == ["Knife grip"], m)
+        check("solid by report: the strongest basis behind each Solid",
+              m["solidBasis"] == {"Knife grip": "reported", "Julienne": "observed",
+                                  "Searing": "inspected", "Closures": "observed"}, m)
+        check("solid by report: module rows count it",
+              m["modules"]["Knife skills"]["masteredByReport"] == 1
+              and m["modules"]["Heat"]["masteredByReport"] == 0, m["modules"])
+        snap = run(proj, "snapshot", on=day)
+        check("solid by report: snapshot agrees with mastery",
+              snap["mastery"]["solidByReport"] == m["solidByReport"]
+              and snap["mastery"]["solidBasis"] == m["solidBasis"]
+              and snap["mastery"]["modules"] == m["modules"], snap["mastery"])
+        run(proj, "set-evidence-kind", "--kind", "code", "--module", "Python")
+        run(proj, "set-evidence-kind", "--kind", "writing", "--module", "Knife skills")
+        m = run(proj, "mastery", on=day)
+        check("solid by report: off performed the report is not Solid at all",
+              m["solidByReport"] == [] and "Knife grip" not in m["solidBasis"]
+              and m["solidBasis"]["Julienne"] == "observed", m)
+
+
 # Keys a reader may emit beyond what 1.24.1 printed, as dotted paths into its
 # JSON (`*` = every list item or dict value). Nothing else may change on the
 # code path: writer output and the files stay byte for byte. On these code
@@ -3654,12 +3698,20 @@ GOLDEN_NEW_KEYS = {
     "due": ["concepts.*.evidenceKind"],
     "revision-brief": ["concepts.*.evidenceKind"],
     "snapshot": ["project.evidenceKind", "project.evidenceKindRecorded",
-                 "mastery.modules.*.evidenceKind"],
-    "mastery": ["modules.*.evidenceKind"],
+                 "mastery.modules.*.evidenceKind", "mastery.modules.*.masteredByReport",
+                 "mastery.solidByReport", "mastery.solidBasis"],
+    "mastery": ["modules.*.evidenceKind", "modules.*.masteredByReport",
+                "solidByReport", "solidBasis"],
     "syllabus": ["evidenceKind", "modules.*.evidenceKind", "unplanned.*.evidenceKind"],
     "gate-check": ["prerequisites.*.evidenceKind"],
 }
-GOLDEN_CODE_VALUES = {"evidenceKind": "code", "evidenceKindRecorded": False}
+GOLDEN_CODE_VALUES = {
+    "evidenceKind": lambda v: v == "code",
+    "evidenceKindRecorded": lambda v: v is False,
+    "masteredByReport": lambda v: v == 0,
+    "solidByReport": lambda v: v == [],
+    "solidBasis": lambda v: set(v.values()) <= {"observed"},
+}
 
 
 def _drop(obj, parts, dropped):
@@ -3688,7 +3740,7 @@ def _golden_step_differs(readers, cmd, want, got):
     dropped = []
     for path in GOLDEN_NEW_KEYS.get(cmd, ()):
         _drop(g, path.split("."), dropped)
-    if any(GOLDEN_CODE_VALUES.get(k, v) != v for k, v in dropped):
+    if not all(GOLDEN_CODE_VALUES[k](v) for k, v in dropped):
         return f"a new key does not read as code ({dropped})"
     return "output" if w != g else None
 
@@ -3755,7 +3807,8 @@ def main():
               t_gate_declared_none, t_golden_code_path,
               t_evidence_kind_resolver, t_evidence_kind_shapes,
               t_set_evidence_kind, t_basis_filter_every_reader, t_single_applied_reader,
-              t_applied_basis_write, t_applied_cli_back_compat, t_kind_read_surfaces):
+              t_applied_basis_write, t_applied_cli_back_compat, t_kind_read_surfaces,
+              t_solid_by_report):
         print(f"-- {t.__name__}")
         try:
             t()

@@ -1431,7 +1431,7 @@ def due_for_check(c, t):
 def new_module_row():
     """Per-module tally shape shared by `mastery` and `snapshot`."""
     return {"concepts": 0, "mastered": 0, "classified": 0, "applied": 0,
-            "dueForCheck": 0,
+            "dueForCheck": 0, "masteredByReport": 0,
             "tiers": {"unclassified": 0, "introduced": 0,
                       "familiar": 0, "mastered": 0}}
 
@@ -1443,6 +1443,8 @@ def tally_module(m, c, t):
         m["classified"] += 1
     if is_mastered(c):
         m["mastered"] += 1
+        if strongest_basis(c) == "reported":
+            m["masteredByReport"] += 1
     if applied_evidence(c) >= 1:
         m["applied"] += 1
     if due_for_check(c, t):
@@ -1549,6 +1551,7 @@ def cmd_mastery(args):
            "blockedOnFeynman": blocked_on_feynman(concepts),
            "blockedOnApplied": blocked_on_applied(concepts),
            "masteredDueForCheck": r["dueForCheck"]}
+    out["solidByReport"], out["solidBasis"] = solid_by_report(concepts)
     if r["parked"]:
         out["parked"] = r["parked"]
     emit(out)
@@ -2249,6 +2252,7 @@ def cmd_snapshot(args):
     feynman = sum(1 for c in concepts if c.get("feynmanPassed") is True)
     classified = sum(1 for c in concepts if c.get("bloomLevel", 0) > 0)
     applied = sum(1 for c in concepts if applied_evidence(c) >= 1)
+    by_report, solid_basis = solid_by_report(concepts)
 
     calibration = calibration_summary(data)
     calibration.pop("overconfidentEvents", None)
@@ -2303,6 +2307,8 @@ def cmd_snapshot(args):
             "blockedOnFeynman": blocked_on_feynman(concepts),
             "blockedOnApplied": blocked_on_applied(concepts),
             "masteredDueForCheck": r["dueForCheck"],
+            "solidByReport": by_report,
+            "solidBasis": solid_basis,
         },
         "calibration": calibration,
         "bloomScale": bloom_scale(),
@@ -2427,6 +2433,22 @@ def applied_evidence(c):
     counts = _evidence_counts(c.get("reviewHistory", []), archived_summary(c))
     kind = effective_kind(c)
     return sum(counts[b] for b in APPLIED_BASES if admits(kind, b))
+
+
+def strongest_basis(c):
+    """The best-seen basis among the applied corrects this concept's kind
+    admits since the last miss — observed, then inspected, then reported —
+    or None. A Solid resting on `reported` is Solid by the learner's
+    account, and every surface that shows it says so."""
+    counts = _evidence_counts(c.get("reviewHistory", []), archived_summary(c))
+    kind = effective_kind(c)
+    return next((b for b in APPLIED_BASES if counts[b] and admits(kind, b)), None)
+
+
+def solid_by_report(concepts):
+    """(names Solid on the learner's word alone, {Solid name: strongest basis})."""
+    basis = {c["name"]: strongest_basis(c) for c in concepts if is_mastered(c)}
+    return [n for n, b in basis.items() if b == "reported"], basis
 
 
 def last_miss(c):

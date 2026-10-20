@@ -72,7 +72,7 @@ touch the same files.
   - Test: dev/eval/test_bodhi_state.py::t_kind_read_surfaces; the golden allowlist gains exactly these keys
   - After: T9
   - Done when: `python3 dev/eval/test_bodhi_state.py` → "0 failed", t_golden_code_path ok
-- [ ] **T11** *Solid* by report: `snapshot`/`mastery` emit `solidByReport` and the `appliedBasis` behind each *Solid* → REQ-25
+- [x] **T11** *Solid* by report: `snapshot`/`mastery` emit `solidByReport` and the `appliedBasis` behind each *Solid* → REQ-25
   - Files: scripts/bodhi-state, dev/eval/test_bodhi_state.py
   - Test: dev/eval/test_bodhi_state.py::t_solid_by_report
   - After: T10
