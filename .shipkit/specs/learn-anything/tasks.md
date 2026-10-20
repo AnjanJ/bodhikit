@@ -24,7 +24,7 @@ touch the same files.
   - Test: dev/eval/test_bodhi_state.py::t_golden_code_path (characterization. It passes on the unchanged script; editing any golden file by hand must make it fail, checked once)
   - After: none
   - Done when: `python3 dev/eval/test_bodhi_state.py` → "0 failed", with t_golden_code_path ok
-- [ ] **T2** Free room in `state-schema` by removing duplication; its guiding principle moves to `state-lifecycle`
+- [x] **T2** Free room in `state-schema` by removing duplication; its guiding principle moves to `state-lifecycle`
   - Files: skills/state-schema/SKILL.md, skills/state-lifecycle/SKILL.md
   - Test: none new; rule 49 (budget) and the rule 45/59 pins in dev/check.sh hold
   - After: none

@@ -16,15 +16,7 @@ Load this KB only when:
 
 If a field is not listed here, do not add it. If a new field is genuinely needed, update this KB first, then `scripts/bodhi-state`, then the skills that touch it.
 
-See also:
-- `state-ops` KB — the per-session operational surface (write path, discovery, vocabulary, gate/mastery).
-- `spaced-repetition` KB — box→interval mapping and update rules (implemented by `bodhi-state`).
-- `state-lifecycle` KB — rotation/archive/collapse protocol (loaded by `/housekeep` only).
-- `state-migration` KB — version transforms (loaded by `/housekeep migrate`).
-
-## Guiding Principle: Progressive Disclosure for the Learner's State
-
-The learner's accumulated work is sacred — nothing is deleted, nothing is gatekept. But context is finite, so every tracking surface is shaped so that **the smallest useful slice is what loads by default**, and the full history remains on disk behind explicit pointers. Three mechanisms: live + archive + summary for narrative surfaces, sectional files for the plan, slim JSON for state. Rotation is `/housekeep`'s job alone (see `state-lifecycle` KB); every other skill stays oblivious to compaction.
+See also: `spaced-repetition` KB (intervals and update rules), `state-lifecycle` KB (why the surfaces are shaped this way, and rotation; `/housekeep` only), `state-migration` KB (version transforms).
 
 ## Fallback Discipline (script unavailable, or a declared manual carve-out)
 
@@ -61,7 +53,7 @@ Slim. No long narrative fields — session narrative lives in `progress.md`.
 
 - `currentStreak`: consecutive days. Reset to 1 if `sessionDates` gap exceeds 1 day. Maintained by `bodhi-state touch-state`.
 - `previousModule`: set automatically by `touch-state --module` when the module advances; read by `gate-check`.
-- `initialBloomLevel` / `currentBloomLevel`: the per-topic Bloom maps are an explicit **manual carve-out** — no script subcommand owns them. `/learn` seeds both; `/assess` and `/evaluate` may update `currentBloomLevel` via the Fallback discipline above.
+- `initialBloomLevel` / `currentBloomLevel`: a **manual carve-out** (`state-ops` KB *Update Rules*); edit via the Fallback discipline above.
 - `lastActivity`: one short sentence (≤120 chars) used by `/progress quick` and `/continue`. Anything longer belongs in `progress.md`.
 - **No `lastSessionSummary` / `bloomResetNote` in v2** — migrated to `progress.md`.
 
@@ -158,9 +150,7 @@ Whole JSON; written exclusively through `bodhi-state`. `/housekeep` does not rot
 - `feynmanPassedAt` (optional, 1.23.0): date of the latest passing explain-back (`set-feynman`). Mastery counts it only if **after** the last miss (latest `incorrect`, live or `archivedSummary.lastMiss`; `/forget` included) — not the same day; an undated flag counts only with no miss on record. Derived as `feynmanCurrent`.
 - `consecutiveCorrectAtL4Plus`: incremented on correct at tested-bloom ≥ 4 — only on a due review, the rule that moves the box (`spaced-repetition` KB) — early L4 corrects add nothing; reset to 0 on any incorrect, any partial, and on `/forget` (1.11.2: "3 consecutive correct" means uninterrupted corrects). A correct at a lower tested level leaves the counter untouched (a routine low-level recall between two L4 demonstrations is a different measurement, not counter-evidence). `--retry` reps never touch it.
 
-These fields, plus one `applied` correct since the last miss, feed the canonical mastery formula, computed by `bodhi-state mastery` and documented in the `state-ops` KB. Skills MUST NOT redefine it inline; see `blooms-taxonomy` KB for the underlying criteria.
-
-**Legacy fallthrough (v2 → v3).** A concept with `bloomLevel: 0` has never been classified by a v3 writer — regardless of `lastReviewed`, which real v2 data populates from pre-v3 quizzes. Gates treat `bloomLevel: 0` as "no opinion yet, allow advancement"; `/progress` displays `—` (not 0%) for modules where every concept is at `bloomLevel: 0`. `bodhi-state` implements both rules.
+These fields, plus one `applied` correct since the last miss, feed the mastery formula (`state-ops` KB *Mastery*). **Legacy fallthrough:** `bloomLevel: 0` means no v3 writer has classified the concept, regardless of `lastReviewed` (real v2 data populates it from pre-v3 quizzes); the gate and `/progress` rules for it are the `state-ops` KB *Legacy display rule*.
 
 ### `learningWithBodhi/<project>/.bodhi/assessment-history.json`
 
@@ -265,6 +255,4 @@ Writers: since 1.16.0 the project-list mutations go through `bodhi-state` — `p
 
 ## Schema-Evolution Rules
 
-- Skills MUST NOT introduce new top-level fields, files, or directories under `.bodhi/` without updating this KB (and `bodhi-state`) first.
-- Skills MUST NOT stuff long narrative into JSON fields — narrative belongs in `progress.md` / `assessments/latest.md`.
 - Schemas evolve; readers tolerate older `version` values (the script read-tolerates v1/v2 and persists v3 on write). Skills MUST NOT branch behavior on version in prose. Full transforms live in the `state-migration` KB.

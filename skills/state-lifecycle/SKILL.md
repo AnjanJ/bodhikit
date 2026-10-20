@@ -12,6 +12,10 @@ File *shapes* live in the `state-schema` KB; this KB is loaded by
 
 See also: `state-migration` KB (version transforms, loaded by `/housekeep migrate`).
 
+## Guiding principle: progressive disclosure for the learner's state
+
+The learner's accumulated work is sacred — nothing is deleted, nothing is gatekept. But context is finite, so every tracking surface is shaped so that **the smallest useful slice is what loads by default**, and the full history remains on disk behind explicit pointers. Three mechanisms: live + archive + summary for narrative surfaces, sectional files for the plan, slim JSON for state. Rotation is `/housekeep`'s job alone; every other skill stays oblivious to compaction.
+
 ## Live + archive + summary pattern (sessions, assessments)
 
 The live doc has two parts:
