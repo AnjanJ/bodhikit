@@ -1,0 +1,832 @@
+{
+  "source": "cfe290b",
+  "case": "rich-code",
+  "steps": [
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "verify"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"ok\": true,\n  \"project\": \"<WS>/rich\",\n  \"errors\": [],\n  \"warnings\": []\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "due"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"dueToday\": 7,\n  \"neverTaughtCount\": 3,\n  \"concepts\": [\n    {\n      \"name\": \"Descriptors\",\n      \"module\": \"Metaprogramming\",\n      \"dueSince\": \"2026-03-31\",\n      \"overdueDays\": 10,\n      \"neverTaught\": true,\n      \"exposure\": \"quizzed-only\",\n      \"bloomOutcome\": \"you can explain it in your own words\",\n      \"question\": \"\",\n      \"priority\": 1\n    },\n    {\n      \"name\": \"Decorators\",\n      \"module\": \"Metaprogramming\",\n      \"dueSince\": \"2026-04-02\",\n      \"overdueDays\": 8,\n      \"neverTaught\": true,\n      \"exposure\": \"seeded\",\n      \"bloomOutcome\": \"you can explain it in your own words\",\n      \"question\": \"\",\n      \"priority\": 2\n    },\n    {\n      \"name\": \"Protocols\",\n      \"module\": \"Typing\",\n      \"dueSince\": \"2026-04-02\",\n      \"overdueDays\": 8,\n      \"neverTaught\": true,\n      \"exposure\": \"quizzed-only\",\n      \"bloomOutcome\": \"you can recall the terms and what they refer to\",\n      \"question\": \"\",\n      \"priority\": 3\n    },\n    {\n      \"name\": \"Metaclasses\",\n      \"module\": \"Metaprogramming\",\n      \"dueSince\": \"2026-03-28\",\n      \"overdueDays\": 13,\n      \"neverTaught\": false,\n      \"exposure\": \"demonstrated\",\n      \"bloomOutcome\": \"you can apply it to a real case with some guidance\",\n      \"question\": \"\",\n      \"priority\": 4\n    },\n    {\n      \"name\": \"Generators\",\n      \"module\": \"Collections\",\n      \"dueSince\": \"2026-03-15\",\n      \"overdueDays\": 26,\n      \"neverTaught\": false,\n      \"exposure\": \"built\",\n      \"bloomOutcome\": \"you can apply it to a real case with some guidance\",\n      \"question\": \"\",\n      \"priority\": 5\n    },\n    {\n      \"name\": \"Iterators\",\n      \"module\": \"Collections\",\n      \"dueSince\": \"2026-04-10\",\n      \"overdueDays\": 0,\n      \"neverTaught\": false,\n      \"exposure\": \"built\",\n      \"bloomOutcome\": \"you can apply it to a real case with some guidance\",\n      \"question\": \"\",\n      \"priority\": 6\n    },\n    {\n      \"name\": \"Closures\",\n      \"module\": \"Functions\",\n      \"dueSince\": \"2026-03-26\",\n      \"overdueDays\": 15,\n      \"neverTaught\": false,\n      \"exposure\": \"built\",\n      \"bloomOutcome\": \"you can work out why it works as it does and find where it breaks, on your own\",\n      \"question\": \"\",\n      \"priority\": 7\n    }\n  ],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "snapshot"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"project\": {\n    \"name\": \"rich\",\n    \"topic\": \"Python internals\",\n    \"createdAt\": \"2026-01-01T09:00:00\",\n    \"currentPhase\": \"1\",\n    \"currentModule\": \"Metaprogramming\",\n    \"currentModuleIndex\": 2,\n    \"position\": {\n      \"index\": 3,\n      \"of\": 5,\n      \"module\": \"Metaprogramming\",\n      \"phase\": 1\n    },\n    \"lastActivity\": \"Wrote a descriptor that validates types\",\n    \"overallCompletion\": 45,\n    \"initialBloomLevel\": {\n      \"python\": 2\n    },\n    \"currentBloomLevel\": {\n      \"python\": 3\n    }\n  },\n  \"cadence\": {\n    \"totalSessions\": 14,\n    \"currentStreak\": 2,\n    \"lastSessionAt\": \"2026-04-06T09:00:00\",\n    \"daysSinceLastSession\": 4,\n    \"sessionsLast7d\": 2,\n    \"sessionsLast30d\": 3\n  },\n  \"review\": {\n    \"concepts\": 9,\n    \"dueToday\": 7,\n    \"dueTodayConcepts\": [\n      \"Closures\",\n      \"Iterators\",\n      \"Generators\",\n      \"Decorators\",\n      \"Descriptors\",\n      \"Metaclasses\",\n      \"Protocols\"\n    ],\n    \"dueThisWeek\": 1,\n    \"dueThisWeekConcepts\": [\n      \"Context managers\"\n    ],\n    \"overdue10dPlus\": 4,\n    \"waitingForReviewDay\": 2,\n    \"unscheduled\": 0,\n    \"boxDistribution\": {\n      \"1\": 3,\n      \"2\": 2,\n      \"3\": 2,\n      \"4\": 2,\n      \"5\": 0\n    },\n    \"retentionRollup\": {\n      \"strong\": 2,\n      \"building\": 4,\n      \"needs_review\": 3\n    },\n    \"retentionConcepts\": {\n      \"strong\": [\n        \"Closures\",\n        \"Recursion\"\n      ],\n      \"building\": [\n        \"Iterators\",\n        \"Generators\",\n        \"Context managers\",\n        \"Metaclasses\"\n      ],\n      \"needs_review\": [\n        \"Decorators\",\n        \"Descriptors\",\n        \"Protocols\"\n      ]\n    },\n    \"unparseableDates\": 0,\n    \"parked\": 0\n  },\n  \"mastery\": {\n    \"mastered\": 1,\n    \"feynmanPassed\": 2,\n    \"applied\": 3,\n    \"classified\": 9,\n    \"modules\": {\n      \"Functions\": {\n        \"concepts\": 2,\n        \"mastered\": 1,\n        \"classified\": 2,\n        \"applied\": 1,\n        \"dueForCheck\": 1,\n        \"tiers\": {\n          \"unclassified\": 0,\n          \"introduced\": 0,\n          \"familiar\": 1,\n          \"mastered\": 1\n        },\n        \"masteryPct\": 50\n      },\n      \"Collections\": {\n        \"concepts\": 3,\n        \"mastered\": 0,\n        \"classified\": 3,\n        \"applied\": 2,\n        \"dueForCheck\": 0,\n        \"tiers\": {\n          \"unclassified\": 0,\n          \"introduced\": 1,\n          \"familiar\": 2,\n          \"mastered\": 0\n        },\n        \"masteryPct\": 0\n      },\n      \"Metaprogramming\": {\n        \"concepts\": 3,\n        \"mastered\": 0,\n        \"classified\": 3,\n        \"applied\": 0,\n        \"dueForCheck\": 0,\n        \"tiers\": {\n          \"unclassified\": 0,\n          \"introduced\": 2,\n          \"familiar\": 1,\n          \"mastered\": 0\n        },\n        \"masteryPct\": 0\n      },\n      \"Typing\": {\n        \"concepts\": 1,\n        \"mastered\": 0,\n        \"classified\": 1,\n        \"applied\": 0,\n        \"dueForCheck\": 0,\n        \"tiers\": {\n          \"unclassified\": 0,\n          \"introduced\": 1,\n          \"familiar\": 0,\n          \"mastered\": 0\n        },\n        \"masteryPct\": 0\n      }\n    },\n    \"blockedOnFeynman\": [],\n    \"blockedOnApplied\": [\n      \"Recursion\"\n    ],\n    \"masteredDueForCheck\": [\n      \"Closures\"\n    ]\n  },\n  \"calibration\": {\n    \"taggedAnswers\": 4,\n    \"buckets\": {\n      \"sure\": {\n        \"correct\": 1,\n        \"incorrect\": 1,\n        \"partial\": 0\n      },\n      \"mostly\": {\n        \"correct\": 1,\n        \"incorrect\": 0,\n        \"partial\": 0\n      },\n      \"guessing\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 1\n      }\n    },\n    \"overconfidenceRate\": 0.5,\n    \"underconfidenceRate\": 0.0\n  },\n  \"bloomScale\": [\n    {\n      \"level\": 1,\n      \"label\": \"Remember\",\n      \"outcome\": \"you can recall the terms and what they refer to\"\n    },\n    {\n      \"level\": 2,\n      \"label\": \"Understand\",\n      \"outcome\": \"you can explain it in your own words\"\n    },\n    {\n      \"level\": 3,\n      \"label\": \"Apply\",\n      \"outcome\": \"you can apply it to a real case with some guidance\"\n    },\n    {\n      \"level\": 4,\n      \"label\": \"Analyze\",\n      \"outcome\": \"you can work out why it works as it does and find where it breaks, on your own\"\n    },\n    {\n      \"level\": 5,\n      \"label\": \"Evaluate\",\n      \"outcome\": \"you can weigh the alternatives and defend a choice between them\"\n    },\n    {\n      \"level\": 6,\n      \"label\": \"Create\",\n      \"outcome\": \"you can create something new with it and teach it\"\n    }\n  ],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "mastery"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"modules\": {\n    \"Functions\": {\n      \"concepts\": 2,\n      \"mastered\": 1,\n      \"classified\": 2,\n      \"applied\": 1,\n      \"dueForCheck\": 1,\n      \"tiers\": {\n        \"unclassified\": 0,\n        \"introduced\": 0,\n        \"familiar\": 1,\n        \"mastered\": 1\n      },\n      \"masteryPct\": 50\n    },\n    \"Collections\": {\n      \"concepts\": 3,\n      \"mastered\": 0,\n      \"classified\": 3,\n      \"applied\": 2,\n      \"dueForCheck\": 0,\n      \"tiers\": {\n        \"unclassified\": 0,\n        \"introduced\": 1,\n        \"familiar\": 2,\n        \"mastered\": 0\n      },\n      \"masteryPct\": 0\n    },\n    \"Metaprogramming\": {\n      \"concepts\": 3,\n      \"mastered\": 0,\n      \"classified\": 3,\n      \"applied\": 0,\n      \"dueForCheck\": 0,\n      \"tiers\": {\n        \"unclassified\": 0,\n        \"introduced\": 2,\n        \"familiar\": 1,\n        \"mastered\": 0\n      },\n      \"masteryPct\": 0\n    },\n    \"Typing\": {\n      \"concepts\": 1,\n      \"mastered\": 0,\n      \"classified\": 1,\n      \"applied\": 0,\n      \"dueForCheck\": 0,\n      \"tiers\": {\n        \"unclassified\": 0,\n        \"introduced\": 1,\n        \"familiar\": 0,\n        \"mastered\": 0\n      },\n      \"masteryPct\": 0\n    }\n  },\n  \"retentionRollup\": {\n    \"strong\": 2,\n    \"building\": 4,\n    \"needs_review\": 3\n  },\n  \"retentionConcepts\": {\n    \"strong\": [\n      \"Closures\",\n      \"Recursion\"\n    ],\n    \"building\": [\n      \"Iterators\",\n      \"Generators\",\n      \"Context managers\",\n      \"Metaclasses\"\n    ],\n    \"needs_review\": [\n      \"Decorators\",\n      \"Descriptors\",\n      \"Protocols\"\n    ]\n  },\n  \"dueToday\": [\n    \"Closures\",\n    \"Iterators\",\n    \"Generators\",\n    \"Decorators\",\n    \"Descriptors\",\n    \"Metaclasses\",\n    \"Protocols\"\n  ],\n  \"dueThisWeek\": [\n    \"Context managers\"\n  ],\n  \"blockedOnFeynman\": [],\n  \"blockedOnApplied\": [\n    \"Recursion\"\n  ],\n  \"masteredDueForCheck\": [\n    \"Closures\"\n  ],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "syllabus"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"project\": \"rich\",\n  \"plan\": true,\n  \"phases\": [\n    {\n      \"phase\": 1,\n      \"title\": \"Phase 1 — Language machinery\",\n      \"file\": \"phase-1.md\",\n      \"modules\": 4\n    },\n    {\n      \"phase\": 2,\n      \"title\": \"Phase 2 — Concurrency\",\n      \"file\": \"phase-2.md\",\n      \"modules\": 1\n    }\n  ],\n  \"position\": {\n    \"index\": 3,\n    \"of\": 5,\n    \"module\": \"Metaprogramming\",\n    \"phase\": 1\n  },\n  \"currentPhase\": \"1\",\n  \"overallCompletion\": 45,\n  \"counts\": {\n    \"modules\": 5,\n    \"done\": 2,\n    \"skipped\": 1,\n    \"upcoming\": 1\n  },\n  \"modules\": [\n    {\n      \"index\": 1,\n      \"phase\": 1,\n      \"id\": \"1.1\",\n      \"name\": \"Functions\",\n      \"status\": \"done\",\n      \"statusSource\": \"declared\",\n      \"targetBloom\": 4,\n      \"plannedConcepts\": [\n        \"Closures\",\n        \"Recursion\"\n      ],\n      \"keyTerms\": [],\n      \"file\": \"phase-1.md\",\n      \"targetBloomLabel\": \"Analyze\",\n      \"targetBloomOutcome\": \"you can work out why it works as it does and find where it breaks, on your own\",\n      \"evidence\": {\n        \"tracked\": true,\n        \"trackedAs\": \"Functions\",\n        \"concepts\": 2,\n        \"classified\": 2,\n        \"applied\": 1,\n        \"mastered\": 1,\n        \"dueForCheck\": 1,\n        \"masteryPct\": 50,\n        \"tiers\": {\n          \"unclassified\": 0,\n          \"introduced\": 0,\n          \"familiar\": 1,\n          \"mastered\": 1\n        },\n        \"summaryTier\": \"familiar\",\n        \"nextDue\": \"2026-03-26\",\n        \"dueToday\": 1,\n        \"parked\": 0\n      }\n    },\n    {\n      \"index\": 2,\n      \"phase\": 1,\n      \"id\": \"1.2\",\n      \"name\": \"Collections\",\n      \"status\": \"done\",\n      \"statusSource\": \"plan-order\",\n      \"targetBloom\": null,\n      \"plannedConcepts\": [\n        \"Iterators\",\n        \"Generators\",\n        \"Context managers\"\n      ],\n      \"keyTerms\": [],\n      \"file\": \"phase-1.md\",\n      \"evidence\": {\n        \"tracked\": true,\n        \"trackedAs\": \"Collections\",\n        \"concepts\": 3,\n        \"classified\": 3,\n        \"applied\": 2,\n        \"mastered\": 0,\n        \"dueForCheck\": 0,\n        \"masteryPct\": 0,\n        \"tiers\": {\n          \"unclassified\": 0,\n          \"introduced\": 1,\n          \"familiar\": 2,\n          \"mastered\": 0\n        },\n        \"summaryTier\": \"introduced\",\n        \"nextDue\": \"2026-03-15\",\n        \"dueToday\": 2,\n        \"parked\": 0\n      }\n    },\n    {\n      \"index\": 3,\n      \"phase\": 1,\n      \"id\": \"1.3\",\n      \"name\": \"Metaprogramming\",\n      \"status\": \"current\",\n      \"statusSource\": \"plan-order\",\n      \"targetBloom\": 3,\n      \"plannedConcepts\": [],\n      \"keyTerms\": [\n        \"descriptor\",\n        \"metaclass\"\n      ],\n      \"file\": \"phase-1.md\",\n      \"targetBloomLabel\": \"Apply\",\n      \"targetBloomOutcome\": \"you can apply it to a real case with some guidance\",\n      \"evidence\": {\n        \"tracked\": true,\n        \"trackedAs\": \"Metaprogramming\",\n        \"concepts\": 3,\n        \"classified\": 3,\n        \"applied\": 0,\n        \"mastered\": 0,\n        \"dueForCheck\": 0,\n        \"masteryPct\": 0,\n        \"tiers\": {\n          \"unclassified\": 0,\n          \"introduced\": 2,\n          \"familiar\": 1,\n          \"mastered\": 0\n        },\n        \"summaryTier\": \"introduced\",\n        \"nextDue\": \"2026-03-28\",\n        \"dueToday\": 3,\n        \"parked\": 0\n      }\n    },\n    {\n      \"index\": 4,\n      \"phase\": 1,\n      \"id\": \"1.4\",\n      \"name\": \"Packaging\",\n      \"status\": \"skipped\",\n      \"statusSource\": \"declared\",\n      \"targetBloom\": null,\n      \"plannedConcepts\": [],\n      \"keyTerms\": [],\n      \"file\": \"phase-1.md\",\n      \"evidence\": {\n        \"tracked\": false,\n        \"concepts\": 0,\n        \"classified\": 0,\n        \"applied\": 0,\n        \"mastered\": 0,\n        \"dueForCheck\": 0,\n        \"masteryPct\": null,\n        \"tiers\": {\n          \"unclassified\": 0,\n          \"introduced\": 0,\n          \"familiar\": 0,\n          \"mastered\": 0\n        },\n        \"summaryTier\": null,\n        \"nextDue\": null,\n        \"dueToday\": 0,\n        \"parked\": 0\n      }\n    },\n    {\n      \"index\": 5,\n      \"phase\": 2,\n      \"id\": \"2\",\n      \"name\": \"Threads and the GIL\",\n      \"status\": \"upcoming\",\n      \"statusSource\": \"plan-order\",\n      \"targetBloom\": 2,\n      \"plannedConcepts\": [],\n      \"keyTerms\": [],\n      \"file\": \"phase-2.md\",\n      \"targetBloomLabel\": \"Understand\",\n      \"targetBloomOutcome\": \"you can explain it in your own words\",\n      \"evidence\": {\n        \"tracked\": false,\n        \"concepts\": 0,\n        \"classified\": 0,\n        \"applied\": 0,\n        \"mastered\": 0,\n        \"dueForCheck\": 0,\n        \"masteryPct\": null,\n        \"tiers\": {\n          \"unclassified\": 0,\n          \"introduced\": 0,\n          \"familiar\": 0,\n          \"mastered\": 0\n        },\n        \"summaryTier\": null,\n        \"nextDue\": null,\n        \"dueToday\": 0,\n        \"parked\": 0\n      }\n    }\n  ],\n  \"untracked\": [\n    \"Packaging\",\n    \"Threads and the GIL\"\n  ],\n  \"unplanned\": [\n    {\n      \"module\": \"Typing\",\n      \"concepts\": 1,\n      \"classified\": 1,\n      \"applied\": 0,\n      \"mastered\": 0,\n      \"dueForCheck\": 0,\n      \"masteryPct\": 0,\n      \"tiers\": {\n        \"unclassified\": 0,\n        \"introduced\": 1,\n        \"familiar\": 0,\n        \"mastered\": 0\n      },\n      \"summaryTier\": \"introduced\",\n      \"nextDue\": \"2026-04-02\",\n      \"dueToday\": 1,\n      \"parked\": 0\n    }\n  ],\n  \"warnings\": [],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "gate-check"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"fires\": false,\n  \"reason\": \"continuation session — 2 concept(s) graded in module 'Metaprogramming'\",\n  \"currentModule\": \"Metaprogramming\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "revision-brief"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"date\": \"2026-04-10\",\n  \"project\": \"rich\",\n  \"module\": \"Metaprogramming\",\n  \"session\": 14,\n  \"sessionToday\": false,\n  \"concepts\": [],\n  \"suggestedFile\": \"revision/2026-04-10-session.md\",\n  \"existing\": [],\n  \"resourcesFile\": null,\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "retention"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"reviews\": 114,\n  \"overallSuccessRate\": 0.97,\n  \"delayedReviews\": 113,\n  \"delayedSuccessRate\": 0.98,\n  \"byGap\": {\n    \"same-day\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    },\n    \"1d\": {\n      \"correct\": 101,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 101,\n      \"successRate\": 1.0\n    },\n    \"2-3d\": {\n      \"correct\": 2,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 2,\n      \"successRate\": 1.0\n    },\n    \"4-7d\": {\n      \"correct\": 3,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 3,\n      \"successRate\": 1.0\n    },\n    \"8-14d\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    },\n    \"15-30d\": {\n      \"correct\": 1,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 1,\n      \"successRate\": 1.0\n    },\n    \"31d+\": {\n      \"correct\": 4,\n      \"incorrect\": 1,\n      \"partial\": 1,\n      \"reviews\": 6,\n      \"successRate\": 0.67\n    }\n  },\n  \"byBoxAtReview\": {\n    \"1\": {\n      \"correct\": 7,\n      \"incorrect\": 1,\n      \"partial\": 1,\n      \"reviews\": 9,\n      \"successRate\": 0.78\n    },\n    \"2\": {\n      \"correct\": 3,\n      \"incorrect\": 1,\n      \"partial\": 0,\n      \"reviews\": 4,\n      \"successRate\": 0.75\n    },\n    \"3\": {\n      \"correct\": 101,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 101,\n      \"successRate\": 1.0\n    },\n    \"4\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    },\n    \"5\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    }\n  },\n  \"relearningRetriesExcluded\": 0,\n  \"deferralsExcluded\": 0,\n  \"selfReportsExcluded\": 0,\n  \"entriesWithoutBoxBefore\": 0,\n  \"entriesSkipped\": 0,\n  \"note\": \"Leitner targets roughly 80-90% success at review time: persistently above suggests intervals too conservative; persistently below, too aggressive\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "calibration"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"taggedAnswers\": 4,\n  \"buckets\": {\n    \"mostly\": {\n      \"correct\": 1,\n      \"incorrect\": 0,\n      \"partial\": 0\n    },\n    \"guessing\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 1\n    },\n    \"sure\": {\n      \"correct\": 1,\n      \"incorrect\": 1,\n      \"partial\": 0\n    }\n  },\n  \"overconfidenceRate\": 0.5,\n  \"underconfidenceRate\": 0.0,\n  \"overconfidentEvents\": [\n    {\n      \"concept\": \"Protocols\",\n      \"date\": \"2026-04-01\"\n    }\n  ],\n  \"underconfidentEvents\": [],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "export-anonymized"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"exportVersion\": 1,\n  \"generated\": \"2026-04-10\",\n  \"concepts\": 9,\n  \"boxDistribution\": {\n    \"1\": 3,\n    \"2\": 2,\n    \"3\": 2,\n    \"4\": 2,\n    \"5\": 0\n  },\n  \"bloomDistribution\": {\n    \"0\": 0,\n    \"1\": 1,\n    \"2\": 3,\n    \"3\": 3,\n    \"4\": 2,\n    \"5\": 0,\n    \"6\": 0\n  },\n  \"feynmanPassed\": 2,\n  \"applied\": 3,\n  \"mastered\": 1,\n  \"sessionTypeCounts\": {\n    \"practice\": 1,\n    \"spaced-review\": 1\n  },\n  \"retention\": {\n    \"reviews\": 114,\n    \"overallSuccessRate\": 0.97,\n    \"delayedReviews\": 113,\n    \"delayedSuccessRate\": 0.98,\n    \"byGap\": {\n      \"same-day\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      },\n      \"1d\": {\n        \"correct\": 101,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 101,\n        \"successRate\": 1.0\n      },\n      \"2-3d\": {\n        \"correct\": 2,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 2,\n        \"successRate\": 1.0\n      },\n      \"4-7d\": {\n        \"correct\": 3,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 3,\n        \"successRate\": 1.0\n      },\n      \"8-14d\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      },\n      \"15-30d\": {\n        \"correct\": 1,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 1,\n        \"successRate\": 1.0\n      },\n      \"31d+\": {\n        \"correct\": 4,\n        \"incorrect\": 1,\n        \"partial\": 1,\n        \"reviews\": 6,\n        \"successRate\": 0.67\n      }\n    },\n    \"byBoxAtReview\": {\n      \"1\": {\n        \"correct\": 7,\n        \"incorrect\": 1,\n        \"partial\": 1,\n        \"reviews\": 9,\n        \"successRate\": 0.78\n      },\n      \"2\": {\n        \"correct\": 3,\n        \"incorrect\": 1,\n        \"partial\": 0,\n        \"reviews\": 4,\n        \"successRate\": 0.75\n      },\n      \"3\": {\n        \"correct\": 101,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 101,\n        \"successRate\": 1.0\n      },\n      \"4\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      },\n      \"5\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      }\n    },\n    \"relearningRetriesExcluded\": 0,\n    \"deferralsExcluded\": 0,\n    \"selfReportsExcluded\": 0,\n    \"entriesWithoutBoxBefore\": 0,\n    \"entriesSkipped\": 0\n  },\n  \"calibration\": {\n    \"taggedAnswers\": 4,\n    \"buckets\": {\n      \"sure\": {\n        \"correct\": 1,\n        \"incorrect\": 1,\n        \"partial\": 0\n      },\n      \"mostly\": {\n        \"correct\": 1,\n        \"incorrect\": 0,\n        \"partial\": 0\n      },\n      \"guessing\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 1\n      }\n    },\n    \"overconfidenceRate\": 0.5,\n    \"underconfidenceRate\": 0.0\n  },\n  \"project\": {\n    \"totalSessions\": 14,\n    \"currentStreak\": 2,\n    \"overallCompletion\": 45,\n    \"daysSinceStart\": 99\n  },\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "session-brief",
+        "--concept",
+        "Closures"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"Closures\",\n  \"tracked\": true,\n  \"firstExposure\": false,\n  \"pretestApplies\": false,\n  \"isReteach\": false,\n  \"box\": 4,\n  \"bloomLevel\": 4,\n  \"bloomLabel\": \"Analyze\",\n  \"bloomOutcome\": \"you can work out why it works as it does and find where it breaks, on your own\",\n  \"evidenceAt3Plus\": 4,\n  \"appliedEvidence\": 1,\n  \"feynmanPassed\": true,\n  \"feynmanCurrent\": true,\n  \"lastReviewed\": \"2026-03-12\",\n  \"daysSinceLastReview\": 29,\n  \"lastResult\": \"correct\",\n  \"dueForReview\": true,\n  \"reviews\": 4,\n  \"currentModule\": \"Metaprogramming\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "session-brief",
+        "--concept",
+        "Recursion"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"Recursion\",\n  \"tracked\": true,\n  \"firstExposure\": false,\n  \"pretestApplies\": false,\n  \"isReteach\": false,\n  \"box\": 4,\n  \"bloomLevel\": 4,\n  \"bloomLabel\": \"Analyze\",\n  \"bloomOutcome\": \"you can work out why it works as it does and find where it breaks, on your own\",\n  \"evidenceAt3Plus\": 4,\n  \"appliedEvidence\": 0,\n  \"feynmanPassed\": true,\n  \"feynmanCurrent\": true,\n  \"lastReviewed\": \"2026-03-12\",\n  \"daysSinceLastReview\": 29,\n  \"lastResult\": \"correct\",\n  \"dueForReview\": false,\n  \"reviews\": 4,\n  \"currentModule\": \"Metaprogramming\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "session-brief",
+        "--concept",
+        "Iterators"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"Iterators\",\n  \"tracked\": true,\n  \"firstExposure\": false,\n  \"pretestApplies\": false,\n  \"isReteach\": false,\n  \"box\": 3,\n  \"bloomLevel\": 3,\n  \"bloomLabel\": \"Apply\",\n  \"bloomOutcome\": \"you can apply it to a real case with some guidance\",\n  \"evidenceAt3Plus\": 99,\n  \"appliedEvidence\": 1,\n  \"feynmanPassed\": false,\n  \"feynmanCurrent\": false,\n  \"lastReviewed\": \"2026-03-29\",\n  \"daysSinceLastReview\": 12,\n  \"lastResult\": \"correct\",\n  \"dueForReview\": true,\n  \"reviews\": 100,\n  \"currentModule\": \"Metaprogramming\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "session-brief",
+        "--concept",
+        "Generators"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"Generators\",\n  \"tracked\": true,\n  \"firstExposure\": false,\n  \"pretestApplies\": false,\n  \"isReteach\": false,\n  \"box\": 3,\n  \"bloomLevel\": 3,\n  \"bloomLabel\": \"Apply\",\n  \"bloomOutcome\": \"you can apply it to a real case with some guidance\",\n  \"evidenceAt3Plus\": 4,\n  \"appliedEvidence\": 1,\n  \"feynmanPassed\": false,\n  \"feynmanCurrent\": false,\n  \"lastReviewed\": \"2026-03-08\",\n  \"daysSinceLastReview\": 33,\n  \"lastResult\": \"correct\",\n  \"dueForReview\": true,\n  \"reviews\": 14,\n  \"currentModule\": \"Metaprogramming\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "session-brief",
+        "--concept",
+        "Decorators"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"Decorators\",\n  \"tracked\": true,\n  \"firstExposure\": false,\n  \"pretestApplies\": false,\n  \"isReteach\": false,\n  \"box\": 1,\n  \"bloomLevel\": 2,\n  \"bloomLabel\": \"Understand\",\n  \"bloomOutcome\": \"you can explain it in your own words\",\n  \"evidenceAt3Plus\": 0,\n  \"appliedEvidence\": 0,\n  \"feynmanPassed\": false,\n  \"feynmanCurrent\": false,\n  \"lastReviewed\": null,\n  \"daysSinceLastReview\": null,\n  \"lastResult\": null,\n  \"dueForReview\": true,\n  \"reviews\": 0,\n  \"currentModule\": \"Metaprogramming\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "session-brief",
+        "--concept",
+        "Descriptors"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"Descriptors\",\n  \"tracked\": true,\n  \"firstExposure\": false,\n  \"pretestApplies\": false,\n  \"isReteach\": true,\n  \"box\": 1,\n  \"bloomLevel\": 2,\n  \"bloomLabel\": \"Understand\",\n  \"bloomOutcome\": \"you can explain it in your own words\",\n  \"evidenceAt3Plus\": 0,\n  \"appliedEvidence\": 0,\n  \"feynmanPassed\": false,\n  \"feynmanCurrent\": false,\n  \"lastReviewed\": \"2026-03-30\",\n  \"daysSinceLastReview\": 11,\n  \"lastResult\": \"partial\",\n  \"dueForReview\": true,\n  \"reviews\": 1,\n  \"currentModule\": \"Metaprogramming\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "session-brief",
+        "--concept",
+        "Metaclasses"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"Metaclasses\",\n  \"tracked\": true,\n  \"firstExposure\": false,\n  \"pretestApplies\": false,\n  \"isReteach\": false,\n  \"box\": 2,\n  \"bloomLevel\": 3,\n  \"bloomLabel\": \"Apply\",\n  \"bloomOutcome\": \"you can apply it to a real case with some guidance\",\n  \"evidenceAt3Plus\": 1,\n  \"appliedEvidence\": 0,\n  \"feynmanPassed\": false,\n  \"feynmanCurrent\": false,\n  \"lastReviewed\": \"2026-03-25\",\n  \"daysSinceLastReview\": 16,\n  \"lastResult\": \"correct\",\n  \"dueForReview\": true,\n  \"reviews\": 1,\n  \"currentModule\": \"Metaprogramming\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "session-brief",
+        "--concept",
+        "Protocols"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"Protocols\",\n  \"tracked\": true,\n  \"firstExposure\": false,\n  \"pretestApplies\": false,\n  \"isReteach\": true,\n  \"box\": 1,\n  \"bloomLevel\": 1,\n  \"bloomLabel\": \"Remember\",\n  \"bloomOutcome\": \"you can recall the terms and what they refer to\",\n  \"evidenceAt3Plus\": 0,\n  \"appliedEvidence\": 0,\n  \"feynmanPassed\": false,\n  \"feynmanCurrent\": false,\n  \"lastReviewed\": \"2026-04-01\",\n  \"daysSinceLastReview\": 9,\n  \"lastResult\": \"incorrect\",\n  \"dueForReview\": true,\n  \"reviews\": 1,\n  \"currentModule\": \"Metaprogramming\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "gate-check",
+        "--module",
+        "Threads and the GIL",
+        "--prereqs",
+        "Closures, Recursion, Iterators, Generators, Decorators, Descriptors, Metaclasses, Protocols"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"fires\": true,\n  \"currentModule\": \"Threads and the GIL\",\n  \"seededOnly\": 0,\n  \"prerequisiteSource\": \"declared\",\n  \"prerequisites\": [\n    {\n      \"name\": \"Closures\",\n      \"bloomLevel\": 4,\n      \"bloomLabel\": \"Analyze\",\n      \"bloomOutcome\": \"you can work out why it works as it does and find where it breaks, on your own\",\n      \"box\": 4,\n      \"lastReviewed\": \"2026-03-12\",\n      \"evidenceAt3Plus\": 4,\n      \"appliedEvidence\": 1,\n      \"status\": \"satisfied\",\n      \"reason\": \"box\"\n    },\n    {\n      \"name\": \"Recursion\",\n      \"bloomLevel\": 4,\n      \"bloomLabel\": \"Analyze\",\n      \"bloomOutcome\": \"you can work out why it works as it does and find where it breaks, on your own\",\n      \"box\": 4,\n      \"lastReviewed\": \"2026-03-12\",\n      \"evidenceAt3Plus\": 4,\n      \"appliedEvidence\": 0,\n      \"status\": \"stale-reconfirm\",\n      \"reason\": \"no-applied-evidence\"\n    },\n    {\n      \"name\": \"Iterators\",\n      \"bloomLevel\": 3,\n      \"bloomLabel\": \"Apply\",\n      \"bloomOutcome\": \"you can apply it to a real case with some guidance\",\n      \"box\": 3,\n      \"lastReviewed\": \"2026-03-29\",\n      \"evidenceAt3Plus\": 99,\n      \"appliedEvidence\": 1,\n      \"status\": \"satisfied\",\n      \"reason\": \"box\"\n    },\n    {\n      \"name\": \"Generators\",\n      \"bloomLevel\": 3,\n      \"bloomLabel\": \"Apply\",\n      \"bloomOutcome\": \"you can apply it to a real case with some guidance\",\n      \"box\": 3,\n      \"lastReviewed\": \"2026-03-08\",\n      \"evidenceAt3Plus\": 4,\n      \"appliedEvidence\": 1,\n      \"status\": \"satisfied\",\n      \"reason\": \"box\"\n    },\n    {\n      \"name\": \"Decorators\",\n      \"bloomLevel\": 2,\n      \"bloomLabel\": \"Understand\",\n      \"bloomOutcome\": \"you can explain it in your own words\",\n      \"box\": 1,\n      \"lastReviewed\": null,\n      \"evidenceAt3Plus\": 0,\n      \"appliedEvidence\": 0,\n      \"status\": \"gap\",\n      \"reason\": \"below-apply\"\n    },\n    {\n      \"name\": \"Descriptors\",\n      \"bloomLevel\": 2,\n      \"bloomLabel\": \"Understand\",\n      \"bloomOutcome\": \"you can explain it in your own words\",\n      \"box\": 1,\n      \"lastReviewed\": \"2026-03-30\",\n      \"evidenceAt3Plus\": 0,\n      \"appliedEvidence\": 0,\n      \"status\": \"gap\",\n      \"reason\": \"below-apply\"\n    },\n    {\n      \"name\": \"Metaclasses\",\n      \"bloomLevel\": 3,\n      \"bloomLabel\": \"Apply\",\n      \"bloomOutcome\": \"you can apply it to a real case with some guidance\",\n      \"box\": 2,\n      \"lastReviewed\": \"2026-03-25\",\n      \"evidenceAt3Plus\": 1,\n      \"appliedEvidence\": 0,\n      \"status\": \"stale-reconfirm\",\n      \"reason\": \"single-evidence\"\n    },\n    {\n      \"name\": \"Protocols\",\n      \"bloomLevel\": 1,\n      \"bloomLabel\": \"Remember\",\n      \"bloomOutcome\": \"you can recall the terms and what they refer to\",\n      \"box\": 1,\n      \"lastReviewed\": \"2026-04-01\",\n      \"evidenceAt3Plus\": 0,\n      \"appliedEvidence\": 0,\n      \"status\": \"gap\",\n      \"reason\": \"below-apply\"\n    }\n  ],\n  \"gaps\": [\n    \"Decorators\",\n    \"Descriptors\",\n    \"Protocols\"\n  ],\n  \"staleReconfirm\": [\n    \"Recursion\",\n    \"Metaclasses\"\n  ],\n  \"verdict\": \"offer\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "gate-check",
+        "--module",
+        "Threads and the GIL",
+        "--prior-module",
+        "Collections"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"fires\": true,\n  \"currentModule\": \"Threads and the GIL\",\n  \"seededOnly\": 0,\n  \"prerequisiteSource\": \"prior-module\",\n  \"prerequisites\": [\n    {\n      \"name\": \"Iterators\",\n      \"bloomLevel\": 3,\n      \"bloomLabel\": \"Apply\",\n      \"bloomOutcome\": \"you can apply it to a real case with some guidance\",\n      \"box\": 3,\n      \"lastReviewed\": \"2026-03-29\",\n      \"evidenceAt3Plus\": 99,\n      \"appliedEvidence\": 1,\n      \"status\": \"satisfied\",\n      \"reason\": \"box\"\n    },\n    {\n      \"name\": \"Generators\",\n      \"bloomLevel\": 3,\n      \"bloomLabel\": \"Apply\",\n      \"bloomOutcome\": \"you can apply it to a real case with some guidance\",\n      \"box\": 3,\n      \"lastReviewed\": \"2026-03-08\",\n      \"evidenceAt3Plus\": 4,\n      \"appliedEvidence\": 1,\n      \"status\": \"satisfied\",\n      \"reason\": \"box\"\n    },\n    {\n      \"name\": \"Context managers\",\n      \"bloomLevel\": 2,\n      \"bloomLabel\": \"Understand\",\n      \"bloomOutcome\": \"you can explain it in your own words\",\n      \"box\": 2,\n      \"lastReviewed\": \"2026-04-08\",\n      \"evidenceAt3Plus\": 0,\n      \"appliedEvidence\": 0,\n      \"status\": \"gap\",\n      \"reason\": \"below-apply\"\n    }\n  ],\n  \"gaps\": [\n    \"Context managers\"\n  ],\n  \"staleReconfirm\": [],\n  \"verdict\": \"offer\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "gate-check",
+        "--module",
+        "Threads and the GIL",
+        "--prior-module",
+        "Functions"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"fires\": true,\n  \"currentModule\": \"Threads and the GIL\",\n  \"seededOnly\": 0,\n  \"prerequisiteSource\": \"prior-module\",\n  \"prerequisites\": [\n    {\n      \"name\": \"Closures\",\n      \"bloomLevel\": 4,\n      \"bloomLabel\": \"Analyze\",\n      \"bloomOutcome\": \"you can work out why it works as it does and find where it breaks, on your own\",\n      \"box\": 4,\n      \"lastReviewed\": \"2026-03-12\",\n      \"evidenceAt3Plus\": 4,\n      \"appliedEvidence\": 1,\n      \"status\": \"satisfied\",\n      \"reason\": \"box\"\n    },\n    {\n      \"name\": \"Recursion\",\n      \"bloomLevel\": 4,\n      \"bloomLabel\": \"Analyze\",\n      \"bloomOutcome\": \"you can work out why it works as it does and find where it breaks, on your own\",\n      \"box\": 4,\n      \"lastReviewed\": \"2026-03-12\",\n      \"evidenceAt3Plus\": 4,\n      \"appliedEvidence\": 0,\n      \"status\": \"stale-reconfirm\",\n      \"reason\": \"no-applied-evidence\"\n    }\n  ],\n  \"gaps\": [],\n  \"staleReconfirm\": [\n    \"Recursion\"\n  ],\n  \"verdict\": \"offer\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "gate-check",
+        "--module",
+        "Packaging"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"fires\": true,\n  \"currentModule\": \"Packaging\",\n  \"seededOnly\": 0,\n  \"prerequisiteSource\": \"prior-module\",\n  \"prerequisites\": [\n    {\n      \"name\": \"Iterators\",\n      \"bloomLevel\": 3,\n      \"bloomLabel\": \"Apply\",\n      \"bloomOutcome\": \"you can apply it to a real case with some guidance\",\n      \"box\": 3,\n      \"lastReviewed\": \"2026-03-29\",\n      \"evidenceAt3Plus\": 99,\n      \"appliedEvidence\": 1,\n      \"status\": \"satisfied\",\n      \"reason\": \"box\"\n    },\n    {\n      \"name\": \"Generators\",\n      \"bloomLevel\": 3,\n      \"bloomLabel\": \"Apply\",\n      \"bloomOutcome\": \"you can apply it to a real case with some guidance\",\n      \"box\": 3,\n      \"lastReviewed\": \"2026-03-08\",\n      \"evidenceAt3Plus\": 4,\n      \"appliedEvidence\": 1,\n      \"status\": \"satisfied\",\n      \"reason\": \"box\"\n    },\n    {\n      \"name\": \"Context managers\",\n      \"bloomLevel\": 2,\n      \"bloomLabel\": \"Understand\",\n      \"bloomOutcome\": \"you can explain it in your own words\",\n      \"box\": 2,\n      \"lastReviewed\": \"2026-04-08\",\n      \"evidenceAt3Plus\": 0,\n      \"appliedEvidence\": 0,\n      \"status\": \"gap\",\n      \"reason\": \"below-apply\"\n    }\n  ],\n  \"gaps\": [\n    \"Context managers\"\n  ],\n  \"staleReconfirm\": [],\n  \"verdict\": \"offer\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "record-review",
+        "--concept",
+        "Iterators",
+        "--result",
+        "correct",
+        "--tested-bloom",
+        "4",
+        "--applied",
+        "--source",
+        "practice"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"Iterators\",\n  \"box\": \"3 -> 4\",\n  \"retry\": false,\n  \"applied\": true,\n  \"appliedEvidence\": 2,\n  \"bloomLevel\": 4,\n  \"bloomLabel\": \"Analyze\",\n  \"bloomOutcome\": \"you can work out why it works as it does and find where it breaks, on your own\",\n  \"crossedBloom3\": false,\n  \"crossedLevel\": true,\n  \"consecutiveCorrectAtL4Plus\": 1,\n  \"nextReview\": \"2026-04-24\",\n  \"created\": false,\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "record-review",
+        "--concept",
+        "Closures",
+        "--result",
+        "correct",
+        "--tested-bloom",
+        "5",
+        "--confidence",
+        "sure",
+        "--source",
+        "quiz"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"Closures\",\n  \"box\": \"4 -> 5\",\n  \"retry\": false,\n  \"applied\": false,\n  \"appliedEvidence\": 1,\n  \"bloomLevel\": 5,\n  \"bloomLabel\": \"Evaluate\",\n  \"bloomOutcome\": \"you can weigh the alternatives and defend a choice between them\",\n  \"crossedBloom3\": false,\n  \"crossedLevel\": true,\n  \"consecutiveCorrectAtL4Plus\": 4,\n  \"nextReview\": \"2026-05-10\",\n  \"created\": false,\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "record-review",
+        "--concept",
+        "Recursion",
+        "--result",
+        "correct",
+        "--tested-bloom",
+        "4",
+        "--applied",
+        "--source",
+        "pair"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"Recursion\",\n  \"box\": \"4 -> 4\",\n  \"retry\": false,\n  \"applied\": true,\n  \"appliedEvidence\": 1,\n  \"bloomLevel\": 4,\n  \"bloomLabel\": \"Analyze\",\n  \"bloomOutcome\": \"you can work out why it works as it does and find where it breaks, on your own\",\n  \"crossedBloom3\": false,\n  \"crossedLevel\": false,\n  \"consecutiveCorrectAtL4Plus\": 3,\n  \"nextReview\": \"2026-04-20\",\n  \"boxHeld\": \"not yet due\",\n  \"created\": false,\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "forget",
+        "--concepts",
+        "Generators, Protocols"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"action\": \"demoted\",\n  \"concepts\": [\n    \"Generators\",\n    \"Protocols\"\n  ],\n  \"boxChanges\": {\n    \"Generators\": \"3 -> 1\",\n    \"Protocols\": \"1 -> 1\"\n  },\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "record-review",
+        "--concept",
+        "Generators",
+        "--result",
+        "correct",
+        "--retry",
+        "--source",
+        "quiz"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"Generators\",\n  \"box\": \"1 -> 1\",\n  \"retry\": true,\n  \"applied\": false,\n  \"appliedEvidence\": 0,\n  \"bloomLevel\": 3,\n  \"bloomLabel\": \"Apply\",\n  \"bloomOutcome\": \"you can apply it to a real case with some guidance\",\n  \"crossedBloom3\": false,\n  \"crossedLevel\": false,\n  \"consecutiveCorrectAtL4Plus\": 0,\n  \"nextReview\": \"2026-04-11\",\n  \"created\": false,\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "record-review",
+        "--concept",
+        "Decorators",
+        "--result",
+        "correct",
+        "--tested-bloom",
+        "3",
+        "--source",
+        "teach"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"Decorators\",\n  \"box\": \"1 -> 1\",\n  \"retry\": false,\n  \"applied\": false,\n  \"appliedEvidence\": 0,\n  \"bloomLevel\": 3,\n  \"bloomLabel\": \"Apply\",\n  \"bloomOutcome\": \"you can apply it to a real case with some guidance\",\n  \"crossedBloom3\": true,\n  \"crossedLevel\": true,\n  \"consecutiveCorrectAtL4Plus\": 0,\n  \"nextReview\": \"2026-04-11\",\n  \"boxHeld\": \"first review\",\n  \"created\": false,\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "record-review",
+        "--concept",
+        "Descriptors",
+        "--result",
+        "incorrect",
+        "--tested-bloom",
+        "2",
+        "--confidence",
+        "sure",
+        "--source",
+        "quiz"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"Descriptors\",\n  \"box\": \"1 -> 1\",\n  \"retry\": false,\n  \"applied\": false,\n  \"appliedEvidence\": 0,\n  \"bloomLevel\": 2,\n  \"bloomLabel\": \"Understand\",\n  \"bloomOutcome\": \"you can explain it in your own words\",\n  \"crossedBloom3\": false,\n  \"crossedLevel\": false,\n  \"consecutiveCorrectAtL4Plus\": 0,\n  \"nextReview\": \"2026-04-11\",\n  \"created\": false,\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "park",
+        "--concept",
+        "Metaclasses"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"action\": \"parked\",\n  \"concepts\": {\n    \"Metaclasses\": null\n  },\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "defer",
+        "--concept",
+        "Descriptors",
+        "--days",
+        "3"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"action\": \"deferred\",\n  \"days\": 3,\n  \"concepts\": {\n    \"Descriptors\": \"2026-04-13\"\n  },\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "add-concept",
+        "--concept",
+        "Slots",
+        "--module",
+        "Metaprogramming"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"action\": \"added\",\n  \"concept\": \"Slots\",\n  \"module\": \"Metaprogramming\",\n  \"box\": 1,\n  \"nextReview\": \"2026-04-11\",\n  \"bloomLevel\": 0,\n  \"bloomLabel\": null,\n  \"bloomOutcome\": \"nothing observed yet\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "record-review",
+        "--concept",
+        "Class decorators",
+        "--module",
+        "Metaprogramming",
+        "--result",
+        "correct",
+        "--tested-bloom",
+        "2",
+        "--source",
+        "teach",
+        "--question",
+        "When does a class decorator run?"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"Class decorators\",\n  \"box\": \"1 -> 1\",\n  \"retry\": false,\n  \"applied\": false,\n  \"appliedEvidence\": 0,\n  \"bloomLevel\": 2,\n  \"bloomLabel\": \"Understand\",\n  \"bloomOutcome\": \"you can explain it in your own words\",\n  \"crossedBloom3\": false,\n  \"crossedLevel\": true,\n  \"consecutiveCorrectAtL4Plus\": 0,\n  \"nextReview\": \"2026-04-11\",\n  \"boxHeld\": \"first review\",\n  \"created\": true,\n  \"newModule\": false,\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "touch-state",
+        "--module",
+        "Metaprogramming",
+        "--module-index",
+        "2"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"action\": \"state-updated\",\n  \"newSession\": true,\n  \"currentStreak\": 1,\n  \"totalSessions\": 15,\n  \"profileSessionsBumped\": true,\n  \"lastActivity\": \"Parked 1 concept(s): Metaclasses\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "record-session",
+        "--type",
+        "pair",
+        "--data",
+        "{\"conceptsReviewed\": 3, \"notes\": \"drove the iterator protocol\"}"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"action\": \"session-recorded\",\n  \"entry\": {\n    \"date\": \"2026-04-10\",\n    \"type\": \"pair\",\n    \"conceptsReviewed\": 3,\n    \"notes\": \"drove the iterator protocol\"\n  },\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "record-session",
+        "--type",
+        "other",
+        "--subtype",
+        "probe"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"action\": \"session-recorded\",\n  \"entry\": {\n    \"date\": \"2026-04-10\",\n    \"type\": \"other\",\n    \"subtype\": \"probe\"\n  },\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "set-feynman",
+        "--concept",
+        "Recursion"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"Recursion\",\n  \"feynmanPassed\": true,\n  \"feynmanPassedAt\": \"2026-04-10\",\n  \"feynmanCurrent\": true,\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "verify"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"ok\": true,\n  \"project\": \"<WS>/rich\",\n  \"errors\": [],\n  \"warnings\": []\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "due"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"dueToday\": 0,\n  \"neverTaughtCount\": 0,\n  \"concepts\": [],\n  \"parkedCount\": 1,\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "snapshot"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"project\": {\n    \"name\": \"rich\",\n    \"topic\": \"Python internals\",\n    \"createdAt\": \"2026-01-01T09:00:00\",\n    \"currentPhase\": \"1\",\n    \"currentModule\": \"Metaprogramming\",\n    \"currentModuleIndex\": 2,\n    \"position\": {\n      \"index\": 3,\n      \"of\": 5,\n      \"module\": \"Metaprogramming\",\n      \"phase\": 1\n    },\n    \"lastActivity\": \"Parked 1 concept(s): Metaclasses\",\n    \"overallCompletion\": 45,\n    \"initialBloomLevel\": {\n      \"python\": 2\n    },\n    \"currentBloomLevel\": {\n      \"python\": 3\n    }\n  },\n  \"cadence\": {\n    \"totalSessions\": 15,\n    \"currentStreak\": 1,\n    \"lastSessionAt\": \"2026-04-10T<time>\",\n    \"daysSinceLastSession\": 0,\n    \"sessionsLast7d\": 3,\n    \"sessionsLast30d\": 4\n  },\n  \"review\": {\n    \"concepts\": 11,\n    \"dueToday\": 0,\n    \"dueTodayConcepts\": [],\n    \"dueThisWeek\": 7,\n    \"dueThisWeekConcepts\": [\n      \"Generators\",\n      \"Context managers\",\n      \"Decorators\",\n      \"Descriptors\",\n      \"Protocols\",\n      \"Slots\",\n      \"Class decorators\"\n    ],\n    \"overdue10dPlus\": 0,\n    \"waitingForReviewDay\": 10,\n    \"unscheduled\": 0,\n    \"boxDistribution\": {\n      \"1\": 6,\n      \"2\": 1,\n      \"3\": 0,\n      \"4\": 2,\n      \"5\": 1\n    },\n    \"retentionRollup\": {\n      \"strong\": 3,\n      \"building\": 1,\n      \"needs_review\": 6\n    },\n    \"retentionConcepts\": {\n      \"strong\": [\n        \"Closures\",\n        \"Recursion\",\n        \"Iterators\"\n      ],\n      \"building\": [\n        \"Context managers\"\n      ],\n      \"needs_review\": [\n        \"Generators\",\n        \"Decorators\",\n        \"Descriptors\",\n        \"Protocols\",\n        \"Slots\",\n        \"Class decorators\"\n      ]\n    },\n    \"unparseableDates\": 0,\n    \"parked\": 1\n  },\n  \"mastery\": {\n    \"mastered\": 2,\n    \"feynmanPassed\": 2,\n    \"applied\": 3,\n    \"classified\": 10,\n    \"modules\": {\n      \"Functions\": {\n        \"concepts\": 2,\n        \"mastered\": 2,\n        \"classified\": 2,\n        \"applied\": 2,\n        \"dueForCheck\": 0,\n        \"tiers\": {\n          \"unclassified\": 0,\n          \"introduced\": 0,\n          \"familiar\": 0,\n          \"mastered\": 2\n        },\n        \"masteryPct\": 100\n      },\n      \"Collections\": {\n        \"concepts\": 3,\n        \"mastered\": 0,\n        \"classified\": 3,\n        \"applied\": 1,\n        \"dueForCheck\": 0,\n        \"tiers\": {\n          \"unclassified\": 0,\n          \"introduced\": 2,\n          \"familiar\": 1,\n          \"mastered\": 0\n        },\n        \"masteryPct\": 0\n      },\n      \"Metaprogramming\": {\n        \"concepts\": 5,\n        \"mastered\": 0,\n        \"classified\": 4,\n        \"applied\": 0,\n        \"dueForCheck\": 0,\n        \"tiers\": {\n          \"unclassified\": 1,\n          \"introduced\": 3,\n          \"familiar\": 1,\n          \"mastered\": 0\n        },\n        \"masteryPct\": 0\n      },\n      \"Typing\": {\n        \"concepts\": 1,\n        \"mastered\": 0,\n        \"classified\": 1,\n        \"applied\": 0,\n        \"dueForCheck\": 0,\n        \"tiers\": {\n          \"unclassified\": 0,\n          \"introduced\": 1,\n          \"familiar\": 0,\n          \"mastered\": 0\n        },\n        \"masteryPct\": 0\n      }\n    },\n    \"blockedOnFeynman\": [],\n    \"blockedOnApplied\": [],\n    \"masteredDueForCheck\": []\n  },\n  \"calibration\": {\n    \"taggedAnswers\": 6,\n    \"buckets\": {\n      \"mostly\": {\n        \"correct\": 1,\n        \"incorrect\": 0,\n        \"partial\": 0\n      },\n      \"sure\": {\n        \"correct\": 2,\n        \"incorrect\": 2,\n        \"partial\": 0\n      },\n      \"guessing\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 1\n      }\n    },\n    \"overconfidenceRate\": 0.5,\n    \"underconfidenceRate\": 0.0\n  },\n  \"bloomScale\": [\n    {\n      \"level\": 1,\n      \"label\": \"Remember\",\n      \"outcome\": \"you can recall the terms and what they refer to\"\n    },\n    {\n      \"level\": 2,\n      \"label\": \"Understand\",\n      \"outcome\": \"you can explain it in your own words\"\n    },\n    {\n      \"level\": 3,\n      \"label\": \"Apply\",\n      \"outcome\": \"you can apply it to a real case with some guidance\"\n    },\n    {\n      \"level\": 4,\n      \"label\": \"Analyze\",\n      \"outcome\": \"you can work out why it works as it does and find where it breaks, on your own\"\n    },\n    {\n      \"level\": 5,\n      \"label\": \"Evaluate\",\n      \"outcome\": \"you can weigh the alternatives and defend a choice between them\"\n    },\n    {\n      \"level\": 6,\n      \"label\": \"Create\",\n      \"outcome\": \"you can create something new with it and teach it\"\n    }\n  ],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "mastery"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"modules\": {\n    \"Functions\": {\n      \"concepts\": 2,\n      \"mastered\": 2,\n      \"classified\": 2,\n      \"applied\": 2,\n      \"dueForCheck\": 0,\n      \"tiers\": {\n        \"unclassified\": 0,\n        \"introduced\": 0,\n        \"familiar\": 0,\n        \"mastered\": 2\n      },\n      \"masteryPct\": 100\n    },\n    \"Collections\": {\n      \"concepts\": 3,\n      \"mastered\": 0,\n      \"classified\": 3,\n      \"applied\": 1,\n      \"dueForCheck\": 0,\n      \"tiers\": {\n        \"unclassified\": 0,\n        \"introduced\": 2,\n        \"familiar\": 1,\n        \"mastered\": 0\n      },\n      \"masteryPct\": 0\n    },\n    \"Metaprogramming\": {\n      \"concepts\": 5,\n      \"mastered\": 0,\n      \"classified\": 4,\n      \"applied\": 0,\n      \"dueForCheck\": 0,\n      \"tiers\": {\n        \"unclassified\": 1,\n        \"introduced\": 3,\n        \"familiar\": 1,\n        \"mastered\": 0\n      },\n      \"masteryPct\": 0\n    },\n    \"Typing\": {\n      \"concepts\": 1,\n      \"mastered\": 0,\n      \"classified\": 1,\n      \"applied\": 0,\n      \"dueForCheck\": 0,\n      \"tiers\": {\n        \"unclassified\": 0,\n        \"introduced\": 1,\n        \"familiar\": 0,\n        \"mastered\": 0\n      },\n      \"masteryPct\": 0\n    }\n  },\n  \"retentionRollup\": {\n    \"strong\": 3,\n    \"building\": 1,\n    \"needs_review\": 6\n  },\n  \"retentionConcepts\": {\n    \"strong\": [\n      \"Closures\",\n      \"Recursion\",\n      \"Iterators\"\n    ],\n    \"building\": [\n      \"Context managers\"\n    ],\n    \"needs_review\": [\n      \"Generators\",\n      \"Decorators\",\n      \"Descriptors\",\n      \"Protocols\",\n      \"Slots\",\n      \"Class decorators\"\n    ]\n  },\n  \"dueToday\": [],\n  \"dueThisWeek\": [\n    \"Generators\",\n    \"Context managers\",\n    \"Decorators\",\n    \"Descriptors\",\n    \"Protocols\",\n    \"Slots\",\n    \"Class decorators\"\n  ],\n  \"blockedOnFeynman\": [],\n  \"blockedOnApplied\": [],\n  \"masteredDueForCheck\": [],\n  \"parked\": [\n    \"Metaclasses\"\n  ],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "syllabus"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"project\": \"rich\",\n  \"plan\": true,\n  \"phases\": [\n    {\n      \"phase\": 1,\n      \"title\": \"Phase 1 — Language machinery\",\n      \"file\": \"phase-1.md\",\n      \"modules\": 4\n    },\n    {\n      \"phase\": 2,\n      \"title\": \"Phase 2 — Concurrency\",\n      \"file\": \"phase-2.md\",\n      \"modules\": 1\n    }\n  ],\n  \"position\": {\n    \"index\": 3,\n    \"of\": 5,\n    \"module\": \"Metaprogramming\",\n    \"phase\": 1\n  },\n  \"currentPhase\": \"1\",\n  \"overallCompletion\": 45,\n  \"counts\": {\n    \"modules\": 5,\n    \"done\": 2,\n    \"skipped\": 1,\n    \"upcoming\": 1\n  },\n  \"modules\": [\n    {\n      \"index\": 1,\n      \"phase\": 1,\n      \"id\": \"1.1\",\n      \"name\": \"Functions\",\n      \"status\": \"done\",\n      \"statusSource\": \"declared\",\n      \"targetBloom\": 4,\n      \"plannedConcepts\": [\n        \"Closures\",\n        \"Recursion\"\n      ],\n      \"keyTerms\": [],\n      \"file\": \"phase-1.md\",\n      \"targetBloomLabel\": \"Analyze\",\n      \"targetBloomOutcome\": \"you can work out why it works as it does and find where it breaks, on your own\",\n      \"evidence\": {\n        \"tracked\": true,\n        \"trackedAs\": \"Functions\",\n        \"concepts\": 2,\n        \"classified\": 2,\n        \"applied\": 2,\n        \"mastered\": 2,\n        \"dueForCheck\": 0,\n        \"masteryPct\": 100,\n        \"tiers\": {\n          \"unclassified\": 0,\n          \"introduced\": 0,\n          \"familiar\": 0,\n          \"mastered\": 2\n        },\n        \"summaryTier\": \"mastered\",\n        \"nextDue\": \"2026-04-20\",\n        \"dueToday\": 0,\n        \"parked\": 0\n      }\n    },\n    {\n      \"index\": 2,\n      \"phase\": 1,\n      \"id\": \"1.2\",\n      \"name\": \"Collections\",\n      \"status\": \"done\",\n      \"statusSource\": \"plan-order\",\n      \"targetBloom\": null,\n      \"plannedConcepts\": [\n        \"Iterators\",\n        \"Generators\",\n        \"Context managers\"\n      ],\n      \"keyTerms\": [],\n      \"file\": \"phase-1.md\",\n      \"evidence\": {\n        \"tracked\": true,\n        \"trackedAs\": \"Collections\",\n        \"concepts\": 3,\n        \"classified\": 3,\n        \"applied\": 1,\n        \"mastered\": 0,\n        \"dueForCheck\": 0,\n        \"masteryPct\": 0,\n        \"tiers\": {\n          \"unclassified\": 0,\n          \"introduced\": 2,\n          \"familiar\": 1,\n          \"mastered\": 0\n        },\n        \"summaryTier\": \"introduced\",\n        \"nextDue\": \"2026-04-11\",\n        \"dueToday\": 0,\n        \"parked\": 0\n      }\n    },\n    {\n      \"index\": 3,\n      \"phase\": 1,\n      \"id\": \"1.3\",\n      \"name\": \"Metaprogramming\",\n      \"status\": \"current\",\n      \"statusSource\": \"plan-order\",\n      \"targetBloom\": 3,\n      \"plannedConcepts\": [],\n      \"keyTerms\": [\n        \"descriptor\",\n        \"metaclass\"\n      ],\n      \"file\": \"phase-1.md\",\n      \"targetBloomLabel\": \"Apply\",\n      \"targetBloomOutcome\": \"you can apply it to a real case with some guidance\",\n      \"evidence\": {\n        \"tracked\": true,\n        \"trackedAs\": \"Metaprogramming\",\n        \"concepts\": 5,\n        \"classified\": 4,\n        \"applied\": 0,\n        \"mastered\": 0,\n        \"dueForCheck\": 0,\n        \"masteryPct\": 0,\n        \"tiers\": {\n          \"unclassified\": 1,\n          \"introduced\": 3,\n          \"familiar\": 1,\n          \"mastered\": 0\n        },\n        \"summaryTier\": \"introduced\",\n        \"nextDue\": \"2026-04-11\",\n        \"dueToday\": 0,\n        \"parked\": 1\n      }\n    },\n    {\n      \"index\": 4,\n      \"phase\": 1,\n      \"id\": \"1.4\",\n      \"name\": \"Packaging\",\n      \"status\": \"skipped\",\n      \"statusSource\": \"declared\",\n      \"targetBloom\": null,\n      \"plannedConcepts\": [],\n      \"keyTerms\": [],\n      \"file\": \"phase-1.md\",\n      \"evidence\": {\n        \"tracked\": false,\n        \"concepts\": 0,\n        \"classified\": 0,\n        \"applied\": 0,\n        \"mastered\": 0,\n        \"dueForCheck\": 0,\n        \"masteryPct\": null,\n        \"tiers\": {\n          \"unclassified\": 0,\n          \"introduced\": 0,\n          \"familiar\": 0,\n          \"mastered\": 0\n        },\n        \"summaryTier\": null,\n        \"nextDue\": null,\n        \"dueToday\": 0,\n        \"parked\": 0\n      }\n    },\n    {\n      \"index\": 5,\n      \"phase\": 2,\n      \"id\": \"2\",\n      \"name\": \"Threads and the GIL\",\n      \"status\": \"upcoming\",\n      \"statusSource\": \"plan-order\",\n      \"targetBloom\": 2,\n      \"plannedConcepts\": [],\n      \"keyTerms\": [],\n      \"file\": \"phase-2.md\",\n      \"targetBloomLabel\": \"Understand\",\n      \"targetBloomOutcome\": \"you can explain it in your own words\",\n      \"evidence\": {\n        \"tracked\": false,\n        \"concepts\": 0,\n        \"classified\": 0,\n        \"applied\": 0,\n        \"mastered\": 0,\n        \"dueForCheck\": 0,\n        \"masteryPct\": null,\n        \"tiers\": {\n          \"unclassified\": 0,\n          \"introduced\": 0,\n          \"familiar\": 0,\n          \"mastered\": 0\n        },\n        \"summaryTier\": null,\n        \"nextDue\": null,\n        \"dueToday\": 0,\n        \"parked\": 0\n      }\n    }\n  ],\n  \"untracked\": [\n    \"Packaging\",\n    \"Threads and the GIL\"\n  ],\n  \"unplanned\": [\n    {\n      \"module\": \"Typing\",\n      \"concepts\": 1,\n      \"classified\": 1,\n      \"applied\": 0,\n      \"mastered\": 0,\n      \"dueForCheck\": 0,\n      \"masteryPct\": 0,\n      \"tiers\": {\n        \"unclassified\": 0,\n        \"introduced\": 1,\n        \"familiar\": 0,\n        \"mastered\": 0\n      },\n      \"summaryTier\": \"introduced\",\n      \"nextDue\": \"2026-04-11\",\n      \"dueToday\": 0,\n      \"parked\": 0\n    }\n  ],\n  \"warnings\": [],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "gate-check"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"fires\": false,\n  \"reason\": \"continuation session — 4 concept(s) graded in module 'Metaprogramming'\",\n  \"currentModule\": \"Metaprogramming\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "revision-brief"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"date\": \"2026-04-10\",\n  \"project\": \"rich\",\n  \"module\": \"Metaprogramming\",\n  \"session\": 15,\n  \"sessionToday\": true,\n  \"concepts\": [\n    {\n      \"name\": \"Class decorators\",\n      \"module\": \"Metaprogramming\",\n      \"resultsToday\": [\n        \"correct\"\n      ],\n      \"sourcesToday\": [\n        \"teach\"\n      ],\n      \"box\": 1,\n      \"nextReview\": \"2026-04-11\",\n      \"bloomLevel\": 2,\n      \"bloomLabel\": \"Understand\",\n      \"bloomOutcome\": \"you can explain it in your own words\",\n      \"question\": \"When does a class decorator run?\",\n      \"feynmanPassed\": false\n    },\n    {\n      \"name\": \"Decorators\",\n      \"module\": \"Metaprogramming\",\n      \"resultsToday\": [\n        \"correct\"\n      ],\n      \"sourcesToday\": [\n        \"teach\"\n      ],\n      \"box\": 1,\n      \"nextReview\": \"2026-04-11\",\n      \"bloomLevel\": 3,\n      \"bloomLabel\": \"Apply\",\n      \"bloomOutcome\": \"you can apply it to a real case with some guidance\",\n      \"question\": \"\",\n      \"feynmanPassed\": false\n    },\n    {\n      \"name\": \"Generators\",\n      \"module\": \"Collections\",\n      \"resultsToday\": [\n        \"incorrect\",\n        \"correct\"\n      ],\n      \"sourcesToday\": [\n        \"quiz\"\n      ],\n      \"box\": 1,\n      \"nextReview\": \"2026-04-11\",\n      \"bloomLevel\": 3,\n      \"bloomLabel\": \"Apply\",\n      \"bloomOutcome\": \"you can apply it to a real case with some guidance\",\n      \"question\": \"\",\n      \"feynmanPassed\": false\n    },\n    {\n      \"name\": \"Closures\",\n      \"module\": \"Functions\",\n      \"resultsToday\": [\n        \"correct\"\n      ],\n      \"sourcesToday\": [\n        \"quiz\"\n      ],\n      \"box\": 5,\n      \"nextReview\": \"2026-05-10\",\n      \"bloomLevel\": 5,\n      \"bloomLabel\": \"Evaluate\",\n      \"bloomOutcome\": \"you can weigh the alternatives and defend a choice between them\",\n      \"question\": \"\",\n      \"feynmanPassed\": true\n    },\n    {\n      \"name\": \"Descriptors\",\n      \"module\": \"Metaprogramming\",\n      \"resultsToday\": [\n        \"incorrect\"\n      ],\n      \"sourcesToday\": [\n        \"quiz\"\n      ],\n      \"box\": 1,\n      \"nextReview\": \"2026-04-13\",\n      \"bloomLevel\": 2,\n      \"bloomLabel\": \"Understand\",\n      \"bloomOutcome\": \"you can explain it in your own words\",\n      \"question\": \"\",\n      \"feynmanPassed\": false\n    },\n    {\n      \"name\": \"Iterators\",\n      \"module\": \"Collections\",\n      \"resultsToday\": [\n        \"correct\"\n      ],\n      \"sourcesToday\": [\n        \"practice\"\n      ],\n      \"box\": 4,\n      \"nextReview\": \"2026-04-24\",\n      \"bloomLevel\": 4,\n      \"bloomLabel\": \"Analyze\",\n      \"bloomOutcome\": \"you can work out why it works as it does and find where it breaks, on your own\",\n      \"question\": \"\",\n      \"feynmanPassed\": false\n    },\n    {\n      \"name\": \"Protocols\",\n      \"module\": \"Typing\",\n      \"resultsToday\": [\n        \"incorrect\"\n      ],\n      \"sourcesToday\": [],\n      \"box\": 1,\n      \"nextReview\": \"2026-04-11\",\n      \"bloomLevel\": 1,\n      \"bloomLabel\": \"Remember\",\n      \"bloomOutcome\": \"you can recall the terms and what they refer to\",\n      \"question\": \"\",\n      \"feynmanPassed\": false\n    },\n    {\n      \"name\": \"Recursion\",\n      \"module\": \"Functions\",\n      \"resultsToday\": [\n        \"correct\"\n      ],\n      \"sourcesToday\": [\n        \"pair\"\n      ],\n      \"box\": 4,\n      \"nextReview\": \"2026-04-20\",\n      \"bloomLevel\": 4,\n      \"bloomLabel\": \"Analyze\",\n      \"bloomOutcome\": \"you can work out why it works as it does and find where it breaks, on your own\",\n      \"question\": \"\",\n      \"feynmanPassed\": true\n    },\n    {\n      \"name\": \"Slots\",\n      \"module\": \"Metaprogramming\",\n      \"resultsToday\": [],\n      \"sourcesToday\": [],\n      \"box\": 1,\n      \"nextReview\": \"2026-04-11\",\n      \"bloomLevel\": 0,\n      \"bloomLabel\": null,\n      \"bloomOutcome\": \"nothing observed yet\",\n      \"question\": \"\",\n      \"feynmanPassed\": false\n    }\n  ],\n  \"suggestedFile\": \"revision/2026-04-10-class-decorators.md\",\n  \"existing\": [],\n  \"resourcesFile\": null,\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "retention"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"reviews\": 119,\n  \"overallSuccessRate\": 0.97,\n  \"delayedReviews\": 118,\n  \"delayedSuccessRate\": 0.97,\n  \"byGap\": {\n    \"same-day\": {\n      \"correct\": 1,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 1,\n      \"successRate\": 1.0\n    },\n    \"1d\": {\n      \"correct\": 101,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 101,\n      \"successRate\": 1.0\n    },\n    \"2-3d\": {\n      \"correct\": 2,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 2,\n      \"successRate\": 1.0\n    },\n    \"4-7d\": {\n      \"correct\": 3,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 3,\n      \"successRate\": 1.0\n    },\n    \"8-14d\": {\n      \"correct\": 1,\n      \"incorrect\": 1,\n      \"partial\": 0,\n      \"reviews\": 2,\n      \"successRate\": 0.5\n    },\n    \"15-30d\": {\n      \"correct\": 3,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 3,\n      \"successRate\": 1.0\n    },\n    \"31d+\": {\n      \"correct\": 5,\n      \"incorrect\": 1,\n      \"partial\": 1,\n      \"reviews\": 7,\n      \"successRate\": 0.71\n    }\n  },\n  \"byBoxAtReview\": {\n    \"1\": {\n      \"correct\": 9,\n      \"incorrect\": 2,\n      \"partial\": 1,\n      \"reviews\": 12,\n      \"successRate\": 0.75\n    },\n    \"2\": {\n      \"correct\": 3,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 3,\n      \"successRate\": 1.0\n    },\n    \"3\": {\n      \"correct\": 102,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 102,\n      \"successRate\": 1.0\n    },\n    \"4\": {\n      \"correct\": 2,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 2,\n      \"successRate\": 1.0\n    },\n    \"5\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    }\n  },\n  \"relearningRetriesExcluded\": 1,\n  \"deferralsExcluded\": 1,\n  \"selfReportsExcluded\": 2,\n  \"entriesWithoutBoxBefore\": 0,\n  \"entriesSkipped\": 0,\n  \"note\": \"Leitner targets roughly 80-90% success at review time: persistently above suggests intervals too conservative; persistently below, too aggressive\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "calibration"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"taggedAnswers\": 6,\n  \"buckets\": {\n    \"sure\": {\n      \"correct\": 2,\n      \"incorrect\": 2,\n      \"partial\": 0\n    },\n    \"mostly\": {\n      \"correct\": 1,\n      \"incorrect\": 0,\n      \"partial\": 0\n    },\n    \"guessing\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 1\n    }\n  },\n  \"overconfidenceRate\": 0.5,\n  \"underconfidenceRate\": 0.0,\n  \"overconfidentEvents\": [\n    {\n      \"concept\": \"Descriptors\",\n      \"date\": \"2026-04-10\"\n    },\n    {\n      \"concept\": \"Protocols\",\n      \"date\": \"2026-04-01\"\n    }\n  ],\n  \"underconfidentEvents\": [],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "export-anonymized"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"exportVersion\": 1,\n  \"generated\": \"2026-04-10\",\n  \"concepts\": 11,\n  \"boxDistribution\": {\n    \"1\": 6,\n    \"2\": 2,\n    \"3\": 0,\n    \"4\": 2,\n    \"5\": 1\n  },\n  \"bloomDistribution\": {\n    \"0\": 1,\n    \"1\": 1,\n    \"2\": 3,\n    \"3\": 3,\n    \"4\": 2,\n    \"5\": 1,\n    \"6\": 0\n  },\n  \"feynmanPassed\": 2,\n  \"applied\": 3,\n  \"mastered\": 2,\n  \"sessionTypeCounts\": {\n    \"practice\": 1,\n    \"spaced-review\": 1,\n    \"learner-forget\": 1,\n    \"learner-park\": 1,\n    \"pair\": 1,\n    \"other\": 1\n  },\n  \"retention\": {\n    \"reviews\": 119,\n    \"overallSuccessRate\": 0.97,\n    \"delayedReviews\": 118,\n    \"delayedSuccessRate\": 0.97,\n    \"byGap\": {\n      \"same-day\": {\n        \"correct\": 1,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 1,\n        \"successRate\": 1.0\n      },\n      \"1d\": {\n        \"correct\": 101,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 101,\n        \"successRate\": 1.0\n      },\n      \"2-3d\": {\n        \"correct\": 2,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 2,\n        \"successRate\": 1.0\n      },\n      \"4-7d\": {\n        \"correct\": 3,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 3,\n        \"successRate\": 1.0\n      },\n      \"8-14d\": {\n        \"correct\": 1,\n        \"incorrect\": 1,\n        \"partial\": 0,\n        \"reviews\": 2,\n        \"successRate\": 0.5\n      },\n      \"15-30d\": {\n        \"correct\": 3,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 3,\n        \"successRate\": 1.0\n      },\n      \"31d+\": {\n        \"correct\": 5,\n        \"incorrect\": 1,\n        \"partial\": 1,\n        \"reviews\": 7,\n        \"successRate\": 0.71\n      }\n    },\n    \"byBoxAtReview\": {\n      \"1\": {\n        \"correct\": 9,\n        \"incorrect\": 2,\n        \"partial\": 1,\n        \"reviews\": 12,\n        \"successRate\": 0.75\n      },\n      \"2\": {\n        \"correct\": 3,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 3,\n        \"successRate\": 1.0\n      },\n      \"3\": {\n        \"correct\": 102,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 102,\n        \"successRate\": 1.0\n      },\n      \"4\": {\n        \"correct\": 2,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 2,\n        \"successRate\": 1.0\n      },\n      \"5\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      }\n    },\n    \"relearningRetriesExcluded\": 1,\n    \"deferralsExcluded\": 1,\n    \"selfReportsExcluded\": 2,\n    \"entriesWithoutBoxBefore\": 0,\n    \"entriesSkipped\": 0\n  },\n  \"calibration\": {\n    \"taggedAnswers\": 6,\n    \"buckets\": {\n      \"guessing\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 1\n      },\n      \"mostly\": {\n        \"correct\": 1,\n        \"incorrect\": 0,\n        \"partial\": 0\n      },\n      \"sure\": {\n        \"correct\": 2,\n        \"incorrect\": 2,\n        \"partial\": 0\n      }\n    },\n    \"overconfidenceRate\": 0.5,\n    \"underconfidenceRate\": 0.0\n  },\n  \"project\": {\n    \"totalSessions\": 15,\n    \"currentStreak\": 1,\n    \"overallCompletion\": 45,\n    \"daysSinceStart\": 99\n  },\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "session-brief",
+        "--concept",
+        "Closures"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"Closures\",\n  \"tracked\": true,\n  \"firstExposure\": false,\n  \"pretestApplies\": false,\n  \"isReteach\": false,\n  \"box\": 5,\n  \"bloomLevel\": 5,\n  \"bloomLabel\": \"Evaluate\",\n  \"bloomOutcome\": \"you can weigh the alternatives and defend a choice between them\",\n  \"evidenceAt3Plus\": 5,\n  \"appliedEvidence\": 1,\n  \"feynmanPassed\": true,\n  \"feynmanCurrent\": true,\n  \"lastReviewed\": \"2026-04-10\",\n  \"daysSinceLastReview\": 0,\n  \"lastResult\": \"correct\",\n  \"dueForReview\": false,\n  \"reviews\": 5,\n  \"currentModule\": \"Metaprogramming\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "session-brief",
+        "--concept",
+        "Recursion"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"Recursion\",\n  \"tracked\": true,\n  \"firstExposure\": false,\n  \"pretestApplies\": false,\n  \"isReteach\": false,\n  \"box\": 4,\n  \"bloomLevel\": 4,\n  \"bloomLabel\": \"Analyze\",\n  \"bloomOutcome\": \"you can work out why it works as it does and find where it breaks, on your own\",\n  \"evidenceAt3Plus\": 5,\n  \"appliedEvidence\": 1,\n  \"feynmanPassed\": true,\n  \"feynmanCurrent\": true,\n  \"lastReviewed\": \"2026-04-10\",\n  \"daysSinceLastReview\": 0,\n  \"lastResult\": \"correct\",\n  \"dueForReview\": false,\n  \"reviews\": 5,\n  \"currentModule\": \"Metaprogramming\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "session-brief",
+        "--concept",
+        "Iterators"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"Iterators\",\n  \"tracked\": true,\n  \"firstExposure\": false,\n  \"pretestApplies\": false,\n  \"isReteach\": false,\n  \"box\": 4,\n  \"bloomLevel\": 4,\n  \"bloomLabel\": \"Analyze\",\n  \"bloomOutcome\": \"you can work out why it works as it does and find where it breaks, on your own\",\n  \"evidenceAt3Plus\": 100,\n  \"appliedEvidence\": 2,\n  \"feynmanPassed\": false,\n  \"feynmanCurrent\": false,\n  \"lastReviewed\": \"2026-04-10\",\n  \"daysSinceLastReview\": 0,\n  \"lastResult\": \"correct\",\n  \"dueForReview\": false,\n  \"reviews\": 101,\n  \"currentModule\": \"Metaprogramming\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "session-brief",
+        "--concept",
+        "Generators"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"Generators\",\n  \"tracked\": true,\n  \"firstExposure\": false,\n  \"pretestApplies\": false,\n  \"isReteach\": true,\n  \"box\": 1,\n  \"bloomLevel\": 3,\n  \"bloomLabel\": \"Apply\",\n  \"bloomOutcome\": \"you can apply it to a real case with some guidance\",\n  \"evidenceAt3Plus\": 0,\n  \"appliedEvidence\": 0,\n  \"feynmanPassed\": false,\n  \"feynmanCurrent\": false,\n  \"lastReviewed\": \"2026-04-10\",\n  \"daysSinceLastReview\": 0,\n  \"lastResult\": \"correct\",\n  \"dueForReview\": false,\n  \"reviews\": 16,\n  \"currentModule\": \"Metaprogramming\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "session-brief",
+        "--concept",
+        "Decorators"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"Decorators\",\n  \"tracked\": true,\n  \"firstExposure\": false,\n  \"pretestApplies\": false,\n  \"isReteach\": true,\n  \"box\": 1,\n  \"bloomLevel\": 3,\n  \"bloomLabel\": \"Apply\",\n  \"bloomOutcome\": \"you can apply it to a real case with some guidance\",\n  \"evidenceAt3Plus\": 1,\n  \"appliedEvidence\": 0,\n  \"feynmanPassed\": false,\n  \"feynmanCurrent\": false,\n  \"lastReviewed\": \"2026-04-10\",\n  \"daysSinceLastReview\": 0,\n  \"lastResult\": \"correct\",\n  \"dueForReview\": false,\n  \"reviews\": 1,\n  \"currentModule\": \"Metaprogramming\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "session-brief",
+        "--concept",
+        "Descriptors"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"Descriptors\",\n  \"tracked\": true,\n  \"firstExposure\": false,\n  \"pretestApplies\": false,\n  \"isReteach\": true,\n  \"box\": 1,\n  \"bloomLevel\": 2,\n  \"bloomLabel\": \"Understand\",\n  \"bloomOutcome\": \"you can explain it in your own words\",\n  \"evidenceAt3Plus\": 0,\n  \"appliedEvidence\": 0,\n  \"feynmanPassed\": false,\n  \"feynmanCurrent\": false,\n  \"lastReviewed\": \"2026-04-10\",\n  \"daysSinceLastReview\": 0,\n  \"lastResult\": \"incorrect\",\n  \"dueForReview\": false,\n  \"reviews\": 2,\n  \"currentModule\": \"Metaprogramming\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "session-brief",
+        "--concept",
+        "Metaclasses"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"Metaclasses\",\n  \"tracked\": true,\n  \"firstExposure\": false,\n  \"pretestApplies\": false,\n  \"isReteach\": false,\n  \"box\": 2,\n  \"bloomLevel\": 3,\n  \"bloomLabel\": \"Apply\",\n  \"bloomOutcome\": \"you can apply it to a real case with some guidance\",\n  \"evidenceAt3Plus\": 1,\n  \"appliedEvidence\": 0,\n  \"feynmanPassed\": false,\n  \"feynmanCurrent\": false,\n  \"lastReviewed\": \"2026-03-25\",\n  \"daysSinceLastReview\": 16,\n  \"lastResult\": \"correct\",\n  \"dueForReview\": false,\n  \"reviews\": 1,\n  \"currentModule\": \"Metaprogramming\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "session-brief",
+        "--concept",
+        "Protocols"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"Protocols\",\n  \"tracked\": true,\n  \"firstExposure\": false,\n  \"pretestApplies\": false,\n  \"isReteach\": true,\n  \"box\": 1,\n  \"bloomLevel\": 1,\n  \"bloomLabel\": \"Remember\",\n  \"bloomOutcome\": \"you can recall the terms and what they refer to\",\n  \"evidenceAt3Plus\": 0,\n  \"appliedEvidence\": 0,\n  \"feynmanPassed\": false,\n  \"feynmanCurrent\": false,\n  \"lastReviewed\": \"2026-04-10\",\n  \"daysSinceLastReview\": 0,\n  \"lastResult\": \"incorrect\",\n  \"dueForReview\": false,\n  \"reviews\": 2,\n  \"currentModule\": \"Metaprogramming\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "session-brief",
+        "--concept",
+        "Slots"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"Slots\",\n  \"tracked\": true,\n  \"firstExposure\": true,\n  \"pretestApplies\": true,\n  \"isReteach\": false,\n  \"box\": 1,\n  \"bloomLevel\": 0,\n  \"bloomLabel\": null,\n  \"bloomOutcome\": \"nothing observed yet\",\n  \"evidenceAt3Plus\": 0,\n  \"appliedEvidence\": 0,\n  \"feynmanPassed\": false,\n  \"feynmanCurrent\": false,\n  \"lastReviewed\": null,\n  \"daysSinceLastReview\": null,\n  \"lastResult\": null,\n  \"dueForReview\": false,\n  \"reviews\": 0,\n  \"currentModule\": \"Metaprogramming\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "session-brief",
+        "--concept",
+        "Class decorators"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"Class decorators\",\n  \"tracked\": true,\n  \"firstExposure\": false,\n  \"pretestApplies\": false,\n  \"isReteach\": true,\n  \"box\": 1,\n  \"bloomLevel\": 2,\n  \"bloomLabel\": \"Understand\",\n  \"bloomOutcome\": \"you can explain it in your own words\",\n  \"evidenceAt3Plus\": 0,\n  \"appliedEvidence\": 0,\n  \"feynmanPassed\": false,\n  \"feynmanCurrent\": false,\n  \"lastReviewed\": \"2026-04-10\",\n  \"daysSinceLastReview\": 0,\n  \"lastResult\": \"correct\",\n  \"dueForReview\": false,\n  \"reviews\": 1,\n  \"currentModule\": \"Metaprogramming\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "gate-check",
+        "--module",
+        "Threads and the GIL",
+        "--prereqs",
+        "Closures, Recursion, Iterators, Generators, Decorators, Descriptors, Metaclasses, Protocols"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"fires\": true,\n  \"currentModule\": \"Threads and the GIL\",\n  \"seededOnly\": 0,\n  \"prerequisiteSource\": \"declared\",\n  \"prerequisites\": [\n    {\n      \"name\": \"Closures\",\n      \"bloomLevel\": 5,\n      \"bloomLabel\": \"Evaluate\",\n      \"bloomOutcome\": \"you can weigh the alternatives and defend a choice between them\",\n      \"box\": 5,\n      \"lastReviewed\": \"2026-04-10\",\n      \"evidenceAt3Plus\": 5,\n      \"appliedEvidence\": 1,\n      \"status\": \"satisfied\",\n      \"reason\": \"box\"\n    },\n    {\n      \"name\": \"Recursion\",\n      \"bloomLevel\": 4,\n      \"bloomLabel\": \"Analyze\",\n      \"bloomOutcome\": \"you can work out why it works as it does and find where it breaks, on your own\",\n      \"box\": 4,\n      \"lastReviewed\": \"2026-04-10\",\n      \"evidenceAt3Plus\": 5,\n      \"appliedEvidence\": 1,\n      \"status\": \"satisfied\",\n      \"reason\": \"box\"\n    },\n    {\n      \"name\": \"Iterators\",\n      \"bloomLevel\": 4,\n      \"bloomLabel\": \"Analyze\",\n      \"bloomOutcome\": \"you can work out why it works as it does and find where it breaks, on your own\",\n      \"box\": 4,\n      \"lastReviewed\": \"2026-04-10\",\n      \"evidenceAt3Plus\": 100,\n      \"appliedEvidence\": 2,\n      \"status\": \"satisfied\",\n      \"reason\": \"box\"\n    },\n    {\n      \"name\": \"Generators\",\n      \"bloomLevel\": 3,\n      \"bloomLabel\": \"Apply\",\n      \"bloomOutcome\": \"you can apply it to a real case with some guidance\",\n      \"box\": 1,\n      \"lastReviewed\": \"2026-04-10\",\n      \"evidenceAt3Plus\": 0,\n      \"appliedEvidence\": 0,\n      \"status\": \"stale-reconfirm\",\n      \"reason\": \"single-evidence\"\n    },\n    {\n      \"name\": \"Decorators\",\n      \"bloomLevel\": 3,\n      \"bloomLabel\": \"Apply\",\n      \"bloomOutcome\": \"you can apply it to a real case with some guidance\",\n      \"box\": 1,\n      \"lastReviewed\": \"2026-04-10\",\n      \"evidenceAt3Plus\": 1,\n      \"appliedEvidence\": 0,\n      \"status\": \"stale-reconfirm\",\n      \"reason\": \"single-evidence\"\n    },\n    {\n      \"name\": \"Descriptors\",\n      \"bloomLevel\": 2,\n      \"bloomLabel\": \"Understand\",\n      \"bloomOutcome\": \"you can explain it in your own words\",\n      \"box\": 1,\n      \"lastReviewed\": \"2026-04-10\",\n      \"evidenceAt3Plus\": 0,\n      \"appliedEvidence\": 0,\n      \"status\": \"gap\",\n      \"reason\": \"below-apply\"\n    },\n    {\n      \"name\": \"Metaclasses\",\n      \"bloomLevel\": 3,\n      \"bloomLabel\": \"Apply\",\n      \"bloomOutcome\": \"you can apply it to a real case with some guidance\",\n      \"box\": 2,\n      \"lastReviewed\": \"2026-03-25\",\n      \"evidenceAt3Plus\": 1,\n      \"appliedEvidence\": 0,\n      \"status\": \"stale-reconfirm\",\n      \"reason\": \"single-evidence\"\n    },\n    {\n      \"name\": \"Protocols\",\n      \"bloomLevel\": 1,\n      \"bloomLabel\": \"Remember\",\n      \"bloomOutcome\": \"you can recall the terms and what they refer to\",\n      \"box\": 1,\n      \"lastReviewed\": \"2026-04-10\",\n      \"evidenceAt3Plus\": 0,\n      \"appliedEvidence\": 0,\n      \"status\": \"gap\",\n      \"reason\": \"below-apply\"\n    }\n  ],\n  \"gaps\": [\n    \"Descriptors\",\n    \"Protocols\"\n  ],\n  \"staleReconfirm\": [\n    \"Generators\",\n    \"Decorators\",\n    \"Metaclasses\"\n  ],\n  \"verdict\": \"offer\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "gate-check",
+        "--module",
+        "Threads and the GIL",
+        "--prior-module",
+        "Collections"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"fires\": true,\n  \"currentModule\": \"Threads and the GIL\",\n  \"seededOnly\": 0,\n  \"prerequisiteSource\": \"prior-module\",\n  \"prerequisites\": [\n    {\n      \"name\": \"Iterators\",\n      \"bloomLevel\": 4,\n      \"bloomLabel\": \"Analyze\",\n      \"bloomOutcome\": \"you can work out why it works as it does and find where it breaks, on your own\",\n      \"box\": 4,\n      \"lastReviewed\": \"2026-04-10\",\n      \"evidenceAt3Plus\": 100,\n      \"appliedEvidence\": 2,\n      \"status\": \"satisfied\",\n      \"reason\": \"box\"\n    },\n    {\n      \"name\": \"Generators\",\n      \"bloomLevel\": 3,\n      \"bloomLabel\": \"Apply\",\n      \"bloomOutcome\": \"you can apply it to a real case with some guidance\",\n      \"box\": 1,\n      \"lastReviewed\": \"2026-04-10\",\n      \"evidenceAt3Plus\": 0,\n      \"appliedEvidence\": 0,\n      \"status\": \"stale-reconfirm\",\n      \"reason\": \"single-evidence\"\n    },\n    {\n      \"name\": \"Context managers\",\n      \"bloomLevel\": 2,\n      \"bloomLabel\": \"Understand\",\n      \"bloomOutcome\": \"you can explain it in your own words\",\n      \"box\": 2,\n      \"lastReviewed\": \"2026-04-08\",\n      \"evidenceAt3Plus\": 0,\n      \"appliedEvidence\": 0,\n      \"status\": \"gap\",\n      \"reason\": \"below-apply\"\n    }\n  ],\n  \"gaps\": [\n    \"Context managers\"\n  ],\n  \"staleReconfirm\": [\n    \"Generators\"\n  ],\n  \"verdict\": \"offer\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "gate-check",
+        "--module",
+        "Threads and the GIL",
+        "--prior-module",
+        "Functions"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"fires\": true,\n  \"currentModule\": \"Threads and the GIL\",\n  \"seededOnly\": 0,\n  \"prerequisiteSource\": \"prior-module\",\n  \"prerequisites\": [\n    {\n      \"name\": \"Closures\",\n      \"bloomLevel\": 5,\n      \"bloomLabel\": \"Evaluate\",\n      \"bloomOutcome\": \"you can weigh the alternatives and defend a choice between them\",\n      \"box\": 5,\n      \"lastReviewed\": \"2026-04-10\",\n      \"evidenceAt3Plus\": 5,\n      \"appliedEvidence\": 1,\n      \"status\": \"satisfied\",\n      \"reason\": \"box\"\n    },\n    {\n      \"name\": \"Recursion\",\n      \"bloomLevel\": 4,\n      \"bloomLabel\": \"Analyze\",\n      \"bloomOutcome\": \"you can work out why it works as it does and find where it breaks, on your own\",\n      \"box\": 4,\n      \"lastReviewed\": \"2026-04-10\",\n      \"evidenceAt3Plus\": 5,\n      \"appliedEvidence\": 1,\n      \"status\": \"satisfied\",\n      \"reason\": \"box\"\n    }\n  ],\n  \"gaps\": [],\n  \"staleReconfirm\": [],\n  \"verdict\": \"clear\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-04-10",
+      "argv": [
+        "gate-check",
+        "--module",
+        "Packaging"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"fires\": true,\n  \"currentModule\": \"Packaging\",\n  \"seededOnly\": 0,\n  \"prerequisiteSource\": \"prior-module\",\n  \"prerequisites\": [\n    {\n      \"name\": \"Iterators\",\n      \"bloomLevel\": 4,\n      \"bloomLabel\": \"Analyze\",\n      \"bloomOutcome\": \"you can work out why it works as it does and find where it breaks, on your own\",\n      \"box\": 4,\n      \"lastReviewed\": \"2026-04-10\",\n      \"evidenceAt3Plus\": 100,\n      \"appliedEvidence\": 2,\n      \"status\": \"satisfied\",\n      \"reason\": \"box\"\n    },\n    {\n      \"name\": \"Generators\",\n      \"bloomLevel\": 3,\n      \"bloomLabel\": \"Apply\",\n      \"bloomOutcome\": \"you can apply it to a real case with some guidance\",\n      \"box\": 1,\n      \"lastReviewed\": \"2026-04-10\",\n      \"evidenceAt3Plus\": 0,\n      \"appliedEvidence\": 0,\n      \"status\": \"stale-reconfirm\",\n      \"reason\": \"single-evidence\"\n    },\n    {\n      \"name\": \"Context managers\",\n      \"bloomLevel\": 2,\n      \"bloomLabel\": \"Understand\",\n      \"bloomOutcome\": \"you can explain it in your own words\",\n      \"box\": 2,\n      \"lastReviewed\": \"2026-04-08\",\n      \"evidenceAt3Plus\": 0,\n      \"appliedEvidence\": 0,\n      \"status\": \"gap\",\n      \"reason\": \"below-apply\"\n    }\n  ],\n  \"gaps\": [\n    \"Context managers\"\n  ],\n  \"staleReconfirm\": [\n    \"Generators\"\n  ],\n  \"verdict\": \"offer\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-15",
+      "argv": [
+        "due"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"dueToday\": 10,\n  \"neverTaughtCount\": 3,\n  \"concepts\": [\n    {\n      \"name\": \"Generators\",\n      \"module\": \"Collections\",\n      \"dueSince\": \"2026-04-11\",\n      \"overdueDays\": 34,\n      \"neverTaught\": false,\n      \"exposure\": \"built\",\n      \"bloomOutcome\": \"you can apply it to a real case with some guidance\",\n      \"question\": \"\",\n      \"priority\": 1\n    },\n    {\n      \"name\": \"Decorators\",\n      \"module\": \"Metaprogramming\",\n      \"dueSince\": \"2026-04-11\",\n      \"overdueDays\": 34,\n      \"neverTaught\": false,\n      \"exposure\": \"taught\",\n      \"bloomOutcome\": \"you can apply it to a real case with some guidance\",\n      \"question\": \"\",\n      \"priority\": 2\n    },\n    {\n      \"name\": \"Protocols\",\n      \"module\": \"Typing\",\n      \"dueSince\": \"2026-04-11\",\n      \"overdueDays\": 34,\n      \"neverTaught\": true,\n      \"exposure\": \"quizzed-only\",\n      \"bloomOutcome\": \"you can recall the terms and what they refer to\",\n      \"question\": \"\",\n      \"priority\": 3\n    },\n    {\n      \"name\": \"Slots\",\n      \"module\": \"Metaprogramming\",\n      \"dueSince\": \"2026-04-11\",\n      \"overdueDays\": 34,\n      \"neverTaught\": true,\n      \"exposure\": \"seeded\",\n      \"bloomOutcome\": \"nothing observed yet\",\n      \"question\": \"\",\n      \"priority\": 4\n    },\n    {\n      \"name\": \"Class decorators\",\n      \"module\": \"Metaprogramming\",\n      \"dueSince\": \"2026-04-11\",\n      \"overdueDays\": 34,\n      \"neverTaught\": false,\n      \"exposure\": \"taught\",\n      \"bloomOutcome\": \"you can explain it in your own words\",\n      \"question\": \"When does a class decorator run?\",\n      \"priority\": 5\n    },\n    {\n      \"name\": \"Descriptors\",\n      \"module\": \"Metaprogramming\",\n      \"dueSince\": \"2026-04-13\",\n      \"overdueDays\": 32,\n      \"neverTaught\": true,\n      \"exposure\": \"quizzed-only\",\n      \"bloomOutcome\": \"you can explain it in your own words\",\n      \"question\": \"\",\n      \"priority\": 6\n    },\n    {\n      \"name\": \"Context managers\",\n      \"module\": \"Collections\",\n      \"dueSince\": \"2026-04-11\",\n      \"overdueDays\": 34,\n      \"neverTaught\": false,\n      \"exposure\": \"taught\",\n      \"bloomOutcome\": \"you can explain it in your own words\",\n      \"question\": \"\",\n      \"priority\": 7\n    },\n    {\n      \"name\": \"Recursion\",\n      \"module\": \"Functions\",\n      \"dueSince\": \"2026-04-20\",\n      \"overdueDays\": 25,\n      \"neverTaught\": false,\n      \"exposure\": \"built\",\n      \"bloomOutcome\": \"you can work out why it works as it does and find where it breaks, on your own\",\n      \"question\": \"\",\n      \"priority\": 8\n    },\n    {\n      \"name\": \"Iterators\",\n      \"module\": \"Collections\",\n      \"dueSince\": \"2026-04-24\",\n      \"overdueDays\": 21,\n      \"neverTaught\": false,\n      \"exposure\": \"built\",\n      \"bloomOutcome\": \"you can work out why it works as it does and find where it breaks, on your own\",\n      \"question\": \"\",\n      \"priority\": 9\n    },\n    {\n      \"name\": \"Closures\",\n      \"module\": \"Functions\",\n      \"dueSince\": \"2026-05-10\",\n      \"overdueDays\": 5,\n      \"neverTaught\": false,\n      \"exposure\": \"built\",\n      \"bloomOutcome\": \"you can weigh the alternatives and defend a choice between them\",\n      \"question\": \"\",\n      \"priority\": 10\n    }\n  ],\n  \"parkedCount\": 1,\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-15",
+      "argv": [
+        "snapshot"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"project\": {\n    \"name\": \"rich\",\n    \"topic\": \"Python internals\",\n    \"createdAt\": \"2026-01-01T09:00:00\",\n    \"currentPhase\": \"1\",\n    \"currentModule\": \"Metaprogramming\",\n    \"currentModuleIndex\": 2,\n    \"position\": {\n      \"index\": 3,\n      \"of\": 5,\n      \"module\": \"Metaprogramming\",\n      \"phase\": 1\n    },\n    \"lastActivity\": \"Parked 1 concept(s): Metaclasses\",\n    \"overallCompletion\": 45,\n    \"initialBloomLevel\": {\n      \"python\": 2\n    },\n    \"currentBloomLevel\": {\n      \"python\": 3\n    }\n  },\n  \"cadence\": {\n    \"totalSessions\": 15,\n    \"currentStreak\": 1,\n    \"lastSessionAt\": \"2026-04-10T<time>\",\n    \"daysSinceLastSession\": 35,\n    \"sessionsLast7d\": 0,\n    \"sessionsLast30d\": 0\n  },\n  \"review\": {\n    \"concepts\": 11,\n    \"dueToday\": 10,\n    \"dueTodayConcepts\": [\n      \"Closures\",\n      \"Recursion\",\n      \"Iterators\",\n      \"Generators\",\n      \"Context managers\",\n      \"Decorators\",\n      \"Descriptors\",\n      \"Protocols\",\n      \"Slots\",\n      \"Class decorators\"\n    ],\n    \"dueThisWeek\": 0,\n    \"dueThisWeekConcepts\": [],\n    \"overdue10dPlus\": 9,\n    \"waitingForReviewDay\": 0,\n    \"unscheduled\": 0,\n    \"boxDistribution\": {\n      \"1\": 6,\n      \"2\": 1,\n      \"3\": 0,\n      \"4\": 2,\n      \"5\": 1\n    },\n    \"retentionRollup\": {\n      \"strong\": 3,\n      \"building\": 1,\n      \"needs_review\": 6\n    },\n    \"retentionConcepts\": {\n      \"strong\": [\n        \"Closures\",\n        \"Recursion\",\n        \"Iterators\"\n      ],\n      \"building\": [\n        \"Context managers\"\n      ],\n      \"needs_review\": [\n        \"Generators\",\n        \"Decorators\",\n        \"Descriptors\",\n        \"Protocols\",\n        \"Slots\",\n        \"Class decorators\"\n      ]\n    },\n    \"unparseableDates\": 0,\n    \"parked\": 1\n  },\n  \"mastery\": {\n    \"mastered\": 2,\n    \"feynmanPassed\": 2,\n    \"applied\": 3,\n    \"classified\": 10,\n    \"modules\": {\n      \"Functions\": {\n        \"concepts\": 2,\n        \"mastered\": 2,\n        \"classified\": 2,\n        \"applied\": 2,\n        \"dueForCheck\": 1,\n        \"tiers\": {\n          \"unclassified\": 0,\n          \"introduced\": 0,\n          \"familiar\": 0,\n          \"mastered\": 2\n        },\n        \"masteryPct\": 100\n      },\n      \"Collections\": {\n        \"concepts\": 3,\n        \"mastered\": 0,\n        \"classified\": 3,\n        \"applied\": 1,\n        \"dueForCheck\": 0,\n        \"tiers\": {\n          \"unclassified\": 0,\n          \"introduced\": 2,\n          \"familiar\": 1,\n          \"mastered\": 0\n        },\n        \"masteryPct\": 0\n      },\n      \"Metaprogramming\": {\n        \"concepts\": 5,\n        \"mastered\": 0,\n        \"classified\": 4,\n        \"applied\": 0,\n        \"dueForCheck\": 0,\n        \"tiers\": {\n          \"unclassified\": 1,\n          \"introduced\": 3,\n          \"familiar\": 1,\n          \"mastered\": 0\n        },\n        \"masteryPct\": 0\n      },\n      \"Typing\": {\n        \"concepts\": 1,\n        \"mastered\": 0,\n        \"classified\": 1,\n        \"applied\": 0,\n        \"dueForCheck\": 0,\n        \"tiers\": {\n          \"unclassified\": 0,\n          \"introduced\": 1,\n          \"familiar\": 0,\n          \"mastered\": 0\n        },\n        \"masteryPct\": 0\n      }\n    },\n    \"blockedOnFeynman\": [],\n    \"blockedOnApplied\": [],\n    \"masteredDueForCheck\": [\n      \"Recursion\"\n    ]\n  },\n  \"calibration\": {\n    \"taggedAnswers\": 6,\n    \"buckets\": {\n      \"sure\": {\n        \"correct\": 2,\n        \"incorrect\": 2,\n        \"partial\": 0\n      },\n      \"mostly\": {\n        \"correct\": 1,\n        \"incorrect\": 0,\n        \"partial\": 0\n      },\n      \"guessing\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 1\n      }\n    },\n    \"overconfidenceRate\": 0.5,\n    \"underconfidenceRate\": 0.0\n  },\n  \"bloomScale\": [\n    {\n      \"level\": 1,\n      \"label\": \"Remember\",\n      \"outcome\": \"you can recall the terms and what they refer to\"\n    },\n    {\n      \"level\": 2,\n      \"label\": \"Understand\",\n      \"outcome\": \"you can explain it in your own words\"\n    },\n    {\n      \"level\": 3,\n      \"label\": \"Apply\",\n      \"outcome\": \"you can apply it to a real case with some guidance\"\n    },\n    {\n      \"level\": 4,\n      \"label\": \"Analyze\",\n      \"outcome\": \"you can work out why it works as it does and find where it breaks, on your own\"\n    },\n    {\n      \"level\": 5,\n      \"label\": \"Evaluate\",\n      \"outcome\": \"you can weigh the alternatives and defend a choice between them\"\n    },\n    {\n      \"level\": 6,\n      \"label\": \"Create\",\n      \"outcome\": \"you can create something new with it and teach it\"\n    }\n  ],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-15",
+      "argv": [
+        "mastery"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"modules\": {\n    \"Functions\": {\n      \"concepts\": 2,\n      \"mastered\": 2,\n      \"classified\": 2,\n      \"applied\": 2,\n      \"dueForCheck\": 1,\n      \"tiers\": {\n        \"unclassified\": 0,\n        \"introduced\": 0,\n        \"familiar\": 0,\n        \"mastered\": 2\n      },\n      \"masteryPct\": 100\n    },\n    \"Collections\": {\n      \"concepts\": 3,\n      \"mastered\": 0,\n      \"classified\": 3,\n      \"applied\": 1,\n      \"dueForCheck\": 0,\n      \"tiers\": {\n        \"unclassified\": 0,\n        \"introduced\": 2,\n        \"familiar\": 1,\n        \"mastered\": 0\n      },\n      \"masteryPct\": 0\n    },\n    \"Metaprogramming\": {\n      \"concepts\": 5,\n      \"mastered\": 0,\n      \"classified\": 4,\n      \"applied\": 0,\n      \"dueForCheck\": 0,\n      \"tiers\": {\n        \"unclassified\": 1,\n        \"introduced\": 3,\n        \"familiar\": 1,\n        \"mastered\": 0\n      },\n      \"masteryPct\": 0\n    },\n    \"Typing\": {\n      \"concepts\": 1,\n      \"mastered\": 0,\n      \"classified\": 1,\n      \"applied\": 0,\n      \"dueForCheck\": 0,\n      \"tiers\": {\n        \"unclassified\": 0,\n        \"introduced\": 1,\n        \"familiar\": 0,\n        \"mastered\": 0\n      },\n      \"masteryPct\": 0\n    }\n  },\n  \"retentionRollup\": {\n    \"strong\": 3,\n    \"building\": 1,\n    \"needs_review\": 6\n  },\n  \"retentionConcepts\": {\n    \"strong\": [\n      \"Closures\",\n      \"Recursion\",\n      \"Iterators\"\n    ],\n    \"building\": [\n      \"Context managers\"\n    ],\n    \"needs_review\": [\n      \"Generators\",\n      \"Decorators\",\n      \"Descriptors\",\n      \"Protocols\",\n      \"Slots\",\n      \"Class decorators\"\n    ]\n  },\n  \"dueToday\": [\n    \"Closures\",\n    \"Recursion\",\n    \"Iterators\",\n    \"Generators\",\n    \"Context managers\",\n    \"Decorators\",\n    \"Descriptors\",\n    \"Protocols\",\n    \"Slots\",\n    \"Class decorators\"\n  ],\n  \"dueThisWeek\": [],\n  \"blockedOnFeynman\": [],\n  \"blockedOnApplied\": [],\n  \"masteredDueForCheck\": [\n    \"Recursion\"\n  ],\n  \"parked\": [\n    \"Metaclasses\"\n  ],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-15",
+      "argv": [
+        "retention"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"reviews\": 119,\n  \"overallSuccessRate\": 0.97,\n  \"delayedReviews\": 118,\n  \"delayedSuccessRate\": 0.97,\n  \"byGap\": {\n    \"same-day\": {\n      \"correct\": 1,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 1,\n      \"successRate\": 1.0\n    },\n    \"1d\": {\n      \"correct\": 101,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 101,\n      \"successRate\": 1.0\n    },\n    \"2-3d\": {\n      \"correct\": 2,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 2,\n      \"successRate\": 1.0\n    },\n    \"4-7d\": {\n      \"correct\": 3,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 3,\n      \"successRate\": 1.0\n    },\n    \"8-14d\": {\n      \"correct\": 1,\n      \"incorrect\": 1,\n      \"partial\": 0,\n      \"reviews\": 2,\n      \"successRate\": 0.5\n    },\n    \"15-30d\": {\n      \"correct\": 3,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 3,\n      \"successRate\": 1.0\n    },\n    \"31d+\": {\n      \"correct\": 5,\n      \"incorrect\": 1,\n      \"partial\": 1,\n      \"reviews\": 7,\n      \"successRate\": 0.71\n    }\n  },\n  \"byBoxAtReview\": {\n    \"1\": {\n      \"correct\": 9,\n      \"incorrect\": 2,\n      \"partial\": 1,\n      \"reviews\": 12,\n      \"successRate\": 0.75\n    },\n    \"2\": {\n      \"correct\": 3,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 3,\n      \"successRate\": 1.0\n    },\n    \"3\": {\n      \"correct\": 102,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 102,\n      \"successRate\": 1.0\n    },\n    \"4\": {\n      \"correct\": 2,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 2,\n      \"successRate\": 1.0\n    },\n    \"5\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    }\n  },\n  \"relearningRetriesExcluded\": 1,\n  \"deferralsExcluded\": 1,\n  \"selfReportsExcluded\": 2,\n  \"entriesWithoutBoxBefore\": 0,\n  \"entriesSkipped\": 0,\n  \"note\": \"Leitner targets roughly 80-90% success at review time: persistently above suggests intervals too conservative; persistently below, too aggressive\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-15",
+      "argv": [
+        "export-anonymized"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"exportVersion\": 1,\n  \"generated\": \"2026-05-15\",\n  \"concepts\": 11,\n  \"boxDistribution\": {\n    \"1\": 6,\n    \"2\": 2,\n    \"3\": 0,\n    \"4\": 2,\n    \"5\": 1\n  },\n  \"bloomDistribution\": {\n    \"0\": 1,\n    \"1\": 1,\n    \"2\": 3,\n    \"3\": 3,\n    \"4\": 2,\n    \"5\": 1,\n    \"6\": 0\n  },\n  \"feynmanPassed\": 2,\n  \"applied\": 3,\n  \"mastered\": 2,\n  \"sessionTypeCounts\": {\n    \"practice\": 1,\n    \"spaced-review\": 1,\n    \"learner-forget\": 1,\n    \"learner-park\": 1,\n    \"pair\": 1,\n    \"other\": 1\n  },\n  \"retention\": {\n    \"reviews\": 119,\n    \"overallSuccessRate\": 0.97,\n    \"delayedReviews\": 118,\n    \"delayedSuccessRate\": 0.97,\n    \"byGap\": {\n      \"same-day\": {\n        \"correct\": 1,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 1,\n        \"successRate\": 1.0\n      },\n      \"1d\": {\n        \"correct\": 101,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 101,\n        \"successRate\": 1.0\n      },\n      \"2-3d\": {\n        \"correct\": 2,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 2,\n        \"successRate\": 1.0\n      },\n      \"4-7d\": {\n        \"correct\": 3,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 3,\n        \"successRate\": 1.0\n      },\n      \"8-14d\": {\n        \"correct\": 1,\n        \"incorrect\": 1,\n        \"partial\": 0,\n        \"reviews\": 2,\n        \"successRate\": 0.5\n      },\n      \"15-30d\": {\n        \"correct\": 3,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 3,\n        \"successRate\": 1.0\n      },\n      \"31d+\": {\n        \"correct\": 5,\n        \"incorrect\": 1,\n        \"partial\": 1,\n        \"reviews\": 7,\n        \"successRate\": 0.71\n      }\n    },\n    \"byBoxAtReview\": {\n      \"1\": {\n        \"correct\": 9,\n        \"incorrect\": 2,\n        \"partial\": 1,\n        \"reviews\": 12,\n        \"successRate\": 0.75\n      },\n      \"2\": {\n        \"correct\": 3,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 3,\n        \"successRate\": 1.0\n      },\n      \"3\": {\n        \"correct\": 102,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 102,\n        \"successRate\": 1.0\n      },\n      \"4\": {\n        \"correct\": 2,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 2,\n        \"successRate\": 1.0\n      },\n      \"5\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      }\n    },\n    \"relearningRetriesExcluded\": 1,\n    \"deferralsExcluded\": 1,\n    \"selfReportsExcluded\": 2,\n    \"entriesWithoutBoxBefore\": 0,\n    \"entriesSkipped\": 0\n  },\n  \"calibration\": {\n    \"taggedAnswers\": 6,\n    \"buckets\": {\n      \"mostly\": {\n        \"correct\": 1,\n        \"incorrect\": 0,\n        \"partial\": 0\n      },\n      \"guessing\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 1\n      },\n      \"sure\": {\n        \"correct\": 2,\n        \"incorrect\": 2,\n        \"partial\": 0\n      }\n    },\n    \"overconfidenceRate\": 0.5,\n    \"underconfidenceRate\": 0.0\n  },\n  \"project\": {\n    \"totalSessions\": 15,\n    \"currentStreak\": 1,\n    \"overallCompletion\": 45,\n    \"daysSinceStart\": 134\n  },\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-15",
+      "argv": [
+        "calibration"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"taggedAnswers\": 6,\n  \"buckets\": {\n    \"mostly\": {\n      \"correct\": 1,\n      \"incorrect\": 0,\n      \"partial\": 0\n    },\n    \"guessing\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 1\n    },\n    \"sure\": {\n      \"correct\": 2,\n      \"incorrect\": 2,\n      \"partial\": 0\n    }\n  },\n  \"overconfidenceRate\": 0.5,\n  \"underconfidenceRate\": 0.0,\n  \"overconfidentEvents\": [\n    {\n      \"concept\": \"Descriptors\",\n      \"date\": \"2026-04-10\"\n    },\n    {\n      \"concept\": \"Protocols\",\n      \"date\": \"2026-04-01\"\n    }\n  ],\n  \"underconfidentEvents\": [],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-15",
+      "argv": [
+        "verify"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"ok\": true,\n  \"project\": \"<WS>/rich\",\n  \"errors\": [],\n  \"warnings\": []\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-15",
+      "argv": [
+        "gate-check",
+        "--module",
+        "Threads and the GIL",
+        "--prereqs",
+        "Closures, Recursion, Iterators, Generators, Decorators, Descriptors, Metaclasses, Protocols"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"fires\": true,\n  \"currentModule\": \"Threads and the GIL\",\n  \"seededOnly\": 0,\n  \"prerequisiteSource\": \"declared\",\n  \"prerequisites\": [\n    {\n      \"name\": \"Closures\",\n      \"bloomLevel\": 5,\n      \"bloomLabel\": \"Evaluate\",\n      \"bloomOutcome\": \"you can weigh the alternatives and defend a choice between them\",\n      \"box\": 5,\n      \"lastReviewed\": \"2026-04-10\",\n      \"evidenceAt3Plus\": 5,\n      \"appliedEvidence\": 1,\n      \"status\": \"satisfied\",\n      \"reason\": \"box\"\n    },\n    {\n      \"name\": \"Recursion\",\n      \"bloomLevel\": 4,\n      \"bloomLabel\": \"Analyze\",\n      \"bloomOutcome\": \"you can work out why it works as it does and find where it breaks, on your own\",\n      \"box\": 4,\n      \"lastReviewed\": \"2026-04-10\",\n      \"evidenceAt3Plus\": 5,\n      \"appliedEvidence\": 1,\n      \"status\": \"satisfied\",\n      \"reason\": \"box\"\n    },\n    {\n      \"name\": \"Iterators\",\n      \"bloomLevel\": 4,\n      \"bloomLabel\": \"Analyze\",\n      \"bloomOutcome\": \"you can work out why it works as it does and find where it breaks, on your own\",\n      \"box\": 4,\n      \"lastReviewed\": \"2026-04-10\",\n      \"evidenceAt3Plus\": 100,\n      \"appliedEvidence\": 2,\n      \"status\": \"satisfied\",\n      \"reason\": \"box\"\n    },\n    {\n      \"name\": \"Generators\",\n      \"bloomLevel\": 3,\n      \"bloomLabel\": \"Apply\",\n      \"bloomOutcome\": \"you can apply it to a real case with some guidance\",\n      \"box\": 1,\n      \"lastReviewed\": \"2026-04-10\",\n      \"evidenceAt3Plus\": 0,\n      \"appliedEvidence\": 0,\n      \"status\": \"stale-reconfirm\",\n      \"reason\": \"stale\"\n    },\n    {\n      \"name\": \"Decorators\",\n      \"bloomLevel\": 3,\n      \"bloomLabel\": \"Apply\",\n      \"bloomOutcome\": \"you can apply it to a real case with some guidance\",\n      \"box\": 1,\n      \"lastReviewed\": \"2026-04-10\",\n      \"evidenceAt3Plus\": 1,\n      \"appliedEvidence\": 0,\n      \"status\": \"stale-reconfirm\",\n      \"reason\": \"stale\"\n    },\n    {\n      \"name\": \"Descriptors\",\n      \"bloomLevel\": 2,\n      \"bloomLabel\": \"Understand\",\n      \"bloomOutcome\": \"you can explain it in your own words\",\n      \"box\": 1,\n      \"lastReviewed\": \"2026-04-10\",\n      \"evidenceAt3Plus\": 0,\n      \"appliedEvidence\": 0,\n      \"status\": \"gap\",\n      \"reason\": \"below-apply\"\n    },\n    {\n      \"name\": \"Metaclasses\",\n      \"bloomLevel\": 3,\n      \"bloomLabel\": \"Apply\",\n      \"bloomOutcome\": \"you can apply it to a real case with some guidance\",\n      \"box\": 2,\n      \"lastReviewed\": \"2026-03-25\",\n      \"evidenceAt3Plus\": 1,\n      \"appliedEvidence\": 0,\n      \"status\": \"stale-reconfirm\",\n      \"reason\": \"stale\"\n    },\n    {\n      \"name\": \"Protocols\",\n      \"bloomLevel\": 1,\n      \"bloomLabel\": \"Remember\",\n      \"bloomOutcome\": \"you can recall the terms and what they refer to\",\n      \"box\": 1,\n      \"lastReviewed\": \"2026-04-10\",\n      \"evidenceAt3Plus\": 0,\n      \"appliedEvidence\": 0,\n      \"status\": \"gap\",\n      \"reason\": \"below-apply\"\n    }\n  ],\n  \"gaps\": [\n    \"Descriptors\",\n    \"Protocols\"\n  ],\n  \"staleReconfirm\": [\n    \"Generators\",\n    \"Decorators\",\n    \"Metaclasses\"\n  ],\n  \"verdict\": \"offer\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-15",
+      "argv": [
+        "gate-check",
+        "--module",
+        "Threads and the GIL",
+        "--prior-module",
+        "Collections"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"fires\": true,\n  \"currentModule\": \"Threads and the GIL\",\n  \"seededOnly\": 0,\n  \"prerequisiteSource\": \"prior-module\",\n  \"prerequisites\": [\n    {\n      \"name\": \"Iterators\",\n      \"bloomLevel\": 4,\n      \"bloomLabel\": \"Analyze\",\n      \"bloomOutcome\": \"you can work out why it works as it does and find where it breaks, on your own\",\n      \"box\": 4,\n      \"lastReviewed\": \"2026-04-10\",\n      \"evidenceAt3Plus\": 100,\n      \"appliedEvidence\": 2,\n      \"status\": \"satisfied\",\n      \"reason\": \"box\"\n    },\n    {\n      \"name\": \"Generators\",\n      \"bloomLevel\": 3,\n      \"bloomLabel\": \"Apply\",\n      \"bloomOutcome\": \"you can apply it to a real case with some guidance\",\n      \"box\": 1,\n      \"lastReviewed\": \"2026-04-10\",\n      \"evidenceAt3Plus\": 0,\n      \"appliedEvidence\": 0,\n      \"status\": \"stale-reconfirm\",\n      \"reason\": \"stale\"\n    },\n    {\n      \"name\": \"Context managers\",\n      \"bloomLevel\": 2,\n      \"bloomLabel\": \"Understand\",\n      \"bloomOutcome\": \"you can explain it in your own words\",\n      \"box\": 2,\n      \"lastReviewed\": \"2026-04-08\",\n      \"evidenceAt3Plus\": 0,\n      \"appliedEvidence\": 0,\n      \"status\": \"gap\",\n      \"reason\": \"below-apply\"\n    }\n  ],\n  \"gaps\": [\n    \"Context managers\"\n  ],\n  \"staleReconfirm\": [\n    \"Generators\"\n  ],\n  \"verdict\": \"offer\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-15",
+      "argv": [
+        "gate-check",
+        "--module",
+        "Threads and the GIL",
+        "--prior-module",
+        "Functions"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"fires\": true,\n  \"currentModule\": \"Threads and the GIL\",\n  \"seededOnly\": 0,\n  \"prerequisiteSource\": \"prior-module\",\n  \"prerequisites\": [\n    {\n      \"name\": \"Closures\",\n      \"bloomLevel\": 5,\n      \"bloomLabel\": \"Evaluate\",\n      \"bloomOutcome\": \"you can weigh the alternatives and defend a choice between them\",\n      \"box\": 5,\n      \"lastReviewed\": \"2026-04-10\",\n      \"evidenceAt3Plus\": 5,\n      \"appliedEvidence\": 1,\n      \"status\": \"satisfied\",\n      \"reason\": \"box\"\n    },\n    {\n      \"name\": \"Recursion\",\n      \"bloomLevel\": 4,\n      \"bloomLabel\": \"Analyze\",\n      \"bloomOutcome\": \"you can work out why it works as it does and find where it breaks, on your own\",\n      \"box\": 4,\n      \"lastReviewed\": \"2026-04-10\",\n      \"evidenceAt3Plus\": 5,\n      \"appliedEvidence\": 1,\n      \"status\": \"satisfied\",\n      \"reason\": \"box\"\n    }\n  ],\n  \"gaps\": [],\n  \"staleReconfirm\": [],\n  \"verdict\": \"clear\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-15",
+      "argv": [
+        "gate-check",
+        "--module",
+        "Packaging"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"fires\": true,\n  \"currentModule\": \"Packaging\",\n  \"seededOnly\": 0,\n  \"prerequisiteSource\": \"prior-module\",\n  \"prerequisites\": [\n    {\n      \"name\": \"Iterators\",\n      \"bloomLevel\": 4,\n      \"bloomLabel\": \"Analyze\",\n      \"bloomOutcome\": \"you can work out why it works as it does and find where it breaks, on your own\",\n      \"box\": 4,\n      \"lastReviewed\": \"2026-04-10\",\n      \"evidenceAt3Plus\": 100,\n      \"appliedEvidence\": 2,\n      \"status\": \"satisfied\",\n      \"reason\": \"box\"\n    },\n    {\n      \"name\": \"Generators\",\n      \"bloomLevel\": 3,\n      \"bloomLabel\": \"Apply\",\n      \"bloomOutcome\": \"you can apply it to a real case with some guidance\",\n      \"box\": 1,\n      \"lastReviewed\": \"2026-04-10\",\n      \"evidenceAt3Plus\": 0,\n      \"appliedEvidence\": 0,\n      \"status\": \"stale-reconfirm\",\n      \"reason\": \"stale\"\n    },\n    {\n      \"name\": \"Context managers\",\n      \"bloomLevel\": 2,\n      \"bloomLabel\": \"Understand\",\n      \"bloomOutcome\": \"you can explain it in your own words\",\n      \"box\": 2,\n      \"lastReviewed\": \"2026-04-08\",\n      \"evidenceAt3Plus\": 0,\n      \"appliedEvidence\": 0,\n      \"status\": \"gap\",\n      \"reason\": \"below-apply\"\n    }\n  ],\n  \"gaps\": [\n    \"Context managers\"\n  ],\n  \"staleReconfirm\": [\n    \"Generators\"\n  ],\n  \"verdict\": \"offer\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    }
+  ],
+  "files": {
+    ".bodhi-profile.json": "{\n  \"version\": 2,\n  \"careerGoal\": \"Python internals for library work\",\n  \"whyLearning\": \"Golden fixture\",\n  \"priorExperience\": \"5 years Python\",\n  \"learningStyle\": \"hands-on\",\n  \"overallBloomLevels\": {\n    \"python\": 3\n  },\n  \"cumulativeStats\": {\n    \"totalSessions\": 15,\n    \"totalExercises\": 6,\n    \"totalConceptsLearned\": 4,\n    \"totalMilestonesReached\": 1,\n    \"totalProjects\": 1,\n    \"teachBacksWritten\": 0,\n    \"teachBacksPublished\": 0\n  },\n  \"patterns\": {\n    \"persistentChallenges\": [],\n    \"consistentStrengths\": []\n  },\n  \"lastUpdated\": \"2026-04-10T<time>\"\n}\n",
+    ".bodhi-profile.projects.json": "{\n  \"version\": 2,\n  \"activeProjects\": [\n    {\n      \"name\": \"rich\",\n      \"topic\": \"Python internals\",\n      \"startedAt\": \"2026-01-01\",\n      \"currentPhase\": \"1\",\n      \"currentModule\": \"Metaprogramming\",\n      \"bloomLevel\": 3,\n      \"pace\": \"steady\",\n      \"status\": \"active\",\n      \"trackPurpose\": \"depth\"\n    }\n  ],\n  \"completedProjects\": []\n}\n",
+    "rich/.bodhi/plan/README.md": "# Learning Plan — Python internals\n\n**Current phase:** 1 (`phase-1.md`)\n**Pace:** steady\n\n## Phases\n\n- **Phase 1 — Language machinery** → `phase-1.md`\n- **Phase 2 — Concurrency** → `phase-2.md`\n",
+    "rich/.bodhi/plan/phase-1.md": "# Phase 1 — Language machinery\n\n## Modules\n\n### Module 1.1 — Functions\n**Status:** done\n**Target Bloom's:** Analyze\n**Concepts:** Closures, Recursion\n\n### Module 1.2 — Collections\n**Concepts:** Iterators, Generators, Context managers\n\n**Prerequisites for next module:** Closures, Recursion, Iterators\n\n### Module 1.3 — Metaprogramming\n**Target Bloom's:** Apply\n**Key terms:** descriptor, metaclass\n\n### Module 1.4 — Packaging\n**Status:** skipped\n",
+    "rich/.bodhi/plan/phase-2.md": "# Phase 2 — Concurrency\n\n## Modules\n\n### Module 2 — Threads and the GIL\n**Target Bloom's:** Understand\n",
+    "rich/.bodhi/spaced-review.json": "{\n  \"version\": 3,\n  \"lastReviewCheck\": \"2026-04-10T<time>\",\n  \"concepts\": [\n    {\n      \"name\": \"Closures\",\n      \"module\": \"Functions\",\n      \"introduced\": \"2026-01-01\",\n      \"box\": 5,\n      \"nextReview\": \"2026-05-10\",\n      \"lastReviewed\": \"2026-04-10\",\n      \"question\": \"\",\n      \"lastResult\": \"correct\",\n      \"bloomLevel\": 5,\n      \"feynmanPassed\": true,\n      \"consecutiveCorrectAtL4Plus\": 4,\n      \"reviewHistory\": [\n        {\n          \"date\": \"2026-03-01\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"teach\",\n          \"boxBefore\": 1\n        },\n        {\n          \"date\": \"2026-03-02\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 4,\n          \"source\": \"quiz\",\n          \"boxBefore\": 1\n        },\n        {\n          \"date\": \"2026-03-05\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 4,\n          \"source\": \"practice\",\n          \"boxBefore\": 2,\n          \"applied\": true\n        },\n        {\n          \"date\": \"2026-03-12\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 4,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-04-10\",\n          \"result\": \"correct\",\n          \"boxBefore\": 4,\n          \"bloomLevel\": 5,\n          \"confidence\": \"sure\",\n          \"source\": \"quiz\"\n        }\n      ],\n      \"feynmanPassedAt\": \"2026-03-12\"\n    },\n    {\n      \"name\": \"Recursion\",\n      \"module\": \"Functions\",\n      \"introduced\": \"2026-01-01\",\n      \"box\": 4,\n      \"nextReview\": \"2026-04-20\",\n      \"lastReviewed\": \"2026-04-10\",\n      \"question\": \"\",\n      \"lastResult\": \"correct\",\n      \"bloomLevel\": 4,\n      \"feynmanPassed\": true,\n      \"consecutiveCorrectAtL4Plus\": 3,\n      \"reviewHistory\": [\n        {\n          \"date\": \"2026-03-01\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"teach\",\n          \"boxBefore\": 1\n        },\n        {\n          \"date\": \"2026-03-02\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 4,\n          \"source\": \"quiz\",\n          \"boxBefore\": 1\n        },\n        {\n          \"date\": \"2026-03-05\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 4,\n          \"source\": \"quiz\",\n          \"boxBefore\": 2\n        },\n        {\n          \"date\": \"2026-03-12\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 4,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-04-10\",\n          \"result\": \"correct\",\n          \"boxBefore\": 4,\n          \"bloomLevel\": 4,\n          \"source\": \"pair\",\n          \"applied\": true\n        }\n      ],\n      \"feynmanPassedAt\": \"2026-04-10\"\n    },\n    {\n      \"name\": \"Iterators\",\n      \"module\": \"Collections\",\n      \"introduced\": \"2026-01-01\",\n      \"box\": 4,\n      \"nextReview\": \"2026-04-24\",\n      \"lastReviewed\": \"2026-04-10\",\n      \"question\": \"\",\n      \"lastResult\": \"correct\",\n      \"bloomLevel\": 4,\n      \"feynmanPassed\": false,\n      \"consecutiveCorrectAtL4Plus\": 1,\n      \"reviewHistory\": [\n        {\n          \"date\": \"2025-12-21\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"teach\",\n          \"boxBefore\": 1,\n          \"applied\": true\n        },\n        {\n          \"date\": \"2025-12-22\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2025-12-23\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2025-12-24\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2025-12-25\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2025-12-26\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2025-12-27\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2025-12-28\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2025-12-29\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2025-12-30\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2025-12-31\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-01-01\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-01-02\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-01-03\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-01-04\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-01-05\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-01-06\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-01-07\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-01-08\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-01-09\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-01-10\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-01-11\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-01-12\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-01-13\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-01-14\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-01-15\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-01-16\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-01-17\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-01-18\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-01-19\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-01-20\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-01-21\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-01-22\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-01-23\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-01-24\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-01-25\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-01-26\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-01-27\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-01-28\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-01-29\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-01-30\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-01-31\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-02-01\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-02-02\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-02-03\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-02-04\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-02-05\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-02-06\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-02-07\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-02-08\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-02-09\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-02-10\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-02-11\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-02-12\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-02-13\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-02-14\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-02-15\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-02-16\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-02-17\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-02-18\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-02-19\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-02-20\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-02-21\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-02-22\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-02-23\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-02-24\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-02-25\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-02-26\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-02-27\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-02-28\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-03-01\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-03-02\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-03-03\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-03-04\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-03-05\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-03-06\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-03-07\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-03-08\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-03-09\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-03-10\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-03-11\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-03-12\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-03-13\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-03-14\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-03-15\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-03-16\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-03-17\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-03-18\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-03-19\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-03-20\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-03-21\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-03-22\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-03-23\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-03-24\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-03-25\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-03-26\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-03-27\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-03-28\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-03-29\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-04-10\",\n          \"result\": \"correct\",\n          \"boxBefore\": 3,\n          \"bloomLevel\": 4,\n          \"source\": \"practice\",\n          \"applied\": true\n        }\n      ],\n      \"reviewHistoryArchived\": 1,\n      \"archivedSummary\": {\n        \"appliedEvidence\": 0,\n        \"evidenceAt3Plus\": 0,\n        \"through\": \"2025-12-20\",\n        \"lastMiss\": \"2025-12-20\"\n      }\n    },\n    {\n      \"name\": \"Generators\",\n      \"module\": \"Collections\",\n      \"introduced\": \"2026-01-01\",\n      \"box\": 1,\n      \"nextReview\": \"2026-04-11\",\n      \"lastReviewed\": \"2026-04-10\",\n      \"question\": \"\",\n      \"lastResult\": \"correct (relearning retry)\",\n      \"bloomLevel\": 3,\n      \"feynmanPassed\": false,\n      \"consecutiveCorrectAtL4Plus\": 0,\n      \"reviewHistory\": [\n        {\n          \"date\": \"2026-03-01\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 2,\n          \"confidence\": \"sure\"\n        },\n        {\n          \"date\": \"2026-03-08\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"reflect\",\n          \"boxBefore\": 3\n        },\n        {\n          \"date\": \"2026-04-10\",\n          \"result\": \"incorrect\",\n          \"selfReport\": true,\n          \"note\": \"learner-initiated demote\"\n        },\n        {\n          \"date\": \"2026-04-10\",\n          \"result\": \"correct\",\n          \"boxBefore\": 1,\n          \"retry\": true,\n          \"source\": \"quiz\"\n        }\n      ],\n      \"reviewHistoryArchived\": 12,\n      \"archivedSummary\": {\n        \"appliedEvidence\": 1,\n        \"evidenceAt3Plus\": 2,\n        \"through\": \"2026-02-01\",\n        \"lastMiss\": \"2026-01-15\",\n        \"exposure\": \"built\"\n      }\n    },\n    {\n      \"name\": \"Context managers\",\n      \"module\": \"Collections\",\n      \"introduced\": \"2026-01-01\",\n      \"box\": 2,\n      \"nextReview\": \"2026-04-11\",\n      \"lastReviewed\": \"2026-04-08\",\n      \"question\": \"\",\n      \"lastResult\": \"correct\",\n      \"bloomLevel\": 2,\n      \"feynmanPassed\": false,\n      \"consecutiveCorrectAtL4Plus\": 0,\n      \"reviewHistory\": [\n        {\n          \"date\": \"2026-04-08\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 2,\n          \"source\": \"teach\",\n          \"boxBefore\": 1\n        }\n      ]\n    },\n    {\n      \"name\": \"Decorators\",\n      \"module\": \"Metaprogramming\",\n      \"introduced\": \"2026-01-01\",\n      \"box\": 1,\n      \"nextReview\": \"2026-04-11\",\n      \"lastReviewed\": \"2026-04-10\",\n      \"question\": \"\",\n      \"lastResult\": \"correct\",\n      \"bloomLevel\": 3,\n      \"feynmanPassed\": false,\n      \"consecutiveCorrectAtL4Plus\": 0,\n      \"reviewHistory\": [\n        {\n          \"date\": \"2026-04-10\",\n          \"result\": \"correct\",\n          \"boxBefore\": 1,\n          \"bloomLevel\": 3,\n          \"source\": \"teach\"\n        }\n      ]\n    },\n    {\n      \"name\": \"Descriptors\",\n      \"module\": \"Metaprogramming\",\n      \"introduced\": \"2026-01-01\",\n      \"box\": 1,\n      \"nextReview\": \"2026-04-13\",\n      \"lastReviewed\": \"2026-04-10\",\n      \"question\": \"\",\n      \"lastResult\": \"incorrect\",\n      \"bloomLevel\": 2,\n      \"feynmanPassed\": false,\n      \"consecutiveCorrectAtL4Plus\": 0,\n      \"reviewHistory\": [\n        {\n          \"date\": \"2026-03-30\",\n          \"result\": \"partial\",\n          \"bloomLevel\": 2,\n          \"source\": \"quiz\",\n          \"boxBefore\": 1,\n          \"confidence\": \"guessing\"\n        },\n        {\n          \"date\": \"2026-04-10\",\n          \"result\": \"incorrect\",\n          \"boxBefore\": 1,\n          \"bloomLevel\": 2,\n          \"confidence\": \"sure\",\n          \"source\": \"quiz\"\n        },\n        {\n          \"date\": \"2026-04-10\",\n          \"deferred\": true,\n          \"days\": 3\n        }\n      ]\n    },\n    {\n      \"name\": \"Metaclasses\",\n      \"module\": \"Metaprogramming\",\n      \"introduced\": \"2026-01-01\",\n      \"box\": 2,\n      \"nextReview\": null,\n      \"lastReviewed\": \"2026-03-25\",\n      \"question\": \"\",\n      \"lastResult\": \"correct\",\n      \"bloomLevel\": 3,\n      \"feynmanPassed\": false,\n      \"consecutiveCorrectAtL4Plus\": 0,\n      \"reviewHistory\": [\n        {\n          \"date\": \"2026-03-25\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 3,\n          \"source\": \"quiz\",\n          \"boxBefore\": 1,\n          \"confidence\": \"mostly\"\n        }\n      ],\n      \"parked\": true\n    },\n    {\n      \"name\": \"Protocols\",\n      \"module\": \"Typing\",\n      \"introduced\": \"2026-01-01\",\n      \"box\": 1,\n      \"nextReview\": \"2026-04-11\",\n      \"lastReviewed\": \"2026-04-10\",\n      \"question\": \"\",\n      \"lastResult\": \"learner-initiated demote\",\n      \"bloomLevel\": 1,\n      \"feynmanPassed\": false,\n      \"consecutiveCorrectAtL4Plus\": 0,\n      \"reviewHistory\": [\n        {\n          \"date\": \"2026-04-01\",\n          \"result\": \"incorrect\",\n          \"bloomLevel\": 1,\n          \"source\": \"quiz\",\n          \"boxBefore\": 1,\n          \"confidence\": \"sure\"\n        },\n        {\n          \"date\": \"2026-04-10\",\n          \"result\": \"incorrect\",\n          \"selfReport\": true,\n          \"note\": \"learner-initiated demote\"\n        }\n      ]\n    },\n    {\n      \"name\": \"Slots\",\n      \"module\": \"Metaprogramming\",\n      \"introduced\": \"2026-04-10\",\n      \"box\": 1,\n      \"nextReview\": \"2026-04-11\",\n      \"lastReviewed\": null,\n      \"question\": \"\",\n      \"lastResult\": \"\",\n      \"bloomLevel\": 0,\n      \"feynmanPassed\": false,\n      \"consecutiveCorrectAtL4Plus\": 0,\n      \"reviewHistory\": []\n    },\n    {\n      \"name\": \"Class decorators\",\n      \"module\": \"Metaprogramming\",\n      \"introduced\": \"2026-04-10\",\n      \"box\": 1,\n      \"nextReview\": \"2026-04-11\",\n      \"lastReviewed\": \"2026-04-10\",\n      \"question\": \"When does a class decorator run?\",\n      \"lastResult\": \"correct\",\n      \"bloomLevel\": 2,\n      \"feynmanPassed\": false,\n      \"consecutiveCorrectAtL4Plus\": 0,\n      \"reviewHistory\": [\n        {\n          \"date\": \"2026-04-10\",\n          \"result\": \"correct\",\n          \"boxBefore\": 1,\n          \"bloomLevel\": 2,\n          \"source\": \"teach\"\n        }\n      ]\n    }\n  ],\n  \"sessionHistory\": [\n    {\n      \"date\": \"2026-03-12\",\n      \"type\": \"practice\",\n      \"conceptsReviewed\": 2\n    },\n    {\n      \"date\": \"2026-04-06\",\n      \"type\": \"spaced-review\",\n      \"conceptsReviewed\": 3,\n      \"passes\": 2,\n      \"misses\": 1\n    },\n    {\n      \"date\": \"2026-04-10\",\n      \"type\": \"learner-forget\",\n      \"conceptsDemoted\": [\n        \"Generators\",\n        \"Protocols\"\n      ],\n      \"boxChanges\": {\n        \"Generators\": \"3 -> 1\",\n        \"Protocols\": \"1 -> 1\"\n      }\n    },\n    {\n      \"date\": \"2026-04-10\",\n      \"type\": \"learner-park\",\n      \"conceptsParked\": [\n        \"Metaclasses\"\n      ]\n    },\n    {\n      \"date\": \"2026-04-10\",\n      \"type\": \"pair\",\n      \"conceptsReviewed\": 3,\n      \"notes\": \"drove the iterator protocol\"\n    },\n    {\n      \"date\": \"2026-04-10\",\n      \"type\": \"other\",\n      \"subtype\": \"probe\"\n    }\n  ]\n}\n",
+    "rich/.bodhi/state.json": "{\n  \"version\": 2,\n  \"projectName\": \"rich\",\n  \"topic\": \"Python internals\",\n  \"createdAt\": \"2026-01-01T09:00:00\",\n  \"lastSessionAt\": \"2026-04-10T<time>\",\n  \"totalSessions\": 15,\n  \"sessionDates\": [\n    \"2026-03-01\",\n    \"2026-03-02\",\n    \"2026-03-05\",\n    \"2026-03-12\",\n    \"2026-04-05\",\n    \"2026-04-06\",\n    \"2026-04-10\"\n  ],\n  \"currentStreak\": 1,\n  \"currentPhase\": \"1\",\n  \"currentModule\": \"Metaprogramming\",\n  \"currentModuleIndex\": 2,\n  \"previousModule\": \"Collections\",\n  \"lastActivity\": \"Parked 1 concept(s): Metaclasses\",\n  \"overallCompletion\": 45,\n  \"initialBloomLevel\": {\n    \"python\": 2\n  },\n  \"currentBloomLevel\": {\n    \"python\": 3\n  }\n}\n"
+  }
+}

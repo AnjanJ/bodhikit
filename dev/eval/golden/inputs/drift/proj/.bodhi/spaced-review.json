@@ -1,0 +1,38 @@
+{
+  "version": 3,
+  "lastReviewCheck": null,
+  "concepts": [
+    {
+      "name": "CSRF tokens",
+      "module": "Module 0",
+      "introduced": "2026-05-01",
+      "box": "2",
+      "nextReview": "2026-06-11",
+      "lastReviewed": "2026-06-09",
+      "question": "",
+      "lastResult": "skipped",
+      "bloomLevel": "2",
+      "feynmanPassed": "false",
+      "consecutiveCorrectAtL4Plus": 0,
+      "reviewHistory": [
+        {
+          "date": "2026-06-01",
+          "result": "correct",
+          "bloomLevel": 2
+        },
+        {
+          "date": "2026-06-09",
+          "result": "skipped",
+          "note": "session consumed; rolled +2 days"
+        }
+      ]
+    }
+  ],
+  "sessionHistory": [
+    {
+      "date": "2026-06-09",
+      "type": "phase-0-reteach-partial",
+      "notes": "invented type from the wild"
+    }
+  ]
+}

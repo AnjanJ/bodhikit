@@ -3101,6 +3101,73 @@ def t_gate_declared_none():
               out["fires"] is True, out)
 
 
+# Keys a reader may emit beyond what 1.24.1 printed, as dotted paths into its
+# JSON (`*` = every list item or dict value). Nothing else may change on the
+# code path: writer output and the files stay byte for byte.
+GOLDEN_NEW_KEYS = {}
+
+
+def _drop(obj, parts):
+    head, rest = parts[0], parts[1:]
+    if isinstance(obj, dict) and head != "*":
+        if not rest:
+            obj.pop(head, None)
+        elif head in obj:
+            _drop(obj[head], rest)
+    elif head == "*" and rest:
+        for kid in (obj.values() if isinstance(obj, dict) else obj
+                    if isinstance(obj, list) else []):
+            _drop(kid, rest)
+
+
+def _golden_step_differs(readers, cmd, want, got):
+    if (want["rc"], want["stderr"]) != (got["rc"], got["stderr"]):
+        return "exit code or stderr"
+    if cmd not in readers:
+        return "output" if want["stdout"] != got["stdout"] else None
+    try:
+        w, g = json.loads(want["stdout"]), json.loads(got["stdout"])
+    except json.JSONDecodeError:
+        return "output" if want["stdout"] != got["stdout"] else None
+    for path in GOLDEN_NEW_KEYS.get(cmd, ()):
+        _drop(g, path.split("."))
+    return "output" if w != g else None
+
+
+def t_golden_code_path():
+    """learn-anything/REQ-1, REQ-3: on a project with no evidence kind, the
+    engine does what release 1.24.1 did. dev/eval/make_golden.py recorded
+    1.24.1's output and files for a fixed script of calls over four code
+    projects; this replays the script on the current engine."""
+    import make_golden
+    for case in make_golden.CASES:
+        name = case["name"]
+        with open(make_golden.golden_path(case), encoding="utf-8") as f:
+            want = json.load(f)
+        check(f"golden {name}: recorded from 1.24.1",
+              want.get("source") == make_golden.SOURCE_REF, want.get("source"))
+        got = make_golden.replay(SCRIPT, case)
+        same_script = [(s["on"], s["argv"]) for s in want["steps"]] == \
+                      [(s["on"], s["argv"]) for s in got["steps"]]
+        check(f"golden {name}: the call script matches the recording", same_script,
+              "CASES changed; rebuild the baseline with make_golden.py on purpose")
+        if not same_script:
+            continue
+        diffs = []
+        for i, (w, g) in enumerate(zip(want["steps"], got["steps"])):
+            what = _golden_step_differs(make_golden.READERS, w["argv"][0], w, g)
+            if what:
+                diffs.append(f"call {i} {w['on']} {' '.join(w['argv'])}: {what} differs\n"
+                             f"--- 1.24.1\n{w['stdout'][:800]}{w['stderr'][:400]}\n"
+                             f"--- now\n{g['stdout'][:800]}{g['stderr'][:400]}")
+        check(f"golden {name}: {len(want['steps'])} calls print what 1.24.1 printed",
+              not diffs, f"{len(diffs)} differ; first: {diffs[0] if diffs else ''}")
+        files = [p for p in sorted(set(want["files"]) | set(got["files"]))
+                 if want["files"].get(p) != got["files"].get(p)]
+        check(f"golden {name}: {len(want['files'])} files byte-identical to 1.24.1",
+              not files, f"differ: {files}")
+
+
 def main():
     for t in (t_migrate, t_record_review, t_sessions_and_forget,
               t_touch_state_and_profile, t_gate_check,
@@ -3126,7 +3193,7 @@ def main():
               t_gate_seeded_module, t_exposure_routes, t_add_concept_bloom,
               t_verify_implies_readers, t_history_cap_keeps_facts,
               t_syllabus, t_plan_single_number_headings, t_module_prefix_join,
-              t_gate_declared_none):
+              t_gate_declared_none, t_golden_code_path):
         print(f"-- {t.__name__}")
         try:
             t()

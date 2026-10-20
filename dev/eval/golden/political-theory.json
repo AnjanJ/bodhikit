@@ -1,0 +1,464 @@
+{
+  "source": "cfe290b",
+  "case": "political-theory",
+  "steps": [
+    {
+      "on": "2026-10-09",
+      "argv": [
+        "verify"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"ok\": true,\n  \"project\": \"<WS>/political-theory\",\n  \"errors\": [],\n  \"warnings\": []\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-10-09",
+      "argv": [
+        "due"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"dueToday\": 2,\n  \"neverTaughtCount\": 1,\n  \"concepts\": [\n    {\n      \"name\": \"Descriptive and normative claims\",\n      \"module\": \"Claims, reasons, and facts versus values\",\n      \"dueSince\": \"2026-10-09\",\n      \"overdueDays\": 0,\n      \"neverTaught\": false,\n      \"exposure\": \"taught\",\n      \"bloomOutcome\": \"you can explain it in your own words\",\n      \"question\": \"What makes a claim descriptive rather than normative, and why does it matter in an argument?\",\n      \"priority\": 1\n    },\n    {\n      \"name\": \"Premises and conclusions\",\n      \"module\": \"Claims, reasons, and facts versus values\",\n      \"dueSince\": \"2026-10-09\",\n      \"overdueDays\": 0,\n      \"neverTaught\": true,\n      \"exposure\": \"seeded\",\n      \"bloomOutcome\": \"nothing observed yet\",\n      \"question\": \"\",\n      \"priority\": 2\n    }\n  ],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-10-09",
+      "argv": [
+        "snapshot"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"project\": {\n    \"name\": \"political-theory\",\n    \"topic\": \"Political theory from first principles\",\n    \"createdAt\": \"2026-10-06T09:00:00\",\n    \"currentPhase\": \"0\",\n    \"currentModule\": \"Claims, reasons, and facts versus values\",\n    \"currentModuleIndex\": 1,\n    \"position\": {\n      \"index\": 1,\n      \"of\": 2,\n      \"module\": \"Claims, reasons, and facts versus values\",\n      \"phase\": 0\n    },\n    \"lastActivity\": \"Taught descriptive and normative claims with a worked example about school textbooks.\",\n    \"overallCompletion\": 5,\n    \"initialBloomLevel\": {\n      \"political-reasoning\": 0\n    },\n    \"currentBloomLevel\": {\n      \"political-reasoning\": 2\n    }\n  },\n  \"cadence\": {\n    \"totalSessions\": 2,\n    \"currentStreak\": 1,\n    \"lastSessionAt\": \"2026-10-08T19:00:00\",\n    \"daysSinceLastSession\": 1,\n    \"sessionsLast7d\": 2,\n    \"sessionsLast30d\": 2\n  },\n  \"review\": {\n    \"concepts\": 2,\n    \"dueToday\": 2,\n    \"dueTodayConcepts\": [\n      \"Descriptive and normative claims\",\n      \"Premises and conclusions\"\n    ],\n    \"dueThisWeek\": 0,\n    \"dueThisWeekConcepts\": [],\n    \"overdue10dPlus\": 0,\n    \"waitingForReviewDay\": 0,\n    \"unscheduled\": 0,\n    \"boxDistribution\": {\n      \"1\": 2,\n      \"2\": 0,\n      \"3\": 0,\n      \"4\": 0,\n      \"5\": 0\n    },\n    \"retentionRollup\": {\n      \"strong\": 0,\n      \"building\": 0,\n      \"needs_review\": 2\n    },\n    \"retentionConcepts\": {\n      \"strong\": [],\n      \"building\": [],\n      \"needs_review\": [\n        \"Descriptive and normative claims\",\n        \"Premises and conclusions\"\n      ]\n    },\n    \"unparseableDates\": 0,\n    \"parked\": 0\n  },\n  \"mastery\": {\n    \"mastered\": 0,\n    \"feynmanPassed\": 0,\n    \"applied\": 0,\n    \"classified\": 1,\n    \"modules\": {\n      \"Claims, reasons, and facts versus values\": {\n        \"concepts\": 2,\n        \"mastered\": 0,\n        \"classified\": 1,\n        \"applied\": 0,\n        \"dueForCheck\": 0,\n        \"tiers\": {\n          \"unclassified\": 1,\n          \"introduced\": 1,\n          \"familiar\": 0,\n          \"mastered\": 0\n        },\n        \"masteryPct\": 0\n      }\n    },\n    \"blockedOnFeynman\": [],\n    \"blockedOnApplied\": [],\n    \"masteredDueForCheck\": []\n  },\n  \"calibration\": {\n    \"taggedAnswers\": 0,\n    \"buckets\": {\n      \"mostly\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0\n      },\n      \"sure\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0\n      },\n      \"guessing\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0\n      }\n    },\n    \"overconfidenceRate\": null,\n    \"underconfidenceRate\": null\n  },\n  \"bloomScale\": [\n    {\n      \"level\": 1,\n      \"label\": \"Remember\",\n      \"outcome\": \"you can recall the terms and what they refer to\"\n    },\n    {\n      \"level\": 2,\n      \"label\": \"Understand\",\n      \"outcome\": \"you can explain it in your own words\"\n    },\n    {\n      \"level\": 3,\n      \"label\": \"Apply\",\n      \"outcome\": \"you can apply it to a real case with some guidance\"\n    },\n    {\n      \"level\": 4,\n      \"label\": \"Analyze\",\n      \"outcome\": \"you can work out why it works as it does and find where it breaks, on your own\"\n    },\n    {\n      \"level\": 5,\n      \"label\": \"Evaluate\",\n      \"outcome\": \"you can weigh the alternatives and defend a choice between them\"\n    },\n    {\n      \"level\": 6,\n      \"label\": \"Create\",\n      \"outcome\": \"you can create something new with it and teach it\"\n    }\n  ],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-10-09",
+      "argv": [
+        "mastery"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"modules\": {\n    \"Claims, reasons, and facts versus values\": {\n      \"concepts\": 2,\n      \"mastered\": 0,\n      \"classified\": 1,\n      \"applied\": 0,\n      \"dueForCheck\": 0,\n      \"tiers\": {\n        \"unclassified\": 1,\n        \"introduced\": 1,\n        \"familiar\": 0,\n        \"mastered\": 0\n      },\n      \"masteryPct\": 0\n    }\n  },\n  \"retentionRollup\": {\n    \"strong\": 0,\n    \"building\": 0,\n    \"needs_review\": 2\n  },\n  \"retentionConcepts\": {\n    \"strong\": [],\n    \"building\": [],\n    \"needs_review\": [\n      \"Descriptive and normative claims\",\n      \"Premises and conclusions\"\n    ]\n  },\n  \"dueToday\": [\n    \"Descriptive and normative claims\",\n    \"Premises and conclusions\"\n  ],\n  \"dueThisWeek\": [],\n  \"blockedOnFeynman\": [],\n  \"blockedOnApplied\": [],\n  \"masteredDueForCheck\": [],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-10-09",
+      "argv": [
+        "syllabus"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"project\": \"political-theory\",\n  \"plan\": true,\n  \"phases\": [\n    {\n      \"phase\": 0,\n      \"title\": \"Phase 0 — The tools of political reasoning\",\n      \"file\": \"phase-0.md\",\n      \"modules\": 2\n    }\n  ],\n  \"position\": {\n    \"index\": 1,\n    \"of\": 2,\n    \"module\": \"Claims, reasons, and facts versus values\",\n    \"phase\": 0\n  },\n  \"currentPhase\": \"0\",\n  \"overallCompletion\": 5,\n  \"counts\": {\n    \"modules\": 2,\n    \"done\": 0,\n    \"skipped\": 0,\n    \"upcoming\": 1\n  },\n  \"modules\": [\n    {\n      \"index\": 1,\n      \"phase\": 0,\n      \"id\": \"0.1\",\n      \"name\": \"Claims, reasons, and facts versus values\",\n      \"status\": \"current\",\n      \"statusSource\": \"plan-order\",\n      \"targetBloom\": null,\n      \"plannedConcepts\": [\n        \"descriptive and normative claims\",\n        \"premises and conclusions\"\n      ],\n      \"keyTerms\": [],\n      \"file\": \"phase-0.md\",\n      \"evidence\": {\n        \"tracked\": true,\n        \"trackedAs\": \"Claims, reasons, and facts versus values\",\n        \"concepts\": 2,\n        \"classified\": 1,\n        \"applied\": 0,\n        \"mastered\": 0,\n        \"dueForCheck\": 0,\n        \"masteryPct\": 0,\n        \"tiers\": {\n          \"unclassified\": 1,\n          \"introduced\": 1,\n          \"familiar\": 0,\n          \"mastered\": 0\n        },\n        \"summaryTier\": \"introduced\",\n        \"nextDue\": \"2026-10-09\",\n        \"dueToday\": 2,\n        \"parked\": 0\n      }\n    },\n    {\n      \"index\": 2,\n      \"phase\": 0,\n      \"id\": \"0.2\",\n      \"name\": \"What do freedom and equality mean?\",\n      \"status\": \"upcoming\",\n      \"statusSource\": \"plan-order\",\n      \"targetBloom\": null,\n      \"plannedConcepts\": [\n        \"negative and positive liberty\",\n        \"equality of opportunity\"\n      ],\n      \"keyTerms\": [],\n      \"file\": \"phase-0.md\",\n      \"evidence\": {\n        \"tracked\": false,\n        \"concepts\": 0,\n        \"classified\": 0,\n        \"applied\": 0,\n        \"mastered\": 0,\n        \"dueForCheck\": 0,\n        \"masteryPct\": null,\n        \"tiers\": {\n          \"unclassified\": 0,\n          \"introduced\": 0,\n          \"familiar\": 0,\n          \"mastered\": 0\n        },\n        \"summaryTier\": null,\n        \"nextDue\": null,\n        \"dueToday\": 0,\n        \"parked\": 0\n      }\n    }\n  ],\n  \"untracked\": [\n    \"What do freedom and equality mean?\"\n  ],\n  \"unplanned\": [],\n  \"warnings\": [],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-10-09",
+      "argv": [
+        "gate-check"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"fires\": false,\n  \"reason\": \"continuation session — 1 concept(s) graded in module 'Claims, reasons, and facts versus values'\",\n  \"currentModule\": \"Claims, reasons, and facts versus values\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-10-09",
+      "argv": [
+        "revision-brief"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"date\": \"2026-10-09\",\n  \"project\": \"political-theory\",\n  \"module\": \"Claims, reasons, and facts versus values\",\n  \"session\": 2,\n  \"sessionToday\": false,\n  \"concepts\": [],\n  \"suggestedFile\": \"revision/2026-10-09-session.md\",\n  \"existing\": [],\n  \"resourcesFile\": null,\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-10-09",
+      "argv": [
+        "retention"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"reviews\": 1,\n  \"overallSuccessRate\": 1.0,\n  \"delayedReviews\": 0,\n  \"delayedSuccessRate\": null,\n  \"byGap\": {\n    \"same-day\": {\n      \"correct\": 1,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 1,\n      \"successRate\": 1.0\n    },\n    \"1d\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    },\n    \"2-3d\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    },\n    \"4-7d\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    },\n    \"8-14d\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    },\n    \"15-30d\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    },\n    \"31d+\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    }\n  },\n  \"byBoxAtReview\": {\n    \"1\": {\n      \"correct\": 1,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 1,\n      \"successRate\": 1.0\n    },\n    \"2\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    },\n    \"3\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    },\n    \"4\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    },\n    \"5\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    }\n  },\n  \"relearningRetriesExcluded\": 0,\n  \"deferralsExcluded\": 0,\n  \"selfReportsExcluded\": 0,\n  \"entriesWithoutBoxBefore\": 0,\n  \"entriesSkipped\": 0,\n  \"note\": \"Leitner targets roughly 80-90% success at review time: persistently above suggests intervals too conservative; persistently below, too aggressive\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-10-09",
+      "argv": [
+        "calibration"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"taggedAnswers\": 0,\n  \"buckets\": {\n    \"mostly\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0\n    },\n    \"guessing\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0\n    },\n    \"sure\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0\n    }\n  },\n  \"overconfidenceRate\": null,\n  \"underconfidenceRate\": null,\n  \"overconfidentEvents\": [],\n  \"underconfidentEvents\": [],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-10-09",
+      "argv": [
+        "export-anonymized"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"exportVersion\": 1,\n  \"generated\": \"2026-10-09\",\n  \"concepts\": 2,\n  \"boxDistribution\": {\n    \"1\": 2,\n    \"2\": 0,\n    \"3\": 0,\n    \"4\": 0,\n    \"5\": 0\n  },\n  \"bloomDistribution\": {\n    \"0\": 1,\n    \"1\": 0,\n    \"2\": 1,\n    \"3\": 0,\n    \"4\": 0,\n    \"5\": 0,\n    \"6\": 0\n  },\n  \"feynmanPassed\": 0,\n  \"applied\": 0,\n  \"mastered\": 0,\n  \"sessionTypeCounts\": {},\n  \"retention\": {\n    \"reviews\": 1,\n    \"overallSuccessRate\": 1.0,\n    \"delayedReviews\": 0,\n    \"delayedSuccessRate\": null,\n    \"byGap\": {\n      \"same-day\": {\n        \"correct\": 1,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 1,\n        \"successRate\": 1.0\n      },\n      \"1d\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      },\n      \"2-3d\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      },\n      \"4-7d\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      },\n      \"8-14d\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      },\n      \"15-30d\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      },\n      \"31d+\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      }\n    },\n    \"byBoxAtReview\": {\n      \"1\": {\n        \"correct\": 1,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 1,\n        \"successRate\": 1.0\n      },\n      \"2\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      },\n      \"3\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      },\n      \"4\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      },\n      \"5\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      }\n    },\n    \"relearningRetriesExcluded\": 0,\n    \"deferralsExcluded\": 0,\n    \"selfReportsExcluded\": 0,\n    \"entriesWithoutBoxBefore\": 0,\n    \"entriesSkipped\": 0\n  },\n  \"calibration\": {\n    \"taggedAnswers\": 0,\n    \"buckets\": {\n      \"mostly\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0\n      },\n      \"sure\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0\n      },\n      \"guessing\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0\n      }\n    },\n    \"overconfidenceRate\": null,\n    \"underconfidenceRate\": null\n  },\n  \"project\": {\n    \"totalSessions\": 2,\n    \"currentStreak\": 1,\n    \"overallCompletion\": 5,\n    \"daysSinceStart\": 3\n  },\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-10-09",
+      "argv": [
+        "session-brief",
+        "--concept",
+        "Descriptive and normative claims"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"Descriptive and normative claims\",\n  \"tracked\": true,\n  \"firstExposure\": false,\n  \"pretestApplies\": false,\n  \"isReteach\": true,\n  \"box\": 1,\n  \"bloomLevel\": 2,\n  \"bloomLabel\": \"Understand\",\n  \"bloomOutcome\": \"you can explain it in your own words\",\n  \"evidenceAt3Plus\": 0,\n  \"appliedEvidence\": 0,\n  \"feynmanPassed\": false,\n  \"feynmanCurrent\": false,\n  \"lastReviewed\": \"2026-10-08\",\n  \"daysSinceLastReview\": 1,\n  \"lastResult\": \"correct\",\n  \"dueForReview\": true,\n  \"reviews\": 1,\n  \"currentModule\": \"Claims, reasons, and facts versus values\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-10-09",
+      "argv": [
+        "session-brief",
+        "--concept",
+        "Premises and conclusions"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"Premises and conclusions\",\n  \"tracked\": true,\n  \"firstExposure\": true,\n  \"pretestApplies\": true,\n  \"isReteach\": false,\n  \"box\": 1,\n  \"bloomLevel\": 0,\n  \"bloomLabel\": null,\n  \"bloomOutcome\": \"nothing observed yet\",\n  \"evidenceAt3Plus\": 0,\n  \"appliedEvidence\": 0,\n  \"feynmanPassed\": false,\n  \"feynmanCurrent\": false,\n  \"lastReviewed\": null,\n  \"daysSinceLastReview\": null,\n  \"lastResult\": null,\n  \"dueForReview\": true,\n  \"reviews\": 0,\n  \"currentModule\": \"Claims, reasons, and facts versus values\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-10-09",
+      "argv": [
+        "record-review",
+        "--concept",
+        "Descriptive and normative claims",
+        "--result",
+        "correct",
+        "--tested-bloom",
+        "3",
+        "--applied",
+        "--source",
+        "practice",
+        "--confidence",
+        "sure"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"Descriptive and normative claims\",\n  \"box\": \"1 -> 2\",\n  \"retry\": false,\n  \"applied\": true,\n  \"appliedEvidence\": 1,\n  \"bloomLevel\": 3,\n  \"bloomLabel\": \"Apply\",\n  \"bloomOutcome\": \"you can apply it to a real case with some guidance\",\n  \"crossedBloom3\": true,\n  \"crossedLevel\": true,\n  \"consecutiveCorrectAtL4Plus\": 0,\n  \"nextReview\": \"2026-10-12\",\n  \"created\": false,\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-10-09",
+      "argv": [
+        "record-review",
+        "--concept",
+        "Premises and conclusions",
+        "--result",
+        "partial",
+        "--tested-bloom",
+        "1",
+        "--source",
+        "teach"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"Premises and conclusions\",\n  \"box\": \"1 -> 1\",\n  \"retry\": false,\n  \"applied\": false,\n  \"appliedEvidence\": 0,\n  \"bloomLevel\": 0,\n  \"bloomLabel\": null,\n  \"bloomOutcome\": \"nothing observed yet\",\n  \"crossedBloom3\": false,\n  \"crossedLevel\": false,\n  \"consecutiveCorrectAtL4Plus\": 0,\n  \"nextReview\": \"2026-10-10\",\n  \"created\": false,\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-10-09",
+      "argv": [
+        "set-feynman",
+        "--concept",
+        "Descriptive and normative claims"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"Descriptive and normative claims\",\n  \"feynmanPassed\": true,\n  \"feynmanPassedAt\": \"2026-10-09\",\n  \"feynmanCurrent\": true,\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-10-09",
+      "argv": [
+        "touch-state",
+        "--activity",
+        "Applied the is/ought split to a new case"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"action\": \"state-updated\",\n  \"newSession\": true,\n  \"currentStreak\": 2,\n  \"totalSessions\": 3,\n  \"profileSessionsBumped\": true,\n  \"lastActivity\": \"Applied the is/ought split to a new case\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-10-09",
+      "argv": [
+        "record-session",
+        "--type",
+        "quiz",
+        "--data",
+        "{\"conceptsReviewed\": 1}"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"action\": \"session-recorded\",\n  \"entry\": {\n    \"date\": \"2026-10-09\",\n    \"type\": \"quiz\",\n    \"conceptsReviewed\": 1\n  },\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-10-09",
+      "argv": [
+        "profile-add-project",
+        "--name",
+        "ethics-primer",
+        "--topic",
+        "Ethics",
+        "--bloom",
+        "1",
+        "--track-purpose",
+        "breadth"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"action\": \"profile-project-added\",\n  \"entry\": {\n    \"name\": \"ethics-primer\",\n    \"topic\": \"Ethics\",\n    \"startedAt\": \"2026-10-09\",\n    \"currentPhase\": \"1\",\n    \"currentModule\": \"\",\n    \"bloomLevel\": 1,\n    \"pace\": \"steady\",\n    \"status\": \"active\",\n    \"trackPurpose\": \"breadth\"\n  },\n  \"activeProjects\": 2,\n  \"file\": \"<WS>/.bodhi-profile.projects.json\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-10-09",
+      "argv": [
+        "profile-complete-project",
+        "--name",
+        "ethics-primer",
+        "--final-bloom",
+        "2"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"action\": \"profile-project-completed\",\n  \"entry\": {\n    \"name\": \"ethics-primer\",\n    \"completedAt\": \"2026-10-09\",\n    \"finalBloomLevel\": 2,\n    \"trackPurpose\": \"breadth\"\n  },\n  \"activeProjects\": 1,\n  \"completedProjects\": 1,\n  \"file\": \"<WS>/.bodhi-profile.projects.json\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-10-09",
+      "argv": [
+        "verify"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"ok\": true,\n  \"project\": \"<WS>/political-theory\",\n  \"errors\": [],\n  \"warnings\": []\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-10-09",
+      "argv": [
+        "due"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"dueToday\": 0,\n  \"neverTaughtCount\": 0,\n  \"concepts\": [],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-10-09",
+      "argv": [
+        "snapshot"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"project\": {\n    \"name\": \"political-theory\",\n    \"topic\": \"Political theory from first principles\",\n    \"createdAt\": \"2026-10-06T09:00:00\",\n    \"currentPhase\": \"0\",\n    \"currentModule\": \"Claims, reasons, and facts versus values\",\n    \"currentModuleIndex\": 1,\n    \"position\": {\n      \"index\": 1,\n      \"of\": 2,\n      \"module\": \"Claims, reasons, and facts versus values\",\n      \"phase\": 0\n    },\n    \"lastActivity\": \"Applied the is/ought split to a new case\",\n    \"overallCompletion\": 5,\n    \"initialBloomLevel\": {\n      \"political-reasoning\": 0\n    },\n    \"currentBloomLevel\": {\n      \"political-reasoning\": 2\n    }\n  },\n  \"cadence\": {\n    \"totalSessions\": 3,\n    \"currentStreak\": 2,\n    \"lastSessionAt\": \"2026-10-09T<time>\",\n    \"daysSinceLastSession\": 0,\n    \"sessionsLast7d\": 3,\n    \"sessionsLast30d\": 3\n  },\n  \"review\": {\n    \"concepts\": 2,\n    \"dueToday\": 0,\n    \"dueTodayConcepts\": [],\n    \"dueThisWeek\": 2,\n    \"dueThisWeekConcepts\": [\n      \"Descriptive and normative claims\",\n      \"Premises and conclusions\"\n    ],\n    \"overdue10dPlus\": 0,\n    \"waitingForReviewDay\": 2,\n    \"unscheduled\": 0,\n    \"boxDistribution\": {\n      \"1\": 1,\n      \"2\": 1,\n      \"3\": 0,\n      \"4\": 0,\n      \"5\": 0\n    },\n    \"retentionRollup\": {\n      \"strong\": 0,\n      \"building\": 1,\n      \"needs_review\": 1\n    },\n    \"retentionConcepts\": {\n      \"strong\": [],\n      \"building\": [\n        \"Descriptive and normative claims\"\n      ],\n      \"needs_review\": [\n        \"Premises and conclusions\"\n      ]\n    },\n    \"unparseableDates\": 0,\n    \"parked\": 0\n  },\n  \"mastery\": {\n    \"mastered\": 0,\n    \"feynmanPassed\": 1,\n    \"applied\": 1,\n    \"classified\": 1,\n    \"modules\": {\n      \"Claims, reasons, and facts versus values\": {\n        \"concepts\": 2,\n        \"mastered\": 0,\n        \"classified\": 1,\n        \"applied\": 1,\n        \"dueForCheck\": 0,\n        \"tiers\": {\n          \"unclassified\": 1,\n          \"introduced\": 0,\n          \"familiar\": 1,\n          \"mastered\": 0\n        },\n        \"masteryPct\": 0\n      }\n    },\n    \"blockedOnFeynman\": [],\n    \"blockedOnApplied\": [],\n    \"masteredDueForCheck\": []\n  },\n  \"calibration\": {\n    \"taggedAnswers\": 1,\n    \"buckets\": {\n      \"mostly\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0\n      },\n      \"guessing\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0\n      },\n      \"sure\": {\n        \"correct\": 1,\n        \"incorrect\": 0,\n        \"partial\": 0\n      }\n    },\n    \"overconfidenceRate\": 0.0,\n    \"underconfidenceRate\": null\n  },\n  \"bloomScale\": [\n    {\n      \"level\": 1,\n      \"label\": \"Remember\",\n      \"outcome\": \"you can recall the terms and what they refer to\"\n    },\n    {\n      \"level\": 2,\n      \"label\": \"Understand\",\n      \"outcome\": \"you can explain it in your own words\"\n    },\n    {\n      \"level\": 3,\n      \"label\": \"Apply\",\n      \"outcome\": \"you can apply it to a real case with some guidance\"\n    },\n    {\n      \"level\": 4,\n      \"label\": \"Analyze\",\n      \"outcome\": \"you can work out why it works as it does and find where it breaks, on your own\"\n    },\n    {\n      \"level\": 5,\n      \"label\": \"Evaluate\",\n      \"outcome\": \"you can weigh the alternatives and defend a choice between them\"\n    },\n    {\n      \"level\": 6,\n      \"label\": \"Create\",\n      \"outcome\": \"you can create something new with it and teach it\"\n    }\n  ],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-10-09",
+      "argv": [
+        "mastery"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"modules\": {\n    \"Claims, reasons, and facts versus values\": {\n      \"concepts\": 2,\n      \"mastered\": 0,\n      \"classified\": 1,\n      \"applied\": 1,\n      \"dueForCheck\": 0,\n      \"tiers\": {\n        \"unclassified\": 1,\n        \"introduced\": 0,\n        \"familiar\": 1,\n        \"mastered\": 0\n      },\n      \"masteryPct\": 0\n    }\n  },\n  \"retentionRollup\": {\n    \"strong\": 0,\n    \"building\": 1,\n    \"needs_review\": 1\n  },\n  \"retentionConcepts\": {\n    \"strong\": [],\n    \"building\": [\n      \"Descriptive and normative claims\"\n    ],\n    \"needs_review\": [\n      \"Premises and conclusions\"\n    ]\n  },\n  \"dueToday\": [],\n  \"dueThisWeek\": [\n    \"Descriptive and normative claims\",\n    \"Premises and conclusions\"\n  ],\n  \"blockedOnFeynman\": [],\n  \"blockedOnApplied\": [],\n  \"masteredDueForCheck\": [],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-10-09",
+      "argv": [
+        "syllabus"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"project\": \"political-theory\",\n  \"plan\": true,\n  \"phases\": [\n    {\n      \"phase\": 0,\n      \"title\": \"Phase 0 — The tools of political reasoning\",\n      \"file\": \"phase-0.md\",\n      \"modules\": 2\n    }\n  ],\n  \"position\": {\n    \"index\": 1,\n    \"of\": 2,\n    \"module\": \"Claims, reasons, and facts versus values\",\n    \"phase\": 0\n  },\n  \"currentPhase\": \"0\",\n  \"overallCompletion\": 5,\n  \"counts\": {\n    \"modules\": 2,\n    \"done\": 0,\n    \"skipped\": 0,\n    \"upcoming\": 1\n  },\n  \"modules\": [\n    {\n      \"index\": 1,\n      \"phase\": 0,\n      \"id\": \"0.1\",\n      \"name\": \"Claims, reasons, and facts versus values\",\n      \"status\": \"current\",\n      \"statusSource\": \"plan-order\",\n      \"targetBloom\": null,\n      \"plannedConcepts\": [\n        \"descriptive and normative claims\",\n        \"premises and conclusions\"\n      ],\n      \"keyTerms\": [],\n      \"file\": \"phase-0.md\",\n      \"evidence\": {\n        \"tracked\": true,\n        \"trackedAs\": \"Claims, reasons, and facts versus values\",\n        \"concepts\": 2,\n        \"classified\": 1,\n        \"applied\": 1,\n        \"mastered\": 0,\n        \"dueForCheck\": 0,\n        \"masteryPct\": 0,\n        \"tiers\": {\n          \"unclassified\": 1,\n          \"introduced\": 0,\n          \"familiar\": 1,\n          \"mastered\": 0\n        },\n        \"summaryTier\": \"familiar\",\n        \"nextDue\": \"2026-10-10\",\n        \"dueToday\": 0,\n        \"parked\": 0\n      }\n    },\n    {\n      \"index\": 2,\n      \"phase\": 0,\n      \"id\": \"0.2\",\n      \"name\": \"What do freedom and equality mean?\",\n      \"status\": \"upcoming\",\n      \"statusSource\": \"plan-order\",\n      \"targetBloom\": null,\n      \"plannedConcepts\": [\n        \"negative and positive liberty\",\n        \"equality of opportunity\"\n      ],\n      \"keyTerms\": [],\n      \"file\": \"phase-0.md\",\n      \"evidence\": {\n        \"tracked\": false,\n        \"concepts\": 0,\n        \"classified\": 0,\n        \"applied\": 0,\n        \"mastered\": 0,\n        \"dueForCheck\": 0,\n        \"masteryPct\": null,\n        \"tiers\": {\n          \"unclassified\": 0,\n          \"introduced\": 0,\n          \"familiar\": 0,\n          \"mastered\": 0\n        },\n        \"summaryTier\": null,\n        \"nextDue\": null,\n        \"dueToday\": 0,\n        \"parked\": 0\n      }\n    }\n  ],\n  \"untracked\": [\n    \"What do freedom and equality mean?\"\n  ],\n  \"unplanned\": [],\n  \"warnings\": [],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-10-09",
+      "argv": [
+        "gate-check"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"fires\": false,\n  \"reason\": \"continuation session — 2 concept(s) graded in module 'Claims, reasons, and facts versus values'\",\n  \"currentModule\": \"Claims, reasons, and facts versus values\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-10-09",
+      "argv": [
+        "revision-brief"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"date\": \"2026-10-09\",\n  \"project\": \"political-theory\",\n  \"module\": \"Claims, reasons, and facts versus values\",\n  \"session\": 3,\n  \"sessionToday\": true,\n  \"concepts\": [\n    {\n      \"name\": \"Premises and conclusions\",\n      \"module\": \"Claims, reasons, and facts versus values\",\n      \"resultsToday\": [\n        \"partial\"\n      ],\n      \"sourcesToday\": [\n        \"teach\"\n      ],\n      \"box\": 1,\n      \"nextReview\": \"2026-10-10\",\n      \"bloomLevel\": 0,\n      \"bloomLabel\": null,\n      \"bloomOutcome\": \"nothing observed yet\",\n      \"question\": \"\",\n      \"feynmanPassed\": false\n    },\n    {\n      \"name\": \"Descriptive and normative claims\",\n      \"module\": \"Claims, reasons, and facts versus values\",\n      \"resultsToday\": [\n        \"correct\"\n      ],\n      \"sourcesToday\": [\n        \"practice\"\n      ],\n      \"box\": 2,\n      \"nextReview\": \"2026-10-12\",\n      \"bloomLevel\": 3,\n      \"bloomLabel\": \"Apply\",\n      \"bloomOutcome\": \"you can apply it to a real case with some guidance\",\n      \"question\": \"What makes a claim descriptive rather than normative, and why does it matter in an argument?\",\n      \"feynmanPassed\": true\n    }\n  ],\n  \"suggestedFile\": \"revision/2026-10-09-premises-and-conclusions.md\",\n  \"existing\": [],\n  \"resourcesFile\": null,\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-10-09",
+      "argv": [
+        "retention"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"reviews\": 3,\n  \"overallSuccessRate\": 0.67,\n  \"delayedReviews\": 2,\n  \"delayedSuccessRate\": 0.5,\n  \"byGap\": {\n    \"same-day\": {\n      \"correct\": 1,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 1,\n      \"successRate\": 1.0\n    },\n    \"1d\": {\n      \"correct\": 1,\n      \"incorrect\": 0,\n      \"partial\": 1,\n      \"reviews\": 2,\n      \"successRate\": 0.5\n    },\n    \"2-3d\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    },\n    \"4-7d\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    },\n    \"8-14d\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    },\n    \"15-30d\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    },\n    \"31d+\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    }\n  },\n  \"byBoxAtReview\": {\n    \"1\": {\n      \"correct\": 2,\n      \"incorrect\": 0,\n      \"partial\": 1,\n      \"reviews\": 3,\n      \"successRate\": 0.67\n    },\n    \"2\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    },\n    \"3\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    },\n    \"4\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    },\n    \"5\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    }\n  },\n  \"relearningRetriesExcluded\": 0,\n  \"deferralsExcluded\": 0,\n  \"selfReportsExcluded\": 0,\n  \"entriesWithoutBoxBefore\": 0,\n  \"entriesSkipped\": 0,\n  \"note\": \"Leitner targets roughly 80-90% success at review time: persistently above suggests intervals too conservative; persistently below, too aggressive\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-10-09",
+      "argv": [
+        "calibration"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"taggedAnswers\": 1,\n  \"buckets\": {\n    \"mostly\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0\n    },\n    \"guessing\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0\n    },\n    \"sure\": {\n      \"correct\": 1,\n      \"incorrect\": 0,\n      \"partial\": 0\n    }\n  },\n  \"overconfidenceRate\": 0.0,\n  \"underconfidenceRate\": null,\n  \"overconfidentEvents\": [],\n  \"underconfidentEvents\": [],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-10-09",
+      "argv": [
+        "export-anonymized"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"exportVersion\": 1,\n  \"generated\": \"2026-10-09\",\n  \"concepts\": 2,\n  \"boxDistribution\": {\n    \"1\": 1,\n    \"2\": 1,\n    \"3\": 0,\n    \"4\": 0,\n    \"5\": 0\n  },\n  \"bloomDistribution\": {\n    \"0\": 1,\n    \"1\": 0,\n    \"2\": 0,\n    \"3\": 1,\n    \"4\": 0,\n    \"5\": 0,\n    \"6\": 0\n  },\n  \"feynmanPassed\": 1,\n  \"applied\": 1,\n  \"mastered\": 0,\n  \"sessionTypeCounts\": {\n    \"quiz\": 1\n  },\n  \"retention\": {\n    \"reviews\": 3,\n    \"overallSuccessRate\": 0.67,\n    \"delayedReviews\": 2,\n    \"delayedSuccessRate\": 0.5,\n    \"byGap\": {\n      \"same-day\": {\n        \"correct\": 1,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 1,\n        \"successRate\": 1.0\n      },\n      \"1d\": {\n        \"correct\": 1,\n        \"incorrect\": 0,\n        \"partial\": 1,\n        \"reviews\": 2,\n        \"successRate\": 0.5\n      },\n      \"2-3d\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      },\n      \"4-7d\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      },\n      \"8-14d\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      },\n      \"15-30d\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      },\n      \"31d+\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      }\n    },\n    \"byBoxAtReview\": {\n      \"1\": {\n        \"correct\": 2,\n        \"incorrect\": 0,\n        \"partial\": 1,\n        \"reviews\": 3,\n        \"successRate\": 0.67\n      },\n      \"2\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      },\n      \"3\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      },\n      \"4\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      },\n      \"5\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      }\n    },\n    \"relearningRetriesExcluded\": 0,\n    \"deferralsExcluded\": 0,\n    \"selfReportsExcluded\": 0,\n    \"entriesWithoutBoxBefore\": 0,\n    \"entriesSkipped\": 0\n  },\n  \"calibration\": {\n    \"taggedAnswers\": 1,\n    \"buckets\": {\n      \"sure\": {\n        \"correct\": 1,\n        \"incorrect\": 0,\n        \"partial\": 0\n      },\n      \"guessing\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0\n      },\n      \"mostly\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0\n      }\n    },\n    \"overconfidenceRate\": 0.0,\n    \"underconfidenceRate\": null\n  },\n  \"project\": {\n    \"totalSessions\": 3,\n    \"currentStreak\": 2,\n    \"overallCompletion\": 5,\n    \"daysSinceStart\": 3\n  },\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-10-09",
+      "argv": [
+        "session-brief",
+        "--concept",
+        "Descriptive and normative claims"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"Descriptive and normative claims\",\n  \"tracked\": true,\n  \"firstExposure\": false,\n  \"pretestApplies\": false,\n  \"isReteach\": false,\n  \"box\": 2,\n  \"bloomLevel\": 3,\n  \"bloomLabel\": \"Apply\",\n  \"bloomOutcome\": \"you can apply it to a real case with some guidance\",\n  \"evidenceAt3Plus\": 1,\n  \"appliedEvidence\": 1,\n  \"feynmanPassed\": true,\n  \"feynmanCurrent\": true,\n  \"lastReviewed\": \"2026-10-09\",\n  \"daysSinceLastReview\": 0,\n  \"lastResult\": \"correct\",\n  \"dueForReview\": false,\n  \"reviews\": 2,\n  \"currentModule\": \"Claims, reasons, and facts versus values\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-10-09",
+      "argv": [
+        "gate-check",
+        "--module",
+        "Justice",
+        "--prior-module",
+        "Claims, reasons, and facts versus values"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"fires\": true,\n  \"currentModule\": \"Justice\",\n  \"seededOnly\": 0,\n  \"prerequisiteSource\": \"prior-module\",\n  \"prerequisites\": [\n    {\n      \"name\": \"Descriptive and normative claims\",\n      \"bloomLevel\": 3,\n      \"bloomLabel\": \"Apply\",\n      \"bloomOutcome\": \"you can apply it to a real case with some guidance\",\n      \"box\": 2,\n      \"lastReviewed\": \"2026-10-09\",\n      \"evidenceAt3Plus\": 1,\n      \"appliedEvidence\": 1,\n      \"status\": \"stale-reconfirm\",\n      \"reason\": \"single-evidence\"\n    },\n    {\n      \"name\": \"Premises and conclusions\",\n      \"bloomLevel\": 0,\n      \"bloomLabel\": null,\n      \"bloomOutcome\": \"nothing observed yet\",\n      \"box\": 1,\n      \"lastReviewed\": \"2026-10-09\",\n      \"evidenceAt3Plus\": 0,\n      \"appliedEvidence\": 0,\n      \"status\": \"no-opinion\",\n      \"reason\": \"unclassified\"\n    }\n  ],\n  \"gaps\": [],\n  \"staleReconfirm\": [\n    \"Descriptive and normative claims\"\n  ],\n  \"verdict\": \"offer\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-10-09",
+      "argv": [
+        "gate-check",
+        "--module",
+        "Justice",
+        "--prereqs",
+        "Descriptive and normative claims, Premises and conclusions"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"fires\": true,\n  \"currentModule\": \"Justice\",\n  \"seededOnly\": 0,\n  \"prerequisiteSource\": \"declared\",\n  \"prerequisites\": [\n    {\n      \"name\": \"Descriptive and normative claims\",\n      \"bloomLevel\": 3,\n      \"bloomLabel\": \"Apply\",\n      \"bloomOutcome\": \"you can apply it to a real case with some guidance\",\n      \"box\": 2,\n      \"lastReviewed\": \"2026-10-09\",\n      \"evidenceAt3Plus\": 1,\n      \"appliedEvidence\": 1,\n      \"status\": \"stale-reconfirm\",\n      \"reason\": \"single-evidence\"\n    },\n    {\n      \"name\": \"Premises and conclusions\",\n      \"bloomLevel\": 0,\n      \"bloomLabel\": null,\n      \"bloomOutcome\": \"nothing observed yet\",\n      \"box\": 1,\n      \"lastReviewed\": \"2026-10-09\",\n      \"evidenceAt3Plus\": 0,\n      \"appliedEvidence\": 0,\n      \"status\": \"no-opinion\",\n      \"reason\": \"unclassified\"\n    }\n  ],\n  \"gaps\": [],\n  \"staleReconfirm\": [\n    \"Descriptive and normative claims\"\n  ],\n  \"verdict\": \"offer\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-10-12",
+      "argv": [
+        "record-review",
+        "--concept",
+        "Descriptive and normative claims",
+        "--result",
+        "correct",
+        "--tested-bloom",
+        "4",
+        "--source",
+        "quiz"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"Descriptive and normative claims\",\n  \"box\": \"2 -> 3\",\n  \"retry\": false,\n  \"applied\": false,\n  \"appliedEvidence\": 1,\n  \"bloomLevel\": 4,\n  \"bloomLabel\": \"Analyze\",\n  \"bloomOutcome\": \"you can work out why it works as it does and find where it breaks, on your own\",\n  \"crossedBloom3\": false,\n  \"crossedLevel\": true,\n  \"consecutiveCorrectAtL4Plus\": 1,\n  \"nextReview\": \"2026-10-19\",\n  \"created\": false,\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-10-12",
+      "argv": [
+        "verify"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"ok\": true,\n  \"project\": \"<WS>/political-theory\",\n  \"errors\": [],\n  \"warnings\": []\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-10-12",
+      "argv": [
+        "due"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"dueToday\": 1,\n  \"neverTaughtCount\": 0,\n  \"concepts\": [\n    {\n      \"name\": \"Premises and conclusions\",\n      \"module\": \"Claims, reasons, and facts versus values\",\n      \"dueSince\": \"2026-10-10\",\n      \"overdueDays\": 2,\n      \"neverTaught\": false,\n      \"exposure\": \"taught\",\n      \"bloomOutcome\": \"nothing observed yet\",\n      \"question\": \"\",\n      \"priority\": 1\n    }\n  ],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-10-12",
+      "argv": [
+        "snapshot"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"project\": {\n    \"name\": \"political-theory\",\n    \"topic\": \"Political theory from first principles\",\n    \"createdAt\": \"2026-10-06T09:00:00\",\n    \"currentPhase\": \"0\",\n    \"currentModule\": \"Claims, reasons, and facts versus values\",\n    \"currentModuleIndex\": 1,\n    \"position\": {\n      \"index\": 1,\n      \"of\": 2,\n      \"module\": \"Claims, reasons, and facts versus values\",\n      \"phase\": 0\n    },\n    \"lastActivity\": \"Applied the is/ought split to a new case\",\n    \"overallCompletion\": 5,\n    \"initialBloomLevel\": {\n      \"political-reasoning\": 0\n    },\n    \"currentBloomLevel\": {\n      \"political-reasoning\": 2\n    }\n  },\n  \"cadence\": {\n    \"totalSessions\": 3,\n    \"currentStreak\": 2,\n    \"lastSessionAt\": \"2026-10-09T<time>\",\n    \"daysSinceLastSession\": 3,\n    \"sessionsLast7d\": 3,\n    \"sessionsLast30d\": 3\n  },\n  \"review\": {\n    \"concepts\": 2,\n    \"dueToday\": 1,\n    \"dueTodayConcepts\": [\n      \"Premises and conclusions\"\n    ],\n    \"dueThisWeek\": 1,\n    \"dueThisWeekConcepts\": [\n      \"Descriptive and normative claims\"\n    ],\n    \"overdue10dPlus\": 0,\n    \"waitingForReviewDay\": 1,\n    \"unscheduled\": 0,\n    \"boxDistribution\": {\n      \"1\": 1,\n      \"2\": 0,\n      \"3\": 1,\n      \"4\": 0,\n      \"5\": 0\n    },\n    \"retentionRollup\": {\n      \"strong\": 0,\n      \"building\": 1,\n      \"needs_review\": 1\n    },\n    \"retentionConcepts\": {\n      \"strong\": [],\n      \"building\": [\n        \"Descriptive and normative claims\"\n      ],\n      \"needs_review\": [\n        \"Premises and conclusions\"\n      ]\n    },\n    \"unparseableDates\": 0,\n    \"parked\": 0\n  },\n  \"mastery\": {\n    \"mastered\": 0,\n    \"feynmanPassed\": 1,\n    \"applied\": 1,\n    \"classified\": 1,\n    \"modules\": {\n      \"Claims, reasons, and facts versus values\": {\n        \"concepts\": 2,\n        \"mastered\": 0,\n        \"classified\": 1,\n        \"applied\": 1,\n        \"dueForCheck\": 0,\n        \"tiers\": {\n          \"unclassified\": 1,\n          \"introduced\": 0,\n          \"familiar\": 1,\n          \"mastered\": 0\n        },\n        \"masteryPct\": 0\n      }\n    },\n    \"blockedOnFeynman\": [],\n    \"blockedOnApplied\": [],\n    \"masteredDueForCheck\": []\n  },\n  \"calibration\": {\n    \"taggedAnswers\": 1,\n    \"buckets\": {\n      \"mostly\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0\n      },\n      \"guessing\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0\n      },\n      \"sure\": {\n        \"correct\": 1,\n        \"incorrect\": 0,\n        \"partial\": 0\n      }\n    },\n    \"overconfidenceRate\": 0.0,\n    \"underconfidenceRate\": null\n  },\n  \"bloomScale\": [\n    {\n      \"level\": 1,\n      \"label\": \"Remember\",\n      \"outcome\": \"you can recall the terms and what they refer to\"\n    },\n    {\n      \"level\": 2,\n      \"label\": \"Understand\",\n      \"outcome\": \"you can explain it in your own words\"\n    },\n    {\n      \"level\": 3,\n      \"label\": \"Apply\",\n      \"outcome\": \"you can apply it to a real case with some guidance\"\n    },\n    {\n      \"level\": 4,\n      \"label\": \"Analyze\",\n      \"outcome\": \"you can work out why it works as it does and find where it breaks, on your own\"\n    },\n    {\n      \"level\": 5,\n      \"label\": \"Evaluate\",\n      \"outcome\": \"you can weigh the alternatives and defend a choice between them\"\n    },\n    {\n      \"level\": 6,\n      \"label\": \"Create\",\n      \"outcome\": \"you can create something new with it and teach it\"\n    }\n  ],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-10-12",
+      "argv": [
+        "mastery"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"modules\": {\n    \"Claims, reasons, and facts versus values\": {\n      \"concepts\": 2,\n      \"mastered\": 0,\n      \"classified\": 1,\n      \"applied\": 1,\n      \"dueForCheck\": 0,\n      \"tiers\": {\n        \"unclassified\": 1,\n        \"introduced\": 0,\n        \"familiar\": 1,\n        \"mastered\": 0\n      },\n      \"masteryPct\": 0\n    }\n  },\n  \"retentionRollup\": {\n    \"strong\": 0,\n    \"building\": 1,\n    \"needs_review\": 1\n  },\n  \"retentionConcepts\": {\n    \"strong\": [],\n    \"building\": [\n      \"Descriptive and normative claims\"\n    ],\n    \"needs_review\": [\n      \"Premises and conclusions\"\n    ]\n  },\n  \"dueToday\": [\n    \"Premises and conclusions\"\n  ],\n  \"dueThisWeek\": [\n    \"Descriptive and normative claims\"\n  ],\n  \"blockedOnFeynman\": [],\n  \"blockedOnApplied\": [],\n  \"masteredDueForCheck\": [],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-10-12",
+      "argv": [
+        "syllabus"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"project\": \"political-theory\",\n  \"plan\": true,\n  \"phases\": [\n    {\n      \"phase\": 0,\n      \"title\": \"Phase 0 — The tools of political reasoning\",\n      \"file\": \"phase-0.md\",\n      \"modules\": 2\n    }\n  ],\n  \"position\": {\n    \"index\": 1,\n    \"of\": 2,\n    \"module\": \"Claims, reasons, and facts versus values\",\n    \"phase\": 0\n  },\n  \"currentPhase\": \"0\",\n  \"overallCompletion\": 5,\n  \"counts\": {\n    \"modules\": 2,\n    \"done\": 0,\n    \"skipped\": 0,\n    \"upcoming\": 1\n  },\n  \"modules\": [\n    {\n      \"index\": 1,\n      \"phase\": 0,\n      \"id\": \"0.1\",\n      \"name\": \"Claims, reasons, and facts versus values\",\n      \"status\": \"current\",\n      \"statusSource\": \"plan-order\",\n      \"targetBloom\": null,\n      \"plannedConcepts\": [\n        \"descriptive and normative claims\",\n        \"premises and conclusions\"\n      ],\n      \"keyTerms\": [],\n      \"file\": \"phase-0.md\",\n      \"evidence\": {\n        \"tracked\": true,\n        \"trackedAs\": \"Claims, reasons, and facts versus values\",\n        \"concepts\": 2,\n        \"classified\": 1,\n        \"applied\": 1,\n        \"mastered\": 0,\n        \"dueForCheck\": 0,\n        \"masteryPct\": 0,\n        \"tiers\": {\n          \"unclassified\": 1,\n          \"introduced\": 0,\n          \"familiar\": 1,\n          \"mastered\": 0\n        },\n        \"summaryTier\": \"familiar\",\n        \"nextDue\": \"2026-10-10\",\n        \"dueToday\": 1,\n        \"parked\": 0\n      }\n    },\n    {\n      \"index\": 2,\n      \"phase\": 0,\n      \"id\": \"0.2\",\n      \"name\": \"What do freedom and equality mean?\",\n      \"status\": \"upcoming\",\n      \"statusSource\": \"plan-order\",\n      \"targetBloom\": null,\n      \"plannedConcepts\": [\n        \"negative and positive liberty\",\n        \"equality of opportunity\"\n      ],\n      \"keyTerms\": [],\n      \"file\": \"phase-0.md\",\n      \"evidence\": {\n        \"tracked\": false,\n        \"concepts\": 0,\n        \"classified\": 0,\n        \"applied\": 0,\n        \"mastered\": 0,\n        \"dueForCheck\": 0,\n        \"masteryPct\": null,\n        \"tiers\": {\n          \"unclassified\": 0,\n          \"introduced\": 0,\n          \"familiar\": 0,\n          \"mastered\": 0\n        },\n        \"summaryTier\": null,\n        \"nextDue\": null,\n        \"dueToday\": 0,\n        \"parked\": 0\n      }\n    }\n  ],\n  \"untracked\": [\n    \"What do freedom and equality mean?\"\n  ],\n  \"unplanned\": [],\n  \"warnings\": [],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-10-12",
+      "argv": [
+        "gate-check"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"fires\": false,\n  \"reason\": \"continuation session — 2 concept(s) graded in module 'Claims, reasons, and facts versus values'\",\n  \"currentModule\": \"Claims, reasons, and facts versus values\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-10-12",
+      "argv": [
+        "revision-brief"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"date\": \"2026-10-12\",\n  \"project\": \"political-theory\",\n  \"module\": \"Claims, reasons, and facts versus values\",\n  \"session\": 3,\n  \"sessionToday\": true,\n  \"concepts\": [\n    {\n      \"name\": \"Descriptive and normative claims\",\n      \"module\": \"Claims, reasons, and facts versus values\",\n      \"resultsToday\": [\n        \"correct\"\n      ],\n      \"sourcesToday\": [\n        \"quiz\"\n      ],\n      \"box\": 3,\n      \"nextReview\": \"2026-10-19\",\n      \"bloomLevel\": 4,\n      \"bloomLabel\": \"Analyze\",\n      \"bloomOutcome\": \"you can work out why it works as it does and find where it breaks, on your own\",\n      \"question\": \"What makes a claim descriptive rather than normative, and why does it matter in an argument?\",\n      \"feynmanPassed\": true\n    }\n  ],\n  \"suggestedFile\": \"revision/2026-10-12-descriptive-and-normative-claims.md\",\n  \"existing\": [],\n  \"resourcesFile\": null,\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-10-12",
+      "argv": [
+        "retention"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"reviews\": 4,\n  \"overallSuccessRate\": 0.75,\n  \"delayedReviews\": 3,\n  \"delayedSuccessRate\": 0.67,\n  \"byGap\": {\n    \"same-day\": {\n      \"correct\": 1,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 1,\n      \"successRate\": 1.0\n    },\n    \"1d\": {\n      \"correct\": 1,\n      \"incorrect\": 0,\n      \"partial\": 1,\n      \"reviews\": 2,\n      \"successRate\": 0.5\n    },\n    \"2-3d\": {\n      \"correct\": 1,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 1,\n      \"successRate\": 1.0\n    },\n    \"4-7d\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    },\n    \"8-14d\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    },\n    \"15-30d\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    },\n    \"31d+\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    }\n  },\n  \"byBoxAtReview\": {\n    \"1\": {\n      \"correct\": 2,\n      \"incorrect\": 0,\n      \"partial\": 1,\n      \"reviews\": 3,\n      \"successRate\": 0.67\n    },\n    \"2\": {\n      \"correct\": 1,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 1,\n      \"successRate\": 1.0\n    },\n    \"3\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    },\n    \"4\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    },\n    \"5\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    }\n  },\n  \"relearningRetriesExcluded\": 0,\n  \"deferralsExcluded\": 0,\n  \"selfReportsExcluded\": 0,\n  \"entriesWithoutBoxBefore\": 0,\n  \"entriesSkipped\": 0,\n  \"note\": \"Leitner targets roughly 80-90% success at review time: persistently above suggests intervals too conservative; persistently below, too aggressive\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-10-12",
+      "argv": [
+        "calibration"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"taggedAnswers\": 1,\n  \"buckets\": {\n    \"sure\": {\n      \"correct\": 1,\n      \"incorrect\": 0,\n      \"partial\": 0\n    },\n    \"guessing\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0\n    },\n    \"mostly\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0\n    }\n  },\n  \"overconfidenceRate\": 0.0,\n  \"underconfidenceRate\": null,\n  \"overconfidentEvents\": [],\n  \"underconfidentEvents\": [],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-10-12",
+      "argv": [
+        "export-anonymized"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"exportVersion\": 1,\n  \"generated\": \"2026-10-12\",\n  \"concepts\": 2,\n  \"boxDistribution\": {\n    \"1\": 1,\n    \"2\": 0,\n    \"3\": 1,\n    \"4\": 0,\n    \"5\": 0\n  },\n  \"bloomDistribution\": {\n    \"0\": 1,\n    \"1\": 0,\n    \"2\": 0,\n    \"3\": 0,\n    \"4\": 1,\n    \"5\": 0,\n    \"6\": 0\n  },\n  \"feynmanPassed\": 1,\n  \"applied\": 1,\n  \"mastered\": 0,\n  \"sessionTypeCounts\": {\n    \"quiz\": 1\n  },\n  \"retention\": {\n    \"reviews\": 4,\n    \"overallSuccessRate\": 0.75,\n    \"delayedReviews\": 3,\n    \"delayedSuccessRate\": 0.67,\n    \"byGap\": {\n      \"same-day\": {\n        \"correct\": 1,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 1,\n        \"successRate\": 1.0\n      },\n      \"1d\": {\n        \"correct\": 1,\n        \"incorrect\": 0,\n        \"partial\": 1,\n        \"reviews\": 2,\n        \"successRate\": 0.5\n      },\n      \"2-3d\": {\n        \"correct\": 1,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 1,\n        \"successRate\": 1.0\n      },\n      \"4-7d\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      },\n      \"8-14d\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      },\n      \"15-30d\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      },\n      \"31d+\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      }\n    },\n    \"byBoxAtReview\": {\n      \"1\": {\n        \"correct\": 2,\n        \"incorrect\": 0,\n        \"partial\": 1,\n        \"reviews\": 3,\n        \"successRate\": 0.67\n      },\n      \"2\": {\n        \"correct\": 1,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 1,\n        \"successRate\": 1.0\n      },\n      \"3\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      },\n      \"4\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      },\n      \"5\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      }\n    },\n    \"relearningRetriesExcluded\": 0,\n    \"deferralsExcluded\": 0,\n    \"selfReportsExcluded\": 0,\n    \"entriesWithoutBoxBefore\": 0,\n    \"entriesSkipped\": 0\n  },\n  \"calibration\": {\n    \"taggedAnswers\": 1,\n    \"buckets\": {\n      \"guessing\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0\n      },\n      \"mostly\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0\n      },\n      \"sure\": {\n        \"correct\": 1,\n        \"incorrect\": 0,\n        \"partial\": 0\n      }\n    },\n    \"overconfidenceRate\": 0.0,\n    \"underconfidenceRate\": null\n  },\n  \"project\": {\n    \"totalSessions\": 3,\n    \"currentStreak\": 2,\n    \"overallCompletion\": 5,\n    \"daysSinceStart\": 6\n  },\n  \"ok\": true\n}\n",
+      "stderr": ""
+    }
+  ],
+  "files": {
+    ".bodhi-profile.json": "{\n  \"version\": 2,\n  \"careerGoal\": \"Understand political ideas well enough to argue them fairly\",\n  \"whyLearning\": \"Fixture for LLM evals: a topic without code\",\n  \"priorExperience\": \"None in political theory\",\n  \"learningStyle\": \"reading and discussion\",\n  \"overallBloomLevels\": {\n    \"political-reasoning\": 2\n  },\n  \"cumulativeStats\": {\n    \"totalSessions\": 3,\n    \"totalExercises\": 1,\n    \"totalConceptsLearned\": 1,\n    \"totalMilestonesReached\": 0,\n    \"totalProjects\": 1,\n    \"teachBacksWritten\": 0,\n    \"teachBacksPublished\": 0\n  },\n  \"patterns\": {\n    \"persistentChallenges\": [],\n    \"consistentStrengths\": []\n  },\n  \"lastUpdated\": \"2026-10-09T<time>\"\n}\n",
+    ".bodhi-profile.projects.json": "{\n  \"version\": 2,\n  \"activeProjects\": [\n    {\n      \"name\": \"political-theory\",\n      \"topic\": \"Political theory from first principles\",\n      \"startedAt\": \"2026-10-06\",\n      \"currentPhase\": \"0\",\n      \"currentModule\": \"Claims, reasons, and facts versus values\",\n      \"bloomLevel\": 2,\n      \"pace\": \"steady\",\n      \"status\": \"active\",\n      \"trackPurpose\": \"depth\"\n    }\n  ],\n  \"completedProjects\": [\n    {\n      \"name\": \"ethics-primer\",\n      \"completedAt\": \"2026-10-09\",\n      \"finalBloomLevel\": 2,\n      \"trackPurpose\": \"breadth\"\n    }\n  ]\n}\n",
+    "political-theory/.bodhi/plan/README.md": "# Learning Plan — Political theory from first principles\n\n**Current phase:** 0 (`phase-0.md`)\n**Target arc:** 12 weeks\n**Pace:** steady\n\n## Phases\n\n- **Phase 0 — The tools of political reasoning** (2 weeks) → `phase-0.md`\n",
+    "political-theory/.bodhi/plan/phase-0.md": "# Phase 0 — The tools of political reasoning\n\n**Goals:** Explain political claims clearly and tell which kind of claim each one is.\n**Duration:** 2 weeks\n**Success criteria:** Can sort the claims in a real argument into facts and values, with reasons.\n\n## Modules\n\n### Module 0.1 — Claims, reasons, and facts versus values\n\n**Prerequisites:** none; begin here.\n\n**Concepts:** descriptive and normative claims, premises and conclusions\n\n**Exercise:** Apply the distinction to a debate the lesson did not use, as a short written analysis saved in `exercises/`.\n\n**Prerequisites for next module:** Descriptive and normative claims\n\n### Module 0.2 — What do freedom and equality mean?\n\n**Prerequisites:** Descriptive and normative claims\n\n**Concepts:** negative and positive liberty, equality of opportunity\n",
+    "political-theory/.bodhi/progress.md": "# Progress Log\n\n## 2026-10-08 — Session 2 (Teach: descriptive and normative claims)\n\n**Duration:** ~35 min\n**Activities:**\n- Worked example: \"School B has eight usable textbooks for twenty pupils\" (descriptive) against \"Every pupil should have a textbook\" (normative).\n- Explain-back in own words; sorted two sentences about a bakery correctly.\n\n**Outcomes:**\n- Descriptive and normative claims introduced; can explain the distinction.\n\n**Next:** An exercise applying the distinction to a new case.\n\n---\n\n## Summary of earlier sessions\n\n- 2026-10-06 — Kickoff and assessment.\n",
+    "political-theory/.bodhi/spaced-review.json": "{\n  \"version\": 3,\n  \"lastReviewCheck\": \"2026-10-12T<time>\",\n  \"concepts\": [\n    {\n      \"name\": \"Descriptive and normative claims\",\n      \"module\": \"Claims, reasons, and facts versus values\",\n      \"introduced\": \"2026-10-08\",\n      \"box\": 3,\n      \"nextReview\": \"2026-10-19\",\n      \"lastReviewed\": \"2026-10-12\",\n      \"question\": \"What makes a claim descriptive rather than normative, and why does it matter in an argument?\",\n      \"lastResult\": \"correct\",\n      \"bloomLevel\": 4,\n      \"feynmanPassed\": true,\n      \"consecutiveCorrectAtL4Plus\": 1,\n      \"reviewHistory\": [\n        {\n          \"date\": \"2026-10-08\",\n          \"result\": \"correct\",\n          \"boxBefore\": 1,\n          \"bloomLevel\": 2,\n          \"source\": \"teach\"\n        },\n        {\n          \"date\": \"2026-10-09\",\n          \"result\": \"correct\",\n          \"boxBefore\": 1,\n          \"bloomLevel\": 3,\n          \"confidence\": \"sure\",\n          \"source\": \"practice\",\n          \"applied\": true\n        },\n        {\n          \"date\": \"2026-10-12\",\n          \"result\": \"correct\",\n          \"boxBefore\": 2,\n          \"bloomLevel\": 4,\n          \"source\": \"quiz\"\n        }\n      ],\n      \"feynmanPassedAt\": \"2026-10-09\"\n    },\n    {\n      \"name\": \"Premises and conclusions\",\n      \"module\": \"Claims, reasons, and facts versus values\",\n      \"introduced\": \"2026-10-08\",\n      \"box\": 1,\n      \"nextReview\": \"2026-10-10\",\n      \"lastReviewed\": \"2026-10-09\",\n      \"question\": \"\",\n      \"lastResult\": \"partial\",\n      \"bloomLevel\": 0,\n      \"feynmanPassed\": false,\n      \"consecutiveCorrectAtL4Plus\": 0,\n      \"reviewHistory\": [\n        {\n          \"date\": \"2026-10-09\",\n          \"result\": \"partial\",\n          \"boxBefore\": 1,\n          \"bloomLevel\": 1,\n          \"source\": \"teach\"\n        }\n      ]\n    }\n  ],\n  \"sessionHistory\": [\n    {\n      \"date\": \"2026-10-09\",\n      \"type\": \"quiz\",\n      \"conceptsReviewed\": 1\n    }\n  ]\n}\n",
+    "political-theory/.bodhi/state.json": "{\n  \"version\": 2,\n  \"projectName\": \"political-theory\",\n  \"topic\": \"Political theory from first principles\",\n  \"createdAt\": \"2026-10-06T09:00:00\",\n  \"lastSessionAt\": \"2026-10-09T<time>\",\n  \"totalSessions\": 3,\n  \"sessionDates\": [\n    \"2026-10-06\",\n    \"2026-10-08\",\n    \"2026-10-09\"\n  ],\n  \"currentStreak\": 2,\n  \"currentPhase\": \"0\",\n  \"currentModule\": \"Claims, reasons, and facts versus values\",\n  \"currentModuleIndex\": 1,\n  \"lastActivity\": \"Applied the is/ought split to a new case\",\n  \"initialBloomLevel\": {\n    \"political-reasoning\": 0\n  },\n  \"currentBloomLevel\": {\n    \"political-reasoning\": 2\n  },\n  \"overallCompletion\": 5\n}\n",
+    "political-theory/exercises/01-facts-and-values/README.md": "# Exercise 1 — Claims about what is and what ought to be\n\nWorked example from the lesson: \"School B has eight usable textbooks for twenty pupils\" is descriptive; \"Every pupil should have access to a textbook\" is normative.\n"
+  }
+}

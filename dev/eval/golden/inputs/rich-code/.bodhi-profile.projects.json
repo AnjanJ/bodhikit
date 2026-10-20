@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "activeProjects": [
+    {
+      "name": "rich",
+      "topic": "Python internals",
+      "startedAt": "2026-01-01",
+      "currentPhase": "1",
+      "currentModule": "Metaprogramming",
+      "bloomLevel": 3,
+      "pace": "steady",
+      "status": "active",
+      "trackPurpose": "depth"
+    }
+  ],
+  "completedProjects": []
+}

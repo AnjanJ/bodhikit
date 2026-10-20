@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "careerGoal": "Backend engineer comfortable with data systems",
+  "whyLearning": "Fixture for LLM evals",
+  "priorExperience": "2 years scripting",
+  "learningStyle": "hands-on",
+  "overallBloomLevels": { "sql": 2 },
+  "cumulativeStats": {
+    "totalSessions": 6,
+    "totalExercises": 3,
+    "totalConceptsLearned": 2,
+    "totalMilestonesReached": 0,
+    "totalProjects": 1,
+    "teachBacksWritten": 0,
+    "teachBacksPublished": 0
+  },
+  "patterns": { "persistentChallenges": [], "consistentStrengths": [] },
+  "lastUpdated": "2026-05-20T18:00:00"
+}

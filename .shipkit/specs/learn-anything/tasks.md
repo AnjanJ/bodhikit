@@ -19,7 +19,7 @@ touch the same files.
   - Test: none, docs only (CLAUDE.md is inert at install)
   - After: none
   - Done when: `dev/check.sh` → "All hard checks passed."
-- [ ] **T1** Golden baseline: 1.24.1 engine outputs as the code-path tripwire → REQ-1, REQ-3
+- [x] **T1** Golden baseline: 1.24.1 engine outputs as the code-path tripwire → REQ-1, REQ-3
   - Files: dev/eval/make_golden.py, dev/eval/golden/, dev/eval/test_bodhi_state.py
   - Test: dev/eval/test_bodhi_state.py::t_golden_code_path (characterization. It passes on the unchanged script; editing any golden file by hand must make it fail, checked once)
   - After: none

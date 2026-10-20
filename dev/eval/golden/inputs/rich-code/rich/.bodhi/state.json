@@ -1,0 +1,29 @@
+{
+  "version": 2,
+  "projectName": "rich",
+  "topic": "Python internals",
+  "createdAt": "2026-01-01T09:00:00",
+  "lastSessionAt": "2026-04-06T09:00:00",
+  "totalSessions": 14,
+  "sessionDates": [
+    "2026-03-01",
+    "2026-03-02",
+    "2026-03-05",
+    "2026-03-12",
+    "2026-04-05",
+    "2026-04-06"
+  ],
+  "currentStreak": 2,
+  "currentPhase": "1",
+  "currentModule": "Metaprogramming",
+  "currentModuleIndex": 2,
+  "previousModule": "Collections",
+  "lastActivity": "Wrote a descriptor that validates types",
+  "overallCompletion": 45,
+  "initialBloomLevel": {
+    "python": 2
+  },
+  "currentBloomLevel": {
+    "python": 3
+  }
+}

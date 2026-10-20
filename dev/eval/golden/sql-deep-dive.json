@@ -1,0 +1,827 @@
+{
+  "source": "cfe290b",
+  "case": "sql-deep-dive",
+  "steps": [
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "verify"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"ok\": true,\n  \"project\": \"<WS>/sql-deep-dive\",\n  \"errors\": [],\n  \"warnings\": [\n    \"spaced-review.json at v2 \\u2014 run `bodhi-state migrate-spaced-review`\"\n  ]\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "due"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"dueToday\": 1,\n  \"neverTaughtCount\": 1,\n  \"concepts\": [\n    {\n      \"name\": \"Query planning\",\n      \"module\": \"Indexing\",\n      \"dueSince\": \"2026-05-21\",\n      \"overdueDays\": 0,\n      \"neverTaught\": true,\n      \"exposure\": \"quizzed-only\",\n      \"bloomOutcome\": \"nothing observed yet\",\n      \"question\": \"What does the planner consider when choosing an index scan vs a seq scan?\",\n      \"priority\": 1\n    }\n  ],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "snapshot"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"project\": {\n    \"name\": \"sql-deep-dive\",\n    \"topic\": \"SQL and database internals\",\n    \"createdAt\": \"2026-04-01T09:00:00\",\n    \"currentPhase\": \"1\",\n    \"currentModule\": \"Query Optimization\",\n    \"currentModuleIndex\": 2,\n    \"position\": {\n      \"index\": 3,\n      \"of\": 3,\n      \"module\": \"Query Optimization\",\n      \"phase\": 1\n    },\n    \"lastActivity\": \"Quizzed on indexing; B-tree intuition solid, query planning shaky.\",\n    \"overallCompletion\": 30,\n    \"initialBloomLevel\": {\n      \"sql-basics\": 2,\n      \"indexing\": 1\n    },\n    \"currentBloomLevel\": {\n      \"sql-basics\": 3,\n      \"indexing\": 2\n    }\n  },\n  \"cadence\": {\n    \"totalSessions\": 6,\n    \"currentStreak\": 1,\n    \"lastSessionAt\": \"2026-05-20T18:00:00\",\n    \"daysSinceLastSession\": 1,\n    \"sessionsLast7d\": 1,\n    \"sessionsLast30d\": 3\n  },\n  \"review\": {\n    \"concepts\": 3,\n    \"dueToday\": 1,\n    \"dueTodayConcepts\": [\n      \"Query planning\"\n    ],\n    \"dueThisWeek\": 1,\n    \"dueThisWeekConcepts\": [\n      \"B-tree indexes\"\n    ],\n    \"overdue10dPlus\": 0,\n    \"waitingForReviewDay\": 2,\n    \"unscheduled\": 0,\n    \"boxDistribution\": {\n      \"1\": 1,\n      \"2\": 0,\n      \"3\": 1,\n      \"4\": 1,\n      \"5\": 0\n    },\n    \"retentionRollup\": {\n      \"strong\": 1,\n      \"building\": 1,\n      \"needs_review\": 1\n    },\n    \"retentionConcepts\": {\n      \"strong\": [\n        \"Normalization trade-offs\"\n      ],\n      \"building\": [\n        \"B-tree indexes\"\n      ],\n      \"needs_review\": [\n        \"Query planning\"\n      ]\n    },\n    \"unparseableDates\": 0,\n    \"parked\": 0\n  },\n  \"mastery\": {\n    \"mastered\": 0,\n    \"feynmanPassed\": 0,\n    \"applied\": 0,\n    \"classified\": 0,\n    \"modules\": {\n      \"Indexing\": {\n        \"concepts\": 2,\n        \"mastered\": 0,\n        \"classified\": 0,\n        \"applied\": 0,\n        \"dueForCheck\": 0,\n        \"tiers\": {\n          \"unclassified\": 2,\n          \"introduced\": 0,\n          \"familiar\": 0,\n          \"mastered\": 0\n        },\n        \"masteryPct\": null\n      },\n      \"Schema Design\": {\n        \"concepts\": 1,\n        \"mastered\": 0,\n        \"classified\": 0,\n        \"applied\": 0,\n        \"dueForCheck\": 0,\n        \"tiers\": {\n          \"unclassified\": 1,\n          \"introduced\": 0,\n          \"familiar\": 0,\n          \"mastered\": 0\n        },\n        \"masteryPct\": null\n      }\n    },\n    \"blockedOnFeynman\": [],\n    \"blockedOnApplied\": [],\n    \"masteredDueForCheck\": []\n  },\n  \"calibration\": {\n    \"taggedAnswers\": 0,\n    \"buckets\": {\n      \"guessing\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0\n      },\n      \"mostly\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0\n      },\n      \"sure\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0\n      }\n    },\n    \"overconfidenceRate\": null,\n    \"underconfidenceRate\": null\n  },\n  \"bloomScale\": [\n    {\n      \"level\": 1,\n      \"label\": \"Remember\",\n      \"outcome\": \"you can recall the terms and what they refer to\"\n    },\n    {\n      \"level\": 2,\n      \"label\": \"Understand\",\n      \"outcome\": \"you can explain it in your own words\"\n    },\n    {\n      \"level\": 3,\n      \"label\": \"Apply\",\n      \"outcome\": \"you can apply it to a real case with some guidance\"\n    },\n    {\n      \"level\": 4,\n      \"label\": \"Analyze\",\n      \"outcome\": \"you can work out why it works as it does and find where it breaks, on your own\"\n    },\n    {\n      \"level\": 5,\n      \"label\": \"Evaluate\",\n      \"outcome\": \"you can weigh the alternatives and defend a choice between them\"\n    },\n    {\n      \"level\": 6,\n      \"label\": \"Create\",\n      \"outcome\": \"you can create something new with it and teach it\"\n    }\n  ],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "mastery"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"modules\": {\n    \"Indexing\": {\n      \"concepts\": 2,\n      \"mastered\": 0,\n      \"classified\": 0,\n      \"applied\": 0,\n      \"dueForCheck\": 0,\n      \"tiers\": {\n        \"unclassified\": 2,\n        \"introduced\": 0,\n        \"familiar\": 0,\n        \"mastered\": 0\n      },\n      \"masteryPct\": null\n    },\n    \"Schema Design\": {\n      \"concepts\": 1,\n      \"mastered\": 0,\n      \"classified\": 0,\n      \"applied\": 0,\n      \"dueForCheck\": 0,\n      \"tiers\": {\n        \"unclassified\": 1,\n        \"introduced\": 0,\n        \"familiar\": 0,\n        \"mastered\": 0\n      },\n      \"masteryPct\": null\n    }\n  },\n  \"retentionRollup\": {\n    \"strong\": 1,\n    \"building\": 1,\n    \"needs_review\": 1\n  },\n  \"retentionConcepts\": {\n    \"strong\": [\n      \"Normalization trade-offs\"\n    ],\n    \"building\": [\n      \"B-tree indexes\"\n    ],\n    \"needs_review\": [\n      \"Query planning\"\n    ]\n  },\n  \"dueToday\": [\n    \"Query planning\"\n  ],\n  \"dueThisWeek\": [\n    \"B-tree indexes\"\n  ],\n  \"blockedOnFeynman\": [],\n  \"blockedOnApplied\": [],\n  \"masteredDueForCheck\": [],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "syllabus"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"project\": \"sql-deep-dive\",\n  \"plan\": true,\n  \"phases\": [\n    {\n      \"phase\": 1,\n      \"title\": \"Phase 1 — Foundations to internals\",\n      \"file\": \"phase-1.md\",\n      \"modules\": 3\n    }\n  ],\n  \"position\": {\n    \"index\": 3,\n    \"of\": 3,\n    \"module\": \"Query Optimization\",\n    \"phase\": 1\n  },\n  \"currentPhase\": \"1\",\n  \"overallCompletion\": 30,\n  \"counts\": {\n    \"modules\": 3,\n    \"done\": 2,\n    \"skipped\": 0,\n    \"upcoming\": 0\n  },\n  \"modules\": [\n    {\n      \"index\": 1,\n      \"phase\": 1,\n      \"id\": \"1.1\",\n      \"name\": \"Schema Design\",\n      \"status\": \"done\",\n      \"statusSource\": \"plan-order\",\n      \"targetBloom\": null,\n      \"plannedConcepts\": [],\n      \"keyTerms\": [],\n      \"file\": \"phase-1.md\",\n      \"evidence\": {\n        \"tracked\": true,\n        \"trackedAs\": \"Schema Design\",\n        \"concepts\": 1,\n        \"classified\": 0,\n        \"applied\": 0,\n        \"mastered\": 0,\n        \"dueForCheck\": 0,\n        \"masteryPct\": null,\n        \"tiers\": {\n          \"unclassified\": 1,\n          \"introduced\": 0,\n          \"familiar\": 0,\n          \"mastered\": 0\n        },\n        \"summaryTier\": null,\n        \"nextDue\": \"2026-06-03\",\n        \"dueToday\": 0,\n        \"parked\": 0\n      }\n    },\n    {\n      \"index\": 2,\n      \"phase\": 1,\n      \"id\": \"1.2\",\n      \"name\": \"Indexing\",\n      \"status\": \"done\",\n      \"statusSource\": \"plan-order\",\n      \"targetBloom\": null,\n      \"plannedConcepts\": [],\n      \"keyTerms\": [],\n      \"file\": \"phase-1.md\",\n      \"evidence\": {\n        \"tracked\": true,\n        \"trackedAs\": \"Indexing\",\n        \"concepts\": 2,\n        \"classified\": 0,\n        \"applied\": 0,\n        \"mastered\": 0,\n        \"dueForCheck\": 0,\n        \"masteryPct\": null,\n        \"tiers\": {\n          \"unclassified\": 2,\n          \"introduced\": 0,\n          \"familiar\": 0,\n          \"mastered\": 0\n        },\n        \"summaryTier\": null,\n        \"nextDue\": \"2026-05-21\",\n        \"dueToday\": 1,\n        \"parked\": 0\n      }\n    },\n    {\n      \"index\": 3,\n      \"phase\": 1,\n      \"id\": \"1.3\",\n      \"name\": \"Query Optimization\",\n      \"status\": \"current\",\n      \"statusSource\": \"plan-order\",\n      \"targetBloom\": null,\n      \"plannedConcepts\": [],\n      \"keyTerms\": [],\n      \"file\": \"phase-1.md\",\n      \"evidence\": {\n        \"tracked\": false,\n        \"concepts\": 0,\n        \"classified\": 0,\n        \"applied\": 0,\n        \"mastered\": 0,\n        \"dueForCheck\": 0,\n        \"masteryPct\": null,\n        \"tiers\": {\n          \"unclassified\": 0,\n          \"introduced\": 0,\n          \"familiar\": 0,\n          \"mastered\": 0\n        },\n        \"summaryTier\": null,\n        \"nextDue\": null,\n        \"dueToday\": 0,\n        \"parked\": 0\n      }\n    }\n  ],\n  \"untracked\": [\n    \"Query Optimization\"\n  ],\n  \"unplanned\": [],\n  \"warnings\": [],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "gate-check"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"fires\": true,\n  \"currentModule\": \"Query Optimization\",\n  \"seededOnly\": 0,\n  \"prerequisiteSource\": \"prior-module\",\n  \"prerequisites\": [\n    {\n      \"name\": \"B-tree indexes\",\n      \"bloomLevel\": 0,\n      \"bloomLabel\": null,\n      \"bloomOutcome\": \"nothing observed yet\",\n      \"box\": 3,\n      \"lastReviewed\": \"2026-05-20\",\n      \"evidenceAt3Plus\": 0,\n      \"appliedEvidence\": 0,\n      \"status\": \"no-opinion\",\n      \"reason\": \"unclassified\"\n    },\n    {\n      \"name\": \"Query planning\",\n      \"bloomLevel\": 0,\n      \"bloomLabel\": null,\n      \"bloomOutcome\": \"nothing observed yet\",\n      \"box\": 1,\n      \"lastReviewed\": \"2026-05-20\",\n      \"evidenceAt3Plus\": 0,\n      \"appliedEvidence\": 0,\n      \"status\": \"no-opinion\",\n      \"reason\": \"unclassified\"\n    }\n  ],\n  \"gaps\": [],\n  \"staleReconfirm\": [],\n  \"verdict\": \"clear\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "revision-brief"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"date\": \"2026-05-21\",\n  \"project\": \"sql-deep-dive\",\n  \"module\": \"Query Optimization\",\n  \"session\": 6,\n  \"sessionToday\": false,\n  \"concepts\": [],\n  \"suggestedFile\": \"revision/2026-05-21-session.md\",\n  \"existing\": [],\n  \"resourcesFile\": null,\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "retention"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"reviews\": 8,\n  \"overallSuccessRate\": 0.75,\n  \"delayedReviews\": 8,\n  \"delayedSuccessRate\": 0.75,\n  \"byGap\": {\n    \"same-day\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    },\n    \"1d\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    },\n    \"2-3d\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    },\n    \"4-7d\": {\n      \"correct\": 1,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 1,\n      \"successRate\": 1.0\n    },\n    \"8-14d\": {\n      \"correct\": 4,\n      \"incorrect\": 1,\n      \"partial\": 1,\n      \"reviews\": 6,\n      \"successRate\": 0.67\n    },\n    \"15-30d\": {\n      \"correct\": 1,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 1,\n      \"successRate\": 1.0\n    },\n    \"31d+\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    }\n  },\n  \"byBoxAtReview\": {\n    \"1\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    },\n    \"2\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    },\n    \"3\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    },\n    \"4\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    },\n    \"5\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    }\n  },\n  \"relearningRetriesExcluded\": 0,\n  \"deferralsExcluded\": 0,\n  \"selfReportsExcluded\": 0,\n  \"entriesWithoutBoxBefore\": 8,\n  \"entriesSkipped\": 0,\n  \"note\": \"Leitner targets roughly 80-90% success at review time: persistently above suggests intervals too conservative; persistently below, too aggressive\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "calibration"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"taggedAnswers\": 0,\n  \"buckets\": {\n    \"guessing\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0\n    },\n    \"sure\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0\n    },\n    \"mostly\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0\n    }\n  },\n  \"overconfidenceRate\": null,\n  \"underconfidenceRate\": null,\n  \"overconfidentEvents\": [],\n  \"underconfidentEvents\": [],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "export-anonymized"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"exportVersion\": 1,\n  \"generated\": \"2026-05-21\",\n  \"concepts\": 3,\n  \"boxDistribution\": {\n    \"1\": 1,\n    \"2\": 0,\n    \"3\": 1,\n    \"4\": 1,\n    \"5\": 0\n  },\n  \"bloomDistribution\": {\n    \"0\": 3,\n    \"1\": 0,\n    \"2\": 0,\n    \"3\": 0,\n    \"4\": 0,\n    \"5\": 0,\n    \"6\": 0\n  },\n  \"feynmanPassed\": 0,\n  \"applied\": 0,\n  \"mastered\": 0,\n  \"sessionTypeCounts\": {\n    \"spaced-review\": 1\n  },\n  \"retention\": {\n    \"reviews\": 8,\n    \"overallSuccessRate\": 0.75,\n    \"delayedReviews\": 8,\n    \"delayedSuccessRate\": 0.75,\n    \"byGap\": {\n      \"same-day\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      },\n      \"1d\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      },\n      \"2-3d\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      },\n      \"4-7d\": {\n        \"correct\": 1,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 1,\n        \"successRate\": 1.0\n      },\n      \"8-14d\": {\n        \"correct\": 4,\n        \"incorrect\": 1,\n        \"partial\": 1,\n        \"reviews\": 6,\n        \"successRate\": 0.67\n      },\n      \"15-30d\": {\n        \"correct\": 1,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 1,\n        \"successRate\": 1.0\n      },\n      \"31d+\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      }\n    },\n    \"byBoxAtReview\": {\n      \"1\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      },\n      \"2\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      },\n      \"3\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      },\n      \"4\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      },\n      \"5\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      }\n    },\n    \"relearningRetriesExcluded\": 0,\n    \"deferralsExcluded\": 0,\n    \"selfReportsExcluded\": 0,\n    \"entriesWithoutBoxBefore\": 8,\n    \"entriesSkipped\": 0\n  },\n  \"calibration\": {\n    \"taggedAnswers\": 0,\n    \"buckets\": {\n      \"sure\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0\n      },\n      \"guessing\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0\n      },\n      \"mostly\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0\n      }\n    },\n    \"overconfidenceRate\": null,\n    \"underconfidenceRate\": null\n  },\n  \"project\": {\n    \"totalSessions\": 6,\n    \"currentStreak\": 1,\n    \"overallCompletion\": 30,\n    \"daysSinceStart\": 50\n  },\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "session-brief",
+        "--concept",
+        "Query planning"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"Query planning\",\n  \"tracked\": true,\n  \"firstExposure\": false,\n  \"pretestApplies\": false,\n  \"isReteach\": true,\n  \"box\": 1,\n  \"bloomLevel\": 0,\n  \"bloomLabel\": null,\n  \"bloomOutcome\": \"nothing observed yet\",\n  \"evidenceAt3Plus\": 0,\n  \"appliedEvidence\": 0,\n  \"feynmanPassed\": false,\n  \"feynmanCurrent\": false,\n  \"lastReviewed\": \"2026-05-20\",\n  \"daysSinceLastReview\": 1,\n  \"lastResult\": \"incorrect\",\n  \"dueForReview\": true,\n  \"reviews\": 2,\n  \"currentModule\": \"Query Optimization\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "session-brief",
+        "--concept",
+        "B-tree indexes"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"B-tree indexes\",\n  \"tracked\": true,\n  \"firstExposure\": false,\n  \"pretestApplies\": false,\n  \"isReteach\": false,\n  \"box\": 3,\n  \"bloomLevel\": 0,\n  \"bloomLabel\": null,\n  \"bloomOutcome\": \"nothing observed yet\",\n  \"evidenceAt3Plus\": 0,\n  \"appliedEvidence\": 0,\n  \"feynmanPassed\": false,\n  \"feynmanCurrent\": false,\n  \"lastReviewed\": \"2026-05-20\",\n  \"daysSinceLastReview\": 1,\n  \"lastResult\": \"correct\",\n  \"dueForReview\": false,\n  \"reviews\": 3,\n  \"currentModule\": \"Query Optimization\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "session-brief",
+        "--concept",
+        "Normalization trade-offs"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"Normalization trade-offs\",\n  \"tracked\": true,\n  \"firstExposure\": false,\n  \"pretestApplies\": false,\n  \"isReteach\": false,\n  \"box\": 4,\n  \"bloomLevel\": 0,\n  \"bloomLabel\": null,\n  \"bloomOutcome\": \"nothing observed yet\",\n  \"evidenceAt3Plus\": 0,\n  \"appliedEvidence\": 0,\n  \"feynmanPassed\": false,\n  \"feynmanCurrent\": false,\n  \"lastReviewed\": \"2026-05-20\",\n  \"daysSinceLastReview\": 1,\n  \"lastResult\": \"correct\",\n  \"dueForReview\": false,\n  \"reviews\": 3,\n  \"currentModule\": \"Query Optimization\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "gate-check",
+        "--prereqs",
+        "B-tree indexes, Query planning"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"fires\": true,\n  \"currentModule\": \"Query Optimization\",\n  \"seededOnly\": 0,\n  \"prerequisiteSource\": \"declared\",\n  \"prerequisites\": [\n    {\n      \"name\": \"B-tree indexes\",\n      \"bloomLevel\": 0,\n      \"bloomLabel\": null,\n      \"bloomOutcome\": \"nothing observed yet\",\n      \"box\": 3,\n      \"lastReviewed\": \"2026-05-20\",\n      \"evidenceAt3Plus\": 0,\n      \"appliedEvidence\": 0,\n      \"status\": \"no-opinion\",\n      \"reason\": \"unclassified\"\n    },\n    {\n      \"name\": \"Query planning\",\n      \"bloomLevel\": 0,\n      \"bloomLabel\": null,\n      \"bloomOutcome\": \"nothing observed yet\",\n      \"box\": 1,\n      \"lastReviewed\": \"2026-05-20\",\n      \"evidenceAt3Plus\": 0,\n      \"appliedEvidence\": 0,\n      \"status\": \"no-opinion\",\n      \"reason\": \"unclassified\"\n    }\n  ],\n  \"gaps\": [],\n  \"staleReconfirm\": [],\n  \"verdict\": \"clear\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "migrate-spaced-review"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"action\": \"migrated\",\n  \"fromVersion\": 2,\n  \"toVersion\": 3,\n  \"concepts\": 3,\n  \"fieldsAdded\": 9,\n  \"backup\": \"<WS>/sql-deep-dive/.bodhi/.pre-1.10-backup/spaced-review.json\",\n  \"marker\": \"<WS>/sql-deep-dive/.bodhi/.migration-1.10.md\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "migrate-spaced-review"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"action\": \"noop\",\n  \"reason\": \"already at v3 with all per-concept fields\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "record-review",
+        "--concept",
+        "Query planning",
+        "--result",
+        "correct",
+        "--tested-bloom",
+        "3",
+        "--confidence",
+        "sure",
+        "--source",
+        "quiz"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"Query planning\",\n  \"box\": \"1 -> 2\",\n  \"retry\": false,\n  \"applied\": false,\n  \"appliedEvidence\": 0,\n  \"bloomLevel\": 3,\n  \"bloomLabel\": \"Apply\",\n  \"bloomOutcome\": \"you can apply it to a real case with some guidance\",\n  \"crossedBloom3\": true,\n  \"crossedLevel\": true,\n  \"consecutiveCorrectAtL4Plus\": 0,\n  \"nextReview\": \"2026-05-24\",\n  \"created\": false,\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "record-review",
+        "--concept",
+        "B-tree indexes",
+        "--result",
+        "partial",
+        "--tested-bloom",
+        "2",
+        "--source",
+        "teach",
+        "--note",
+        "mixed up leaf pages"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"B-tree indexes\",\n  \"box\": \"3 -> 3\",\n  \"retry\": false,\n  \"applied\": false,\n  \"appliedEvidence\": 0,\n  \"bloomLevel\": 0,\n  \"bloomLabel\": null,\n  \"bloomOutcome\": \"nothing observed yet\",\n  \"crossedBloom3\": false,\n  \"crossedLevel\": false,\n  \"consecutiveCorrectAtL4Plus\": 0,\n  \"nextReview\": \"2026-05-22\",\n  \"created\": false,\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "record-review",
+        "--concept",
+        "Normalization trade-offs",
+        "--result",
+        "incorrect",
+        "--tested-bloom",
+        "2",
+        "--confidence",
+        "guessing",
+        "--source",
+        "reflect"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"Normalization trade-offs\",\n  \"box\": \"4 -> 1\",\n  \"retry\": false,\n  \"applied\": false,\n  \"appliedEvidence\": 0,\n  \"bloomLevel\": 0,\n  \"bloomLabel\": null,\n  \"bloomOutcome\": \"nothing observed yet\",\n  \"crossedBloom3\": false,\n  \"crossedLevel\": false,\n  \"consecutiveCorrectAtL4Plus\": 0,\n  \"nextReview\": \"2026-05-22\",\n  \"created\": false,\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "record-review",
+        "--concept",
+        "Normalization trade-offs",
+        "--result",
+        "correct",
+        "--retry",
+        "--source",
+        "reflect"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"Normalization trade-offs\",\n  \"box\": \"1 -> 1\",\n  \"retry\": true,\n  \"applied\": false,\n  \"appliedEvidence\": 0,\n  \"bloomLevel\": 0,\n  \"bloomLabel\": null,\n  \"bloomOutcome\": \"nothing observed yet\",\n  \"crossedBloom3\": false,\n  \"crossedLevel\": false,\n  \"consecutiveCorrectAtL4Plus\": 0,\n  \"nextReview\": \"2026-05-22\",\n  \"created\": false,\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "add-concept",
+        "--concept",
+        "EXPLAIN plans",
+        "--module",
+        "Query Optimization",
+        "--question",
+        "What does a seq scan cost?",
+        "--bloom",
+        "2"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"action\": \"added\",\n  \"concept\": \"EXPLAIN plans\",\n  \"module\": \"Query Optimization\",\n  \"box\": 1,\n  \"nextReview\": \"2026-05-22\",\n  \"bloomLevel\": 2,\n  \"bloomLabel\": \"Understand\",\n  \"bloomOutcome\": \"you can explain it in your own words\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "touch-state",
+        "--activity",
+        "Read an EXPLAIN plan",
+        "--module",
+        "Query Optimization",
+        "--module-index",
+        "2",
+        "--phase",
+        "1",
+        "--completion",
+        "40"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"action\": \"state-updated\",\n  \"newSession\": true,\n  \"currentStreak\": 2,\n  \"totalSessions\": 7,\n  \"profileSessionsBumped\": true,\n  \"lastActivity\": \"Read an EXPLAIN plan\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "record-session",
+        "--type",
+        "spaced-review",
+        "--data",
+        "{\"conceptsReviewed\": 2, \"passes\": 1, \"misses\": 1}"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"action\": \"session-recorded\",\n  \"entry\": {\n    \"date\": \"2026-05-21\",\n    \"type\": \"spaced-review\",\n    \"conceptsReviewed\": 2,\n    \"passes\": 1,\n    \"misses\": 1\n  },\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "record-session",
+        "--type",
+        "other"
+      ],
+      "rc": 1,
+      "stdout": "{\"ok\": false, \"error\": \"type 'other' requires --subtype (state-schema KB)\"}\n",
+      "stderr": "bodhi-state: type 'other' requires --subtype (state-schema KB)\n"
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "record-session",
+        "--type",
+        "review-ish"
+      ],
+      "rc": 1,
+      "stdout": "{\"ok\": false, \"error\": \"type 'review-ish' is not in the canonical vocabulary ['diagnostic-after-gap', 'evaluate', 'learner-forget', 'learner-park', 'other', 'pair', 'practice', 'quiz', 'spaced-review', 'targeted-reteach'] (state-schema KB). Use 'other' with --subtype for genuinely novel sessions.\"}\n",
+      "stderr": "bodhi-state: type 'review-ish' is not in the canonical vocabulary ['diagnostic-after-gap', 'evaluate', 'learner-forget', 'learner-park', 'other', 'pair', 'practice', 'quiz', 'spaced-review', 'targeted-reteach'] (state-schema KB). Use 'other' with --subtype for genuinely novel sessions.\n"
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "record-review",
+        "--concept",
+        "Hash joins",
+        "--result",
+        "correct"
+      ],
+      "rc": 1,
+      "stdout": "{\"ok\": false, \"error\": \"concept 'Hash joins' not tracked; pass --module to auto-create it\"}\n",
+      "stderr": "bodhi-state: concept 'Hash joins' not tracked; pass --module to auto-create it\n"
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "set-feynman",
+        "--concept",
+        "Query planning"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"Query planning\",\n  \"feynmanPassed\": true,\n  \"feynmanPassedAt\": \"2026-05-21\",\n  \"feynmanCurrent\": true,\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "forget",
+        "--concept",
+        "B-tree indexes",
+        "--note",
+        "felt shaky"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"action\": \"demoted\",\n  \"concepts\": [\n    \"B-tree indexes\"\n  ],\n  \"boxChanges\": {\n    \"B-tree indexes\": \"3 -> 1\"\n  },\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "defer",
+        "--concept",
+        "EXPLAIN plans",
+        "--days",
+        "2",
+        "--note",
+        "ran out"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"action\": \"deferred\",\n  \"days\": 2,\n  \"concepts\": {\n    \"EXPLAIN plans\": \"2026-05-23\"\n  },\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "park",
+        "--concept",
+        "Normalization trade-offs"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"action\": \"parked\",\n  \"concepts\": {\n    \"Normalization trade-offs\": null\n  },\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "park",
+        "--concept",
+        "Normalization trade-offs",
+        "--resume"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"action\": \"resumed\",\n  \"concepts\": {\n    \"Normalization trade-offs\": \"2026-05-22\"\n  },\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "bump-profile",
+        "--counter",
+        "totalExercises"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"action\": \"profile-bumped\",\n  \"counter\": \"totalExercises\",\n  \"value\": 4,\n  \"file\": \"<WS>/.bodhi-profile.json\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "record-assessment",
+        "--trigger",
+        "assess",
+        "--data",
+        "{\"topic\": \"sql\", \"subTopics\": [{\"name\": \"joins\", \"bloomLevel\": 2}, {\"name\": \"indexes\", \"bloomLevel\": 4}]}"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"action\": \"assessment-recorded\",\n  \"trigger\": \"assess\",\n  \"entries\": 1,\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "record-assessment",
+        "--trigger",
+        "evaluate",
+        "--data",
+        "{\"topic\": \"sql\", \"subTopics\": [{\"name\": \"joins\", \"bloomLevel\": 2}, {\"name\": \"indexes\", \"bloomLevel\": 5}]}"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"action\": \"assessment-recorded\",\n  \"trigger\": \"evaluate\",\n  \"entries\": 2,\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "record-assessment",
+        "--trigger",
+        "plan-regenerate",
+        "--data",
+        "{\"topic\": \"sql\", \"subTopics\": [{\"name\": \"joins\", \"bloomLevel\": 1}, {\"name\": \"indexes\", \"bloomLevel\": 4}]}"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"action\": \"assessment-recorded\",\n  \"trigger\": \"plan-regenerate\",\n  \"entries\": 3,\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "profile-update-patterns"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"action\": \"profile-patterns-updated\",\n  \"addedChallenges\": [\n    \"joins\"\n  ],\n  \"addedStrengths\": [\n    \"indexes\"\n  ],\n  \"counts\": {\n    \"belowBloom3\": {\n      \"joins\": 3\n    },\n    \"bloom4Plus\": {\n      \"indexes\": 3\n    }\n  },\n  \"threshold\": 3,\n  \"file\": \"<WS>/.bodhi-profile.json\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "profile-update-project",
+        "--name",
+        "sql-deep-dive",
+        "--module",
+        "Query Optimization",
+        "--bloom",
+        "3"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"action\": \"profile-project-updated\",\n  \"entry\": {\n    \"name\": \"sql-deep-dive\",\n    \"topic\": \"SQL and database internals\",\n    \"startedAt\": \"2026-04-01\",\n    \"currentPhase\": \"1\",\n    \"currentModule\": \"Query Optimization\",\n    \"bloomLevel\": 3,\n    \"pace\": \"steady\",\n    \"status\": \"active\",\n    \"trackPurpose\": \"depth\"\n  },\n  \"updatedFields\": [\n    \"currentModule\",\n    \"bloomLevel\"\n  ],\n  \"file\": \"<WS>/.bodhi-profile.projects.json\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "normalize"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"action\": \"noop\",\n  \"reason\": \"nothing to normalize\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "verify"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"ok\": true,\n  \"project\": \"<WS>/sql-deep-dive\",\n  \"errors\": [],\n  \"warnings\": []\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "due"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"dueToday\": 0,\n  \"neverTaughtCount\": 0,\n  \"concepts\": [],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "snapshot"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"project\": {\n    \"name\": \"sql-deep-dive\",\n    \"topic\": \"SQL and database internals\",\n    \"createdAt\": \"2026-04-01T09:00:00\",\n    \"currentPhase\": \"1\",\n    \"currentModule\": \"Query Optimization\",\n    \"currentModuleIndex\": 2,\n    \"position\": {\n      \"index\": 3,\n      \"of\": 3,\n      \"module\": \"Query Optimization\",\n      \"phase\": 1\n    },\n    \"lastActivity\": \"Resumed 1 concept(s): Normalization trade-offs\",\n    \"overallCompletion\": 40,\n    \"initialBloomLevel\": {\n      \"sql-basics\": 2,\n      \"indexing\": 1\n    },\n    \"currentBloomLevel\": {\n      \"sql-basics\": 3,\n      \"indexing\": 2\n    }\n  },\n  \"cadence\": {\n    \"totalSessions\": 7,\n    \"currentStreak\": 2,\n    \"lastSessionAt\": \"2026-05-21T<time>\",\n    \"daysSinceLastSession\": 0,\n    \"sessionsLast7d\": 2,\n    \"sessionsLast30d\": 4\n  },\n  \"review\": {\n    \"concepts\": 4,\n    \"dueToday\": 0,\n    \"dueTodayConcepts\": [],\n    \"dueThisWeek\": 4,\n    \"dueThisWeekConcepts\": [\n      \"B-tree indexes\",\n      \"Query planning\",\n      \"Normalization trade-offs\",\n      \"EXPLAIN plans\"\n    ],\n    \"overdue10dPlus\": 0,\n    \"waitingForReviewDay\": 4,\n    \"unscheduled\": 0,\n    \"boxDistribution\": {\n      \"1\": 3,\n      \"2\": 1,\n      \"3\": 0,\n      \"4\": 0,\n      \"5\": 0\n    },\n    \"retentionRollup\": {\n      \"strong\": 0,\n      \"building\": 1,\n      \"needs_review\": 3\n    },\n    \"retentionConcepts\": {\n      \"strong\": [],\n      \"building\": [\n        \"Query planning\"\n      ],\n      \"needs_review\": [\n        \"B-tree indexes\",\n        \"Normalization trade-offs\",\n        \"EXPLAIN plans\"\n      ]\n    },\n    \"unparseableDates\": 0,\n    \"parked\": 0\n  },\n  \"mastery\": {\n    \"mastered\": 0,\n    \"feynmanPassed\": 1,\n    \"applied\": 0,\n    \"classified\": 2,\n    \"modules\": {\n      \"Indexing\": {\n        \"concepts\": 2,\n        \"mastered\": 0,\n        \"classified\": 1,\n        \"applied\": 0,\n        \"dueForCheck\": 0,\n        \"tiers\": {\n          \"unclassified\": 1,\n          \"introduced\": 0,\n          \"familiar\": 1,\n          \"mastered\": 0\n        },\n        \"masteryPct\": 0\n      },\n      \"Schema Design\": {\n        \"concepts\": 1,\n        \"mastered\": 0,\n        \"classified\": 0,\n        \"applied\": 0,\n        \"dueForCheck\": 0,\n        \"tiers\": {\n          \"unclassified\": 1,\n          \"introduced\": 0,\n          \"familiar\": 0,\n          \"mastered\": 0\n        },\n        \"masteryPct\": null\n      },\n      \"Query Optimization\": {\n        \"concepts\": 1,\n        \"mastered\": 0,\n        \"classified\": 1,\n        \"applied\": 0,\n        \"dueForCheck\": 0,\n        \"tiers\": {\n          \"unclassified\": 0,\n          \"introduced\": 1,\n          \"familiar\": 0,\n          \"mastered\": 0\n        },\n        \"masteryPct\": 0\n      }\n    },\n    \"blockedOnFeynman\": [],\n    \"blockedOnApplied\": [],\n    \"masteredDueForCheck\": []\n  },\n  \"calibration\": {\n    \"taggedAnswers\": 2,\n    \"buckets\": {\n      \"mostly\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0\n      },\n      \"guessing\": {\n        \"correct\": 0,\n        \"incorrect\": 1,\n        \"partial\": 0\n      },\n      \"sure\": {\n        \"correct\": 1,\n        \"incorrect\": 0,\n        \"partial\": 0\n      }\n    },\n    \"overconfidenceRate\": 0.0,\n    \"underconfidenceRate\": 0.0\n  },\n  \"bloomScale\": [\n    {\n      \"level\": 1,\n      \"label\": \"Remember\",\n      \"outcome\": \"you can recall the terms and what they refer to\"\n    },\n    {\n      \"level\": 2,\n      \"label\": \"Understand\",\n      \"outcome\": \"you can explain it in your own words\"\n    },\n    {\n      \"level\": 3,\n      \"label\": \"Apply\",\n      \"outcome\": \"you can apply it to a real case with some guidance\"\n    },\n    {\n      \"level\": 4,\n      \"label\": \"Analyze\",\n      \"outcome\": \"you can work out why it works as it does and find where it breaks, on your own\"\n    },\n    {\n      \"level\": 5,\n      \"label\": \"Evaluate\",\n      \"outcome\": \"you can weigh the alternatives and defend a choice between them\"\n    },\n    {\n      \"level\": 6,\n      \"label\": \"Create\",\n      \"outcome\": \"you can create something new with it and teach it\"\n    }\n  ],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "mastery"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"modules\": {\n    \"Indexing\": {\n      \"concepts\": 2,\n      \"mastered\": 0,\n      \"classified\": 1,\n      \"applied\": 0,\n      \"dueForCheck\": 0,\n      \"tiers\": {\n        \"unclassified\": 1,\n        \"introduced\": 0,\n        \"familiar\": 1,\n        \"mastered\": 0\n      },\n      \"masteryPct\": 0\n    },\n    \"Schema Design\": {\n      \"concepts\": 1,\n      \"mastered\": 0,\n      \"classified\": 0,\n      \"applied\": 0,\n      \"dueForCheck\": 0,\n      \"tiers\": {\n        \"unclassified\": 1,\n        \"introduced\": 0,\n        \"familiar\": 0,\n        \"mastered\": 0\n      },\n      \"masteryPct\": null\n    },\n    \"Query Optimization\": {\n      \"concepts\": 1,\n      \"mastered\": 0,\n      \"classified\": 1,\n      \"applied\": 0,\n      \"dueForCheck\": 0,\n      \"tiers\": {\n        \"unclassified\": 0,\n        \"introduced\": 1,\n        \"familiar\": 0,\n        \"mastered\": 0\n      },\n      \"masteryPct\": 0\n    }\n  },\n  \"retentionRollup\": {\n    \"strong\": 0,\n    \"building\": 1,\n    \"needs_review\": 3\n  },\n  \"retentionConcepts\": {\n    \"strong\": [],\n    \"building\": [\n      \"Query planning\"\n    ],\n    \"needs_review\": [\n      \"B-tree indexes\",\n      \"Normalization trade-offs\",\n      \"EXPLAIN plans\"\n    ]\n  },\n  \"dueToday\": [],\n  \"dueThisWeek\": [\n    \"B-tree indexes\",\n    \"Query planning\",\n    \"Normalization trade-offs\",\n    \"EXPLAIN plans\"\n  ],\n  \"blockedOnFeynman\": [],\n  \"blockedOnApplied\": [],\n  \"masteredDueForCheck\": [],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "syllabus"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"project\": \"sql-deep-dive\",\n  \"plan\": true,\n  \"phases\": [\n    {\n      \"phase\": 1,\n      \"title\": \"Phase 1 — Foundations to internals\",\n      \"file\": \"phase-1.md\",\n      \"modules\": 3\n    }\n  ],\n  \"position\": {\n    \"index\": 3,\n    \"of\": 3,\n    \"module\": \"Query Optimization\",\n    \"phase\": 1\n  },\n  \"currentPhase\": \"1\",\n  \"overallCompletion\": 40,\n  \"counts\": {\n    \"modules\": 3,\n    \"done\": 2,\n    \"skipped\": 0,\n    \"upcoming\": 0\n  },\n  \"modules\": [\n    {\n      \"index\": 1,\n      \"phase\": 1,\n      \"id\": \"1.1\",\n      \"name\": \"Schema Design\",\n      \"status\": \"done\",\n      \"statusSource\": \"plan-order\",\n      \"targetBloom\": null,\n      \"plannedConcepts\": [],\n      \"keyTerms\": [],\n      \"file\": \"phase-1.md\",\n      \"evidence\": {\n        \"tracked\": true,\n        \"trackedAs\": \"Schema Design\",\n        \"concepts\": 1,\n        \"classified\": 0,\n        \"applied\": 0,\n        \"mastered\": 0,\n        \"dueForCheck\": 0,\n        \"masteryPct\": null,\n        \"tiers\": {\n          \"unclassified\": 1,\n          \"introduced\": 0,\n          \"familiar\": 0,\n          \"mastered\": 0\n        },\n        \"summaryTier\": null,\n        \"nextDue\": \"2026-05-22\",\n        \"dueToday\": 0,\n        \"parked\": 0\n      }\n    },\n    {\n      \"index\": 2,\n      \"phase\": 1,\n      \"id\": \"1.2\",\n      \"name\": \"Indexing\",\n      \"status\": \"done\",\n      \"statusSource\": \"plan-order\",\n      \"targetBloom\": null,\n      \"plannedConcepts\": [],\n      \"keyTerms\": [],\n      \"file\": \"phase-1.md\",\n      \"evidence\": {\n        \"tracked\": true,\n        \"trackedAs\": \"Indexing\",\n        \"concepts\": 2,\n        \"classified\": 1,\n        \"applied\": 0,\n        \"mastered\": 0,\n        \"dueForCheck\": 0,\n        \"masteryPct\": 0,\n        \"tiers\": {\n          \"unclassified\": 1,\n          \"introduced\": 0,\n          \"familiar\": 1,\n          \"mastered\": 0\n        },\n        \"summaryTier\": \"familiar\",\n        \"nextDue\": \"2026-05-22\",\n        \"dueToday\": 0,\n        \"parked\": 0\n      }\n    },\n    {\n      \"index\": 3,\n      \"phase\": 1,\n      \"id\": \"1.3\",\n      \"name\": \"Query Optimization\",\n      \"status\": \"current\",\n      \"statusSource\": \"plan-order\",\n      \"targetBloom\": null,\n      \"plannedConcepts\": [],\n      \"keyTerms\": [],\n      \"file\": \"phase-1.md\",\n      \"evidence\": {\n        \"tracked\": true,\n        \"trackedAs\": \"Query Optimization\",\n        \"concepts\": 1,\n        \"classified\": 1,\n        \"applied\": 0,\n        \"mastered\": 0,\n        \"dueForCheck\": 0,\n        \"masteryPct\": 0,\n        \"tiers\": {\n          \"unclassified\": 0,\n          \"introduced\": 1,\n          \"familiar\": 0,\n          \"mastered\": 0\n        },\n        \"summaryTier\": \"introduced\",\n        \"nextDue\": \"2026-05-23\",\n        \"dueToday\": 0,\n        \"parked\": 0\n      }\n    }\n  ],\n  \"untracked\": [],\n  \"unplanned\": [],\n  \"warnings\": [],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "gate-check"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"fires\": true,\n  \"currentModule\": \"Query Optimization\",\n  \"seededOnly\": 1,\n  \"prerequisiteSource\": \"prior-module\",\n  \"prerequisites\": [\n    {\n      \"name\": \"B-tree indexes\",\n      \"bloomLevel\": 0,\n      \"bloomLabel\": null,\n      \"bloomOutcome\": \"nothing observed yet\",\n      \"box\": 1,\n      \"lastReviewed\": \"2026-05-21\",\n      \"evidenceAt3Plus\": 0,\n      \"appliedEvidence\": 0,\n      \"status\": \"no-opinion\",\n      \"reason\": \"unclassified\"\n    },\n    {\n      \"name\": \"Query planning\",\n      \"bloomLevel\": 3,\n      \"bloomLabel\": \"Apply\",\n      \"bloomOutcome\": \"you can apply it to a real case with some guidance\",\n      \"box\": 2,\n      \"lastReviewed\": \"2026-05-21\",\n      \"evidenceAt3Plus\": 1,\n      \"appliedEvidence\": 0,\n      \"status\": \"stale-reconfirm\",\n      \"reason\": \"single-evidence\"\n    }\n  ],\n  \"gaps\": [],\n  \"staleReconfirm\": [\n    \"Query planning\"\n  ],\n  \"verdict\": \"offer\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "revision-brief"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"date\": \"2026-05-21\",\n  \"project\": \"sql-deep-dive\",\n  \"module\": \"Query Optimization\",\n  \"session\": 7,\n  \"sessionToday\": true,\n  \"concepts\": [\n    {\n      \"name\": \"B-tree indexes\",\n      \"module\": \"Indexing\",\n      \"resultsToday\": [\n        \"partial\",\n        \"incorrect\"\n      ],\n      \"sourcesToday\": [\n        \"teach\"\n      ],\n      \"box\": 1,\n      \"nextReview\": \"2026-05-22\",\n      \"bloomLevel\": 0,\n      \"bloomLabel\": null,\n      \"bloomOutcome\": \"nothing observed yet\",\n      \"question\": \"How does a B-tree index change how the database finds a row?\",\n      \"feynmanPassed\": false\n    },\n    {\n      \"name\": \"Normalization trade-offs\",\n      \"module\": \"Schema Design\",\n      \"resultsToday\": [\n        \"incorrect\",\n        \"correct\"\n      ],\n      \"sourcesToday\": [\n        \"reflect\"\n      ],\n      \"box\": 1,\n      \"nextReview\": \"2026-05-22\",\n      \"bloomLevel\": 0,\n      \"bloomLabel\": null,\n      \"bloomOutcome\": \"nothing observed yet\",\n      \"question\": \"When is denormalizing the right call?\",\n      \"feynmanPassed\": false\n    },\n    {\n      \"name\": \"Query planning\",\n      \"module\": \"Indexing\",\n      \"resultsToday\": [\n        \"correct\"\n      ],\n      \"sourcesToday\": [\n        \"quiz\"\n      ],\n      \"box\": 2,\n      \"nextReview\": \"2026-05-24\",\n      \"bloomLevel\": 3,\n      \"bloomLabel\": \"Apply\",\n      \"bloomOutcome\": \"you can apply it to a real case with some guidance\",\n      \"question\": \"What does the planner consider when choosing an index scan vs a seq scan?\",\n      \"feynmanPassed\": true\n    },\n    {\n      \"name\": \"EXPLAIN plans\",\n      \"module\": \"Query Optimization\",\n      \"resultsToday\": [],\n      \"sourcesToday\": [],\n      \"box\": 1,\n      \"nextReview\": \"2026-05-23\",\n      \"bloomLevel\": 2,\n      \"bloomLabel\": \"Understand\",\n      \"bloomOutcome\": \"you can explain it in your own words\",\n      \"question\": \"What does a seq scan cost?\",\n      \"feynmanPassed\": false\n    }\n  ],\n  \"suggestedFile\": \"revision/2026-05-21-b-tree-indexes.md\",\n  \"existing\": [],\n  \"resourcesFile\": null,\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "retention"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"reviews\": 11,\n  \"overallSuccessRate\": 0.64,\n  \"delayedReviews\": 11,\n  \"delayedSuccessRate\": 0.64,\n  \"byGap\": {\n    \"same-day\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    },\n    \"1d\": {\n      \"correct\": 1,\n      \"incorrect\": 1,\n      \"partial\": 1,\n      \"reviews\": 3,\n      \"successRate\": 0.33\n    },\n    \"2-3d\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    },\n    \"4-7d\": {\n      \"correct\": 1,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 1,\n      \"successRate\": 1.0\n    },\n    \"8-14d\": {\n      \"correct\": 4,\n      \"incorrect\": 1,\n      \"partial\": 1,\n      \"reviews\": 6,\n      \"successRate\": 0.67\n    },\n    \"15-30d\": {\n      \"correct\": 1,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 1,\n      \"successRate\": 1.0\n    },\n    \"31d+\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    }\n  },\n  \"byBoxAtReview\": {\n    \"1\": {\n      \"correct\": 1,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 1,\n      \"successRate\": 1.0\n    },\n    \"2\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    },\n    \"3\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 1,\n      \"reviews\": 1,\n      \"successRate\": 0.0\n    },\n    \"4\": {\n      \"correct\": 0,\n      \"incorrect\": 1,\n      \"partial\": 0,\n      \"reviews\": 1,\n      \"successRate\": 0.0\n    },\n    \"5\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    }\n  },\n  \"relearningRetriesExcluded\": 1,\n  \"deferralsExcluded\": 1,\n  \"selfReportsExcluded\": 1,\n  \"entriesWithoutBoxBefore\": 8,\n  \"entriesSkipped\": 0,\n  \"note\": \"Leitner targets roughly 80-90% success at review time: persistently above suggests intervals too conservative; persistently below, too aggressive\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "calibration"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"taggedAnswers\": 2,\n  \"buckets\": {\n    \"sure\": {\n      \"correct\": 1,\n      \"incorrect\": 0,\n      \"partial\": 0\n    },\n    \"mostly\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0\n    },\n    \"guessing\": {\n      \"correct\": 0,\n      \"incorrect\": 1,\n      \"partial\": 0\n    }\n  },\n  \"overconfidenceRate\": 0.0,\n  \"underconfidenceRate\": 0.0,\n  \"overconfidentEvents\": [],\n  \"underconfidentEvents\": [],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "export-anonymized"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"exportVersion\": 1,\n  \"generated\": \"2026-05-21\",\n  \"concepts\": 4,\n  \"boxDistribution\": {\n    \"1\": 3,\n    \"2\": 1,\n    \"3\": 0,\n    \"4\": 0,\n    \"5\": 0\n  },\n  \"bloomDistribution\": {\n    \"0\": 2,\n    \"1\": 0,\n    \"2\": 1,\n    \"3\": 1,\n    \"4\": 0,\n    \"5\": 0,\n    \"6\": 0\n  },\n  \"feynmanPassed\": 1,\n  \"applied\": 0,\n  \"mastered\": 0,\n  \"sessionTypeCounts\": {\n    \"spaced-review\": 2,\n    \"learner-forget\": 1,\n    \"learner-park\": 2\n  },\n  \"retention\": {\n    \"reviews\": 11,\n    \"overallSuccessRate\": 0.64,\n    \"delayedReviews\": 11,\n    \"delayedSuccessRate\": 0.64,\n    \"byGap\": {\n      \"same-day\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      },\n      \"1d\": {\n        \"correct\": 1,\n        \"incorrect\": 1,\n        \"partial\": 1,\n        \"reviews\": 3,\n        \"successRate\": 0.33\n      },\n      \"2-3d\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      },\n      \"4-7d\": {\n        \"correct\": 1,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 1,\n        \"successRate\": 1.0\n      },\n      \"8-14d\": {\n        \"correct\": 4,\n        \"incorrect\": 1,\n        \"partial\": 1,\n        \"reviews\": 6,\n        \"successRate\": 0.67\n      },\n      \"15-30d\": {\n        \"correct\": 1,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 1,\n        \"successRate\": 1.0\n      },\n      \"31d+\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      }\n    },\n    \"byBoxAtReview\": {\n      \"1\": {\n        \"correct\": 1,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 1,\n        \"successRate\": 1.0\n      },\n      \"2\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      },\n      \"3\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 1,\n        \"reviews\": 1,\n        \"successRate\": 0.0\n      },\n      \"4\": {\n        \"correct\": 0,\n        \"incorrect\": 1,\n        \"partial\": 0,\n        \"reviews\": 1,\n        \"successRate\": 0.0\n      },\n      \"5\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      }\n    },\n    \"relearningRetriesExcluded\": 1,\n    \"deferralsExcluded\": 1,\n    \"selfReportsExcluded\": 1,\n    \"entriesWithoutBoxBefore\": 8,\n    \"entriesSkipped\": 0\n  },\n  \"calibration\": {\n    \"taggedAnswers\": 2,\n    \"buckets\": {\n      \"mostly\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0\n      },\n      \"sure\": {\n        \"correct\": 1,\n        \"incorrect\": 0,\n        \"partial\": 0\n      },\n      \"guessing\": {\n        \"correct\": 0,\n        \"incorrect\": 1,\n        \"partial\": 0\n      }\n    },\n    \"overconfidenceRate\": 0.0,\n    \"underconfidenceRate\": 0.0\n  },\n  \"project\": {\n    \"totalSessions\": 7,\n    \"currentStreak\": 2,\n    \"overallCompletion\": 40,\n    \"daysSinceStart\": 50\n  },\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "session-brief",
+        "--concept",
+        "Query planning"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"Query planning\",\n  \"tracked\": true,\n  \"firstExposure\": false,\n  \"pretestApplies\": false,\n  \"isReteach\": false,\n  \"box\": 2,\n  \"bloomLevel\": 3,\n  \"bloomLabel\": \"Apply\",\n  \"bloomOutcome\": \"you can apply it to a real case with some guidance\",\n  \"evidenceAt3Plus\": 1,\n  \"appliedEvidence\": 0,\n  \"feynmanPassed\": true,\n  \"feynmanCurrent\": true,\n  \"lastReviewed\": \"2026-05-21\",\n  \"daysSinceLastReview\": 0,\n  \"lastResult\": \"correct\",\n  \"dueForReview\": false,\n  \"reviews\": 3,\n  \"currentModule\": \"Query Optimization\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "session-brief",
+        "--concept",
+        "B-tree indexes"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"B-tree indexes\",\n  \"tracked\": true,\n  \"firstExposure\": false,\n  \"pretestApplies\": false,\n  \"isReteach\": true,\n  \"box\": 1,\n  \"bloomLevel\": 0,\n  \"bloomLabel\": null,\n  \"bloomOutcome\": \"nothing observed yet\",\n  \"evidenceAt3Plus\": 0,\n  \"appliedEvidence\": 0,\n  \"feynmanPassed\": false,\n  \"feynmanCurrent\": false,\n  \"lastReviewed\": \"2026-05-21\",\n  \"daysSinceLastReview\": 0,\n  \"lastResult\": \"incorrect\",\n  \"dueForReview\": false,\n  \"reviews\": 5,\n  \"currentModule\": \"Query Optimization\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "session-brief",
+        "--concept",
+        "Normalization trade-offs"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"Normalization trade-offs\",\n  \"tracked\": true,\n  \"firstExposure\": false,\n  \"pretestApplies\": false,\n  \"isReteach\": true,\n  \"box\": 1,\n  \"bloomLevel\": 0,\n  \"bloomLabel\": null,\n  \"bloomOutcome\": \"nothing observed yet\",\n  \"evidenceAt3Plus\": 0,\n  \"appliedEvidence\": 0,\n  \"feynmanPassed\": false,\n  \"feynmanCurrent\": false,\n  \"lastReviewed\": \"2026-05-21\",\n  \"daysSinceLastReview\": 0,\n  \"lastResult\": \"correct\",\n  \"dueForReview\": false,\n  \"reviews\": 5,\n  \"currentModule\": \"Query Optimization\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-21",
+      "argv": [
+        "session-brief",
+        "--concept",
+        "EXPLAIN plans"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"EXPLAIN plans\",\n  \"tracked\": true,\n  \"firstExposure\": false,\n  \"pretestApplies\": false,\n  \"isReteach\": false,\n  \"box\": 1,\n  \"bloomLevel\": 2,\n  \"bloomLabel\": \"Understand\",\n  \"bloomOutcome\": \"you can explain it in your own words\",\n  \"evidenceAt3Plus\": 0,\n  \"appliedEvidence\": 0,\n  \"feynmanPassed\": false,\n  \"feynmanCurrent\": false,\n  \"lastReviewed\": null,\n  \"daysSinceLastReview\": null,\n  \"lastResult\": null,\n  \"dueForReview\": false,\n  \"reviews\": 0,\n  \"currentModule\": \"Query Optimization\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-24",
+      "argv": [
+        "record-review",
+        "--concept",
+        "Query planning",
+        "--result",
+        "correct",
+        "--tested-bloom",
+        "4",
+        "--applied",
+        "--confidence",
+        "mostly",
+        "--source",
+        "practice"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"Query planning\",\n  \"box\": \"2 -> 3\",\n  \"retry\": false,\n  \"applied\": true,\n  \"appliedEvidence\": 1,\n  \"bloomLevel\": 4,\n  \"bloomLabel\": \"Analyze\",\n  \"bloomOutcome\": \"you can work out why it works as it does and find where it breaks, on your own\",\n  \"crossedBloom3\": false,\n  \"crossedLevel\": true,\n  \"consecutiveCorrectAtL4Plus\": 1,\n  \"nextReview\": \"2026-05-31\",\n  \"created\": false,\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-24",
+      "argv": [
+        "record-review",
+        "--concept",
+        "EXPLAIN plans",
+        "--result",
+        "correct",
+        "--tested-bloom",
+        "3",
+        "--applied",
+        "--source",
+        "pair"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"EXPLAIN plans\",\n  \"box\": \"1 -> 1\",\n  \"retry\": false,\n  \"applied\": true,\n  \"appliedEvidence\": 1,\n  \"bloomLevel\": 3,\n  \"bloomLabel\": \"Apply\",\n  \"bloomOutcome\": \"you can apply it to a real case with some guidance\",\n  \"crossedBloom3\": true,\n  \"crossedLevel\": true,\n  \"consecutiveCorrectAtL4Plus\": 0,\n  \"nextReview\": \"2026-05-25\",\n  \"boxHeld\": \"first review\",\n  \"created\": false,\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-24",
+      "argv": [
+        "touch-state",
+        "--activity",
+        "Built an index for a slow query"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"action\": \"state-updated\",\n  \"newSession\": true,\n  \"currentStreak\": 1,\n  \"totalSessions\": 8,\n  \"profileSessionsBumped\": true,\n  \"lastActivity\": \"Built an index for a slow query\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-24",
+      "argv": [
+        "verify"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"ok\": true,\n  \"project\": \"<WS>/sql-deep-dive\",\n  \"errors\": [],\n  \"warnings\": []\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-24",
+      "argv": [
+        "due"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"dueToday\": 2,\n  \"neverTaughtCount\": 1,\n  \"concepts\": [\n    {\n      \"name\": \"B-tree indexes\",\n      \"module\": \"Indexing\",\n      \"dueSince\": \"2026-05-22\",\n      \"overdueDays\": 2,\n      \"neverTaught\": false,\n      \"exposure\": \"taught\",\n      \"bloomOutcome\": \"nothing observed yet\",\n      \"question\": \"How does a B-tree index change how the database finds a row?\",\n      \"priority\": 1\n    },\n    {\n      \"name\": \"Normalization trade-offs\",\n      \"module\": \"Schema Design\",\n      \"dueSince\": \"2026-05-22\",\n      \"overdueDays\": 2,\n      \"neverTaught\": true,\n      \"exposure\": \"quizzed-only\",\n      \"bloomOutcome\": \"nothing observed yet\",\n      \"question\": \"When is denormalizing the right call?\",\n      \"priority\": 2\n    }\n  ],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-24",
+      "argv": [
+        "snapshot"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"project\": {\n    \"name\": \"sql-deep-dive\",\n    \"topic\": \"SQL and database internals\",\n    \"createdAt\": \"2026-04-01T09:00:00\",\n    \"currentPhase\": \"1\",\n    \"currentModule\": \"Query Optimization\",\n    \"currentModuleIndex\": 2,\n    \"position\": {\n      \"index\": 3,\n      \"of\": 3,\n      \"module\": \"Query Optimization\",\n      \"phase\": 1\n    },\n    \"lastActivity\": \"Built an index for a slow query\",\n    \"overallCompletion\": 40,\n    \"initialBloomLevel\": {\n      \"sql-basics\": 2,\n      \"indexing\": 1\n    },\n    \"currentBloomLevel\": {\n      \"sql-basics\": 3,\n      \"indexing\": 2\n    }\n  },\n  \"cadence\": {\n    \"totalSessions\": 8,\n    \"currentStreak\": 1,\n    \"lastSessionAt\": \"2026-05-24T<time>\",\n    \"daysSinceLastSession\": 0,\n    \"sessionsLast7d\": 3,\n    \"sessionsLast30d\": 4\n  },\n  \"review\": {\n    \"concepts\": 4,\n    \"dueToday\": 2,\n    \"dueTodayConcepts\": [\n      \"B-tree indexes\",\n      \"Normalization trade-offs\"\n    ],\n    \"dueThisWeek\": 2,\n    \"dueThisWeekConcepts\": [\n      \"Query planning\",\n      \"EXPLAIN plans\"\n    ],\n    \"overdue10dPlus\": 0,\n    \"waitingForReviewDay\": 2,\n    \"unscheduled\": 0,\n    \"boxDistribution\": {\n      \"1\": 3,\n      \"2\": 0,\n      \"3\": 1,\n      \"4\": 0,\n      \"5\": 0\n    },\n    \"retentionRollup\": {\n      \"strong\": 0,\n      \"building\": 1,\n      \"needs_review\": 3\n    },\n    \"retentionConcepts\": {\n      \"strong\": [],\n      \"building\": [\n        \"Query planning\"\n      ],\n      \"needs_review\": [\n        \"B-tree indexes\",\n        \"Normalization trade-offs\",\n        \"EXPLAIN plans\"\n      ]\n    },\n    \"unparseableDates\": 0,\n    \"parked\": 0\n  },\n  \"mastery\": {\n    \"mastered\": 0,\n    \"feynmanPassed\": 1,\n    \"applied\": 2,\n    \"classified\": 2,\n    \"modules\": {\n      \"Indexing\": {\n        \"concepts\": 2,\n        \"mastered\": 0,\n        \"classified\": 1,\n        \"applied\": 1,\n        \"dueForCheck\": 0,\n        \"tiers\": {\n          \"unclassified\": 1,\n          \"introduced\": 0,\n          \"familiar\": 1,\n          \"mastered\": 0\n        },\n        \"masteryPct\": 0\n      },\n      \"Schema Design\": {\n        \"concepts\": 1,\n        \"mastered\": 0,\n        \"classified\": 0,\n        \"applied\": 0,\n        \"dueForCheck\": 0,\n        \"tiers\": {\n          \"unclassified\": 1,\n          \"introduced\": 0,\n          \"familiar\": 0,\n          \"mastered\": 0\n        },\n        \"masteryPct\": null\n      },\n      \"Query Optimization\": {\n        \"concepts\": 1,\n        \"mastered\": 0,\n        \"classified\": 1,\n        \"applied\": 1,\n        \"dueForCheck\": 0,\n        \"tiers\": {\n          \"unclassified\": 0,\n          \"introduced\": 1,\n          \"familiar\": 0,\n          \"mastered\": 0\n        },\n        \"masteryPct\": 0\n      }\n    },\n    \"blockedOnFeynman\": [],\n    \"blockedOnApplied\": [],\n    \"masteredDueForCheck\": []\n  },\n  \"calibration\": {\n    \"taggedAnswers\": 3,\n    \"buckets\": {\n      \"mostly\": {\n        \"correct\": 1,\n        \"incorrect\": 0,\n        \"partial\": 0\n      },\n      \"guessing\": {\n        \"correct\": 0,\n        \"incorrect\": 1,\n        \"partial\": 0\n      },\n      \"sure\": {\n        \"correct\": 1,\n        \"incorrect\": 0,\n        \"partial\": 0\n      }\n    },\n    \"overconfidenceRate\": 0.0,\n    \"underconfidenceRate\": 0.0\n  },\n  \"bloomScale\": [\n    {\n      \"level\": 1,\n      \"label\": \"Remember\",\n      \"outcome\": \"you can recall the terms and what they refer to\"\n    },\n    {\n      \"level\": 2,\n      \"label\": \"Understand\",\n      \"outcome\": \"you can explain it in your own words\"\n    },\n    {\n      \"level\": 3,\n      \"label\": \"Apply\",\n      \"outcome\": \"you can apply it to a real case with some guidance\"\n    },\n    {\n      \"level\": 4,\n      \"label\": \"Analyze\",\n      \"outcome\": \"you can work out why it works as it does and find where it breaks, on your own\"\n    },\n    {\n      \"level\": 5,\n      \"label\": \"Evaluate\",\n      \"outcome\": \"you can weigh the alternatives and defend a choice between them\"\n    },\n    {\n      \"level\": 6,\n      \"label\": \"Create\",\n      \"outcome\": \"you can create something new with it and teach it\"\n    }\n  ],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-24",
+      "argv": [
+        "mastery"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"modules\": {\n    \"Indexing\": {\n      \"concepts\": 2,\n      \"mastered\": 0,\n      \"classified\": 1,\n      \"applied\": 1,\n      \"dueForCheck\": 0,\n      \"tiers\": {\n        \"unclassified\": 1,\n        \"introduced\": 0,\n        \"familiar\": 1,\n        \"mastered\": 0\n      },\n      \"masteryPct\": 0\n    },\n    \"Schema Design\": {\n      \"concepts\": 1,\n      \"mastered\": 0,\n      \"classified\": 0,\n      \"applied\": 0,\n      \"dueForCheck\": 0,\n      \"tiers\": {\n        \"unclassified\": 1,\n        \"introduced\": 0,\n        \"familiar\": 0,\n        \"mastered\": 0\n      },\n      \"masteryPct\": null\n    },\n    \"Query Optimization\": {\n      \"concepts\": 1,\n      \"mastered\": 0,\n      \"classified\": 1,\n      \"applied\": 1,\n      \"dueForCheck\": 0,\n      \"tiers\": {\n        \"unclassified\": 0,\n        \"introduced\": 1,\n        \"familiar\": 0,\n        \"mastered\": 0\n      },\n      \"masteryPct\": 0\n    }\n  },\n  \"retentionRollup\": {\n    \"strong\": 0,\n    \"building\": 1,\n    \"needs_review\": 3\n  },\n  \"retentionConcepts\": {\n    \"strong\": [],\n    \"building\": [\n      \"Query planning\"\n    ],\n    \"needs_review\": [\n      \"B-tree indexes\",\n      \"Normalization trade-offs\",\n      \"EXPLAIN plans\"\n    ]\n  },\n  \"dueToday\": [\n    \"B-tree indexes\",\n    \"Normalization trade-offs\"\n  ],\n  \"dueThisWeek\": [\n    \"Query planning\",\n    \"EXPLAIN plans\"\n  ],\n  \"blockedOnFeynman\": [],\n  \"blockedOnApplied\": [],\n  \"masteredDueForCheck\": [],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-24",
+      "argv": [
+        "syllabus"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"project\": \"sql-deep-dive\",\n  \"plan\": true,\n  \"phases\": [\n    {\n      \"phase\": 1,\n      \"title\": \"Phase 1 — Foundations to internals\",\n      \"file\": \"phase-1.md\",\n      \"modules\": 3\n    }\n  ],\n  \"position\": {\n    \"index\": 3,\n    \"of\": 3,\n    \"module\": \"Query Optimization\",\n    \"phase\": 1\n  },\n  \"currentPhase\": \"1\",\n  \"overallCompletion\": 40,\n  \"counts\": {\n    \"modules\": 3,\n    \"done\": 2,\n    \"skipped\": 0,\n    \"upcoming\": 0\n  },\n  \"modules\": [\n    {\n      \"index\": 1,\n      \"phase\": 1,\n      \"id\": \"1.1\",\n      \"name\": \"Schema Design\",\n      \"status\": \"done\",\n      \"statusSource\": \"plan-order\",\n      \"targetBloom\": null,\n      \"plannedConcepts\": [],\n      \"keyTerms\": [],\n      \"file\": \"phase-1.md\",\n      \"evidence\": {\n        \"tracked\": true,\n        \"trackedAs\": \"Schema Design\",\n        \"concepts\": 1,\n        \"classified\": 0,\n        \"applied\": 0,\n        \"mastered\": 0,\n        \"dueForCheck\": 0,\n        \"masteryPct\": null,\n        \"tiers\": {\n          \"unclassified\": 1,\n          \"introduced\": 0,\n          \"familiar\": 0,\n          \"mastered\": 0\n        },\n        \"summaryTier\": null,\n        \"nextDue\": \"2026-05-22\",\n        \"dueToday\": 1,\n        \"parked\": 0\n      }\n    },\n    {\n      \"index\": 2,\n      \"phase\": 1,\n      \"id\": \"1.2\",\n      \"name\": \"Indexing\",\n      \"status\": \"done\",\n      \"statusSource\": \"plan-order\",\n      \"targetBloom\": null,\n      \"plannedConcepts\": [],\n      \"keyTerms\": [],\n      \"file\": \"phase-1.md\",\n      \"evidence\": {\n        \"tracked\": true,\n        \"trackedAs\": \"Indexing\",\n        \"concepts\": 2,\n        \"classified\": 1,\n        \"applied\": 1,\n        \"mastered\": 0,\n        \"dueForCheck\": 0,\n        \"masteryPct\": 0,\n        \"tiers\": {\n          \"unclassified\": 1,\n          \"introduced\": 0,\n          \"familiar\": 1,\n          \"mastered\": 0\n        },\n        \"summaryTier\": \"familiar\",\n        \"nextDue\": \"2026-05-22\",\n        \"dueToday\": 1,\n        \"parked\": 0\n      }\n    },\n    {\n      \"index\": 3,\n      \"phase\": 1,\n      \"id\": \"1.3\",\n      \"name\": \"Query Optimization\",\n      \"status\": \"current\",\n      \"statusSource\": \"plan-order\",\n      \"targetBloom\": null,\n      \"plannedConcepts\": [],\n      \"keyTerms\": [],\n      \"file\": \"phase-1.md\",\n      \"evidence\": {\n        \"tracked\": true,\n        \"trackedAs\": \"Query Optimization\",\n        \"concepts\": 1,\n        \"classified\": 1,\n        \"applied\": 1,\n        \"mastered\": 0,\n        \"dueForCheck\": 0,\n        \"masteryPct\": 0,\n        \"tiers\": {\n          \"unclassified\": 0,\n          \"introduced\": 1,\n          \"familiar\": 0,\n          \"mastered\": 0\n        },\n        \"summaryTier\": \"introduced\",\n        \"nextDue\": \"2026-05-25\",\n        \"dueToday\": 0,\n        \"parked\": 0\n      }\n    }\n  ],\n  \"untracked\": [],\n  \"unplanned\": [],\n  \"warnings\": [],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-24",
+      "argv": [
+        "gate-check"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"fires\": false,\n  \"reason\": \"continuation session — 1 concept(s) graded in module 'Query Optimization'\",\n  \"currentModule\": \"Query Optimization\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-24",
+      "argv": [
+        "revision-brief"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"date\": \"2026-05-24\",\n  \"project\": \"sql-deep-dive\",\n  \"module\": \"Query Optimization\",\n  \"session\": 8,\n  \"sessionToday\": true,\n  \"concepts\": [\n    {\n      \"name\": \"EXPLAIN plans\",\n      \"module\": \"Query Optimization\",\n      \"resultsToday\": [\n        \"correct\"\n      ],\n      \"sourcesToday\": [\n        \"pair\"\n      ],\n      \"box\": 1,\n      \"nextReview\": \"2026-05-25\",\n      \"bloomLevel\": 3,\n      \"bloomLabel\": \"Apply\",\n      \"bloomOutcome\": \"you can apply it to a real case with some guidance\",\n      \"question\": \"What does a seq scan cost?\",\n      \"feynmanPassed\": false\n    },\n    {\n      \"name\": \"Query planning\",\n      \"module\": \"Indexing\",\n      \"resultsToday\": [\n        \"correct\"\n      ],\n      \"sourcesToday\": [\n        \"practice\"\n      ],\n      \"box\": 3,\n      \"nextReview\": \"2026-05-31\",\n      \"bloomLevel\": 4,\n      \"bloomLabel\": \"Analyze\",\n      \"bloomOutcome\": \"you can work out why it works as it does and find where it breaks, on your own\",\n      \"question\": \"What does the planner consider when choosing an index scan vs a seq scan?\",\n      \"feynmanPassed\": true\n    }\n  ],\n  \"suggestedFile\": \"revision/2026-05-24-query-optimization.md\",\n  \"existing\": [],\n  \"resourcesFile\": null,\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-24",
+      "argv": [
+        "retention"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"reviews\": 13,\n  \"overallSuccessRate\": 0.69,\n  \"delayedReviews\": 13,\n  \"delayedSuccessRate\": 0.69,\n  \"byGap\": {\n    \"same-day\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    },\n    \"1d\": {\n      \"correct\": 1,\n      \"incorrect\": 1,\n      \"partial\": 1,\n      \"reviews\": 3,\n      \"successRate\": 0.33\n    },\n    \"2-3d\": {\n      \"correct\": 2,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 2,\n      \"successRate\": 1.0\n    },\n    \"4-7d\": {\n      \"correct\": 1,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 1,\n      \"successRate\": 1.0\n    },\n    \"8-14d\": {\n      \"correct\": 4,\n      \"incorrect\": 1,\n      \"partial\": 1,\n      \"reviews\": 6,\n      \"successRate\": 0.67\n    },\n    \"15-30d\": {\n      \"correct\": 1,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 1,\n      \"successRate\": 1.0\n    },\n    \"31d+\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    }\n  },\n  \"byBoxAtReview\": {\n    \"1\": {\n      \"correct\": 2,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 2,\n      \"successRate\": 1.0\n    },\n    \"2\": {\n      \"correct\": 1,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 1,\n      \"successRate\": 1.0\n    },\n    \"3\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 1,\n      \"reviews\": 1,\n      \"successRate\": 0.0\n    },\n    \"4\": {\n      \"correct\": 0,\n      \"incorrect\": 1,\n      \"partial\": 0,\n      \"reviews\": 1,\n      \"successRate\": 0.0\n    },\n    \"5\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    }\n  },\n  \"relearningRetriesExcluded\": 1,\n  \"deferralsExcluded\": 1,\n  \"selfReportsExcluded\": 1,\n  \"entriesWithoutBoxBefore\": 8,\n  \"entriesSkipped\": 0,\n  \"note\": \"Leitner targets roughly 80-90% success at review time: persistently above suggests intervals too conservative; persistently below, too aggressive\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-24",
+      "argv": [
+        "calibration"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"taggedAnswers\": 3,\n  \"buckets\": {\n    \"mostly\": {\n      \"correct\": 1,\n      \"incorrect\": 0,\n      \"partial\": 0\n    },\n    \"guessing\": {\n      \"correct\": 0,\n      \"incorrect\": 1,\n      \"partial\": 0\n    },\n    \"sure\": {\n      \"correct\": 1,\n      \"incorrect\": 0,\n      \"partial\": 0\n    }\n  },\n  \"overconfidenceRate\": 0.0,\n  \"underconfidenceRate\": 0.0,\n  \"overconfidentEvents\": [],\n  \"underconfidentEvents\": [],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-24",
+      "argv": [
+        "export-anonymized"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"exportVersion\": 1,\n  \"generated\": \"2026-05-24\",\n  \"concepts\": 4,\n  \"boxDistribution\": {\n    \"1\": 3,\n    \"2\": 0,\n    \"3\": 1,\n    \"4\": 0,\n    \"5\": 0\n  },\n  \"bloomDistribution\": {\n    \"0\": 2,\n    \"1\": 0,\n    \"2\": 0,\n    \"3\": 1,\n    \"4\": 1,\n    \"5\": 0,\n    \"6\": 0\n  },\n  \"feynmanPassed\": 1,\n  \"applied\": 2,\n  \"mastered\": 0,\n  \"sessionTypeCounts\": {\n    \"spaced-review\": 2,\n    \"learner-forget\": 1,\n    \"learner-park\": 2\n  },\n  \"retention\": {\n    \"reviews\": 13,\n    \"overallSuccessRate\": 0.69,\n    \"delayedReviews\": 13,\n    \"delayedSuccessRate\": 0.69,\n    \"byGap\": {\n      \"same-day\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      },\n      \"1d\": {\n        \"correct\": 1,\n        \"incorrect\": 1,\n        \"partial\": 1,\n        \"reviews\": 3,\n        \"successRate\": 0.33\n      },\n      \"2-3d\": {\n        \"correct\": 2,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 2,\n        \"successRate\": 1.0\n      },\n      \"4-7d\": {\n        \"correct\": 1,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 1,\n        \"successRate\": 1.0\n      },\n      \"8-14d\": {\n        \"correct\": 4,\n        \"incorrect\": 1,\n        \"partial\": 1,\n        \"reviews\": 6,\n        \"successRate\": 0.67\n      },\n      \"15-30d\": {\n        \"correct\": 1,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 1,\n        \"successRate\": 1.0\n      },\n      \"31d+\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      }\n    },\n    \"byBoxAtReview\": {\n      \"1\": {\n        \"correct\": 2,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 2,\n        \"successRate\": 1.0\n      },\n      \"2\": {\n        \"correct\": 1,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 1,\n        \"successRate\": 1.0\n      },\n      \"3\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 1,\n        \"reviews\": 1,\n        \"successRate\": 0.0\n      },\n      \"4\": {\n        \"correct\": 0,\n        \"incorrect\": 1,\n        \"partial\": 0,\n        \"reviews\": 1,\n        \"successRate\": 0.0\n      },\n      \"5\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0,\n        \"reviews\": 0,\n        \"successRate\": null\n      }\n    },\n    \"relearningRetriesExcluded\": 1,\n    \"deferralsExcluded\": 1,\n    \"selfReportsExcluded\": 1,\n    \"entriesWithoutBoxBefore\": 8,\n    \"entriesSkipped\": 0\n  },\n  \"calibration\": {\n    \"taggedAnswers\": 3,\n    \"buckets\": {\n      \"sure\": {\n        \"correct\": 1,\n        \"incorrect\": 0,\n        \"partial\": 0\n      },\n      \"guessing\": {\n        \"correct\": 0,\n        \"incorrect\": 1,\n        \"partial\": 0\n      },\n      \"mostly\": {\n        \"correct\": 1,\n        \"incorrect\": 0,\n        \"partial\": 0\n      }\n    },\n    \"overconfidenceRate\": 0.0,\n    \"underconfidenceRate\": 0.0\n  },\n  \"project\": {\n    \"totalSessions\": 8,\n    \"currentStreak\": 1,\n    \"overallCompletion\": 40,\n    \"daysSinceStart\": 53\n  },\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-24",
+      "argv": [
+        "session-brief",
+        "--concept",
+        "Query planning"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"Query planning\",\n  \"tracked\": true,\n  \"firstExposure\": false,\n  \"pretestApplies\": false,\n  \"isReteach\": false,\n  \"box\": 3,\n  \"bloomLevel\": 4,\n  \"bloomLabel\": \"Analyze\",\n  \"bloomOutcome\": \"you can work out why it works as it does and find where it breaks, on your own\",\n  \"evidenceAt3Plus\": 2,\n  \"appliedEvidence\": 1,\n  \"feynmanPassed\": true,\n  \"feynmanCurrent\": true,\n  \"lastReviewed\": \"2026-05-24\",\n  \"daysSinceLastReview\": 0,\n  \"lastResult\": \"correct\",\n  \"dueForReview\": false,\n  \"reviews\": 4,\n  \"currentModule\": \"Query Optimization\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-24",
+      "argv": [
+        "session-brief",
+        "--concept",
+        "EXPLAIN plans"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"concept\": \"EXPLAIN plans\",\n  \"tracked\": true,\n  \"firstExposure\": false,\n  \"pretestApplies\": false,\n  \"isReteach\": true,\n  \"box\": 1,\n  \"bloomLevel\": 3,\n  \"bloomLabel\": \"Apply\",\n  \"bloomOutcome\": \"you can apply it to a real case with some guidance\",\n  \"evidenceAt3Plus\": 1,\n  \"appliedEvidence\": 1,\n  \"feynmanPassed\": false,\n  \"feynmanCurrent\": false,\n  \"lastReviewed\": \"2026-05-24\",\n  \"daysSinceLastReview\": 0,\n  \"lastResult\": \"correct\",\n  \"dueForReview\": false,\n  \"reviews\": 1,\n  \"currentModule\": \"Query Optimization\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-05-24",
+      "argv": [
+        "gate-check",
+        "--prereqs",
+        "B-tree indexes, Query planning"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"fires\": false,\n  \"reason\": \"continuation session — 1 concept(s) graded in module 'Query Optimization'\",\n  \"currentModule\": \"Query Optimization\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-06-30",
+      "argv": [
+        "due",
+        "--limit",
+        "1"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"dueToday\": 4,\n  \"neverTaughtCount\": 1,\n  \"concepts\": [\n    {\n      \"name\": \"B-tree indexes\",\n      \"module\": \"Indexing\",\n      \"dueSince\": \"2026-05-22\",\n      \"overdueDays\": 39,\n      \"neverTaught\": false,\n      \"exposure\": \"taught\",\n      \"bloomOutcome\": \"nothing observed yet\",\n      \"question\": \"How does a B-tree index change how the database finds a row?\",\n      \"priority\": 1\n    }\n  ],\n  \"truncated\": 3,\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-06-30",
+      "argv": [
+        "snapshot"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"project\": {\n    \"name\": \"sql-deep-dive\",\n    \"topic\": \"SQL and database internals\",\n    \"createdAt\": \"2026-04-01T09:00:00\",\n    \"currentPhase\": \"1\",\n    \"currentModule\": \"Query Optimization\",\n    \"currentModuleIndex\": 2,\n    \"position\": {\n      \"index\": 3,\n      \"of\": 3,\n      \"module\": \"Query Optimization\",\n      \"phase\": 1\n    },\n    \"lastActivity\": \"Built an index for a slow query\",\n    \"overallCompletion\": 40,\n    \"initialBloomLevel\": {\n      \"sql-basics\": 2,\n      \"indexing\": 1\n    },\n    \"currentBloomLevel\": {\n      \"sql-basics\": 3,\n      \"indexing\": 2\n    }\n  },\n  \"cadence\": {\n    \"totalSessions\": 8,\n    \"currentStreak\": 1,\n    \"lastSessionAt\": \"2026-05-24T<time>\",\n    \"daysSinceLastSession\": 37,\n    \"sessionsLast7d\": 0,\n    \"sessionsLast30d\": 0\n  },\n  \"review\": {\n    \"concepts\": 4,\n    \"dueToday\": 4,\n    \"dueTodayConcepts\": [\n      \"B-tree indexes\",\n      \"Query planning\",\n      \"Normalization trade-offs\",\n      \"EXPLAIN plans\"\n    ],\n    \"dueThisWeek\": 0,\n    \"dueThisWeekConcepts\": [],\n    \"overdue10dPlus\": 4,\n    \"waitingForReviewDay\": 0,\n    \"unscheduled\": 0,\n    \"boxDistribution\": {\n      \"1\": 3,\n      \"2\": 0,\n      \"3\": 1,\n      \"4\": 0,\n      \"5\": 0\n    },\n    \"retentionRollup\": {\n      \"strong\": 0,\n      \"building\": 1,\n      \"needs_review\": 3\n    },\n    \"retentionConcepts\": {\n      \"strong\": [],\n      \"building\": [\n        \"Query planning\"\n      ],\n      \"needs_review\": [\n        \"B-tree indexes\",\n        \"Normalization trade-offs\",\n        \"EXPLAIN plans\"\n      ]\n    },\n    \"unparseableDates\": 0,\n    \"parked\": 0\n  },\n  \"mastery\": {\n    \"mastered\": 0,\n    \"feynmanPassed\": 1,\n    \"applied\": 2,\n    \"classified\": 2,\n    \"modules\": {\n      \"Indexing\": {\n        \"concepts\": 2,\n        \"mastered\": 0,\n        \"classified\": 1,\n        \"applied\": 1,\n        \"dueForCheck\": 0,\n        \"tiers\": {\n          \"unclassified\": 1,\n          \"introduced\": 0,\n          \"familiar\": 1,\n          \"mastered\": 0\n        },\n        \"masteryPct\": 0\n      },\n      \"Schema Design\": {\n        \"concepts\": 1,\n        \"mastered\": 0,\n        \"classified\": 0,\n        \"applied\": 0,\n        \"dueForCheck\": 0,\n        \"tiers\": {\n          \"unclassified\": 1,\n          \"introduced\": 0,\n          \"familiar\": 0,\n          \"mastered\": 0\n        },\n        \"masteryPct\": null\n      },\n      \"Query Optimization\": {\n        \"concepts\": 1,\n        \"mastered\": 0,\n        \"classified\": 1,\n        \"applied\": 1,\n        \"dueForCheck\": 0,\n        \"tiers\": {\n          \"unclassified\": 0,\n          \"introduced\": 1,\n          \"familiar\": 0,\n          \"mastered\": 0\n        },\n        \"masteryPct\": 0\n      }\n    },\n    \"blockedOnFeynman\": [],\n    \"blockedOnApplied\": [],\n    \"masteredDueForCheck\": []\n  },\n  \"calibration\": {\n    \"taggedAnswers\": 3,\n    \"buckets\": {\n      \"sure\": {\n        \"correct\": 1,\n        \"incorrect\": 0,\n        \"partial\": 0\n      },\n      \"guessing\": {\n        \"correct\": 0,\n        \"incorrect\": 1,\n        \"partial\": 0\n      },\n      \"mostly\": {\n        \"correct\": 1,\n        \"incorrect\": 0,\n        \"partial\": 0\n      }\n    },\n    \"overconfidenceRate\": 0.0,\n    \"underconfidenceRate\": 0.0\n  },\n  \"bloomScale\": [\n    {\n      \"level\": 1,\n      \"label\": \"Remember\",\n      \"outcome\": \"you can recall the terms and what they refer to\"\n    },\n    {\n      \"level\": 2,\n      \"label\": \"Understand\",\n      \"outcome\": \"you can explain it in your own words\"\n    },\n    {\n      \"level\": 3,\n      \"label\": \"Apply\",\n      \"outcome\": \"you can apply it to a real case with some guidance\"\n    },\n    {\n      \"level\": 4,\n      \"label\": \"Analyze\",\n      \"outcome\": \"you can work out why it works as it does and find where it breaks, on your own\"\n    },\n    {\n      \"level\": 5,\n      \"label\": \"Evaluate\",\n      \"outcome\": \"you can weigh the alternatives and defend a choice between them\"\n    },\n    {\n      \"level\": 6,\n      \"label\": \"Create\",\n      \"outcome\": \"you can create something new with it and teach it\"\n    }\n  ],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-06-30",
+      "argv": [
+        "mastery"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"modules\": {\n    \"Indexing\": {\n      \"concepts\": 2,\n      \"mastered\": 0,\n      \"classified\": 1,\n      \"applied\": 1,\n      \"dueForCheck\": 0,\n      \"tiers\": {\n        \"unclassified\": 1,\n        \"introduced\": 0,\n        \"familiar\": 1,\n        \"mastered\": 0\n      },\n      \"masteryPct\": 0\n    },\n    \"Schema Design\": {\n      \"concepts\": 1,\n      \"mastered\": 0,\n      \"classified\": 0,\n      \"applied\": 0,\n      \"dueForCheck\": 0,\n      \"tiers\": {\n        \"unclassified\": 1,\n        \"introduced\": 0,\n        \"familiar\": 0,\n        \"mastered\": 0\n      },\n      \"masteryPct\": null\n    },\n    \"Query Optimization\": {\n      \"concepts\": 1,\n      \"mastered\": 0,\n      \"classified\": 1,\n      \"applied\": 1,\n      \"dueForCheck\": 0,\n      \"tiers\": {\n        \"unclassified\": 0,\n        \"introduced\": 1,\n        \"familiar\": 0,\n        \"mastered\": 0\n      },\n      \"masteryPct\": 0\n    }\n  },\n  \"retentionRollup\": {\n    \"strong\": 0,\n    \"building\": 1,\n    \"needs_review\": 3\n  },\n  \"retentionConcepts\": {\n    \"strong\": [],\n    \"building\": [\n      \"Query planning\"\n    ],\n    \"needs_review\": [\n      \"B-tree indexes\",\n      \"Normalization trade-offs\",\n      \"EXPLAIN plans\"\n    ]\n  },\n  \"dueToday\": [\n    \"B-tree indexes\",\n    \"Query planning\",\n    \"Normalization trade-offs\",\n    \"EXPLAIN plans\"\n  ],\n  \"dueThisWeek\": [],\n  \"blockedOnFeynman\": [],\n  \"blockedOnApplied\": [],\n  \"masteredDueForCheck\": [],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-06-30",
+      "argv": [
+        "retention"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"reviews\": 13,\n  \"overallSuccessRate\": 0.69,\n  \"delayedReviews\": 13,\n  \"delayedSuccessRate\": 0.69,\n  \"byGap\": {\n    \"same-day\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    },\n    \"1d\": {\n      \"correct\": 1,\n      \"incorrect\": 1,\n      \"partial\": 1,\n      \"reviews\": 3,\n      \"successRate\": 0.33\n    },\n    \"2-3d\": {\n      \"correct\": 2,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 2,\n      \"successRate\": 1.0\n    },\n    \"4-7d\": {\n      \"correct\": 1,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 1,\n      \"successRate\": 1.0\n    },\n    \"8-14d\": {\n      \"correct\": 4,\n      \"incorrect\": 1,\n      \"partial\": 1,\n      \"reviews\": 6,\n      \"successRate\": 0.67\n    },\n    \"15-30d\": {\n      \"correct\": 1,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 1,\n      \"successRate\": 1.0\n    },\n    \"31d+\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    }\n  },\n  \"byBoxAtReview\": {\n    \"1\": {\n      \"correct\": 2,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 2,\n      \"successRate\": 1.0\n    },\n    \"2\": {\n      \"correct\": 1,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 1,\n      \"successRate\": 1.0\n    },\n    \"3\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 1,\n      \"reviews\": 1,\n      \"successRate\": 0.0\n    },\n    \"4\": {\n      \"correct\": 0,\n      \"incorrect\": 1,\n      \"partial\": 0,\n      \"reviews\": 1,\n      \"successRate\": 0.0\n    },\n    \"5\": {\n      \"correct\": 0,\n      \"incorrect\": 0,\n      \"partial\": 0,\n      \"reviews\": 0,\n      \"successRate\": null\n    }\n  },\n  \"relearningRetriesExcluded\": 1,\n  \"deferralsExcluded\": 1,\n  \"selfReportsExcluded\": 1,\n  \"entriesWithoutBoxBefore\": 8,\n  \"entriesSkipped\": 0,\n  \"note\": \"Leitner targets roughly 80-90% success at review time: persistently above suggests intervals too conservative; persistently below, too aggressive\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-06-30",
+      "argv": [
+        "verify"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"ok\": true,\n  \"project\": \"<WS>/sql-deep-dive\",\n  \"errors\": [],\n  \"warnings\": []\n}\n",
+      "stderr": ""
+    }
+  ],
+  "files": {
+    ".bodhi-profile.json": "{\n  \"version\": 2,\n  \"careerGoal\": \"Backend engineer comfortable with data systems\",\n  \"whyLearning\": \"Fixture for LLM evals\",\n  \"priorExperience\": \"2 years scripting\",\n  \"learningStyle\": \"hands-on\",\n  \"overallBloomLevels\": {\n    \"sql\": 2\n  },\n  \"cumulativeStats\": {\n    \"totalSessions\": 8,\n    \"totalExercises\": 4,\n    \"totalConceptsLearned\": 2,\n    \"totalMilestonesReached\": 0,\n    \"totalProjects\": 1,\n    \"teachBacksWritten\": 0,\n    \"teachBacksPublished\": 0\n  },\n  \"patterns\": {\n    \"persistentChallenges\": [\n      \"joins\"\n    ],\n    \"consistentStrengths\": [\n      \"indexes\"\n    ]\n  },\n  \"lastUpdated\": \"2026-05-24T<time>\"\n}\n",
+    ".bodhi-profile.projects.json": "{\n  \"version\": 2,\n  \"activeProjects\": [\n    {\n      \"name\": \"sql-deep-dive\",\n      \"topic\": \"SQL and database internals\",\n      \"startedAt\": \"2026-04-01\",\n      \"currentPhase\": \"1\",\n      \"currentModule\": \"Query Optimization\",\n      \"bloomLevel\": 3,\n      \"pace\": \"steady\",\n      \"status\": \"active\",\n      \"trackPurpose\": \"depth\"\n    }\n  ],\n  \"completedProjects\": []\n}\n",
+    "sql-deep-dive/.bodhi/.migration-1.10.md": "# Migration to 1.10 — 2026-05-21\n\nPerformed by `bodhi-state migrate-spaced-review`.\n\n- spaced-review.json: v2 -> v3\n- concepts touched: 3\n- fields added: 9\n- backup: `.bodhi/.pre-1.10-backup/spaced-review.json`\n",
+    "sql-deep-dive/.bodhi/.pre-1.10-backup/spaced-review.json": "{\n  \"version\": 2,\n  \"lastReviewCheck\": \"2026-05-20T18:00:00\",\n  \"concepts\": [\n    {\n      \"name\": \"B-tree indexes\",\n      \"module\": \"Indexing\",\n      \"introduced\": \"2026-04-10\",\n      \"box\": 3,\n      \"nextReview\": \"2026-05-27\",\n      \"lastReviewed\": \"2026-05-20\",\n      \"question\": \"How does a B-tree index change how the database finds a row?\",\n      \"lastResult\": \"clean recall with a real-world analogy\",\n      \"precisionGap\": \"clustered vs non-clustered still blurry\",\n      \"reviewHistory\": [\n        { \"date\": \"2026-04-22\", \"result\": \"correct\" },\n        { \"date\": \"2026-05-06\", \"result\": \"correct\" },\n        { \"date\": \"2026-05-20\", \"result\": \"correct\" }\n      ]\n    },\n    {\n      \"name\": \"Query planning\",\n      \"module\": \"Indexing\",\n      \"introduced\": \"2026-04-22\",\n      \"box\": 1,\n      \"nextReview\": \"2026-05-21\",\n      \"lastReviewed\": \"2026-05-20\",\n      \"question\": \"What does the planner consider when choosing an index scan vs a seq scan?\",\n      \"lastResult\": \"could name cost factors but not why\",\n      \"reviewHistory\": [\n        { \"date\": \"2026-05-06\", \"result\": \"partial\" },\n        { \"date\": \"2026-05-20\", \"result\": \"incorrect\" }\n      ]\n    },\n    {\n      \"name\": \"Normalization trade-offs\",\n      \"module\": \"Schema Design\",\n      \"introduced\": \"2026-04-03\",\n      \"box\": 4,\n      \"nextReview\": \"2026-06-03\",\n      \"lastReviewed\": \"2026-05-20\",\n      \"question\": \"When is denormalizing the right call?\",\n      \"lastResult\": \"strong\",\n      \"reviewHistory\": [\n        { \"date\": \"2026-04-10\", \"result\": \"correct\" },\n        { \"date\": \"2026-04-22\", \"result\": \"correct\" },\n        { \"date\": \"2026-05-20\", \"result\": \"correct\" }\n      ]\n    }\n  ],\n  \"sessionHistory\": [\n    {\n      \"date\": \"2026-05-20\",\n      \"type\": \"spaced-review\",\n      \"conceptsReviewed\": 3,\n      \"passes\": 2,\n      \"misses\": 1,\n      \"boxChanges\": { \"Query planning\": \"2 -> 1\" },\n      \"habitObservations\": { \"hedging\": \"hedges on planner internals\" }\n    }\n  ]\n}\n",
+    "sql-deep-dive/.bodhi/assessment-history.json": "{\n  \"version\": 1,\n  \"entries\": [\n    {\n      \"topic\": \"sql\",\n      \"subTopics\": [\n        {\n          \"name\": \"joins\",\n          \"bloomLevel\": 2\n        },\n        {\n          \"name\": \"indexes\",\n          \"bloomLevel\": 4\n        }\n      ],\n      \"date\": \"2026-05-21\",\n      \"trigger\": \"assess\"\n    },\n    {\n      \"topic\": \"sql\",\n      \"subTopics\": [\n        {\n          \"name\": \"joins\",\n          \"bloomLevel\": 2\n        },\n        {\n          \"name\": \"indexes\",\n          \"bloomLevel\": 5\n        }\n      ],\n      \"date\": \"2026-05-21\",\n      \"trigger\": \"evaluate\"\n    },\n    {\n      \"topic\": \"sql\",\n      \"subTopics\": [\n        {\n          \"name\": \"joins\",\n          \"bloomLevel\": 1\n        },\n        {\n          \"name\": \"indexes\",\n          \"bloomLevel\": 4\n        }\n      ],\n      \"date\": \"2026-05-21\",\n      \"trigger\": \"plan-regenerate\"\n    }\n  ]\n}\n",
+    "sql-deep-dive/.bodhi/plan/README.md": "# Learning Plan — SQL and database internals\n\n**Current phase:** 1 (`phase-1.md`)\n**Target arc:** 10 weeks\n**Pace:** steady\n\n## Phases\n\n- **Phase 1 — Foundations to internals** (6 weeks) → `phase-1.md`\n",
+    "sql-deep-dive/.bodhi/plan/phase-1.md": "# Phase 1 — Foundations to internals\n\n**Goals:** Read and reason about real query behavior.\n**Duration:** 6 weeks\n**Success criteria:** Can explain and predict planner choices on a real schema.\n\n## Modules\n\n### Module 1.1 — Schema Design\nNormalization, trade-offs, real-world denormalization.\n\n### Module 1.2 — Indexing\nB-trees, clustered vs non-clustered, covering indexes.\n\n**Prerequisites for next module:** B-tree indexes, Query planning\n\n### Module 1.3 — Query Optimization\nEXPLAIN, planner cost model, join strategies.\n",
+    "sql-deep-dive/.bodhi/progress.md": "# Progress Log\n\n## 2026-05-20 — Session 6 (Spaced review + planner intro)\n\n**Duration:** ~40 min\n**Activities:**\n- Reviewed 3 due concepts; B-tree and normalization held, query planning missed.\n- Read EXPLAIN output on two sample queries.\n\n**Outcomes:**\n- Query planning demoted to Box 1; needs a targeted rep.\n\n**Bloom adjustments:**\n- indexing: 2 → 2 (held)\n\n**Next:** Start Query Optimization module; revisit query planning first.\n\n---\n\n## Summary of earlier sessions\n\n- **2026-05-06 — Indexing module wrap; planner first contact**\n  → `progress/archive/session-2026-05-06.md`\n- **2026-04-22 — B-tree mechanics; first EXPLAIN reading**\n  → `progress/archive/session-2026-04-22.md`\n",
+    "sql-deep-dive/.bodhi/progress/archive/session-2026-04-22.md": "## 2026-04-22 — Session 4\n\nB-tree mechanics.\n",
+    "sql-deep-dive/.bodhi/progress/archive/session-2026-05-06.md": "## 2026-05-06 — Session 5\n\nIndexing module wrap.\n",
+    "sql-deep-dive/.bodhi/spaced-review.json": "{\n  \"version\": 3,\n  \"lastReviewCheck\": \"2026-05-24T<time>\",\n  \"concepts\": [\n    {\n      \"name\": \"B-tree indexes\",\n      \"module\": \"Indexing\",\n      \"introduced\": \"2026-04-10\",\n      \"box\": 1,\n      \"nextReview\": \"2026-05-22\",\n      \"lastReviewed\": \"2026-05-21\",\n      \"question\": \"How does a B-tree index change how the database finds a row?\",\n      \"lastResult\": \"learner-initiated demote\",\n      \"precisionGap\": \"clustered vs non-clustered still blurry\",\n      \"reviewHistory\": [\n        {\n          \"date\": \"2026-04-22\",\n          \"result\": \"correct\"\n        },\n        {\n          \"date\": \"2026-05-06\",\n          \"result\": \"correct\"\n        },\n        {\n          \"date\": \"2026-05-20\",\n          \"result\": \"correct\"\n        },\n        {\n          \"date\": \"2026-05-21\",\n          \"result\": \"partial\",\n          \"boxBefore\": 3,\n          \"bloomLevel\": 2,\n          \"source\": \"teach\"\n        },\n        {\n          \"date\": \"2026-05-21\",\n          \"result\": \"incorrect\",\n          \"selfReport\": true,\n          \"note\": \"learner-initiated demote\"\n        }\n      ],\n      \"bloomLevel\": 0,\n      \"feynmanPassed\": false,\n      \"consecutiveCorrectAtL4Plus\": 0\n    },\n    {\n      \"name\": \"Query planning\",\n      \"module\": \"Indexing\",\n      \"introduced\": \"2026-04-22\",\n      \"box\": 3,\n      \"nextReview\": \"2026-05-31\",\n      \"lastReviewed\": \"2026-05-24\",\n      \"question\": \"What does the planner consider when choosing an index scan vs a seq scan?\",\n      \"lastResult\": \"correct\",\n      \"reviewHistory\": [\n        {\n          \"date\": \"2026-05-06\",\n          \"result\": \"partial\"\n        },\n        {\n          \"date\": \"2026-05-20\",\n          \"result\": \"incorrect\"\n        },\n        {\n          \"date\": \"2026-05-21\",\n          \"result\": \"correct\",\n          \"boxBefore\": 1,\n          \"bloomLevel\": 3,\n          \"confidence\": \"sure\",\n          \"source\": \"quiz\"\n        },\n        {\n          \"date\": \"2026-05-24\",\n          \"result\": \"correct\",\n          \"boxBefore\": 2,\n          \"bloomLevel\": 4,\n          \"confidence\": \"mostly\",\n          \"source\": \"practice\",\n          \"applied\": true\n        }\n      ],\n      \"bloomLevel\": 4,\n      \"feynmanPassed\": true,\n      \"consecutiveCorrectAtL4Plus\": 1,\n      \"feynmanPassedAt\": \"2026-05-21\"\n    },\n    {\n      \"name\": \"Normalization trade-offs\",\n      \"module\": \"Schema Design\",\n      \"introduced\": \"2026-04-03\",\n      \"box\": 1,\n      \"nextReview\": \"2026-05-22\",\n      \"lastReviewed\": \"2026-05-21\",\n      \"question\": \"When is denormalizing the right call?\",\n      \"lastResult\": \"correct (relearning retry)\",\n      \"reviewHistory\": [\n        {\n          \"date\": \"2026-04-10\",\n          \"result\": \"correct\"\n        },\n        {\n          \"date\": \"2026-04-22\",\n          \"result\": \"correct\"\n        },\n        {\n          \"date\": \"2026-05-20\",\n          \"result\": \"correct\"\n        },\n        {\n          \"date\": \"2026-05-21\",\n          \"result\": \"incorrect\",\n          \"boxBefore\": 4,\n          \"bloomLevel\": 2,\n          \"confidence\": \"guessing\",\n          \"source\": \"reflect\"\n        },\n        {\n          \"date\": \"2026-05-21\",\n          \"result\": \"correct\",\n          \"boxBefore\": 1,\n          \"retry\": true,\n          \"source\": \"reflect\"\n        }\n      ],\n      \"bloomLevel\": 0,\n      \"feynmanPassed\": false,\n      \"consecutiveCorrectAtL4Plus\": 0,\n      \"parked\": false\n    },\n    {\n      \"name\": \"EXPLAIN plans\",\n      \"module\": \"Query Optimization\",\n      \"introduced\": \"2026-05-21\",\n      \"box\": 1,\n      \"nextReview\": \"2026-05-25\",\n      \"lastReviewed\": \"2026-05-24\",\n      \"question\": \"What does a seq scan cost?\",\n      \"lastResult\": \"correct\",\n      \"bloomLevel\": 3,\n      \"feynmanPassed\": false,\n      \"consecutiveCorrectAtL4Plus\": 0,\n      \"reviewHistory\": [\n        {\n          \"date\": \"2026-05-21\",\n          \"deferred\": true,\n          \"days\": 2,\n          \"note\": \"ran out\"\n        },\n        {\n          \"date\": \"2026-05-24\",\n          \"result\": \"correct\",\n          \"boxBefore\": 1,\n          \"bloomLevel\": 3,\n          \"source\": \"pair\",\n          \"applied\": true\n        }\n      ]\n    }\n  ],\n  \"sessionHistory\": [\n    {\n      \"date\": \"2026-05-20\",\n      \"type\": \"spaced-review\",\n      \"conceptsReviewed\": 3,\n      \"passes\": 2,\n      \"misses\": 1,\n      \"boxChanges\": {\n        \"Query planning\": \"2 -> 1\"\n      },\n      \"habitObservations\": {\n        \"hedging\": \"hedges on planner internals\"\n      }\n    },\n    {\n      \"date\": \"2026-05-21\",\n      \"type\": \"spaced-review\",\n      \"conceptsReviewed\": 2,\n      \"passes\": 1,\n      \"misses\": 1\n    },\n    {\n      \"date\": \"2026-05-21\",\n      \"type\": \"learner-forget\",\n      \"conceptsDemoted\": [\n        \"B-tree indexes\"\n      ],\n      \"boxChanges\": {\n        \"B-tree indexes\": \"3 -> 1\"\n      },\n      \"notes\": \"felt shaky\"\n    },\n    {\n      \"date\": \"2026-05-21\",\n      \"type\": \"learner-park\",\n      \"conceptsParked\": [\n        \"Normalization trade-offs\"\n      ]\n    },\n    {\n      \"date\": \"2026-05-21\",\n      \"type\": \"learner-park\",\n      \"conceptsResumed\": [\n        \"Normalization trade-offs\"\n      ]\n    }\n  ]\n}\n",
+    "sql-deep-dive/.bodhi/state.json": "{\n  \"version\": 2,\n  \"projectName\": \"sql-deep-dive\",\n  \"topic\": \"SQL and database internals\",\n  \"createdAt\": \"2026-04-01T09:00:00\",\n  \"lastSessionAt\": \"2026-05-24T<time>\",\n  \"totalSessions\": 8,\n  \"sessionDates\": [\n    \"2026-04-01\",\n    \"2026-04-03\",\n    \"2026-04-10\",\n    \"2026-04-22\",\n    \"2026-05-06\",\n    \"2026-05-20\",\n    \"2026-05-21\",\n    \"2026-05-24\"\n  ],\n  \"currentStreak\": 1,\n  \"currentPhase\": \"1\",\n  \"currentModule\": \"Query Optimization\",\n  \"previousModule\": \"Indexing\",\n  \"currentModuleIndex\": 2,\n  \"lastActivity\": \"Built an index for a slow query\",\n  \"initialBloomLevel\": {\n    \"sql-basics\": 2,\n    \"indexing\": 1\n  },\n  \"currentBloomLevel\": {\n    \"sql-basics\": 3,\n    \"indexing\": 2\n  },\n  \"overallCompletion\": 40\n}\n"
+  }
+}

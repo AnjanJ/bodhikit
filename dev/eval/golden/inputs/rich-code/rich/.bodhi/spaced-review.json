@@ -1,0 +1,968 @@
+{
+  "version": 3,
+  "lastReviewCheck": "2026-04-06T09:00:00",
+  "concepts": [
+    {
+      "name": "Closures",
+      "module": "Functions",
+      "introduced": "2026-01-01",
+      "box": 4,
+      "nextReview": "2026-03-26",
+      "lastReviewed": "2026-03-12",
+      "question": "",
+      "lastResult": "correct",
+      "bloomLevel": 4,
+      "feynmanPassed": true,
+      "consecutiveCorrectAtL4Plus": 3,
+      "reviewHistory": [
+        {
+          "date": "2026-03-01",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "teach",
+          "boxBefore": 1
+        },
+        {
+          "date": "2026-03-02",
+          "result": "correct",
+          "bloomLevel": 4,
+          "source": "quiz",
+          "boxBefore": 1
+        },
+        {
+          "date": "2026-03-05",
+          "result": "correct",
+          "bloomLevel": 4,
+          "source": "practice",
+          "boxBefore": 2,
+          "applied": true
+        },
+        {
+          "date": "2026-03-12",
+          "result": "correct",
+          "bloomLevel": 4,
+          "source": "quiz",
+          "boxBefore": 3
+        }
+      ],
+      "feynmanPassedAt": "2026-03-12"
+    },
+    {
+      "name": "Recursion",
+      "module": "Functions",
+      "introduced": "2026-01-01",
+      "box": 4,
+      "nextReview": "2026-04-20",
+      "lastReviewed": "2026-03-12",
+      "question": "",
+      "lastResult": "correct",
+      "bloomLevel": 4,
+      "feynmanPassed": true,
+      "consecutiveCorrectAtL4Plus": 3,
+      "reviewHistory": [
+        {
+          "date": "2026-03-01",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "teach",
+          "boxBefore": 1
+        },
+        {
+          "date": "2026-03-02",
+          "result": "correct",
+          "bloomLevel": 4,
+          "source": "quiz",
+          "boxBefore": 1
+        },
+        {
+          "date": "2026-03-05",
+          "result": "correct",
+          "bloomLevel": 4,
+          "source": "quiz",
+          "boxBefore": 2
+        },
+        {
+          "date": "2026-03-12",
+          "result": "correct",
+          "bloomLevel": 4,
+          "source": "quiz",
+          "boxBefore": 3
+        }
+      ],
+      "feynmanPassedAt": "2026-03-12"
+    },
+    {
+      "name": "Iterators",
+      "module": "Collections",
+      "introduced": "2026-01-01",
+      "box": 3,
+      "nextReview": "2026-04-10",
+      "lastReviewed": "2026-03-29",
+      "question": "",
+      "lastResult": "correct",
+      "bloomLevel": 3,
+      "feynmanPassed": false,
+      "consecutiveCorrectAtL4Plus": 0,
+      "reviewHistory": [
+        {
+          "date": "2025-12-20",
+          "result": "incorrect",
+          "bloomLevel": 2,
+          "source": "quiz",
+          "boxBefore": 2
+        },
+        {
+          "date": "2025-12-21",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "teach",
+          "boxBefore": 1,
+          "applied": true
+        },
+        {
+          "date": "2025-12-22",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2025-12-23",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2025-12-24",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2025-12-25",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2025-12-26",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2025-12-27",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2025-12-28",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2025-12-29",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2025-12-30",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2025-12-31",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-01-01",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-01-02",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-01-03",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-01-04",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-01-05",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-01-06",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-01-07",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-01-08",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-01-09",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-01-10",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-01-11",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-01-12",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-01-13",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-01-14",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-01-15",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-01-16",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-01-17",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-01-18",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-01-19",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-01-20",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-01-21",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-01-22",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-01-23",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-01-24",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-01-25",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-01-26",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-01-27",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-01-28",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-01-29",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-01-30",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-01-31",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-02-01",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-02-02",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-02-03",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-02-04",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-02-05",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-02-06",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-02-07",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-02-08",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-02-09",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-02-10",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-02-11",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-02-12",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-02-13",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-02-14",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-02-15",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-02-16",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-02-17",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-02-18",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-02-19",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-02-20",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-02-21",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-02-22",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-02-23",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-02-24",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-02-25",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-02-26",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-02-27",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-02-28",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-03-01",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-03-02",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-03-03",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-03-04",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-03-05",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-03-06",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-03-07",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-03-08",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-03-09",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-03-10",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-03-11",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-03-12",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-03-13",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-03-14",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-03-15",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-03-16",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-03-17",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-03-18",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-03-19",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-03-20",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-03-21",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-03-22",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-03-23",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-03-24",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-03-25",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-03-26",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-03-27",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-03-28",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        },
+        {
+          "date": "2026-03-29",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 3
+        }
+      ]
+    },
+    {
+      "name": "Generators",
+      "module": "Collections",
+      "introduced": "2026-01-01",
+      "box": 3,
+      "nextReview": "2026-03-15",
+      "lastReviewed": "2026-03-08",
+      "question": "",
+      "lastResult": "correct",
+      "bloomLevel": 3,
+      "feynmanPassed": false,
+      "consecutiveCorrectAtL4Plus": 0,
+      "reviewHistory": [
+        {
+          "date": "2026-03-01",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 2,
+          "confidence": "sure"
+        },
+        {
+          "date": "2026-03-08",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "reflect",
+          "boxBefore": 3
+        }
+      ],
+      "reviewHistoryArchived": 12,
+      "archivedSummary": {
+        "appliedEvidence": 1,
+        "evidenceAt3Plus": 2,
+        "through": "2026-02-01",
+        "lastMiss": "2026-01-15",
+        "exposure": "built"
+      }
+    },
+    {
+      "name": "Context managers",
+      "module": "Collections",
+      "introduced": "2026-01-01",
+      "box": 2,
+      "nextReview": "2026-04-11",
+      "lastReviewed": "2026-04-08",
+      "question": "",
+      "lastResult": "correct",
+      "bloomLevel": 2,
+      "feynmanPassed": false,
+      "consecutiveCorrectAtL4Plus": 0,
+      "reviewHistory": [
+        {
+          "date": "2026-04-08",
+          "result": "correct",
+          "bloomLevel": 2,
+          "source": "teach",
+          "boxBefore": 1
+        }
+      ]
+    },
+    {
+      "name": "Decorators",
+      "module": "Metaprogramming",
+      "introduced": "2026-01-01",
+      "box": 1,
+      "nextReview": "2026-04-02",
+      "lastReviewed": null,
+      "question": "",
+      "lastResult": "",
+      "bloomLevel": 2,
+      "feynmanPassed": false,
+      "consecutiveCorrectAtL4Plus": 0,
+      "reviewHistory": []
+    },
+    {
+      "name": "Descriptors",
+      "module": "Metaprogramming",
+      "introduced": "2026-01-01",
+      "box": 1,
+      "nextReview": "2026-03-31",
+      "lastReviewed": "2026-03-30",
+      "question": "",
+      "lastResult": "partial",
+      "bloomLevel": 2,
+      "feynmanPassed": false,
+      "consecutiveCorrectAtL4Plus": 0,
+      "reviewHistory": [
+        {
+          "date": "2026-03-30",
+          "result": "partial",
+          "bloomLevel": 2,
+          "source": "quiz",
+          "boxBefore": 1,
+          "confidence": "guessing"
+        }
+      ]
+    },
+    {
+      "name": "Metaclasses",
+      "module": "Metaprogramming",
+      "introduced": "2026-01-01",
+      "box": 2,
+      "nextReview": "2026-03-28",
+      "lastReviewed": "2026-03-25",
+      "question": "",
+      "lastResult": "correct",
+      "bloomLevel": 3,
+      "feynmanPassed": false,
+      "consecutiveCorrectAtL4Plus": 0,
+      "reviewHistory": [
+        {
+          "date": "2026-03-25",
+          "result": "correct",
+          "bloomLevel": 3,
+          "source": "quiz",
+          "boxBefore": 1,
+          "confidence": "mostly"
+        }
+      ]
+    },
+    {
+      "name": "Protocols",
+      "module": "Typing",
+      "introduced": "2026-01-01",
+      "box": 1,
+      "nextReview": "2026-04-02",
+      "lastReviewed": "2026-04-01",
+      "question": "",
+      "lastResult": "incorrect",
+      "bloomLevel": 1,
+      "feynmanPassed": false,
+      "consecutiveCorrectAtL4Plus": 0,
+      "reviewHistory": [
+        {
+          "date": "2026-04-01",
+          "result": "incorrect",
+          "bloomLevel": 1,
+          "source": "quiz",
+          "boxBefore": 1,
+          "confidence": "sure"
+        }
+      ]
+    }
+  ],
+  "sessionHistory": [
+    {
+      "date": "2026-03-12",
+      "type": "practice",
+      "conceptsReviewed": 2
+    },
+    {
+      "date": "2026-04-06",
+      "type": "spaced-review",
+      "conceptsReviewed": 3,
+      "passes": 2,
+      "misses": 1
+    }
+  ]
+}

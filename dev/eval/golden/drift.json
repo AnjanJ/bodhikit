@@ -1,0 +1,84 @@
+{
+  "source": "cfe290b",
+  "case": "drift",
+  "steps": [
+    {
+      "on": "2026-06-10",
+      "argv": [
+        "verify"
+      ],
+      "rc": 1,
+      "stdout": "{\n  \"ok\": false,\n  \"project\": \"<WS>/proj\",\n  \"errors\": [\n    \"state.json nests session bookkeeping under 'session' \\u2014 canonical fields are top-level; run `bodhi-state normalize`\",\n    \"state.json lastActivity is dict, expected string \\u2014 run `bodhi-state normalize`\",\n    \"state.json previousModule is dict, expected string \\u2014 run `bodhi-state normalize`\",\n    \"state.json currentModule is int, expected string \\u2014 run `bodhi-state normalize`\",\n    \"concept 'CSRF tokens' box '2' not int 1-5 \\u2014 run `bodhi-state normalize`\",\n    \"concept 'CSRF tokens' bloomLevel '2' not int 0-6 \\u2014 run `bodhi-state normalize`\",\n    \"concept 'CSRF tokens' feynmanPassed 'false' not true|false \\u2014 run `bodhi-state normalize`\",\n    \"concept 'CSRF tokens' reviewHistory result 'skipped' not in canonical vocabulary (correct|incorrect|partial) \\u2014 run `bodhi-state normalize`\",\n    \"sessionHistory type 'phase-0-reteach-partial' not in canonical vocabulary\"\n  ],\n  \"warnings\": [\n    \"state.json 'initialBloomLevels' should be the singular map \\u2014 run `bodhi-state normalize`\",\n    \"state.json 'currentBloomLevels' should be the singular map \\u2014 run `bodhi-state normalize`\"\n  ]\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-06-10",
+      "argv": [
+        "snapshot"
+      ],
+      "rc": 1,
+      "stdout": "{\"ok\": false, \"error\": \"<WS>/proj/.bodhi/state.json: currentModule is int, expected string \\u2014 run `bodhi-state normalize`\"}\n",
+      "stderr": "bodhi-state: <WS>/proj/.bodhi/state.json: currentModule is int, expected string — run `bodhi-state normalize`\n"
+    },
+    {
+      "on": "2026-06-10",
+      "argv": [
+        "due"
+      ],
+      "rc": 1,
+      "stdout": "{\"ok\": false, \"error\": \"<WS>/proj/.bodhi/spaced-review.json: concept 'CSRF tokens' box '2' not int 1-5 \\u2014 run `bodhi-state normalize`; `bodhi-state verify` lists every problem\"}\n",
+      "stderr": "bodhi-state: <WS>/proj/.bodhi/spaced-review.json: concept 'CSRF tokens' box '2' not int 1-5 — run `bodhi-state normalize`; `bodhi-state verify` lists every problem\n"
+    },
+    {
+      "on": "2026-06-10",
+      "argv": [
+        "normalize"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"action\": \"normalized\",\n  \"changes\": [\n    \"lifted 'session' bookkeeping to top level\",\n    \"deduped and sorted sessionDates\",\n    \"stringified lastActivity (original kept in lastActivityLegacy)\",\n    \"stringified previousModule (original kept in previousModuleLegacy)\",\n    \"stringified currentModule\",\n    \"renamed initialBloomLevels -> initialBloomLevel\",\n    \"renamed currentBloomLevels -> currentBloomLevel\",\n    \"box '2' -> 2 (CSRF tokens)\",\n    \"bloomLevel '2' -> 2 (CSRF tokens)\",\n    \"feynmanPassed 'false' -> False (CSRF tokens)\",\n    \"reviewHistory result 'skipped' -> deferral (CSRF tokens)\",\n    \"sessionHistory type 'phase-0-reteach-partial' -> other+subtype\"\n  ],\n  \"backup\": \"<WS>/proj/.bodhi/.pre-normalize-backup\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-06-10",
+      "argv": [
+        "normalize"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"action\": \"noop\",\n  \"reason\": \"nothing to normalize\",\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-06-10",
+      "argv": [
+        "verify"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"ok\": true,\n  \"project\": \"<WS>/proj\",\n  \"errors\": [],\n  \"warnings\": []\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-06-10",
+      "argv": [
+        "snapshot"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"project\": {\n    \"name\": \"proj\",\n    \"topic\": \"testing\",\n    \"createdAt\": \"2026-06-01\",\n    \"currentPhase\": \"1\",\n    \"currentModule\": \"2\",\n    \"currentModuleIndex\": 0,\n    \"position\": null,\n    \"lastActivity\": \"Phase 0 assessments\",\n    \"overallCompletion\": 5,\n    \"initialBloomLevel\": {\n      \"ruby\": 0\n    },\n    \"currentBloomLevel\": {\n      \"ruby\": 3\n    }\n  },\n  \"cadence\": {\n    \"totalSessions\": 4,\n    \"currentStreak\": 1,\n    \"lastSessionAt\": \"2026-06-05\",\n    \"daysSinceLastSession\": 5,\n    \"sessionsLast7d\": 2,\n    \"sessionsLast30d\": 2\n  },\n  \"review\": {\n    \"concepts\": 1,\n    \"dueToday\": 0,\n    \"dueTodayConcepts\": [],\n    \"dueThisWeek\": 1,\n    \"dueThisWeekConcepts\": [\n      \"CSRF tokens\"\n    ],\n    \"overdue10dPlus\": 0,\n    \"waitingForReviewDay\": 1,\n    \"unscheduled\": 0,\n    \"boxDistribution\": {\n      \"1\": 0,\n      \"2\": 1,\n      \"3\": 0,\n      \"4\": 0,\n      \"5\": 0\n    },\n    \"retentionRollup\": {\n      \"strong\": 0,\n      \"building\": 1,\n      \"needs_review\": 0\n    },\n    \"retentionConcepts\": {\n      \"strong\": [],\n      \"building\": [\n        \"CSRF tokens\"\n      ],\n      \"needs_review\": []\n    },\n    \"unparseableDates\": 0,\n    \"parked\": 0\n  },\n  \"mastery\": {\n    \"mastered\": 0,\n    \"feynmanPassed\": 0,\n    \"applied\": 0,\n    \"classified\": 1,\n    \"modules\": {\n      \"Module 0\": {\n        \"concepts\": 1,\n        \"mastered\": 0,\n        \"classified\": 1,\n        \"applied\": 0,\n        \"dueForCheck\": 0,\n        \"tiers\": {\n          \"unclassified\": 0,\n          \"introduced\": 1,\n          \"familiar\": 0,\n          \"mastered\": 0\n        },\n        \"masteryPct\": 0\n      }\n    },\n    \"blockedOnFeynman\": [],\n    \"blockedOnApplied\": [],\n    \"masteredDueForCheck\": []\n  },\n  \"calibration\": {\n    \"taggedAnswers\": 0,\n    \"buckets\": {\n      \"mostly\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0\n      },\n      \"guessing\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0\n      },\n      \"sure\": {\n        \"correct\": 0,\n        \"incorrect\": 0,\n        \"partial\": 0\n      }\n    },\n    \"overconfidenceRate\": null,\n    \"underconfidenceRate\": null\n  },\n  \"bloomScale\": [\n    {\n      \"level\": 1,\n      \"label\": \"Remember\",\n      \"outcome\": \"you can recall the terms and what they refer to\"\n    },\n    {\n      \"level\": 2,\n      \"label\": \"Understand\",\n      \"outcome\": \"you can explain it in your own words\"\n    },\n    {\n      \"level\": 3,\n      \"label\": \"Apply\",\n      \"outcome\": \"you can apply it to a real case with some guidance\"\n    },\n    {\n      \"level\": 4,\n      \"label\": \"Analyze\",\n      \"outcome\": \"you can work out why it works as it does and find where it breaks, on your own\"\n    },\n    {\n      \"level\": 5,\n      \"label\": \"Evaluate\",\n      \"outcome\": \"you can weigh the alternatives and defend a choice between them\"\n    },\n    {\n      \"level\": 6,\n      \"label\": \"Create\",\n      \"outcome\": \"you can create something new with it and teach it\"\n    }\n  ],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    },
+    {
+      "on": "2026-06-10",
+      "argv": [
+        "mastery"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"modules\": {\n    \"Module 0\": {\n      \"concepts\": 1,\n      \"mastered\": 0,\n      \"classified\": 1,\n      \"applied\": 0,\n      \"dueForCheck\": 0,\n      \"tiers\": {\n        \"unclassified\": 0,\n        \"introduced\": 1,\n        \"familiar\": 0,\n        \"mastered\": 0\n      },\n      \"masteryPct\": 0\n    }\n  },\n  \"retentionRollup\": {\n    \"strong\": 0,\n    \"building\": 1,\n    \"needs_review\": 0\n  },\n  \"retentionConcepts\": {\n    \"strong\": [],\n    \"building\": [\n      \"CSRF tokens\"\n    ],\n    \"needs_review\": []\n  },\n  \"dueToday\": [],\n  \"dueThisWeek\": [\n    \"CSRF tokens\"\n  ],\n  \"blockedOnFeynman\": [],\n  \"blockedOnApplied\": [],\n  \"masteredDueForCheck\": [],\n  \"ok\": true\n}\n",
+      "stderr": ""
+    }
+  ],
+  "files": {
+    "proj/.bodhi/.pre-normalize-backup/spaced-review.json": "{\n  \"version\": 3,\n  \"lastReviewCheck\": null,\n  \"concepts\": [\n    {\n      \"name\": \"CSRF tokens\",\n      \"module\": \"Module 0\",\n      \"introduced\": \"2026-05-01\",\n      \"box\": \"2\",\n      \"nextReview\": \"2026-06-11\",\n      \"lastReviewed\": \"2026-06-09\",\n      \"question\": \"\",\n      \"lastResult\": \"skipped\",\n      \"bloomLevel\": \"2\",\n      \"feynmanPassed\": \"false\",\n      \"consecutiveCorrectAtL4Plus\": 0,\n      \"reviewHistory\": [\n        {\n          \"date\": \"2026-06-01\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 2\n        },\n        {\n          \"date\": \"2026-06-09\",\n          \"result\": \"skipped\",\n          \"note\": \"session consumed; rolled +2 days\"\n        }\n      ]\n    }\n  ],\n  \"sessionHistory\": [\n    {\n      \"date\": \"2026-06-09\",\n      \"type\": \"phase-0-reteach-partial\",\n      \"notes\": \"invented type from the wild\"\n    }\n  ]\n}\n",
+    "proj/.bodhi/.pre-normalize-backup/state.json": "{\n  \"version\": 2,\n  \"projectName\": \"proj\",\n  \"topic\": \"testing\",\n  \"createdAt\": \"2026-06-01\",\n  \"lastSessionAt\": \"2026-06-05\",\n  \"session\": {\n    \"totalSessions\": 4,\n    \"sessionDates\": [\n      \"2026-06-05\",\n      \"2026-06-05\",\n      \"2026-06-05\",\n      \"2026-06-04\"\n    ],\n    \"currentStreak\": 1\n  },\n  \"currentPhase\": \"1\",\n  \"currentModule\": 2,\n  \"currentModuleIndex\": 0,\n  \"previousModule\": {\n    \"id\": \"0.3\",\n    \"name\": \"Module 0.3\",\n    \"completedAt\": \"2026-06-05\",\n    \"outcomes\": \"rich narrative that must survive\"\n  },\n  \"lastActivity\": {\n    \"type\": \"phase-complete\",\n    \"name\": \"Phase 0 assessments\",\n    \"completed\": true,\n    \"result\": \"long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative \"\n  },\n  \"initialBloomLevels\": {\n    \"ruby\": 0\n  },\n  \"currentBloomLevels\": {\n    \"ruby\": 3\n  },\n  \"overallCompletion\": 5\n}\n",
+    "proj/.bodhi/spaced-review.json": "{\n  \"version\": 3,\n  \"lastReviewCheck\": null,\n  \"concepts\": [\n    {\n      \"name\": \"CSRF tokens\",\n      \"module\": \"Module 0\",\n      \"introduced\": \"2026-05-01\",\n      \"box\": 2,\n      \"nextReview\": \"2026-06-11\",\n      \"lastReviewed\": \"2026-06-09\",\n      \"question\": \"\",\n      \"lastResult\": \"skipped\",\n      \"bloomLevel\": 2,\n      \"feynmanPassed\": false,\n      \"consecutiveCorrectAtL4Plus\": 0,\n      \"reviewHistory\": [\n        {\n          \"date\": \"2026-06-01\",\n          \"result\": \"correct\",\n          \"bloomLevel\": 2\n        },\n        {\n          \"date\": \"2026-06-09\",\n          \"note\": \"session consumed; rolled +2 days\",\n          \"deferred\": true\n        }\n      ]\n    }\n  ],\n  \"sessionHistory\": [\n    {\n      \"date\": \"2026-06-09\",\n      \"type\": \"other\",\n      \"notes\": \"invented type from the wild\",\n      \"subtype\": \"phase-0-reteach-partial\"\n    }\n  ]\n}\n",
+    "proj/.bodhi/state.json": "{\n  \"version\": 2,\n  \"projectName\": \"proj\",\n  \"topic\": \"testing\",\n  \"createdAt\": \"2026-06-01\",\n  \"lastSessionAt\": \"2026-06-05\",\n  \"currentPhase\": \"1\",\n  \"currentModule\": \"2\",\n  \"currentModuleIndex\": 0,\n  \"previousModule\": \"Module 0.3\",\n  \"lastActivity\": \"Phase 0 assessments\",\n  \"overallCompletion\": 5,\n  \"totalSessions\": 4,\n  \"currentStreak\": 1,\n  \"sessionDates\": [\n    \"2026-06-04\",\n    \"2026-06-05\"\n  ],\n  \"lastActivityLegacy\": {\n    \"type\": \"phase-complete\",\n    \"name\": \"Phase 0 assessments\",\n    \"completed\": true,\n    \"result\": \"long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative \"\n  },\n  \"previousModuleLegacy\": {\n    \"id\": \"0.3\",\n    \"name\": \"Module 0.3\",\n    \"completedAt\": \"2026-06-05\",\n    \"outcomes\": \"rich narrative that must survive\"\n  },\n  \"initialBloomLevel\": {\n    \"ruby\": 0\n  },\n  \"currentBloomLevel\": {\n    \"ruby\": 3\n  }\n}\n"
+  }
+}

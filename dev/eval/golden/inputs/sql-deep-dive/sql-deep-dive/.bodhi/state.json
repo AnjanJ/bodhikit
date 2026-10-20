@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "projectName": "sql-deep-dive",
+  "topic": "SQL and database internals",
+  "createdAt": "2026-04-01T09:00:00",
+  "lastSessionAt": "2026-05-20T18:00:00",
+  "totalSessions": 6,
+  "sessionDates": ["2026-04-01", "2026-04-03", "2026-04-10", "2026-04-22", "2026-05-06", "2026-05-20"],
+  "currentStreak": 1,
+  "currentPhase": "1",
+  "currentModule": "Query Optimization",
+  "previousModule": "Indexing",
+  "currentModuleIndex": 2,
+  "lastActivity": "Quizzed on indexing; B-tree intuition solid, query planning shaky.",
+  "initialBloomLevel": { "sql-basics": 2, "indexing": 1 },
+  "currentBloomLevel": { "sql-basics": 3, "indexing": 2 },
+  "overallCompletion": 30
+}

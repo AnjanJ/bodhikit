@@ -1,0 +1,39 @@
+{
+  "version": 2,
+  "projectName": "proj",
+  "topic": "testing",
+  "createdAt": "2026-06-01",
+  "lastSessionAt": "2026-06-05",
+  "session": {
+    "totalSessions": 4,
+    "sessionDates": [
+      "2026-06-05",
+      "2026-06-05",
+      "2026-06-05",
+      "2026-06-04"
+    ],
+    "currentStreak": 1
+  },
+  "currentPhase": "1",
+  "currentModule": 2,
+  "currentModuleIndex": 0,
+  "previousModule": {
+    "id": "0.3",
+    "name": "Module 0.3",
+    "completedAt": "2026-06-05",
+    "outcomes": "rich narrative that must survive"
+  },
+  "lastActivity": {
+    "type": "phase-complete",
+    "name": "Phase 0 assessments",
+    "completed": true,
+    "result": "long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative long narrative "
+  },
+  "initialBloomLevels": {
+    "ruby": 0
+  },
+  "currentBloomLevels": {
+    "ruby": 3
+  },
+  "overallCompletion": 5
+}
