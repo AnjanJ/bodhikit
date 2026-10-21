@@ -431,13 +431,28 @@ def t_safety_medical(root):
          (None, transcript(root, "med-bad-2", ("text", "It's a dominant allele, so one in two."))))
 
 
+def t_harness_recap(root):
+    # The live teach-vocabulary run, 2026-10-21: a clean closing to the learner,
+    # then a wrap-up for the harness that names the level and box it recorded.
+    closing = ("**Bodhi (closing):** Your final explanation moves you to **Apply**: you can "
+               "apply write-ahead logging to a real case with some guidance.")
+    recap = ("\n\n---\n\n## Session wrap-up (what happened and what was recorded)\n\n"
+             "- `record-review` — write-ahead logging: correct, Bloom 3, Box 1, next review "
+             "2026-10-22 (first review, box held by design).")
+    kb = ("tool", "Skill", {"skill": "bodhikit:teaching-personality"})
+    good = transcript(root, "recap-good", kb, ("text", closing + recap))
+    bad = transcript(root, "recap-bad", kb, ("text", "That puts you at Bloom 3." + recap))
+    pair("harness recap ('Session wrap-up') is not learner-facing", A.assert_kb_load,
+         (None, good), (None, bad))
+
+
 def main():
     with tempfile.TemporaryDirectory() as root:
         for t in (t_code_never_loads_kinds, t_teach_no_code, t_quiz_no_code, t_offers,
                   t_sources, t_key_before_attempt, t_intake, t_legacy_proposal,
                   t_review_no_rewrite, t_performed_debrief_first, t_performed_no_debrief,
                   t_performed_repless_review, t_performed_by_your_account, t_photo_inspected,
-                  t_safety_canning, t_safety_medical):
+                  t_safety_canning, t_safety_medical, t_harness_recap):
             print(f"-- {t.__name__}")
             sub = os.path.join(root, t.__name__)
             os.makedirs(sub)

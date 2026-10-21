@@ -621,8 +621,11 @@ KB_LOAD_RE = re.compile(
 
 
 # The harness asks for a closing recap of the writes; it may arrive as a
-# heading ("## Recap") or a bold lead ("**Recap of what was written**").
-RECAP_RE = re.compile(r"^(?:#{1,4}\s*|\*\*)(Recap|Harness recap|Writes completed)\b.*$", re.M | re.I)
+# heading ("## Recap", "## Session wrap-up") or a bold lead ("**Recap of what
+# was written**"). 2026-10-21: teach-vocabulary closed to the learner in
+# outcome words, then wrote "## Session wrap-up (what happened and what was
+# recorded)" about "the learner", listing "Bloom 3, Box 1".
+RECAP_RE = re.compile(r"^(?:#{1,4}\s*|\*\*)(Recap|Harness recap|Writes completed|Session wrap-?up)\b.*$", re.M | re.I)
 
 
 GATE_CHECK_RE = re.compile(r"bodhi-state[^\n\]]*\bgate-check\b")
