@@ -170,7 +170,7 @@ touch the same files.
 
 ## Release 2: in the open (REQ-38, REQ-39, REQ-41–43)
 
-- [ ] **T31** Claude hosts without files: a reference adapted from the OpenAI adapter's conversation-only mode, used by `/learn` and `/continue` when no project can be written → REQ-39
+- [x] **T31** Claude hosts without files: a reference adapted from the OpenAI adapter's conversation-only mode, used by `/learn` and `/continue` when no project can be written → REQ-39
   - Files: skills/learn/references/host-without-files.md, skills/learn/SKILL.md, skills/continue/SKILL.md, docs/hosts-without-files.md
   - Test: none, manual (REQ-39 is untested by design)
   - After: T30
