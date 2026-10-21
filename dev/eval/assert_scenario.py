@@ -540,8 +540,9 @@ def assert_teach_pretest(project, transcript):
     ok("pretest appears in the first half of the session")
     # The pretest is priming, not assessment: it must not be the recorded review.
     sr = load(project, ".bodhi", "spaced-review.json")
-    c = next((c for c in sr["concepts"]
-              if c["name"].strip().lower() == "write-ahead logging"), None)
+    # Matched on letters and digits: an executor may track it as
+    # "write-ahead-logging" (_key; a slug, not the judgment under test).
+    c = next((c for c in sr["concepts"] if _key(c["name"]) == _key("Write-ahead logging")), None)
     if c is None:
         fail("'Write-ahead logging' was never tracked — the understanding-only "
              "session recorded nothing (record-review + touch-state are duties "
@@ -599,8 +600,10 @@ def assert_teach_hint_discipline(project, transcript):
     ok("every hint turn shows the artifact it is about")
     # The learner never demonstrated understanding: no 'correct' may be recorded.
     sr = load(project, ".bodhi", "spaced-review.json")
+    # Letters and digits only: the 2026-10-21 run tracked it, correctly, as
+    # "transaction-isolation-levels" and the exact-name match failed it.
     c = next((c for c in sr["concepts"]
-              if c["name"].strip().lower() == "transaction isolation levels"), None)
+              if _key(c["name"]) == _key("Transaction isolation levels")), None)
     if c is None:
         fail("'Transaction isolation levels' was never tracked — a failed "
              "session still records its retention outcome (incorrect/partial)")
@@ -1235,7 +1238,8 @@ CODE_LINE_RE = re.compile(
     r"print\(|puts \w|\w+\s*=>\s*\{)", re.I)
 CODE_TALK_RE = re.compile(
     r"(?i)\b(?:write (?:a|the|some) (?:function|program|script|method|query)|"
-    r"in code\b|code example|(?:this|the) code\b|run (?:this|the|your) code|pseudo-?code|"
+    r"in code\b|code example|(?:this|the) code\b(?![- ](?:review|reviewer|path|tools?|of conduct))|"
+    r"run (?:this|the|your) code|pseudo-?code|"
     r"what would this (?:code|program) output)")
 
 
@@ -1282,14 +1286,25 @@ def assert_kind_quiz_no_code(project, transcript):
 
 OFFER_RE = re.compile(r"(?i)(?:/?bodhikit:(?:pair|debug-together)|/pair\b|/debug-together\b|"
                       r"\bdebug-together\b|\bpair[- ]programming\b|\bpair mode\b)")
+# A sentence that names a code tool to say it is NOT offering it ("no `/pair`
+# offer, since there is no code to type" — the 2026-10-21 live run) is the
+# skill doing its job, not an offer.
+NEGATED_RE = re.compile(r"(?i)\b(?:no|not|never|without|skip(?:s|ped)?|nothing)\b|n't\b")
+
+
+def code_tool_offers(prose):
+    for sentence in re.split(r"(?<=[.?!])\s+|\n+", prose):
+        m = OFFER_RE.search(sentence)
+        if m and not NEGATED_RE.search(sentence):
+            yield m.group(0), sentence
 
 
 def assert_kind_offers(project, transcript):
     """learn-anything/REQ-16: off code, the tutor offers neither /pair nor
     /debug-together."""
-    m = OFFER_RE.search(assistant_prose(transcript))
-    if m:
-        fail(f"a non-code session offered a code tool ({m.group(0)!r})")
+    offer = next(code_tool_offers(assistant_prose(transcript)), None)
+    if offer:
+        fail(f"a non-code session offered a code tool ({offer[0]!r}: {offer[1][:120]!r})")
     ok("no /pair or /debug-together offer")
 
 

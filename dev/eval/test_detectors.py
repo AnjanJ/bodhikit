@@ -107,6 +107,12 @@ def t_teach_no_code(root):
     pair("kind teach no code (fence)", A.assert_kind_teach_no_code, (None, good), (None, bad))
     bad = transcript(root, "teach-bad-2", ("text", "Now write a function that lists the gametes."))
     pair("kind teach no code (talk)", A.assert_kind_teach_no_code, (None, good), (None, bad))
+    # From the 2026-10-21 live run: naming the code reviewer is not code.
+    named = transcript(root, "teach-good-2", ("text", "This is `writing` work, so I review it "
+                                              "myself, in place — the code reviewer has no "
+                                              "business here."))
+    pair("kind teach no code (the code reviewer is a name)", A.assert_kind_teach_no_code,
+         (None, named), (None, bad))
 
 
 def t_quiz_no_code(root):
@@ -124,6 +130,12 @@ def t_offers(root):
     bad = transcript(root, "offers-bad", ("text", "Want to switch to "
                                           "`/bodhikit:pair --invoked-from=teach crosses`?"))
     pair("kind offers", A.assert_kind_offers, (None, good), (None, bad))
+    # From the 2026-10-21 live run: saying there is no offer is not an offer.
+    declined = transcript(root, "offers-good-2", ("text", "On to guided practice — no `/pair` "
+                                                  "offer, since there is no code to type on a "
+                                                  "problems-kind concept."))
+    pair("kind offers (a stated non-offer passes)", A.assert_kind_offers,
+         (None, declined), (None, bad))
 
 
 def t_sources(root):
