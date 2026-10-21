@@ -1392,9 +1392,13 @@ PROGRAMMING_Q_RE = re.compile(
     r"how (?:long|much) have you (?:been )?(?:coding|programming|coded|programmed)|"
     r"(?:written|write) (?:any )?code before)")
 KIND_WORDS_RE = re.compile(
-    r"(?i)(worked problems?|problems? (?:with|against) (?:worked )?answers|written (?:piece|work|"
-    r"argument|analys[ie]s)|essays?|practice reps?|away from the screen|by your account|"
-    r"hands-on practice|a debrief)")
+    r"(?i)(worked (?:problems?|exercises?)|problems? (?:with|against) (?:worked )?answers|"
+    r"answer keys?|checked against|against (?:the )?criteria|criteria (?:I|we) save|"
+    r"written (?:piece|work|argument|analys[ie]s)|essays?|practice reps?|away from the screen|"
+    r"by your account|hands-on practice|a debrief)")
+# One project-level `bodhi-state ... set-evidence-kind` invocation inside a
+# Bash command, which may chain other calls (`&& ... add-concept --module`).
+SET_KIND_SEGMENT_RE = re.compile(r"set-evidence-kind([^&|;\n]*)")
 
 
 def new_project(project):
@@ -1410,24 +1414,34 @@ def new_project(project):
     return path
 
 
-def proposal_then_record(transcript, expect):
+def proposal_then_record(transcript, expect, ordered=True):
     """The plain-words proposal is in the prose before the one
-    set-evidence-kind call, which records `expect` (a kind or a set)."""
+    set-evidence-kind call, which records `expect`. With `ordered=False`
+    the proposal may appear anywhere the learner reads."""
     items = stream_items(transcript)
-    calls = [i for i, it in enumerate(items) if it[0] == "tool"
-             and "set-evidence-kind" in json.dumps(it[2]) and "--module" not in json.dumps(it[2])]
+    # Only shell invocations count; a progress.md edit that mentions the
+    # subcommand (2026-10-21 live run) is narrative, not a write.
+    calls, kinds = [], []
+    for i, it in enumerate(items):
+        if it[0] != "tool" or it[1] != "Bash":
+            continue
+        for seg in SET_KIND_SEGMENT_RE.findall(str(it[2].get("command", ""))):
+            if "--module" not in seg:
+                calls.append(i)
+                kinds.append(seg)
     if not calls:
         fail("no set-evidence-kind call — the kind was never recorded")
     if len(calls) > 1:
         fail(f"set-evidence-kind ran {len(calls)} times for the project — propose once, record once")
-    before = "\n".join(it[1] for it in items[:calls[0]] if it[0] == "text")
+    before = protocol_text(items, calls[0]) if ordered else assistant_prose(transcript)
     if not KIND_WORDS_RE.search(before):
         fail("no plain-words description of how the work will be checked before the kind was "
              "recorded — propose it to the learner first")
-    kind = re.search(r"--kind[ =]+\\?\"?(\w+)", json.dumps(items[calls[0]][2]))
+    kind = re.search(r"--kind[ =]+\"?(\w+)", kinds[0])
     if not kind or kind.group(1) != expect:
         fail(f"set-evidence-kind recorded {kind.group(1) if kind else None!r}, not {expect!r}")
-    ok("the kind was proposed in plain words before it was recorded, once")
+    ok("the kind was proposed in plain words" + (" before it was recorded" if ordered else "")
+       + ", and recorded once")
 
 
 def assert_kind_intake(project, transcript):
@@ -1453,13 +1467,31 @@ def assert_kind_intake(project, transcript):
 
 def assert_kind_legacy_proposal(project, transcript):
     """learn-anything/REQ-9: a kind-less project whose topic is not code gets
-    one proposal from /continue, recorded after the learner confirms."""
+    one proposal from /continue, recorded once on the learner's yes. The yes
+    is scripted in advance, so the order of proposal and record says nothing
+    here (2026-10-21: the run recorded first and reported the proposal after);
+    kind-legacy-unanswered carries the shown-and-not-recorded half."""
     state = load(project, ".bodhi", "state.json")
     if state.get("evidenceKind") != "writing":
         fail(f"evidenceKind is {state.get('evidenceKind')!r}; political theory's applied "
              "work is written argument, and the learner agreed to the proposal")
     ok("evidenceKind 'writing' recorded")
-    proposal_then_record(transcript, "writing")
+    proposal_then_record(transcript, "writing", ordered=False)
+
+
+def assert_kind_legacy_unanswered(project, transcript):
+    """learn-anything/REQ-9: the proposal is shown in plain words, and with no
+    answer from the learner nothing is recorded."""
+    state = load(project, ".bodhi", "state.json")
+    if "evidenceKind" in state:
+        fail(f"evidenceKind {state['evidenceKind']!r} recorded with no answer from the learner")
+    for name, inp in tool_events(transcript):
+        if name == "Bash" and SET_KIND_SEGMENT_RE.search(str(inp.get("command", ""))):
+            fail("set-evidence-kind ran although the learner never answered the proposal")
+    ok("no kind recorded without the learner's yes")
+    if not KIND_WORDS_RE.search(assistant_prose(transcript)):
+        fail("no plain-words proposal of how the work will be checked was shown")
+    ok("the proposal was shown in plain words")
 
 
 REWRITE_RE = re.compile(
@@ -1544,6 +1576,29 @@ def text_before(items, i):
     return "\n".join(it[1] for it in items[:i] if it[0] == "text")
 
 
+# A headless run with every reply scripted may make all its writes first and
+# then print the session "as it ran, turn by turn" (seen on 2026-10-21). The
+# stream order then says nothing about the conversation; the narration's own
+# order does, up to the point where it reports what was recorded.
+NARRATION_RE = re.compile(r"(?i)as it ran|turn by turn")
+WRITES_REPORT_RE = re.compile(
+    r"(?im)^\s*(?:#+\s*|\*\*|---\s*$)?\s*(?:what (?:was|got|I) recorded|recorded|tracking|"
+    r"writes|bookkeeping|results)\b")
+
+
+def protocol_text(items, i):
+    """What the learner read before item i, or, in a run narrated after its
+    writes, that narration up to its report of the writes."""
+    before = text_before(items, i)
+    narration = [it[1] for it in items[i:] if it[0] == "text" and NARRATION_RE.search(it[1])]
+    if narration:
+        n = narration[-1]
+        start = NARRATION_RE.search(n).end()
+        cut = WRITES_REPORT_RE.search(n, start)
+        before += "\n" + n[start:cut.start() if cut else len(n)]
+    return before
+
+
 def assert_performed_debrief_first(project, transcript, concept="Emulsions"):
     """learn-anything/REQ-28: the three debrief questions come before the rep
     is recorded. learn-anything/REQ-29: the rep is recorded as reported
@@ -1552,7 +1607,7 @@ def assert_performed_debrief_first(project, transcript, concept="Emulsions"):
     reps = review_calls(items, concept, applied=True)
     if not reps:
         fail(f"no applied review recorded for the {concept} rep the learner reported")
-    before = text_before(items, reps[0])
+    before = protocol_text(items, reps[0])
     for label, rx in DEBRIEF_RES:
         if not rx.search(before):
             fail(f"the debrief question '{label}' was not asked before the rep was recorded")
@@ -1606,7 +1661,7 @@ def assert_performed_repless_review(project, transcript, concept="Emulsions"):
     graded = review_calls(items, concept)
     if not graded:
         fail(f"no review recorded for the due {concept}; the knowledge question still runs")
-    if not OFFER_REP_RE.search(text_before(items, graded[0])):
+    if not OFFER_REP_RE.search(protocol_text(items, graded[0])):
         fail("the tutor never asked about or offered a practice rep before reviewing")
     ok("a practice rep was offered or asked about first")
     today = todays_entries(concept_or_fail(project, concept))
@@ -1629,7 +1684,9 @@ def assert_performed_by_your_account(project, transcript, concept="Knife grip"):
         fail(f"{concept} is Solid on the learner's word alone, and no mention of it says so "
              "(\"by your account\")")
     ok(f"{concept} shown as Solid by the learner's account")
-    m = BARE_LEVEL_RE.search(prose)
+    # /progress's Spaced Repetition Health rows have read "(Box 4-5)" since
+    # June 2026, for every project; that is its template, not this change.
+    m = BARE_LEVEL_RE.search(re.sub(r"\((?:Box 4-5|Box 2-3|Box 1)\)", "", prose))
     if m:
         fail(f"learner-facing text quotes a bare level/box ({m.group(0)!r})")
     ok("no bare Bloom/Box numbers in learner-facing text")
@@ -1656,7 +1713,7 @@ def assert_photo_inspected(project, transcript, concept="One-point perspective",
     if not looked:
         fail(f"the photo {photo} was never opened before the rep was recorded")
     ok("the photo was opened before recording")
-    before = text_before(items, reps[0])
+    before = protocol_text(items, reps[0])
     if not CAN_JUDGE_RE.search(before):
         fail("the tutor never said what it could judge from the image")
     if not CANNOT_JUDGE_RE.search(before):
@@ -1774,6 +1831,7 @@ def main():
                        "kind-quiz": assert_kind_quiz_no_code,
                        "kind-intake": assert_kind_intake,
                        "kind-legacy-proposal": assert_kind_legacy_proposal,
+                       "kind-legacy-unanswered": assert_kind_legacy_unanswered,
                        "kind-review": assert_kind_review_no_rewrite,
                        "performed-debrief-first": assert_performed_debrief_first,
                        "performed-no-debrief": assert_performed_no_debrief_no_record,

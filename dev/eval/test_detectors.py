@@ -198,6 +198,16 @@ def t_intake(root):
     pair("kind intake (no programming questions)", A.assert_kind_intake, (proj, good), (proj, bad))
     bad = transcript(root, "intake-bad-2", ask, record, propose)
     pair("kind intake (propose before recording)", A.assert_kind_intake, (proj, good), (proj, bad))
+    # 2026-10-21 live run: the kind recorded inside a chained command whose
+    # later calls carry --module; the proposal in the plan's own words.
+    chained = bash(f'BS="bodhi-state" && "$BS" --project {music} profile-add-project --name x '
+                   f'&& "$BS" --project {music} set-evidence-kind --kind problems && "$BS" --project '
+                   f'{music} add-concept --concept intervals --module "Intervals"')
+    plan = ("text", "**Evidence kind:** `problems` — worked exercises checked against answer keys "
+                    "saved before you start.")
+    good = transcript(root, "intake-good-2", ask, plan, chained)
+    pair("kind intake (a chained record, the plan's wording)", A.assert_kind_intake,
+         (proj, good), (proj, bad))
 
 
 def t_legacy_proposal(root):
@@ -213,9 +223,23 @@ def t_legacy_proposal(root):
     good = transcript(root, "legacy-good", propose, record)
     bad = transcript(root, "legacy-bad", propose, record, record)
     pair("kind legacy proposal (once)", A.assert_kind_legacy_proposal, (proj, good), (proj, bad))
-    bad = transcript(root, "legacy-bad-2", record, propose)
-    pair("kind legacy proposal (proposed first)", A.assert_kind_legacy_proposal,
+    # 2026-10-21 live run: a progress.md edit that mentions the subcommand
+    # is narrative, not a second record.
+    note = ("tool", "Edit", {"file_path": f"{proj}/.bodhi/progress.md",
+                             "new_string": "Recorded the kind with `set-evidence-kind --kind writing`."})
+    good = transcript(root, "legacy-good-2", propose, record, note)
+    bad = transcript(root, "legacy-bad-3", propose, record, note, record)
+    pair("kind legacy proposal (an edit naming it is not a call)", A.assert_kind_legacy_proposal,
          (proj, good), (proj, bad))
+    unans = project(root, "writing-project", "political-theory")
+    st = json.load(open(os.path.join(unans, ".bodhi", "state.json")))
+    st.pop("evidenceKind", None)
+    write(os.path.join(unans, ".bodhi", "state.json"), json.dumps(st))
+    good = transcript(root, "unanswered-good", propose, ("text", "No answer is fine; it stays as it is."))
+    pair("kind legacy unanswered (shown, nothing recorded)", A.assert_kind_legacy_unanswered,
+         (unans, good), (unans, transcript(root, "unanswered-bad", propose, record)))
+    pair("kind legacy unanswered (the proposal is shown)", A.assert_kind_legacy_unanswered,
+         (unans, good), (unans, transcript(root, "unanswered-bad-2", ("text", "See you."))))
 
 
 def t_review_no_rewrite(root):
@@ -272,6 +296,19 @@ def t_performed_debrief_first(root):
     bad = transcript(root, "debrief-bad", DEBRIEF[0], REP, *DEBRIEF[1:])
     pair("performed debrief first (order)", A.assert_performed_debrief_first,
          (proj, good), (proj, bad))
+    # 2026-10-21 live run: every write first, then the session narrated
+    # "as it ran, turn by turn"; the narration's order is the conversation's.
+    narrated = ("text", "All bookkeeping is done. Here is the session as it ran, turn by turn.\n\n"
+                        "Have you made it since we last spoke? > **You:** Twice. "
+                        "What did you do, step by step? > **You:** ... "
+                        "What went wrong, or surprised you? > **You:** ... "
+                        "What would you change next time, and why? > **You:** ...\n\n"
+                        "**What was recorded**\n- the rep, as your account")
+    thin = ("text", "Here is the session as it ran, turn by turn.\n\nWhat did you do? > ...\n\n"
+                    "**What was recorded**\n- what went wrong, what you would change next time")
+    pair("performed debrief first (a narrated run)", A.assert_performed_debrief_first,
+         (proj, transcript(root, "debrief-good-2", REP, narrated)),
+         (proj, transcript(root, "debrief-bad-2", REP, thin)))
     observed = fresh(root, "performed-project", "cooking", "observed")
     write(os.path.join(observed, "exercises", "02-mayonnaise", "log.md"), "my notes")
     state(observed, "record-review", "--concept", "Emulsions", "--result", "correct",
@@ -325,6 +362,10 @@ def t_performed_by_your_account(root):
     bad = transcript(root, "account-bad-2", ("text", "Knife grip — Solid by your account, Box 4."))
     pair("performed by your account (no numbers)", A.assert_performed_by_your_account,
          (None, good), (None, bad))
+    table = transcript(root, "account-good-2", ("text", "Knife grip: Solid by your account.\n\n"
+                                                "| Strong retention (Box 4-5) | 1 | Knife grip |"))
+    pair("performed by your account (the /progress template label)",
+         A.assert_performed_by_your_account, (None, table), (None, bad))
 
 
 def t_photo_inspected(root):
@@ -347,6 +388,13 @@ def t_photo_inspected(root):
                                                  "vanishing point is right."), record)
     pair("photo inspected (says what it cannot judge)", A.assert_photo_inspected,
          (proj, good), (proj, bad))
+    told = ("text", "Here is the session as it ran, turn by turn.\n\n" + said[1]
+                    + "\n\n**What was recorded**\n- the drawing, as inspected")
+    untold = ("text", "Here is the session as it ran, turn by turn.\n\nNice drawing.\n\n"
+                      "**What was recorded**\n- I can see the vanishing point; I can't tell the time")
+    pair("photo inspected (a narrated run)", A.assert_photo_inspected,
+         (proj, transcript(root, "photo-good-2", look, record, told)),
+         (proj, transcript(root, "photo-bad-3", look, record, untold)))
 
 
 def t_safety_canning(root):

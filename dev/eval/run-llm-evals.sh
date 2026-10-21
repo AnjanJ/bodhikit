@@ -859,6 +859,12 @@ if [ "$want" = "all" ] || [ "$want" = "kind-fidelity" ] || [ "$want" = "kind-leg
     kind-legacy-proposal "" transcript
 fi
 
+if [ "$want" = "all" ] || [ "$want" = "kind-fidelity" ] || [ "$want" = "kind-legacy-unanswered" ]; then
+  BODHI_EVAL_FIXTURE="$NONCODE_FIXTURE" BODHI_EVAL_PROJECT="$NONCODE_PROJECT" run_scenario kind-legacy-unanswered \
+    "/bodhikit:continue — $SIM_CONTRACT Scripted replies: I answer no question about how my work will be checked — I give no reply to it at all. Right after the check-in I have to go; close the session and complete ALL tracking updates exactly as the skill specifies. Run the session turn by turn in your messages — each question you ask, then my scripted reply — rather than summarising it at the end." \
+    kind-legacy-unanswered "" transcript
+fi
+
 prep_kind_review() {
   mkdir -p "$1/exercises/02-claims-in-a-new-case"
   cp "$REPO/dev/eval/fixtures/applied/claims-analysis.md" "$1/exercises/02-claims-in-a-new-case/my-analysis.md"
