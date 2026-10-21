@@ -132,7 +132,7 @@ touch the same files.
   - Test: dev/eval/assert_scenario.py::assert_kind_quiz_no_code, ::assert_kind_legacy_proposal, ::assert_performed_repless_review, ::assert_performed_no_debrief_no_record
   - After: T13, T19
   - Done when: `dev/eval/run-llm-evals.sh kind-fidelity performed` → pass; `dev/eval/run-llm-evals.sh quiz quiz-unlabelled reflect continue-gate` → the code scenarios pass unchanged
-- [ ] **T23** `/learn`, `/assess`, `/resources` and the agents: the four-row kind table; propose, confirm, `set-evidence-kind`; non-code intake; subject sources saved before the first lesson; non-code instructions passed in agent prompts → REQ-4, REQ-5, REQ-10, REQ-19, REQ-35
+- [x] **T23** `/learn`, `/assess`, `/resources` and the agents: the four-row kind table; propose, confirm, `set-evidence-kind`; non-code intake; subject sources saved before the first lesson; non-code instructions passed in agent prompts → REQ-4, REQ-5, REQ-10, REQ-19, REQ-35
   - Files: skills/learn/SKILL.md, skills/assess/SKILL.md, skills/resources/SKILL.md, agents/skill-assessor.md, agents/resource-finder.md
   - Test: dev/eval/assert_scenario.py::assert_learn_scaffold (records `code` for a code topic), ::assert_kind_intake, ::assert_kind_sources
   - After: T13, T19
