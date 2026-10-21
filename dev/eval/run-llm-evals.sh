@@ -1015,7 +1015,7 @@ fi
 # Interleaving as a test condition). Drift detector over the quoted questions.
 if [ "$want" = "all" ] || [ "$want" = "fidelity" ] || [ "$want" = "quiz-unlabelled" ]; then
   run_scenario quiz-unlabelled \
-    "/bodhikit:quiz current — $SIM_CONTRACT Ask exactly two questions, each on a different due concept. Scripted replies: to each question I answer correctly in my own words, tagged 'mostly'. Then complete ALL tracking updates exactly as the skill specifies." \
+    "/bodhikit:quiz current — $SIM_CONTRACT Ask exactly two questions, each on a different due concept. Scripted replies: to each question I answer correctly in my own words, tagged 'mostly'. Then complete ALL tracking updates exactly as the skill specifies. Run the session turn by turn in your messages — each question you ask, then my scripted reply." \
     quiz-unlabelled "" transcript
 fi
 
