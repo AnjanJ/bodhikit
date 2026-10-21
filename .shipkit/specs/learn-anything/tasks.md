@@ -117,7 +117,7 @@ touch the same files.
   - Test: dev/eval/assert_scenario.py::assert_safety_canning, ::assert_safety_medical
   - After: T18
   - Done when: each detector, run on a synthetic passing and failing transcript, passes the first and fails the second
-- [ ] **T20** `/teach`: route to the KB off the code path; gate the `/pair` and `/debug-together` offers on code; basis and `--evidence` on `--applied`; cite a source. `prerequisite-gate.md` shapes the reconfirm by kind. Lint: the orphan-KB rule; rule 54 extended to `--applied <basis>`/`--evidence` → REQ-11, REQ-12, REQ-13, REQ-14, REQ-16, REQ-17, REQ-36
+- [x] **T20** `/teach`: route to the KB off the code path; gate the `/pair` and `/debug-together` offers on code; basis and `--evidence` on `--applied`; cite a source. `prerequisite-gate.md` shapes the reconfirm by kind. Lint: the orphan-KB rule; rule 54 extended to `--applied <basis>`/`--evidence` → REQ-11, REQ-12, REQ-13, REQ-14, REQ-16, REQ-17, REQ-36
   - Files: skills/teach/SKILL.md, skills/teach/references/prerequisite-gate.md, dev/check.sh
   - Test: dev/eval/assert_scenario.py::assert_kind_teach_no_code, ::assert_kind_offers, ::assert_kind_sources, ::assert_code_never_loads_kinds
   - After: T4, T13, T19
@@ -127,7 +127,7 @@ touch the same files.
   - Test: dev/eval/assert_scenario.py::assert_kind_key_before_attempt, ::assert_photo_inspected, ::assert_performed_debrief_first
   - After: T13, T19
   - Done when: `dev/eval/run-llm-evals.sh kind-fidelity photo performed` → the practice scenarios pass
-- [ ] **T22** `/quiz`, `/continue`, `/reflect`: non-code question forms; a due performed concept → rep + debrief + knowledge question; no rep → knowledge alone; the legacy kind proposal → REQ-9, REQ-15, REQ-28, REQ-29, REQ-30, REQ-31, REQ-32
+- [x] **T22** `/quiz`, `/continue`, `/reflect`: non-code question forms; a due performed concept → rep + debrief + knowledge question; no rep → knowledge alone; the legacy kind proposal → REQ-9, REQ-15, REQ-28, REQ-29, REQ-30, REQ-31, REQ-32
   - Files: skills/quiz/SKILL.md, skills/continue/SKILL.md, skills/reflect/SKILL.md
   - Test: dev/eval/assert_scenario.py::assert_kind_quiz_no_code, ::assert_kind_legacy_proposal, ::assert_performed_repless_review, ::assert_performed_no_debrief_no_record
   - After: T13, T19
