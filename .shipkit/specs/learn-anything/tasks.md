@@ -102,7 +102,7 @@ touch the same files.
   - Test: dev/eval/assert_scenario.py::assert_code_never_loads_kinds, ::assert_kind_quiz_no_code, ::assert_kind_teach_no_code, ::assert_kind_key_before_attempt, ::assert_kind_intake, ::assert_kind_offers, ::assert_kind_legacy_proposal, ::assert_kind_review_no_rewrite, ::assert_kind_sources
   - After: T15
   - Done when: each detector, run on a synthetic passing and failing transcript, passes the first and fails the second
-- [ ] **T17** Eval group `kind-grading`: apply-band, genuine and parrot on `problems` and on `writing`, both sides of each boundary → REQ-20
+- [x] **T17** Eval group `kind-grading`: apply-band, genuine and parrot on `problems` and on `writing`, both sides of each boundary → REQ-20
   - Files: dev/eval/assert_scenario.py, dev/eval/run-llm-evals.sh, dev/eval/README.md
   - Test: dev/eval/assert_scenario.py::assert_grade_apply_band, ::assert_grade_genuine, ::assert_grade_jargon run with the kind fixtures through `BODHI_EVAL_FIXTURE`/`BODHI_EVAL_PROJECT`/`BODHI_EVAL_CONCEPT`
   - After: T16
@@ -122,7 +122,7 @@ touch the same files.
   - Test: dev/eval/assert_scenario.py::assert_kind_teach_no_code, ::assert_kind_offers, ::assert_kind_sources, ::assert_code_never_loads_kinds
   - After: T4, T13, T19
   - Done when: `dev/eval/run-llm-evals.sh kind-fidelity` → the teach scenarios pass; `dev/eval/run-llm-evals.sh fidelity` → the code scenarios pass unchanged; `dev/check.sh` passes
-- [ ] **T21** `/practice`: one folder per exercise off the code path, the key saved before the attempt, basis and `--evidence`, the performed practice task, photos → REQ-11, REQ-12, REQ-13, REQ-22, REQ-26, REQ-28, REQ-29, REQ-30
+- [x] **T21** `/practice`: one folder per exercise off the code path, the key saved before the attempt, basis and `--evidence`, the performed practice task, photos → REQ-11, REQ-12, REQ-13, REQ-22, REQ-26, REQ-28, REQ-29, REQ-30
   - Files: skills/practice/SKILL.md
   - Test: dev/eval/assert_scenario.py::assert_kind_key_before_attempt, ::assert_photo_inspected, ::assert_performed_debrief_first
   - After: T13, T19
@@ -137,17 +137,17 @@ touch the same files.
   - Test: dev/eval/assert_scenario.py::assert_learn_scaffold (records `code` for a code topic), ::assert_kind_intake, ::assert_kind_sources
   - After: T13, T19
   - Done when: `dev/eval/run-llm-evals.sh lifecycle kind-fidelity` → pass
-- [ ] **T24** `/review` reviews problems and writing in place, with the code-reviewer line conditional on code; the revision sheet uses the subject's own material → REQ-18
+- [x] **T24** `/review` reviews problems and writing in place, with the code-reviewer line conditional on code; the revision sheet uses the subject's own material → REQ-18
   - Files: skills/review/SKILL.md, skills/reflect/references/revision-sheet.md
   - Test: dev/eval/assert_scenario.py::assert_kind_review_no_rewrite
   - After: T13, T19
   - Done when: `dev/eval/run-llm-evals.sh kind-fidelity` → the review scenario passes; `dev/check.sh` passes (rule 3 holds)
-- [ ] **T25** `/progress` renders *Solid* resting on reported practice as "by your account" → REQ-25
+- [x] **T25** `/progress` renders *Solid* resting on reported practice as "by your account" → REQ-25
   - Files: skills/progress/SKILL.md, skills/progress/references/module-row.md
   - Test: dev/eval/assert_scenario.py::assert_performed_by_your_account
   - After: T13, T19
   - Done when: `dev/eval/run-llm-evals.sh performed` → the progress scenario passes
-- [ ] **T26** Safety rule and the key exception in `exercises/`; rule 49 caps `rules/learning-project.md` at 4096 bytes → REQ-33, REQ-34, REQ-11, REQ-12
+- [x] **T26** Safety rule and the key exception in `exercises/`; rule 49 caps `rules/learning-project.md` at 4096 bytes → REQ-33, REQ-34, REQ-11, REQ-12
   - Files: rules/learning-project.md, dev/check.sh
   - Test: dev/eval/assert_scenario.py::assert_safety_canning, ::assert_safety_medical
   - After: T20
