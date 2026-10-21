@@ -47,9 +47,7 @@ Slim. No long narrative fields — session narrative lives in `progress.md`.
   "lastActivity": "string",
   "initialBloomLevel": { "<sub-topic>": 0 },
   "currentBloomLevel": { "<sub-topic>": 0 },
-  "overallCompletion": 0,
-  "evidenceKind": "code",
-  "moduleEvidenceKinds": { "<normalized module name>": "performed" }
+  "overallCompletion": 0
 }
 ```
 
@@ -57,7 +55,7 @@ Slim. No long narrative fields — session narrative lives in `progress.md`.
 - `previousModule`: set automatically by `touch-state --module` when the module advances; read by `gate-check`.
 - `initialBloomLevel` / `currentBloomLevel`: a **manual carve-out** (`state-ops` KB *Update Rules*); edit via the Fallback discipline above.
 - `lastActivity`: one short sentence (≤120 chars) used by `/progress quick` and `/continue`. Anything longer belongs in `progress.md`.
-- `evidenceKind` / `moduleEvidenceKinds` (optional): `code`, `problems`, `writing` or `performed`, for the project and per module, keyed by the normalized module name (`Module N.M —` prefix dropped, spacing collapsed, case folded). Effective kind: the module's, else the project's, else `code` (no kind = a code project). Written only by `set-evidence-kind`; a change keeps every review.
+- `evidenceKind` / `moduleEvidenceKinds` (optional; never in a scaffolded skeleton): `code`, `problems`, `writing` or `performed`, for the project and per module, keyed by the normalized module name (`Module N.M —` prefix dropped, spacing collapsed, case folded). Effective kind: the module's, else the project's, else `code` (no kind = a code project). Written only by `set-evidence-kind`; a change keeps every review.
 - **No `lastSessionSummary` / `bloomResetNote` in v2** — migrated to `progress.md`.
 
 ### `learningWithBodhi/<project>/.bodhi/progress.md`
