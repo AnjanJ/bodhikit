@@ -118,9 +118,9 @@ Present the dashboard in this format:
 |--------|-------|----------|
 | Due today | [N] | [list] |
 | Due this week | [N] | [list] |
-| Strong retention (Box 4-5) | [N] | [list] |
-| Building retention (Box 2-3) | [N] | [list] |
-| Needs review (Box 1) | [N] | [list] |
+| Strong retention | [N] | [list] |
+| Building retention | [N] | [list] |
+| Needs review | [N] | [list] |
 | Waiting for their review day | [N] | — |
 
 ---

@@ -362,10 +362,14 @@ def t_performed_by_your_account(root):
     bad = transcript(root, "account-bad-2", ("text", "Knife grip — Solid by your account, Box 4."))
     pair("performed by your account (no numbers)", A.assert_performed_by_your_account,
          (None, good), (None, bad))
+    # The live 2026-10-21 dashboard: /progress's Spaced Repetition Health row
+    # printed its box range, which a learner must never see.
     table = transcript(root, "account-good-2", ("text", "Knife grip: Solid by your account.\n\n"
-                                                "| Strong retention (Box 4-5) | 1 | Knife grip |"))
-    pair("performed by your account (the /progress template label)",
-         A.assert_performed_by_your_account, (None, table), (None, bad))
+                                                "| Strong retention | 1 | Knife grip |"))
+    labelled = transcript(root, "account-bad-3", ("text", "Knife grip: Solid by your account.\n\n"
+                                                  "| Strong retention (Box 4-5) | 1 | Knife grip |"))
+    pair("performed by your account (no box range on the dashboard)",
+         A.assert_performed_by_your_account, (None, table), (None, labelled))
 
 
 def t_photo_inspected(root):

@@ -1687,9 +1687,7 @@ def assert_performed_by_your_account(project, transcript, concept="Knife grip"):
         fail(f"{concept} is Solid on the learner's word alone, and no mention of it says so "
              "(\"by your account\")")
     ok(f"{concept} shown as Solid by the learner's account")
-    # /progress's Spaced Repetition Health rows have read "(Box 4-5)" since
-    # June 2026, for every project; that is its template, not this change.
-    m = BARE_LEVEL_RE.search(re.sub(r"\((?:Box 4-5|Box 2-3|Box 1)\)", "", prose))
+    m = BARE_LEVEL_RE.search(prose)
     if m:
         fail(f"learner-facing text quotes a bare level/box ({m.group(0)!r})")
     ok("no bare Bloom/Box numbers in learner-facing text")
