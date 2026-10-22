@@ -200,7 +200,7 @@ touch the same files.
   - Test: dev/eval/test_session_context.py::t_rule_on_first_skill (SessionStart unchanged; outside a cloud chat a skill injects nothing; in one, the first BodhiKit skill injects the rule and the second does not; a command from another plugin injects nothing)
   - After: T35
   - Done when: `python3 dev/eval/test_session_context.py` → "0 failed"; `python3 dev/eval/test_cowork_plugin.py` → pass; `dev/check.sh` passes
-- [ ] **T29** Cowork probe on claude.ai with a connected Mac, rerun after T35 and T36 and recorded (the 2026-10-22 run passed 3 of 5) → REQ-38
+- [x] **T29** Cowork probe on claude.ai with a connected Mac, rerun after T35 and T36 and recorded (the 2026-10-22 run passed 3 of 5) → REQ-38
   - Files: docs/cowork-probe.md
   - Test: none, manual (REQ-38 is untested by design)
   - After: T35, T36
