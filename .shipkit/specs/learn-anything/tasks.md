@@ -162,7 +162,7 @@ touch the same files.
   - Test: dev/eval/test_cowork_plugin.py::test_package_contents (skills, agents, hooks, scripts, rules and the manifest present; `${CLAUDE_PLUGIN_ROOT}` paths resolve; no `dev/` or `.shipkit/`)
   - After: T26
   - Done when: `python3 platforms/cowork/build_plugin.py --archive dist/bodhikit.plugin && python3 dev/eval/test_cowork_plugin.py` → pass
-- [ ] **T30** Release docs for 1.25.0, which carries Releases 1 and 2: README Science section with the research citations, CHANGELOG, MIGRATION, `dev/read-defaults.md`, the journal, the version in both manifests, the Codex manifest and the badge
+- [x] **T30** Release docs for 1.25.0, which carries Releases 1 and 2: README Science section with the research citations, CHANGELOG, MIGRATION, `dev/read-defaults.md`, the journal, the version in both manifests, the Codex manifest and the badge
   - Files: README.md, CHANGELOG.md, MIGRATION.md, dev/read-defaults.md, dev/changelog-journal.md, .claude-plugin/plugin.json, .claude-plugin/marketplace.json, platforms/openai/bodhikit/.codex-plugin/plugin.json
   - Test: none, docs; rules 1 and 11 in dev/check.sh (versions, counts)
   - After: T21, T22, T23, T24, T25, T27, T29, T31, T32, T33, T34, T35, T36

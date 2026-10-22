@@ -10,7 +10,7 @@ Bodhi (Pali: "awakening") is a patient, wise guide. It teaches code and software
 
 BodhiKit turns Claude Code, Codex, or ChatGPT into a research-informed tutor: a set of skills that teach by asking rather than answering, keep per-concept learning state when the platform exposes project files, and schedule your reviews. It does not write the code, or the essay, for you.
 
-**What it can check, and what it can't.** It checks code by reading it and seeing it run, and problems and essays against the answers or criteria it saved before you started. It can't see a skill you practise away from the screen, like a dish, a drawing or a passage played. There it debriefs you, grades the debrief, and counts the practice as *your account*, labelled that way wherever it shows. In every subject the tutor itself grades your level, your reviews and your explain-backs. On claude.ai or a phone it can teach but can't keep your schedule: tracked study needs a computer, in Claude Code or Codex. What "research-informed" does and does not claim is in [The Science](#the-science); the only outcome data so far — one learner, thin, published to be falsifiable — is in [docs/outcomes.md](./docs/outcomes.md).
+**What it can check, and what it can't.** It checks code by reading it and seeing it run, and problems and essays against the answers or criteria it saved before you started. It can't see a skill you practise away from the screen, like a dish, a drawing or a passage played. There it debriefs you, grades the debrief, and counts the practice as *your account*, labelled that way wherever it shows. In every subject the tutor itself grades your level, your reviews and your explain-backs. Tracked study needs a computer: Claude Code, Codex, or a claude.ai chat with Claude Desktop connected to your folder. Without one, on claude.ai or a phone, it teaches but can't keep your schedule. What "research-informed" does and does not claim is in [The Science](#the-science); the only outcome data so far — one learner, thin, published to be falsifiable — is in [docs/outcomes.md](./docs/outcomes.md).
 
 ### Purpose & philosophy
 
@@ -54,6 +54,16 @@ The *voice* comes from four named teachers (Gautama Buddha, Dr. B.R. Ambedkar, M
 ```
 
 Restart Claude Code after installing. (To try a checkout without installing: `claude --plugin-dir ~/code/bodhikit`.)
+
+### Claude chats with your computer connected
+
+A chat on claude.ai can keep your learning project in a folder on your computer, through the Claude Desktop app. Build the package, then upload it under Customize → Plugins → Add → Upload plugin:
+
+```bash
+python3 platforms/cowork/build_plugin.py --archive dist/bodhikit.plugin
+```
+
+Keep one BodhiKit plugin switched on, since two copies both register `/bodhikit:*`. In each new chat, with Claude Desktop open, choose + → Devices and tick your computer. When the chat asks for a folder, allow `learningWithBodhi/` rather than a single project, because your profile lives there. How this was checked, and what wasn't, is in [docs/cowork-probe.md](./docs/cowork-probe.md).
 
 ### Codex and ChatGPT
 
@@ -376,7 +386,7 @@ Fencing the weak claims is what lets you trust the strong ones.
 The 1.10.x release line proved a structural lesson: a spec being *correct* is not the same as a spec being *binding* on an LLM executor. 1.11.0 closes that class of bug at the architecture level instead of patching instances:
 
 - **`scripts/bodhi-state`** — a dependency-free Python CLI that performs every tracking-JSON mutation: Leitner box math, the Bloom ratchet, counter rules, `sessionHistory` vocabulary enforcement, the prerequisite-gate verdict, the mastery formula, migration with backup + verification. Skills decide *what happened* (the pedagogical judgment); the script decides *what the file looks like*. Unknown learner fields are preserved in code, atomically.
-- **Two hooks** (`hooks/hooks.json`): a SessionStart hook that injects the learning-project rule when a session starts inside a learning project (plugins cannot ship path-scoped rules), and a Stop hook that runs `bodhi-state verify` on touched projects before a session ends — broken tracking state blocks the stop once with a repair instruction instead of silently persisting, and a day that studied something does not end without its revision sheet (`revision/YYYY-MM-DD-<concept>.md`: the key idea in plain words, the worked example, where you slipped, two self-test prompts with answers, next review dates, free links from your saved resources).
+- **Two hook scripts** (`hooks/hooks.json`): a SessionStart hook that injects the learning-project rule when a session starts inside a learning project (plugins cannot ship path-scoped rules; a cloud chat starts with no folder, so there the same script injects it when the first BodhiKit skill runs), and a Stop hook that runs `bodhi-state verify` on every project the session touched, wherever it is, before a session ends — broken tracking state blocks the stop once with a repair instruction instead of silently persisting, and a day that studied something does not end without its revision sheet (`revision/YYYY-MM-DD-<concept>.md`: the key idea in plain words, the worked example, where you slipped, two self-test prompts with answers, next review dates, free links from your saved resources).
 - **A three-layer test harness** (`dev/eval/`): a free deterministic suite covering every script contract (run by `dev/check.sh` on every change); headless LLM evals that run real skills against fixture projects and assert on the resulting *file state* — the automated successor to the manual dogfood passes of the 1.10.x line; and (1.12.0) **grading-calibration evals** — scripted learner answers of controlled quality asserted against honest grading bands (a jargon parrot must not pass the Feynman gate; missing trade-offs must cap tested-bloom at 4) — plus transcript-fidelity checks on the teaching protocol itself (pretest fires on first exposure, no fourth hint, ever). The deterministic layer makes the file mechanics trustworthy; the grading layer measures the judgment feeding them, and doubles as the model-drift detector.
 
 ## Learn More

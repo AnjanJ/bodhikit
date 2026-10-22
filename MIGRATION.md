@@ -13,6 +13,8 @@ No tracking-file migration. A project with no evidence kind recorded reads as `c
 
 The kinds are `code`, `problems`, `writing` and `performed`; `--clear` removes one. Reviews you recorded before 1.25.0 count as observed work, as they always did.
 
+On claude.ai, upload the new `bodhikit.plugin` (README → Install) and switch off any older BodhiKit copy, because both register `/bodhikit:*`.
+
 ## 1.18.0
 
 No tracking-file change. Run `/plugin update bodhikit@bodhikit` (or reinstall) and **restart Claude Code** — the knowledge bases are now registered skills and the learning-project rule arrives through a SessionStart hook, and both take effect on the next session start. If you had been enabling the plugin per-project, nothing else changes.

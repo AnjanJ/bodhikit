@@ -36,6 +36,8 @@ The learner's accumulated work is theirs. Every skill MAY read every file when t
 
 **Evidence kinds (1.25.0).** On a concept whose `evidenceKind` is not `code`, `/teach`, `/practice`, `/quiz`, `/learn`, `/assess`, `/resources` and `/review` also load the `evidence-kinds` KB. The kind comes from the read surfaces they already call (`session-brief`, `due`, `snapshot`, a `gate-check` row), so no new file is read. A code session never loads it; the `kind-fidelity` code-path guard asserts that.
 
+**Hosts without lasting files (1.25.0).** When the host keeps no files between chats (claude.ai or a phone with no folder connected), `/learn` (in place of Phases 1.5–5) and `/continue` (when discovery finds no project) load `skills/learn/references/host-without-files.md`, and neither writes a tracking file.
+
 ## What the Audit Measures
 
 For each skill, `dev/context-audit.sh` classifies each read as:
