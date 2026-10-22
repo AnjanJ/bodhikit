@@ -174,6 +174,22 @@ def t_key_before_attempt(root):
          (proj, good), (proj, bad))
 
 
+
+def t_task_before_attempt(root):
+    proj = project(root, "writing-project", "political-theory")
+    folder = "exercises/03-premises-in-a-new-case"
+    for name in ("README.md", "criteria.md", "my-piece.md"):
+        write(os.path.join(proj, folder, name), name)
+    task = ("tool", "Write", {"file_path": f"{proj}/{folder}/README.md", "content": "task"})
+    key = ("tool", "Write", {"file_path": f"{proj}/{folder}/criteria.md", "content": "key"})
+    piece = ("tool", "Write", {"file_path": f"{proj}/{folder}/my-piece.md", "content": "piece"})
+    said = ("text", "The task and the criteria are saved.")
+    good = transcript(root, "task-good", task, key, said, piece)
+    pair("writing task before attempt (order)", A.assert_kind_task_before_attempt,
+         (proj, good), (proj, transcript(root, "task-late", key, said, piece, task)))
+    pair("writing task before attempt (missing)", A.assert_kind_task_before_attempt,
+         (proj, good), (proj, transcript(root, "task-none", key, said, piece)))
+
 def t_intake(root):
     proj = project(root, "v2-project", "sql-deep-dive")
     parent = os.path.dirname(proj)
@@ -501,7 +517,8 @@ def t_harness_recap(root):
 def main():
     with tempfile.TemporaryDirectory() as root:
         for t in (t_code_never_loads_kinds, t_teach_no_code, t_quiz_no_code, t_offers,
-                  t_sources, t_key_before_attempt, t_intake, t_legacy_proposal,
+                  t_sources, t_key_before_attempt, t_task_before_attempt, t_intake,
+                  t_legacy_proposal,
                   t_review_no_rewrite, t_performed_debrief_first, t_performed_no_debrief,
                   t_performed_practice_sets_rep, t_kind_gate_reconfirm_rep,
                   t_performed_repless_review, t_performed_by_your_account, t_photo_inspected,

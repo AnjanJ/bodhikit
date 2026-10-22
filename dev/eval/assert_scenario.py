@@ -1389,6 +1389,38 @@ def assert_kind_key_before_attempt(project, transcript):
     ok("applied evidence, if any, sits beside the key")
 
 
+def assert_kind_task_before_attempt(project, transcript):
+    """learn-anything/REQ-12: a writing exercise saves its task (README.md)
+    and its criteria in the exercise's folder before the learner's piece.
+    Whether the task's case is one the lesson did not use (REQ-44) is read in
+    the transcript, not detected."""
+    events = tool_events(transcript)
+    key_re = re.compile(r"exercises/([^/\s\"']+)/criteria\.md")
+    key_at = next((i for i, (n, inp) in enumerate(events) if wrote(n, inp, key_re)), None)
+    if key_at is None:
+        fail("no criteria.md was written in an exercise folder")
+    folder = key_re.search(json.dumps(events[key_at][1])).group(1)
+    task_re = re.compile(r"exercises/" + re.escape(folder) + r"/README\.md")
+    piece_re = re.compile(r"exercises/" + re.escape(folder) +
+                          r"/(?!answers\.md|criteria\.md|README\.md)[^\s\"']+")
+    task_at = next((i for i, (n, inp) in enumerate(events) if wrote(n, inp, task_re)), None)
+    if task_at is None or not os.path.exists(os.path.join(project, "exercises", folder, "README.md")):
+        fail(f"the task (exercises/{folder}/README.md) was never saved")
+    piece_at = next((i for i, (n, inp) in enumerate(events) if wrote(n, inp, piece_re)), None)
+    if piece_at is None:
+        fail(f"the learner's piece was never saved in exercises/{folder}/")
+    if task_at > piece_at:
+        fail(f"the task in exercises/{folder}/ was saved after the learner's piece")
+    if key_at > piece_at:
+        fail(f"the criteria in exercises/{folder}/ were saved after the learner's piece")
+    ok(f"task and criteria saved in exercises/{folder}/ before the learner's piece")
+
+
+def assert_kind_teach_writing(project, transcript):
+    assert_kind_teach(project, transcript)
+    assert_kind_task_before_attempt(project, transcript)
+
+
 PROGRAMMING_Q_RE = re.compile(
     r"(?i)(programming (?:experience|background|languages?)|coding (?:experience|background)|"
     r"(?:which|what) (?:programming )?languages? (?:have you|do you)|"
@@ -1872,7 +1904,7 @@ def main():
                        "teach-vocabulary": assert_teach_vocabulary,
                        "plan-view": assert_plan_view,
                        "kind-teach-problems": assert_kind_teach,
-                       "kind-teach-writing": assert_kind_teach,
+                       "kind-teach-writing": assert_kind_teach_writing,
                        "kind-practice-problems": assert_kind_practice,
                        "kind-quiz": assert_kind_quiz_no_code,
                        "kind-intake": assert_kind_intake,

@@ -215,7 +215,7 @@ touch the same files.
   - Test: dev/eval/assert_scenario.py::assert_kind_gate_reconfirm_rep, exercised by dev/eval/test_detectors.py::t_kind_gate_reconfirm_rep (a good run passes; one with no gate-check, one that tries the rep as observed work first, one with no debrief before the record, and one with code fail)
   - After: T20, T38
   - Done when: `python3 dev/eval/test_detectors.py` → "0 failed"; `dev/check.sh` passes; the live run joins the release sweep
-- [ ] **T40** A writing exercise saves its task (`README.md`) and its criteria before the learner's piece; `kind-teach-writing` asserts it → REQ-12, REQ-44
+- [x] **T40** A writing exercise saves its task (`README.md`) and its criteria before the learner's piece; `kind-teach-writing` asserts it → REQ-12, REQ-44
   - Files: dev/eval/assert_scenario.py, dev/eval/test_detectors.py, dev/eval/README.md, CHANGELOG.md, dev/changelog-journal.md
   - Test: dev/eval/assert_scenario.py::assert_kind_task_before_attempt, exercised by dev/eval/test_detectors.py::t_task_before_attempt (task and criteria before the piece passes; a task written after the piece, or none, fails). REQ-44 is untested: read in the `kind-teach-writing` transcript at each sweep
   - After: T39
