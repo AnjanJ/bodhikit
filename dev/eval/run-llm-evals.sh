@@ -907,6 +907,30 @@ if [ "$want" = "all" ] || [ "$want" = "performed" ] || [ "$want" = "performed-pr
     performed-practice-sets-rep "" transcript
 fi
 
+# The prerequisite check on a performed concept (learn-anything/REQ-17).
+# Prep: a miss on Emulsions after its last rep, then two plain recalls (Box 3,
+# Apply), so nothing applied stands since the miss; the learner has moved on to
+# Pan sauces, whose only concept is seeded. The chained /teach must run
+# gate-check, get Emulsions back as no-applied-evidence, and reconfirm it with
+# a rep and its debrief, recorded as reported, never tried as observed work.
+prep_kind_gate_reconfirm_rep() {
+  BODHI_TODAY=2026-09-20 python3 "$REPO/scripts/bodhi-state" --project "$1" record-review \
+    --concept "Emulsions" --result incorrect --tested-bloom 3 --source quiz > /dev/null
+  BODHI_TODAY=2026-09-21 python3 "$REPO/scripts/bodhi-state" --project "$1" record-review \
+    --concept "Emulsions" --result correct --tested-bloom 3 --source quiz > /dev/null
+  BODHI_TODAY=2026-09-24 python3 "$REPO/scripts/bodhi-state" --project "$1" record-review \
+    --concept "Emulsions" --result correct --tested-bloom 3 --source quiz > /dev/null
+  python3 "$REPO/scripts/bodhi-state" --project "$1" touch-state --module "Pan sauces" \
+    --module-index 2 --activity "finished Emulsions" > /dev/null
+  python3 "$REPO/scripts/bodhi-state" --project "$1" add-concept \
+    --concept "Deglazing" --module "Pan sauces" > /dev/null
+}
+if [ "$want" = "all" ] || [ "$want" = "performed" ] || [ "$want" = "kind-gate-reconfirm-rep" ]; then
+  BODHI_EVAL_FIXTURE="$PERFORMED_FIXTURE" BODHI_EVAL_PROJECT="$PERFORMED_PROJECT" run_scenario kind-gate-reconfirm-rep \
+    "/bodhikit:continue — $SIM_CONTRACT Scripted replies: I want to skip today's due reviews and go straight to continuing with the current module. If you check an earlier concept before the new one: I made mayonnaise this morning. When you ask what I did: one yolk, a teaspoon of mustard and lemon juice, then 200 ml of sunflower oil, drop by drop at first while whisking, then a thin stream. When you ask what went wrong or surprised me: it thickened sooner than I expected, and I nearly poured too fast after that. When you ask what I would change: keep the stream thin until it is properly thick, because the yolk can only coat so much oil at a time. If you offer me a choice about earlier concepts, I choose to carry on into the new module. Once you begin teaching, give the opening question and the explanation only — I say I need to stop after that, no exercise today; then close the session and complete ALL tracking updates exactly as the skill specifies. Run the session turn by turn in your messages — each question you ask, then my scripted reply." \
+    kind-gate-reconfirm-rep prep_kind_gate_reconfirm_rep transcript
+fi
+
 if [ "$want" = "all" ] || [ "$want" = "performed" ] || [ "$want" = "performed-repless-review" ]; then
   BODHI_EVAL_FIXTURE="$PERFORMED_FIXTURE" BODHI_EVAL_PROJECT="$PERFORMED_PROJECT" run_scenario performed-repless-review \
     "/bodhikit:quiz Emulsions — $SIM_CONTRACT Scripted replies: I have not made anything since we last spoke — no practice at all. To any knowledge question, I answer correctly in my own words, tagged 'mostly'. Complete ALL tracking updates exactly as the skill specifies. Run the session turn by turn in your messages — each question you ask, then my scripted reply." \

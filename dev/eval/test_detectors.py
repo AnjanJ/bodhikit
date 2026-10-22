@@ -357,6 +357,29 @@ def t_performed_practice_sets_rep(root):
     pair("performed practice sets a rep (no code)",
          A.assert_performed_practice_sets_rep, (clean, good), (clean, code))
 
+
+def t_kind_gate_reconfirm_rep(root):
+    proj = fresh(root, "performed-project", "cooking", "gate-rep")
+    state(proj, "record-review", "--concept", "Emulsions", "--result", "correct",
+          "--tested-bloom", "3", "--applied", "reported", "--source", "teach")
+    gate = bash(BS + 'gate-check --prereqs "Emulsions"')
+    rep = bash(BS + 'record-review --concept "Emulsions" --result correct --tested-bloom 3 '
+               "--applied reported --source teach")
+    good = transcript(root, "gate-rep-good", gate, *DEBRIEF, rep)
+    pair("kind gate reconfirm rep (gate-check ran)", A.assert_kind_gate_reconfirm_rep,
+         (proj, good), (proj, transcript(root, "gate-rep-nogate", *DEBRIEF, rep)))
+    # The gate reference said "the same call with --applied": observed work,
+    # which bodhi-state refuses on a performed concept.
+    observed = bash(BS + 'record-review --concept "Emulsions" --result correct '
+                    "--tested-bloom 3 --applied --source teach")
+    pair("kind gate reconfirm rep (never tried as observed)", A.assert_kind_gate_reconfirm_rep,
+         (proj, good), (proj, transcript(root, "gate-rep-observed", gate, *DEBRIEF, observed, rep)))
+    pair("kind gate reconfirm rep (debrief first)", A.assert_kind_gate_reconfirm_rep,
+         (proj, good), (proj, transcript(root, "gate-rep-late", gate, rep, *DEBRIEF)))
+    code = ("text", "```python\nratio = oil_ml / yolks\n```")
+    pair("kind gate reconfirm rep (no code)", A.assert_kind_gate_reconfirm_rep,
+         (proj, good), (proj, transcript(root, "gate-rep-code", gate, code, *DEBRIEF, rep)))
+
 def t_performed_repless_review(root):
     proj = fresh(root, "performed-project", "cooking", "repless")
     state(proj, "record-review", "--concept", "Emulsions", "--result", "correct",
@@ -480,7 +503,7 @@ def main():
         for t in (t_code_never_loads_kinds, t_teach_no_code, t_quiz_no_code, t_offers,
                   t_sources, t_key_before_attempt, t_intake, t_legacy_proposal,
                   t_review_no_rewrite, t_performed_debrief_first, t_performed_no_debrief,
-                  t_performed_practice_sets_rep,
+                  t_performed_practice_sets_rep, t_kind_gate_reconfirm_rep,
                   t_performed_repless_review, t_performed_by_your_account, t_photo_inspected,
                   t_safety_canning, t_safety_medical, t_harness_recap):
             print(f"-- {t.__name__}")

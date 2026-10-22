@@ -1652,6 +1652,25 @@ def assert_performed_no_debrief_no_record(project, transcript, concept="Emulsion
     ok(f"the learner was told how the rep counts ({m.group(0)!r})")
 
 
+def assert_kind_gate_reconfirm_rep(project, transcript, concept="Emulsions"):
+    """learn-anything/REQ-17: at the prerequisite check, a performed concept
+    with no applied work since its last miss is reconfirmed by a rep and its
+    debrief, recorded as the learner's account and never tried as observed
+    work, which bodhi-state refuses on a performed concept."""
+    assert_kind_teach_no_code(project, transcript)
+    if not GATE_CHECK_RE.search(assistant_text(transcript)):
+        fail("bodhi-state gate-check was never run, so nothing asked for the reconfirm")
+    ok("gate-check ran")
+    items = stream_items(transcript)
+    for i in review_calls(items, concept, applied=True):
+        cmd = json.dumps(items[i][2])
+        if not re.search(r"--applied[ =]+(?:reported|inspected)\b", cmd):
+            fail(f"the {concept} reconfirm was tried as observed work ({cmd[:140]}); a rep "
+                 "the tutor did not see is --applied reported")
+    ok("the rep was never tried as observed work")
+    assert_performed_debrief_first(project, transcript, concept)
+
+
 REP_TASK_RE = re.compile(
     r"(?i)(away from the screen|in (?:your|the) kitchen|\b(?:a|the|this|your|one|today's|"
     r"tonight's|next) (?:practice )?rep\b|practice rep)")
@@ -1863,6 +1882,7 @@ def main():
                        "performed-debrief-first": assert_performed_debrief_first,
                        "performed-no-debrief": assert_performed_no_debrief_no_record,
                        "performed-practice-sets-rep": assert_performed_practice_sets_rep,
+                       "kind-gate-reconfirm-rep": assert_kind_gate_reconfirm_rep,
                        "performed-repless-review": assert_performed_repless_review,
                        "performed-by-your-account": assert_performed_by_your_account,
                        "photo-inspected": assert_photo_inspected,

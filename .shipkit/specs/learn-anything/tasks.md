@@ -210,7 +210,7 @@ touch the same files.
   - Test: dev/eval/assert_scenario.py::assert_performed_practice_sets_rep, exercised by dev/eval/test_detectors.py::t_performed_practice_sets_rep (a good run passes; one without the debrief questions, one with no task, one that records a rep, and one with code fail)
   - After: T19
   - Done when: `python3 dev/eval/test_detectors.py` → "0 failed"; `dev/check.sh` passes; the live run joins the release sweep
-- [ ] **T39** The prerequisite reconfirm records applied work in the kind's form (`--applied` on code; `--applied --evidence <file>` for a problem or a written piece; `--applied reported` for a rep, after its debrief), and eval scenario `kind-gate-reconfirm-rep` → REQ-17
+- [x] **T39** The prerequisite reconfirm records applied work in the kind's form (`--applied` on code; `--applied --evidence <file>` for a problem or a written piece; `--applied reported` for a rep, after its debrief), and eval scenario `kind-gate-reconfirm-rep` → REQ-17
   - Files: skills/teach/references/prerequisite-gate.md, dev/eval/assert_scenario.py, dev/eval/run-llm-evals.sh, dev/eval/test_detectors.py, dev/eval/README.md, CHANGELOG.md, dev/changelog-journal.md
   - Test: dev/eval/assert_scenario.py::assert_kind_gate_reconfirm_rep, exercised by dev/eval/test_detectors.py::t_kind_gate_reconfirm_rep (a good run passes; one with no gate-check, one that tries the rep as observed work first, one with no debrief before the record, and one with code fail)
   - After: T20, T38
