@@ -273,10 +273,46 @@ def t_touched_outside_cwd():
         check("outside: a project under cwd keeps its reason word for word", reason == expected, reason)
 
 
+def t_shell_variables():
+    """learn-anything/REQ-38, from the 2026-10-22 rerun: the cloud chat set a
+    shell variable and passed `--project $S/sql-deep-dive` in the same
+    command, so the transcript never names the path outright."""
+    import datetime
+    today = datetime.date.today().isoformat()
+    studied = {"version": 3, "sessionHistory": [], "concepts": [
+        {"name": "Joins", "module": "A", "box": 2, "bloomLevel": 3,
+         "feynmanPassed": False, "consecutiveCorrectAtL4Plus": 0,
+         "nextReview": today, "lastReviewed": today,
+         "reviewHistory": [{"date": today, "result": "correct",
+                            "bloomLevel": 3, "source": "quiz"}]}]}
+    with tempfile.TemporaryDirectory() as root:
+        cwd = os.path.join(root, "home", "claude")
+        os.makedirs(cwd)
+        scratch = os.path.join(root, "tmp", "scratchpad", "probe2")
+        proj = make_project(scratch, "sql", studied)
+        rel = os.path.relpath(proj, scratch)
+        live = (f"S={scratch}; rm -rf $S; mkdir -p $S/{rel} && "
+                f"cp -a /mnt/user-data/uploads/learningWithBodhi/sql/.bodhi $S/{rel}/ && "
+                f'"$R/scripts/bodhi-state" --project $S/{rel} touch-state --activity probe; '
+                'echo "exit=$?"; mkdir -p /mnt/user-data/outputs')
+        for label, cmd in (
+                ("the live command", live),
+                ("${S} in quotes", f'export S="{scratch}" && "$R/scripts/bodhi-state" --project "${{S}}/{rel}" touch-state --activity x'),
+        ):
+            tp = write_transcript(root, [cmd], cwd)
+            out = run_hook({"cwd": cwd, "transcript_path": tp})
+            d = json.loads(out) if out else {}
+            check(f"variables: {label} names the project",
+                  d.get("decision") == "block" and proj in d.get("reason", ""), out[:160])
+        tp = write_transcript(root, [f'"$R/scripts/bodhi-state" --project $UNSET/{rel} touch-state --activity x'], cwd)
+        out = run_hook({"cwd": cwd, "transcript_path": tp})
+        check("variables: an unassigned variable names nothing", out == "", out[:120])
+
+
 def main():
     for t in (t_block_on_broken, t_reentry_and_stale, t_configured_roots,
               t_bounded_search, t_failure_reasons, t_revision_sheet_required,
-              t_touched_outside_cwd):
+              t_touched_outside_cwd, t_shell_variables):
         t()
     print(f"\n{PASS} passed, {FAIL} failed")
     sys.exit(1 if FAIL else 0)

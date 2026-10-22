@@ -108,6 +108,21 @@ def recently_touched(project):
     return False
 
 
+ASSIGN_RE = re.compile(r"""(?:^|[\s;&|(])(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)="""
+                       r"""(?:"([^"]*)"|'([^']*)'|([^\s;&|)]*))""")
+
+
+def expand_vars(raw, cmd, end):
+    """`$NAME` and `${NAME}` from assignments made earlier in the same command:
+    a cloud chat sets `S=<scratch>` and then passes `--project $S/<name>`
+    (learn-anything REQ-38, 2026-10-22). Unknown names stay as written."""
+    env = {}
+    for a in ASSIGN_RE.finditer(cmd[:end]):
+        env[a.group(1)] = next(g for g in a.groups()[1:] if g is not None)
+    return re.sub(r"\$\{([A-Za-z_]\w*)\}|\$([A-Za-z_]\w*)",
+                  lambda v: env.get(v.group(1) or v.group(2), v.group(0)), raw)
+
+
 def session_writes(transcript_path):
     """Which projects THIS session closed, from its transcript: every Bash
     tool_use whose command runs bodhi-state with --project (either the
@@ -136,7 +151,7 @@ def session_writes(transcript_path):
                     if "bodhi-state" not in cmd:
                         continue
                     for m in arg_re.finditer(cmd):
-                        raw = next(g for g in m.groups() if g)
+                        raw = expand_vars(next(g for g in m.groups() if g), cmd, m.start())
                         path = os.path.abspath(os.path.join(cwd, os.path.expanduser(raw)))
                         entry = out.setdefault(path, {"touch": False})
                         if re.search(r"\btouch-state\b", cmd[m.end():]):
