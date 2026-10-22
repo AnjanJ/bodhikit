@@ -210,13 +210,23 @@ touch the same files.
   - Test: dev/eval/assert_scenario.py::assert_performed_practice_sets_rep, exercised by dev/eval/test_detectors.py::t_performed_practice_sets_rep (a good run passes; one without the debrief questions, one with no task, one that records a rep, and one with code fail)
   - After: T19
   - Done when: `python3 dev/eval/test_detectors.py` → "0 failed"; `dev/check.sh` passes; the live run joins the release sweep
+- [ ] **T39** The prerequisite reconfirm records applied work in the kind's form (`--applied` on code; `--applied --evidence <file>` for a problem or a written piece; `--applied reported` for a rep, after its debrief), and eval scenario `kind-gate-reconfirm-rep` → REQ-17
+  - Files: skills/teach/references/prerequisite-gate.md, dev/eval/assert_scenario.py, dev/eval/run-llm-evals.sh, dev/eval/test_detectors.py, dev/eval/README.md, CHANGELOG.md, dev/changelog-journal.md
+  - Test: dev/eval/assert_scenario.py::assert_kind_gate_reconfirm_rep, exercised by dev/eval/test_detectors.py::t_kind_gate_reconfirm_rep (a good run passes; one with no gate-check, one that tries the rep as observed work first, one with no debrief before the record, and one with code fail)
+  - After: T20, T38
+  - Done when: `python3 dev/eval/test_detectors.py` → "0 failed"; `dev/check.sh` passes; the live run joins the release sweep
+- [ ] **T40** A writing exercise saves its task (`README.md`) and its criteria before the learner's piece; `kind-teach-writing` asserts it → REQ-12, REQ-44
+  - Files: dev/eval/assert_scenario.py, dev/eval/test_detectors.py, dev/eval/README.md, CHANGELOG.md, dev/changelog-journal.md
+  - Test: dev/eval/assert_scenario.py::assert_kind_task_before_attempt, exercised by dev/eval/test_detectors.py::t_task_before_attempt (task and criteria before the piece passes; a task written after the piece, or none, fails). REQ-44 is untested: read in the `kind-teach-writing` transcript at each sweep
+  - After: T39
+  - Done when: `python3 dev/eval/test_detectors.py` → "0 failed"; `dev/check.sh` passes; the live run joins the release sweep
 
 ## The release: both ship as 1.25.0
 
 - [x] **T30** Release docs for 1.25.0, which carries Releases 1 and 2: README Science section with the research citations, CHANGELOG, MIGRATION, `dev/read-defaults.md`, the journal, the version in both manifests, the Codex manifest and the badge
   - Files: README.md, CHANGELOG.md, MIGRATION.md, dev/read-defaults.md, dev/changelog-journal.md, .claude-plugin/plugin.json, .claude-plugin/marketplace.json, platforms/openai/bodhikit/.codex-plugin/plugin.json
   - Test: none, docs; rules 1 and 11 in dev/check.sh (versions, counts)
-  - After: T21, T22, T23, T24, T25, T27, T29, T31, T32, T33, T34, T35, T36, T38
+  - After: T21, T22, T23, T24, T25, T27, T29, T31, T32, T33, T34, T35, T36, T38, T39, T40
   - Done when: `dev/check.sh` passes
 
 ## After the gate
