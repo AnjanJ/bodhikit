@@ -162,10 +162,10 @@ touch the same files.
   - Test: dev/eval/test_cowork_plugin.py::test_package_contents (skills, agents, hooks, scripts, rules and the manifest present; `${CLAUDE_PLUGIN_ROOT}` paths resolve; no `dev/` or `.shipkit/`)
   - After: T26
   - Done when: `python3 platforms/cowork/build_plugin.py --archive dist/bodhikit.plugin && python3 dev/eval/test_cowork_plugin.py` → pass
-- [ ] **T30** Release 1 docs: README Science section with the research citations, CHANGELOG, MIGRATION, `dev/read-defaults.md`, the journal, version bump in both manifests and the badge
-  - Files: README.md, CHANGELOG.md, MIGRATION.md, dev/read-defaults.md, dev/changelog-journal.md, .claude-plugin/plugin.json, .claude-plugin/marketplace.json
+- [ ] **T30** Release docs for 1.25.0, which carries Releases 1 and 2: README Science section with the research citations, CHANGELOG, MIGRATION, `dev/read-defaults.md`, the journal, the version in both manifests, the Codex manifest and the badge
+  - Files: README.md, CHANGELOG.md, MIGRATION.md, dev/read-defaults.md, dev/changelog-journal.md, .claude-plugin/plugin.json, .claude-plugin/marketplace.json, platforms/openai/bodhikit/.codex-plugin/plugin.json
   - Test: none, docs; rules 1 and 11 in dev/check.sh (versions, counts)
-  - After: T21, T22, T23, T24, T25, T27
+  - After: T21, T22, T23, T24, T25, T27, T29, T31, T32, T33, T34, T35, T36
   - Done when: `dev/check.sh` passes
 
 ## Release 2: in the open (REQ-38, REQ-39, REQ-41–43)
@@ -173,22 +173,19 @@ touch the same files.
 - [x] **T31** Claude hosts without files: a reference adapted from the OpenAI adapter's conversation-only mode, used by `/learn` and `/continue` when no project can be written → REQ-39
   - Files: skills/learn/references/host-without-files.md, skills/learn/SKILL.md, skills/continue/SKILL.md, docs/hosts-without-files.md
   - Test: none, manual (REQ-39 is untested by design)
-  - After: T30
   - Done when: a manual claude.ai run is recorded in docs/hosts-without-files.md, and `dev/check.sh` passes
 - [x] **T32** `dev/outcomes.py` reports delayed recall per kind and counts *Solid* by report separately; rule 46 runs its test → REQ-41
   - Files: dev/outcomes.py, dev/eval/test_outcomes.py, dev/check.sh, docs/outcomes.md
   - Test: dev/eval/test_outcomes.py::t_recall_per_kind
-  - After: T28, T30
+  - After: T28
   - Done when: `python3 dev/eval/test_outcomes.py` → pass; `dev/check.sh` passes
 - [x] **T33** Repositioning: a tutor for any subject, code first-class, and what it cannot verify → REQ-42
   - Files: README.md, GUIDE.md, .claude-plugin/plugin.json, .claude-plugin/marketplace.json, platforms/openai/bodhikit/.codex-plugin/plugin.json
   - Test: none, prose (REQ-42 is untested by design)
-  - After: T30
   - Done when: `dev/check.sh` passes, and `python3 dev/eval/test_openai_plugin.py` → pass
 - [x] **T34** The voice: "the learner does the work", keeping "writes the code" for code, across the KBs every skill inherits → REQ-43
   - Files: skills/teaching-personality/SKILL.md, skills/ai-learning-safeguards/SKILL.md, skills/growth-mindset/SKILL.md, skills/metacognition/SKILL.md
   - Test: none, prose (REQ-43 is untested by design); the code sweep confirms no regression
-  - After: T30
   - Done when: `dev/check.sh` passes
 - [x] **T35** The Stop hook also checks every project this session closed with `touch-state`, wherever it is; for a project outside the working folder, its reason says to bring `revision/` over from the learner's folder and add to today's sheet → REQ-38
   - Files: scripts/bodhi-stop-hook.py, dev/eval/test_stop_hook.py
@@ -208,15 +205,12 @@ touch the same files.
 
 ## After the gate
 
-Release 1:
+Releases 1 and 2 ship together as 1.25.0, so there is one sweep and one tag:
 - Full sweep with the code groups at their recorded levels: executor-discipline, grading with `BODHI_EVAL_RUNS=3`, fidelity, lifecycle, applied.
 - Every new group on both sides of each grading boundary.
 - `BODHI_EVAL_RUNTIME=codex` executor-discipline.
 - Record the results in `dev/eval/README.md`.
 - The maintainer tags and pushes.
 - Rebuild `dist/bodhikit-openai.zip`; re-upload the ChatGPT listing once the portal accepts skills-only submissions.
-
-Release 2:
-- The same sweep, then tag.
-- Publish `dist/bodhikit.plugin`, and claim Claude Cowork support, only after T29 passes.
+- Publish `dist/bodhikit.plugin`. T29 passed, so the release claims REQ-38: a Claude chat that works on a folder through a connected Claude Desktop.
 - Write `.shipkit/product.md` with the four intake goals.
