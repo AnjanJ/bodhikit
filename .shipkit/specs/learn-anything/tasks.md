@@ -12,7 +12,7 @@ The golden test is the REQ-1 tripwire: engine output for code must stay byte-ide
 (`dev/eval/test_openai_plugin.py`, `docs/openai*.md`, `platforms/openai/**`). T13, T27 and T33
 touch the same files.
 
-## Release 1: learn anything (REQ-1–38, REQ-40)
+## Release 1: learn anything (REQ-1–37, REQ-40)
 
 - [x] **T0** Rewrite the feature-freeze section of `CLAUDE.md` for the learn-anything decision (intake conflict 1)
   - Files: CLAUDE.md
@@ -162,18 +162,13 @@ touch the same files.
   - Test: dev/eval/test_cowork_plugin.py::test_package_contents (skills, agents, hooks, scripts, rules and the manifest present; `${CLAUDE_PLUGIN_ROOT}` paths resolve; no `dev/` or `.shipkit/`)
   - After: T26
   - Done when: `python3 platforms/cowork/build_plugin.py --archive dist/bodhikit.plugin && python3 dev/eval/test_cowork_plugin.py` → pass
-- [ ] **T29** Cowork probe checklist, run by the maintainer, with the result recorded → REQ-38
-  - Files: docs/cowork-probe.md
-  - Test: none, manual (REQ-38 is untested by design)
-  - After: T28
-  - Done when: docs/cowork-probe.md records a dated pass or fail for each check: `python3` present, `bodhi-state` writes, the session-start rule arrives, the Stop hook asks for the sheet, files persist across sessions
 - [ ] **T30** Release 1 docs: README Science section with the research citations, CHANGELOG, MIGRATION, `dev/read-defaults.md`, the journal, version bump in both manifests and the badge
   - Files: README.md, CHANGELOG.md, MIGRATION.md, dev/read-defaults.md, dev/changelog-journal.md, .claude-plugin/plugin.json, .claude-plugin/marketplace.json
   - Test: none, docs; rules 1 and 11 in dev/check.sh (versions, counts)
-  - After: T21, T22, T23, T24, T25, T27, T29
+  - After: T21, T22, T23, T24, T25, T27
   - Done when: `dev/check.sh` passes
 
-## Release 2: in the open (REQ-39, REQ-41–43)
+## Release 2: in the open (REQ-38, REQ-39, REQ-41–43)
 
 - [ ] **T31** Claude hosts without files: a reference adapted from the OpenAI adapter's conversation-only mode, used by `/learn` and `/continue` when no project can be written → REQ-39
   - Files: skills/learn/references/host-without-files.md, skills/learn/SKILL.md, skills/continue/SKILL.md, docs/hosts-without-files.md
@@ -195,6 +190,21 @@ touch the same files.
   - Test: none, prose (REQ-43 is untested by design); the code sweep confirms no regression
   - After: T30
   - Done when: `dev/check.sh` passes
+- [ ] **T35** The Stop hook also checks every project this session closed with `touch-state`, wherever it is; for a project outside the working folder, its reason says to bring `revision/` over from the learner's folder and add to today's sheet → REQ-38
+  - Files: scripts/bodhi-stop-hook.py, dev/eval/test_stop_hook.py
+  - Test: dev/eval/test_stop_hook.py::t_touched_outside_cwd (a project outside `cwd` that the transcript closed blocks without today's sheet; one it never closed stays silent; a project under `cwd` keeps today's reason word for word)
+  - After: T28
+  - Done when: `python3 dev/eval/test_stop_hook.py` → "0 failed"; `python3 dev/eval/test_openai_plugin.py` → pass; `dev/check.sh` passes
+- [ ] **T36** In a cloud chat, the learning-project rule arrives when a BodhiKit skill first runs: `UserPromptExpansion` and `PreToolUse` on `Skill` call `bodhi-session-context.py`, which injects the rule once per session when the host is a cloud chat and the working folder is not a learning project; rule 46 runs the new test → REQ-38
+  - Files: scripts/bodhi-session-context.py, hooks/hooks.json, dev/eval/test_session_context.py, dev/check.sh, CLAUDE.md
+  - Test: dev/eval/test_session_context.py::t_rule_on_first_skill (SessionStart unchanged; outside a cloud chat a skill injects nothing; in one, the first BodhiKit skill injects the rule and the second does not; a command from another plugin injects nothing)
+  - After: T35
+  - Done when: `python3 dev/eval/test_session_context.py` → "0 failed"; `python3 dev/eval/test_cowork_plugin.py` → pass; `dev/check.sh` passes
+- [ ] **T29** Cowork probe on claude.ai with a connected Mac, rerun after T35 and T36 and recorded (the 2026-10-22 run passed 3 of 5) → REQ-38
+  - Files: docs/cowork-probe.md
+  - Test: none, manual (REQ-38 is untested by design)
+  - After: T35, T36
+  - Done when: docs/cowork-probe.md records a dated run on which all five checks read PASS: `python3` present, `bodhi-state` writes, the rule arrives, the Stop hook asks for the sheet, files persist across chats
 
 ## After the gate
 
@@ -205,8 +215,8 @@ Release 1:
 - Record the results in `dev/eval/README.md`.
 - The maintainer tags and pushes.
 - Rebuild `dist/bodhikit-openai.zip`; re-upload the ChatGPT listing once the portal accepts skills-only submissions.
-- Publish `dist/bodhikit.plugin` for Cowork only after T29 passes.
 
 Release 2:
 - The same sweep, then tag.
+- Publish `dist/bodhikit.plugin`, and claim Claude Cowork support, only after T29 passes.
 - Write `.shipkit/product.md` with the four intake goals.

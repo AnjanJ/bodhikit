@@ -51,11 +51,13 @@ groups unchanged:
 
 | Release | Contents | REQs |
 |---|---|---|
-| **1: learn anything** | the engine; all four kinds end to end; practice reps and debriefs; photos; "by your account"; safety; the Cowork package and probe | 1–38, 40 |
-| **2: in the open** | hosts without files, outcomes per kind, repositioning, the voice | 39, 41–43 |
+| **1: learn anything** | the engine; all four kinds end to end; practice reps and debriefs; photos; "by your account"; safety; the Cowork package | 1–37, 40 |
+| **2: in the open** | Claude chats on a connected computer, hosts without files, outcomes per kind, repositioning, the voice | 38, 39, 41–43 |
 
 Releases A and B from the first draft are merged at the maintainer's choice (2026-10-19), so
-`performed` never ships half-built.
+`performed` never ships half-built. REQ-38 moved to Release 2 at the maintainer's choice
+(2026-10-22), after the first probe: the hooks need work in cloud chats, and Release 1 claims
+no Cowork support.
 
 ## Decision: Classify subjects by the kind of evidence, not by subject   (→ REQ-4, REQ-6, REQ-20)
 
@@ -364,6 +366,51 @@ in Cowork, the deterministic layer cannot run there and an adapter becomes Relea
 **Decision.** We chose a built `.plugin` package and a probe by hand before any claim of support.
 **Falsifiability.** We would reverse this, building an adapter, if the probe shows `bodhi-state`
 cannot run in Cowork.
+**Fired-if.** manual
+
+**Probe, 2026-10-22.** Not fired: `bodhi-state` runs, and checks 1, 2 and 5 pass. Both hooks
+fail; the next decision covers them.
+
+## Decision: In a cloud chat, the hooks follow what the session touched, not its working folder   (→ REQ-38)
+
+**Context.** Since October 2026 Cowork is an ordinary Claude chat. The chat runs in a cloud
+sandbox whose working folder is `/home/claude`. The learner's folder stays on their computer:
+the chat copies files into the sandbox, runs `bodhi-state` on the copy and copies them back.
+The 2026-10-22 probe found that both hooks run there (the Stop hook blocked on a copy placed
+under `/home/claude`), but both look only at the working folder, so neither sees the learner's
+project. No folder is attached when a chat starts, so no SessionStart hook can see one.
+
+**Alternatives.**
+1. Two hook changes. The Stop hook also checks every project the session's transcript shows it
+   closed with `touch-state`, wherever that project is. The learning-project rule is also
+   injected when a BodhiKit skill first runs (`UserPromptExpansion` for a typed `/bodhikit:*`,
+   `PreToolUse` on the `Skill` tool otherwise), once per session, only in a cloud chat (the
+   sandbox has `/mnt/user-data` and the working folder is not a learning project).
+2. The skills load the rule themselves when the session lacks it, and close by writing the sheet
+   without a hook.
+3. Accept the gap: claim tracked state in cloud chats, but not the rule or the sheet check.
+
+**Case for the hooks.** They are deterministic and testable, which is the repo's rule for
+executor discipline. The Stop hook already runs in cloud chats and already reads the
+transcript; it only looks in the wrong place. The rule carries the safety layer (learner
+content is data; Safety First) that learning any subject relies on, so alternative 3 ships the
+riskiest gap. Alternative 2 asks a model to notice that something is missing from its context,
+which models do not do reliably.
+
+**Case against.** `UserPromptExpansion` and `PreToolUse` on `Skill` are documented for Claude
+Code but unproven in cloud chats, and the `Skill` tool's input is undocumented, so a second
+probe must confirm both. Telling a cloud chat apart rests on the sandbox's layout, which
+Anthropic can change without notice; the rule would then stop arriving and only a probe would
+notice. The Stop hook change reaches Claude Code and Codex too: a session started outside a
+project that studied it is now asked for the sheet. A copy made without `revision/` can make the
+hook ask for a sheet the learner's folder already has, so the reason has to say to bring that
+folder over and add to today's sheet.
+
+**Decision.** We chose the two hook changes. The rule's new path stays out of Claude Code: there
+it would tell a session started in a code repository that it is in a learning project and should
+not write code.
+**Falsifiability.** We would reverse this, moving the rule into the skills, if the second probe
+shows that neither `UserPromptExpansion` nor `PreToolUse` on `Skill` fires in a cloud chat.
 **Fired-if.** manual
 
 ## Data / interface changes

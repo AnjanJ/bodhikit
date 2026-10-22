@@ -80,7 +80,7 @@ learner's word and labels it as the learner's word everywhere it shows.
 
 ### Where it runs
 - **REQ-37.** The build shall produce a Claude Cowork `.plugin` package from the same source tree as the Claude Code plugin.
-- **REQ-38.** The plugin shall keep tracked state in Claude Cowork: `bodhi-state` writes, the learning-project rule at session start, and the revision-sheet check at the end. [untested: no headless Cowork runner; verified by the manual probe checklist]
+- **REQ-38.** The plugin shall keep tracked state in a Claude chat that works on a folder through a connected Claude Desktop (Claude Cowork until October 2026): `bodhi-state` writes, the learning-project rule no later than the first BodhiKit skill, and the revision-sheet check at the end. [untested: no headless runner; verified by the manual probe checklist]
 - **REQ-39.** Where the host cannot keep project files between chats, the tutor shall say that tracked study needs a desktop surface and shall offer teaching that keeps no schedule. [untested: no headless claude.ai runner; verified by a manual run]
 - **REQ-40.** The OpenAI package built from this tree shall carry the evidence kinds, the applied-work basis and the safety rule.
 
@@ -91,7 +91,7 @@ learner's word and labels it as the learner's word everywhere it shows.
 
 ## Out of scope
 - Any change to how a `code` concept is taught, graded or evidenced, including requiring a file path for code's applied work. Code keeps 1.24.1 behaviour (REQ-1).
-- Full phone and claude.ai support with saved state. It gets its own spec after a research spike on keeping state between chats; until then REQ-39 is the behaviour.
+- Full phone and claude.ai support with saved state when no computer is connected. It gets its own spec after a research spike on keeping state between chats; until then REQ-39 is the behaviour.
 - Analysing audio or voice (pronunciation, an instrument's sound). Photos and written transcripts are in.
 - The tutor certifying a physical skill, or claiming to have seen what it did not.
 - Personal medical or clinical advice; step-by-step coaching of dangerous procedures.
