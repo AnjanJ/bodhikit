@@ -2,8 +2,11 @@
 """Stop hook: schema safety net for BodhiKit tracking files.
 
 Runs `bodhi-state verify` on any learning project THIS session could have
-touched — under the working directory or under the per-repo
-`.bodhikit/config.json` projectRoot — whose tracking files changed recently.
+touched — under the working directory, under the per-repo
+`.bodhikit/config.json` projectRoot, or named by this session's own
+`touch-state` wherever it is — whose tracking files changed recently. The
+last covers a cloud chat (learn-anything REQ-38): its working folder is the
+sandbox's, and the learner's project is a copy staged elsewhere.
 Global `~/.bodhikit/config.json` searchPaths are deliberately not walked: a
 project studied in another terminal must not block an unrelated session's
 stop with a repair or a revision sheet it has no context to write.
@@ -178,8 +181,14 @@ def main():
         return
     wrote = session_writes(payload.get("transcript_path"))
 
+    found = find_projects(configured_roots(cwd))
+    seen = {os.path.realpath(p) for p in found}
+    outside = [p for p, w in wrote.items()
+               if w.get("touch") and os.path.realpath(p) not in seen
+               and os.path.exists(os.path.join(p, ".bodhi", "state.json"))]
+
     failures, missing_sheets = [], []
-    for project in find_projects(configured_roots(cwd)):
+    for project in found + outside:
         if not recently_touched(project):
             continue
         try:
@@ -208,7 +217,8 @@ def main():
             brief = {}
         if brief.get("sessionToday") and not brief.get("existing"):
             missing_sheets.append((project, brief.get("suggestedFile", "revision/<today>.md"),
-                                   [c.get("name") for c in brief.get("concepts", [])][:6]))
+                                   [c.get("name") for c in brief.get("concepts", [])][:6],
+                                   project in outside))
 
     reasons = []
     if failures:
@@ -223,7 +233,7 @@ def main():
             "`bodhi-state migrate-spaced-review`.")
     if missing_sheets:
         lines = [f"{project}: write {path}  (studied today: {', '.join(n for n in names if n)})"
-                 for project, path, names in missing_sheets]
+                 for project, path, names, _ in missing_sheets]
         reasons.append(
             "This session studied a project and has not written today's revision sheet:\n"
             + "\n".join(lines) +
@@ -233,7 +243,12 @@ def main():
             "concepts, results and next-review dates; outcome clauses, the worked "
             "example, where the learner slipped, two self-test prompts with "
             "answers, next reviews, free links only from .bodhi/resources.md or "
-            "official docs). Then stop.")
+            "official docs). Then stop." +
+            ("\nFor a project outside this session's working folder (a cloud chat "
+             "works on a copy of the learner's folder), bring that folder's "
+             "`revision/` over first, add to today's sheet if it already has one, "
+             "and copy the sheet back to the learner's folder."
+             if any(o for *_, o in missing_sheets) else ""))
     if reasons:
         print(json.dumps({"decision": "block", "reason": "\n\n".join(reasons)}))
 

@@ -190,7 +190,7 @@ touch the same files.
   - Test: none, prose (REQ-43 is untested by design); the code sweep confirms no regression
   - After: T30
   - Done when: `dev/check.sh` passes
-- [ ] **T35** The Stop hook also checks every project this session closed with `touch-state`, wherever it is; for a project outside the working folder, its reason says to bring `revision/` over from the learner's folder and add to today's sheet → REQ-38
+- [x] **T35** The Stop hook also checks every project this session closed with `touch-state`, wherever it is; for a project outside the working folder, its reason says to bring `revision/` over from the learner's folder and add to today's sheet → REQ-38
   - Files: scripts/bodhi-stop-hook.py, dev/eval/test_stop_hook.py
   - Test: dev/eval/test_stop_hook.py::t_touched_outside_cwd (a project outside `cwd` that the transcript closed blocks without today's sheet; one it never closed stays silent; a project under `cwd` keeps today's reason word for word)
   - After: T28

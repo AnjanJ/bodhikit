@@ -214,9 +214,69 @@ def t_revision_sheet_required():
         out = run_hook({"cwd": os.path.join(root, "learningWithBodhi", "rust"), "transcript_path": tp})
         check("sheet: a project with no study today needs no sheet", out == "", out)
 
+def t_touched_outside_cwd():
+    """learn-anything/REQ-38: a cloud chat's working folder is /home/claude,
+    and the learner's project is a copy staged elsewhere (/mnt/user-data/...).
+    A project this session closed is checked wherever it is; one it never
+    closed is not, and a project under cwd keeps its reason word for word."""
+    import datetime
+    today = datetime.date.today().isoformat()
+    studied = {"version": 3, "sessionHistory": [], "concepts": [
+        {"name": "Joins", "module": "A", "box": 2, "bloomLevel": 3,
+         "feynmanPassed": False, "consecutiveCorrectAtL4Plus": 0,
+         "nextReview": today, "lastReviewed": today,
+         "reviewHistory": [{"date": today, "result": "correct",
+                            "bloomLevel": 3, "source": "quiz"}]}]}
+    copy_note = "bring that folder's `revision/` over"
+    with tempfile.TemporaryDirectory() as root:
+        cwd = os.path.join(root, "home", "claude")
+        os.makedirs(cwd)
+        staged = make_project(os.path.join(root, "mnt", "user-data", "uploads"), "sql", studied)
+        out = run_hook({"cwd": cwd})
+        check("outside: without a transcript a staged copy is silent", out == "", out[:120])
+        tp = write_transcript(root, [f'"$R/scripts/bodhi-state" --project "{staged}" record-review --concept Joins --result correct'], cwd)
+        out = run_hook({"cwd": cwd, "transcript_path": tp})
+        check("outside: a copy the session never closed is silent", out == "", out[:120])
+        tp = write_transcript(root, [f'"$R/scripts/bodhi-state" --project "{staged}" touch-state --activity probe'], cwd)
+        out = run_hook({"cwd": cwd, "transcript_path": tp})
+        d = json.loads(out) if out else {}
+        reason = d.get("reason", "")
+        check("outside: a copy this session closed blocks without today's sheet",
+              d.get("decision") == "block" and f"{staged}: write revision/{today}-joins.md" in reason, out[:160])
+        check("outside: the reason says to bring the learner's revision/ over", copy_note in reason, reason[-300:])
+        os.makedirs(os.path.join(staged, "revision"))
+        with open(os.path.join(staged, "revision", f"{today}-joins.md"), "w") as f:
+            f.write("# Revision — Joins\n")
+        out = run_hook({"cwd": cwd, "transcript_path": tp})
+        check("outside: with today's sheet in the copy the stop is silent", out == "", out[:120])
+        broken = make_project(os.path.join(root, "mnt", "user-data", "outputs"), "rust", BROKEN_SR)
+        tp = write_transcript(root, [f'"$R/scripts/bodhi-state" --project "{broken}" touch-state --activity probe'], cwd)
+        out = run_hook({"cwd": cwd, "transcript_path": tp})
+        d = json.loads(out) if out else {}
+        check("outside: a broken copy this session closed fails verify",
+              d.get("decision") == "block" and broken in d.get("reason", "") and "schema verification" in d.get("reason", ""), out[:160])
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, "sql", studied)
+        tp = write_transcript(root, [f'"$R/scripts/bodhi-state" --project "{proj}" touch-state --activity done'], root)
+        out = run_hook({"cwd": root, "transcript_path": tp})
+        reason = json.loads(out).get("reason", "") if out else ""
+        expected = (
+            "This session studied a project and has not written today's revision sheet:\n"
+            f"{proj}: write revision/{today}-joins.md  (studied today: Joins)\n"
+            "Write it now from this session, following "
+            "skills/reflect/references/revision-sheet.md in the BodhiKit plugin "
+            "(run `bodhi-state --project <project> revision-brief` for the "
+            "concepts, results and next-review dates; outcome clauses, the worked "
+            "example, where the learner slipped, two self-test prompts with "
+            "answers, next reviews, free links only from .bodhi/resources.md or "
+            "official docs). Then stop.")
+        check("outside: a project under cwd keeps its reason word for word", reason == expected, reason)
+
+
 def main():
     for t in (t_block_on_broken, t_reentry_and_stale, t_configured_roots,
-              t_bounded_search, t_failure_reasons, t_revision_sheet_required):
+              t_bounded_search, t_failure_reasons, t_revision_sheet_required,
+              t_touched_outside_cwd):
         t()
     print(f"\n{PASS} passed, {FAIL} failed")
     sys.exit(1 if FAIL else 0)
