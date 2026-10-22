@@ -195,7 +195,7 @@ touch the same files.
   - Test: dev/eval/test_stop_hook.py::t_touched_outside_cwd (a project outside `cwd` that the transcript closed blocks without today's sheet; one it never closed stays silent; a project under `cwd` keeps today's reason word for word)
   - After: T28
   - Done when: `python3 dev/eval/test_stop_hook.py` → "0 failed"; `python3 dev/eval/test_openai_plugin.py` → pass; `dev/check.sh` passes
-- [ ] **T36** In a cloud chat, the learning-project rule arrives when a BodhiKit skill first runs: `UserPromptExpansion` and `PreToolUse` on `Skill` call `bodhi-session-context.py`, which injects the rule once per session when the host is a cloud chat and the working folder is not a learning project; rule 46 runs the new test → REQ-38
+- [x] **T36** In a cloud chat, the learning-project rule arrives when a BodhiKit skill first runs: `UserPromptExpansion` and `PreToolUse` on `Skill` call `bodhi-session-context.py`, which injects the rule once per session when the host is a cloud chat, unless SessionStart already gave it; rule 46 runs the new test → REQ-38
   - Files: scripts/bodhi-session-context.py, hooks/hooks.json, dev/eval/test_session_context.py, dev/check.sh, CLAUDE.md
   - Test: dev/eval/test_session_context.py::t_rule_on_first_skill (SessionStart unchanged; outside a cloud chat a skill injects nothing; in one, the first BodhiKit skill injects the rule and the second does not; a command from another plugin injects nothing)
   - After: T35

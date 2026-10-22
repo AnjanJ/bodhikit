@@ -1,9 +1,32 @@
 {
-  "description": "BodhiKit hooks, all fail-open (a missing python3 or a mis-expanded path exits 0). SessionStart: inject rules/learning-project.md when the session starts inside a learning project (plugins do not load rules/). Stop: verify tracking-file schemas before the session ends.",
+  "description": "BodhiKit hooks, all fail-open (a missing python3 or a mis-expanded path exits 0). SessionStart: inject rules/learning-project.md when the session starts inside a learning project (plugins do not load rules/). UserPromptExpansion and PreToolUse on Skill: in a cloud chat only, inject the same rule when a BodhiKit skill first runs. Stop: verify tracking-file schemas before the session ends.",
   "hooks": {
     "SessionStart": [
       {
         "matcher": "startup|resume|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "command -v python3 >/dev/null 2>&1 && python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-session-context.py\" || exit 0",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "UserPromptExpansion": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "command -v python3 >/dev/null 2>&1 && python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-session-context.py\" || exit 0",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Skill",
         "hooks": [
           {
             "type": "command",

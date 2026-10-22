@@ -385,7 +385,7 @@ project. No folder is attached when a chat starts, so no SessionStart hook can s
    closed with `touch-state`, wherever that project is. The learning-project rule is also
    injected when a BodhiKit skill first runs (`UserPromptExpansion` for a typed `/bodhikit:*`,
    `PreToolUse` on the `Skill` tool otherwise), once per session, only in a cloud chat (the
-   sandbox has `/mnt/user-data` and the working folder is not a learning project).
+   sandbox has `/mnt/user-data`), unless SessionStart already gave it.
 2. The skills load the rule themselves when the session lacks it, and close by writing the sheet
    without a hook.
 3. Accept the gap: claim tracked state in cloud chats, but not the rule or the sheet check.

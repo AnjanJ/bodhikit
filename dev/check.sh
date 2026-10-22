@@ -407,6 +407,17 @@ if [ -f dev/eval/test_bodhi_state.py ]; then
   else
     err "dev/eval/test_stop_hook.py missing"
   fi
+  # The learning-project rule's delivery: SessionStart in a learning project,
+  # and in a cloud chat the first BodhiKit skill (learn-anything REQ-38).
+  if [ -f dev/eval/test_session_context.py ]; then
+    if ! python3 dev/eval/test_session_context.py >${TMPDIR:-/tmp}/bodhi-session-context-tests.log 2>&1; then
+      err "session-context test suite failed — see ${TMPDIR:-/tmp}/bodhi-session-context-tests.log"
+    else
+      ok "session-context test suite passed"
+    fi
+  else
+    err "dev/eval/test_session_context.py missing"
+  fi
   # The Cowork package is the same tree zipped; this proves it carries every
   # surface byte for byte and nothing from dev/ (learn-anything REQ-37).
   if [ -f dev/eval/test_cowork_plugin.py ]; then

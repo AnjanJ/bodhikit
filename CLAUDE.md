@@ -2,7 +2,7 @@
 
 This is a Claude Code plugin. Edits are markdown + JSON + one Python script. End users install via `/plugin marketplace add <github-url>` then `/plugin install`.
 
-Claude Code loads `skills/`, `agents/`, `hooks/`, and the `.claude-plugin/` manifests from an installed plugin — and **nothing else**: a `knowledge/` tree is never registered and a plugin `rules/` directory is never loaded (both verified with headless probes in 1.18.0; from 1.0 to 1.17 every "Reference the `X` KB" pointed at a file the runtime could not load). Since 1.18.0 the knowledge bases live under `skills/<kb>/SKILL.md` with `user-invocable: false` — registered, hidden from the `/` menu, loaded on demand through the Skill tool — and `rules/learning-project.md` is delivered by the SessionStart hook (`scripts/bodhi-session-context.py`). `scripts/` ships with the install and is executed via Bash (it never enters context). Root-level files (this CLAUDE.md, README, CHANGELOG, `dev/`) are inert at install time.
+Claude Code loads `skills/`, `agents/`, `hooks/`, and the `.claude-plugin/` manifests from an installed plugin — and **nothing else**: a `knowledge/` tree is never registered and a plugin `rules/` directory is never loaded (both verified with headless probes in 1.18.0; from 1.0 to 1.17 every "Reference the `X` KB" pointed at a file the runtime could not load). Since 1.18.0 the knowledge bases live under `skills/<kb>/SKILL.md` with `user-invocable: false` — registered, hidden from the `/` menu, loaded on demand through the Skill tool — and `rules/learning-project.md` is delivered by the SessionStart hook (`scripts/bodhi-session-context.py`), or in a cloud chat by the same script when a BodhiKit skill first runs. `scripts/` ships with the install and is executed via Bash (it never enters context). Root-level files (this CLAUDE.md, README, CHANGELOG, `dev/`) are inert at install time.
 
 ## The deterministic state layer (1.11.0)
 
@@ -54,9 +54,9 @@ The plugin's audience is currently one real learner. No new skills, KBs, taxonom
 - `skills/<name>/SKILL.md` — user-invocable commands (frontmatter `user-invocable: true`). Every one opens with the **Knowledge bases are skills** sentence, which is how a `` `name` KB `` reference becomes a `Skill(bodhikit:name)` call; lint requires it.
 - `agents/<name>.md` — sub-agents (Sonnet/Haiku, read-only: `disallowedTools: Edit, Write, Agent`).
 - `skills/<kb>/SKILL.md` — KBs (frontmatter `user-invocable: false`; lint tells the two kinds apart by that line). `state-ops` is the routine operational surface; `state-schema` is the field-level reference behind it (1.13.0 split). The per-skill read contract lives in `dev/read-defaults.md` (dev-only, moved out of knowledge/ in 1.13.0).
-- `rules/<name>.md` — the learning-project rule. Plugins cannot ship path-scoped rules, so the SessionStart hook injects this file's body when the session starts inside a learning project.
+- `rules/<name>.md` — the learning-project rule. Plugins cannot ship path-scoped rules, so the SessionStart hook injects this file's body when the session starts inside a learning project (in a cloud chat, when a BodhiKit skill first runs).
 - `scripts/bodhi-state` — deterministic state writer (Python 3, stdlib-only). `scripts/bodhi-stop-hook.py` — Stop-hook safety net.
-- `hooks/hooks.json` — plugin hook manifest (SessionStart → learning-project rule; Stop → schema verify).
+- `hooks/hooks.json` — plugin hook manifest (SessionStart, and in cloud chats UserPromptExpansion and PreToolUse on Skill → learning-project rule; Stop → schema verify and revision sheet).
 - `.claude-plugin/plugin.json` — install manifest. Update `version` here on release.
 - `.claude-plugin/marketplace.json` — marketplace manifest. Keep `version` and counts in sync with `plugin.json` and README.
 - `CHANGELOG.md` — append entries on release. Use absolute dates.
