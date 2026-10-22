@@ -1652,6 +1652,31 @@ def assert_performed_no_debrief_no_record(project, transcript, concept="Emulsion
     ok(f"the learner was told how the rep counts ({m.group(0)!r})")
 
 
+REP_TASK_RE = re.compile(
+    r"(?i)(away from the screen|in (?:your|the) kitchen|\b(?:a|the|this|your|one|today's|"
+    r"tonight's|next) (?:practice )?rep\b|practice rep)")
+
+
+def assert_performed_practice_sets_rep(project, transcript, concept="Emulsions"):
+    """learn-anything/REQ-13: a practice set on a performed concept is a rep
+    done away from the screen, shown with the three debrief questions that
+    will follow it, and nothing goes on the record before the rep happens."""
+    assert_kind_teach_no_code(project, transcript)
+    prose = assistant_prose(transcript)
+    m = REP_TASK_RE.search(prose)
+    if not m:
+        fail("no practice rep to do away from the screen was set")
+    ok(f"a rep to do away from the screen was set ({m.group(0)!r})")
+    for label, rx in DEBRIEF_RES:
+        if not rx.search(prose):
+            fail(f"the debrief question '{label}' was not shown with the rep")
+    ok("all three debrief questions were shown with the rep")
+    applied = [h for h in todays_entries(concept_or_fail(project, concept)) if h.get("applied")]
+    if applied or review_calls(stream_items(transcript), concept, applied=True):
+        fail("applied work was recorded for a rep that has not happened yet")
+    ok("nothing recorded for the rep before it happened")
+
+
 OFFER_REP_RE = re.compile(
     r"(?i)(have you (?:made|cooked|practi[sc]ed|tried|done|drawn|played)|since (?:we last|last time|"
     r"the last)|a (?:practice )?rep\b|practice rep)")
@@ -1837,6 +1862,7 @@ def main():
                        "kind-review": assert_kind_review_no_rewrite,
                        "performed-debrief-first": assert_performed_debrief_first,
                        "performed-no-debrief": assert_performed_no_debrief_no_record,
+                       "performed-practice-sets-rep": assert_performed_practice_sets_rep,
                        "performed-repless-review": assert_performed_repless_review,
                        "performed-by-your-account": assert_performed_by_your_account,
                        "photo-inspected": assert_photo_inspected,

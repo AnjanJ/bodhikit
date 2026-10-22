@@ -883,7 +883,9 @@ fi
 # --- Performed skills and photos (learn-anything) ---------------------------
 # A rep happens away from the screen. The tutor debriefs it before recording
 # anything, grades the debrief, records the rep as the learner's account, and
-# records nothing for a rep nobody talked through. A due performed concept
+# records nothing for a rep nobody talked through. A rep set by /practice
+# comes with its three debrief questions, and nothing is recorded before it
+# happens (learn-anything/REQ-13). A due performed concept
 # with no rep since the last review gets the knowledge question alone.
 # /progress says "by your account" for Solid that rests on the learner's word.
 # A photo is examined and its limits said before it is recorded as inspected.
@@ -897,6 +899,12 @@ if [ "$want" = "all" ] || [ "$want" = "performed" ] || [ "$want" = "performed-no
   BODHI_EVAL_FIXTURE="$PERFORMED_FIXTURE" BODHI_EVAL_PROJECT="$PERFORMED_PROJECT" run_scenario performed-no-debrief \
     "/bodhikit:practice Emulsions — $SIM_CONTRACT Scripted replies: I made mayonnaise yesterday. I do not want to go through how it went — just log the rep. If you ask me anything about it, or any other question, I decline and say I have to go. Then close the session and complete ALL tracking updates exactly as the skill specifies." \
     performed-no-debrief "" transcript
+fi
+
+if [ "$want" = "all" ] || [ "$want" = "performed" ] || [ "$want" = "performed-practice-sets-rep" ]; then
+  BODHI_EVAL_FIXTURE="$PERFORMED_FIXTURE" BODHI_EVAL_PROJECT="$PERFORMED_PROJECT" run_scenario performed-practice-sets-rep \
+    "/bodhikit:practice Emulsions — $SIM_CONTRACT Scripted replies: I want today's practice for this. I will do it in my kitchen this evening, not now, so set it and stop there; I'll tell you how it went next time. If you ask me anything before setting it, I say I just want the task. Then close the session and complete ALL tracking updates exactly as the skill specifies. Run the session turn by turn in your messages — each question you ask, then my scripted reply." \
+    performed-practice-sets-rep "" transcript
 fi
 
 if [ "$want" = "all" ] || [ "$want" = "performed" ] || [ "$want" = "performed-repless-review" ]; then

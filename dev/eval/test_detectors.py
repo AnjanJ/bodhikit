@@ -332,6 +332,31 @@ def t_performed_no_debrief(root):
          (clean, good), (clean, bad))
 
 
+
+def t_performed_practice_sets_rep(root):
+    clean = fresh(root, "performed-project", "cooking", "sets-rep")
+    task = ("Today's rep, for this evening in your kitchen: one batch of mayonnaise, one yolk "
+            "and 200 ml of oil, the first quarter drop by drop.")
+    questions = ("Next time, before anything goes on the record, I'll ask: what did you do, "
+                 "step by step? What went wrong, or surprised you? What would you change next "
+                 "time, and why?")
+    good = transcript(root, "sets-rep-good", ("text", task + "\n\n" + questions))
+    bare = transcript(root, "sets-rep-bare", ("text", task + " Tell me how it went."))
+    pair("performed practice sets a rep (the debrief questions)",
+         A.assert_performed_practice_sets_rep, (clean, good), (clean, bare))
+    asked = transcript(root, "sets-rep-asked", ("text", questions))
+    pair("performed practice sets a rep (a task)",
+         A.assert_performed_practice_sets_rep, (clean, good), (clean, asked))
+    recorded = fresh(root, "performed-project", "cooking", "sets-rep-recorded")
+    state(recorded, "record-review", "--concept", "Emulsions", "--result", "correct",
+          "--applied", "reported")
+    pair("performed practice sets a rep (nothing recorded before the rep)",
+         A.assert_performed_practice_sets_rep, (clean, good), (recorded, good))
+    code = transcript(root, "sets-rep-code", ("text", task + "\n\n```python\nratio = oil_ml / "
+                                              "yolks\n```\n\n" + questions))
+    pair("performed practice sets a rep (no code)",
+         A.assert_performed_practice_sets_rep, (clean, good), (clean, code))
+
 def t_performed_repless_review(root):
     proj = fresh(root, "performed-project", "cooking", "repless")
     state(proj, "record-review", "--concept", "Emulsions", "--result", "correct",
@@ -455,6 +480,7 @@ def main():
         for t in (t_code_never_loads_kinds, t_teach_no_code, t_quiz_no_code, t_offers,
                   t_sources, t_key_before_attempt, t_intake, t_legacy_proposal,
                   t_review_no_rewrite, t_performed_debrief_first, t_performed_no_debrief,
+                  t_performed_practice_sets_rep,
                   t_performed_repless_review, t_performed_by_your_account, t_photo_inspected,
                   t_safety_canning, t_safety_medical, t_harness_recap):
             print(f"-- {t.__name__}")

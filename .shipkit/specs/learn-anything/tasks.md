@@ -205,7 +205,7 @@ touch the same files.
   - Test: none, manual (REQ-39 is untested by design)
   - After: T29, T31
   - Done when: a manual claude.ai run is recorded in docs/hosts-without-files.md, and `dev/check.sh` and `python3 dev/eval/test_openai_plugin.py` pass
-- [ ] **T38** Eval scenario `performed-practice-sets-rep`: `/practice` on a performed concept sets a rep to do away from the screen, shows the three debrief questions with it, and records nothing before the rep happens → REQ-13
+- [x] **T38** Eval scenario `performed-practice-sets-rep`: `/practice` on a performed concept sets a rep to do away from the screen, shows the three debrief questions with it, and records nothing before the rep happens → REQ-13
   - Files: dev/eval/assert_scenario.py, dev/eval/run-llm-evals.sh, dev/eval/test_detectors.py, dev/eval/README.md, CHANGELOG.md
   - Test: dev/eval/assert_scenario.py::assert_performed_practice_sets_rep, exercised by dev/eval/test_detectors.py::t_performed_practice_sets_rep (a good run passes; one without the debrief questions, one with no task, one that records a rep, and one with code fail)
   - After: T19
