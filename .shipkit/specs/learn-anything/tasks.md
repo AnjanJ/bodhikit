@@ -217,7 +217,7 @@ touch the same files.
   - Done when: `python3 dev/eval/test_detectors.py` → "0 failed"; `dev/check.sh` passes; the live run joins the release sweep
 - [x] **T40** A writing exercise saves its task (`README.md`) and its criteria before the learner's piece; `kind-teach-writing` asserts it → REQ-12, REQ-44
   - Files: dev/eval/assert_scenario.py, dev/eval/test_detectors.py, dev/eval/README.md, CHANGELOG.md, dev/changelog-journal.md
-  - Test: dev/eval/assert_scenario.py::assert_kind_task_before_attempt, exercised by dev/eval/test_detectors.py::t_task_before_attempt (task and criteria before the piece passes; a task written after the piece, or none, fails). REQ-44 is untested: read in the `kind-teach-writing` transcript at each sweep
+  - Test: dev/eval/assert_scenario.py::assert_kind_task_before_attempt, exercised by dev/eval/test_detectors.py::t_task_before_attempt (task and criteria before the piece passes; a task written after the piece, or none, fails). REQ-44 is untested: read in the `kind-teach-writing` transcript at each sweep, run with `BODHI_EVAL_KEEP=1`
   - After: T39
   - Done when: `python3 dev/eval/test_detectors.py` → "0 failed"; `dev/check.sh` passes; the live run joins the release sweep
 

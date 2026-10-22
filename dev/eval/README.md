@@ -185,7 +185,9 @@ assistant transcript:
   `/debug-together` offer, a source from `resources.md` named, the
   exercise's key saved before the learner's work; on writing, the task in
   `README.md` and the criteria both before the learner's piece, while whether
-  the task's case is new is read in the transcript), `kind-practice-problems`
+  the task's case is new is read in the transcript: run it with
+  `BODHI_EVAL_KEEP=1`, since a passing run's workdir is deleted),
+  `kind-practice-problems`
   (the key before the work), `kind-quiz` (a problem posed from the subject,
   no code, no "define X"), `kind-intake` (`/learn` on music theory: no
   programming questions, the kind proposed in plain words before the one
