@@ -205,13 +205,18 @@ touch the same files.
   - Test: none, manual (REQ-39 is untested by design)
   - After: T29, T31
   - Done when: a manual claude.ai run is recorded in docs/hosts-without-files.md, and `dev/check.sh` and `python3 dev/eval/test_openai_plugin.py` pass
+- [ ] **T38** Eval scenario `performed-practice-sets-rep`: `/practice` on a performed concept sets a rep to do away from the screen, shows the three debrief questions with it, and records nothing before the rep happens → REQ-13
+  - Files: dev/eval/assert_scenario.py, dev/eval/run-llm-evals.sh, dev/eval/test_detectors.py, dev/eval/README.md, CHANGELOG.md
+  - Test: dev/eval/assert_scenario.py::assert_performed_practice_sets_rep, exercised by dev/eval/test_detectors.py::t_performed_practice_sets_rep (a good run passes; one without the debrief questions, one with no task, one that records a rep, and one with code fail)
+  - After: T19
+  - Done when: `python3 dev/eval/test_detectors.py` → "0 failed"; `dev/check.sh` passes; the live run joins the release sweep
 
 ## The release: both ship as 1.25.0
 
 - [x] **T30** Release docs for 1.25.0, which carries Releases 1 and 2: README Science section with the research citations, CHANGELOG, MIGRATION, `dev/read-defaults.md`, the journal, the version in both manifests, the Codex manifest and the badge
   - Files: README.md, CHANGELOG.md, MIGRATION.md, dev/read-defaults.md, dev/changelog-journal.md, .claude-plugin/plugin.json, .claude-plugin/marketplace.json, platforms/openai/bodhikit/.codex-plugin/plugin.json
   - Test: none, docs; rules 1 and 11 in dev/check.sh (versions, counts)
-  - After: T21, T22, T23, T24, T25, T27, T29, T31, T32, T33, T34, T35, T36
+  - After: T21, T22, T23, T24, T25, T27, T29, T31, T32, T33, T34, T35, T36, T38
   - Done when: `dev/check.sh` passes
 
 ## After the gate
