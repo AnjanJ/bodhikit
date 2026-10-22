@@ -202,7 +202,7 @@ touch the same files.
   - Test: none, manual (REQ-38 is untested by design)
   - After: T35, T36
   - Done when: docs/cowork-probe.md records a dated run on which all five checks read PASS: `python3` present, `bodhi-state` writes, the rule arrives, the Stop hook asks for the sheet, files persist across chats
-- [ ] **T37** The host-without-files reference knows a connected computer: a chat that reaches the learner's folder through Claude Desktop is not a host without files, and the say-once line names that path beside Claude Code → REQ-38, REQ-39
+- [x] **T37** The host-without-files reference knows a connected computer: a chat that reaches the learner's folder through Claude Desktop is not a host without files, and the say-once line names that path beside Claude Code → REQ-38, REQ-39
   - Files: skills/learn/references/host-without-files.md, skills/learn/SKILL.md, skills/continue/SKILL.md, docs/hosts-without-files.md
   - Test: none, manual (REQ-39 is untested by design)
   - After: T29, T31
