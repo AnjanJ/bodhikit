@@ -773,7 +773,7 @@ if [ "$want" = "all" ] || [ "$want" = "grading" ] || [ "$want" = "grade-understa
 fi
 
 # --- Transcript-fidelity scenarios (1.12.0) -----------------------------------
-# --- Evidence kinds: grading (learn-anything REQ-20) -------------------------
+# --- Evidence kinds: grading (learn-anything/REQ-20) -------------------------
 # The explain-back rubric grades every kind by the same five checks and rows.
 # The same three boundaries the code grading group pins — a parrot that fails
 # the prediction probe (partial, Feynman held), application without the

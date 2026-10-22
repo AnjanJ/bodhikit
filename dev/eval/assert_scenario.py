@@ -1358,9 +1358,9 @@ KEY_PATH_RE = re.compile(r"exercises/([^/\s\"']+)/(answers|criteria)\.md")
 
 
 def assert_kind_key_before_attempt(project, transcript):
-    """learn-anything/REQ-11, REQ-12: the key (answers.md or criteria.md) is
-    saved in the exercise's own folder before the learner's work exists or
-    any applied review is recorded."""
+    """learn-anything/REQ-11, learn-anything/REQ-12: the key (answers.md or
+    criteria.md) is saved in the exercise's own folder before the learner's
+    work exists or any applied review is recorded."""
     events = tool_events(transcript)
     key_at = next((i for i, (n, inp) in enumerate(events) if wrote(n, inp, KEY_PATH_RE)), None)
     if key_at is None:
@@ -1448,9 +1448,10 @@ def proposal_then_record(transcript, expect, ordered=True):
 
 
 def assert_kind_intake(project, transcript):
-    """learn-anything/REQ-4, REQ-5, REQ-10: /learn on a non-code subject asks
-    about the subject, never programming; proposes the kind in plain words;
-    records exactly one kind after the learner confirms."""
+    """learn-anything/REQ-4, learn-anything/REQ-5, learn-anything/REQ-10: /learn
+    on a non-code subject asks about the subject, never programming; proposes
+    the kind in plain words; records exactly one kind after the learner
+    confirms."""
     prose = assistant_prose(transcript)
     if not prose.strip():
         fail("empty transcript — run did not produce assistant output")
