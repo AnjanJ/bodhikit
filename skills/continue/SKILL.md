@@ -40,7 +40,7 @@ I see you have several learning paths in progress:
 Which path shall we walk today?
 ```
 
-**If no projects found:** use the canonical "no active project" line from the `teaching-personality` KB empty-states table, then offer `/bodhikit:learn`. On a host that keeps no files between chats (claude.ai, a phone), follow `${CLAUDE_PLUGIN_ROOT}/skills/learn/references/host-without-files.md` instead.
+**If no projects found:** use the canonical "no active project" line from the `teaching-personality` KB empty-states table, then offer `/bodhikit:learn`. On a host that keeps no files between chats (claude.ai or a phone with no computer connected), follow `${CLAUDE_PLUGIN_ROOT}/skills/learn/references/host-without-files.md` instead.
 
 ---
 
