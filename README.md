@@ -57,7 +57,7 @@ Restart Claude Code after installing. (To try a checkout without installing: `cl
 
 ### Claude chats with your computer connected
 
-A chat on claude.ai can keep your learning project in a folder on your computer, through the Claude Desktop app. Build the package, then upload it under Customize → Plugins → Add → Upload plugin:
+A chat on claude.ai can keep your learning project in a folder on your computer, through the Claude Desktop app. Download [`bodhikit.plugin`](https://github.com/AnjanJ/bodhikit/releases/latest/download/bodhikit.plugin) from the latest release, then upload it under Customize → Plugins → Add → Upload plugin. To build it from a checkout instead:
 
 ```bash
 python3 platforms/cowork/build_plugin.py --archive dist/bodhikit.plugin

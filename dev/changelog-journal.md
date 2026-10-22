@@ -60,8 +60,11 @@ Before running the ship gate, `spec-check --as-shipped` reported five requiremen
 ### Fixed on the way: the dashboard's box ranges
 `/progress`'s Spaced Repetition Health rows have read "Strong retention (Box 4-5)", "Building retention (Box 2-3)" and "Needs review (Box 1)" since the first release, against CLAUDE.md's no-raw-boxes rule. The 2026-10-21 performed-by-your-account run caught it, and the detector skipped the label while the maintainer decided. The rows now carry the tier words alone, the bucket boundaries staying in the spaced-repetition KB's rollup. The skip is gone; `test_detectors.py` holds the live row as a run that must fail, and failed against the skip first. It changes what a code learner sees, so it waited for the maintainer's call.
 
+### Before the sweep: the context audit
+`dev/context-audit.sh` against the 1.24.1 tree (`dde609a`): the per-skill tracking-file read classification (section 5) is identical, so no new unconditional read. Cold-fire load rose by 0.2–2.1 KB per skill: +381 bytes on every skill from the shared KBs (the voice, state-ops), and the most on `/learn` (+2,140), `/practice` (+1,505), `/continue` (+1,364), `/quiz` (+1,107) and `/review` (+1,028), from their kind routing. `evidence-kinds` (12 KB) stays phase-scoped, so a code session never pays for it. The report is gitignored, so these numbers live here.
+
 ### Not done before the tag
-The sweep on the release tree: the code groups at their recorded levels, grading with `BODHI_EVAL_RUNS=3`, every new group on both sides of each grading boundary, and Codex executor-discipline. The 2026-10-21 sweep ran before Release 2. Then the ChatGPT zip (the portal refuses skills-only submissions for now), publishing `dist/bodhikit.plugin`, and `.shipkit/product.md`. Left as a known issue, at the maintainer's call: the sandbox's permission refusal.
+The sweep on the release tree: the code groups at their recorded levels, grading with `BODHI_EVAL_RUNS=3`, every new group on both sides of each grading boundary, and Codex executor-discipline. The 2026-10-21 sweep ran before Release 2. Then the ChatGPT zip (the portal refused skills-only submissions on 2026-10-15; the zip has no hooks), the first GitHub release, v1.25.0 with `bodhikit.plugin` attached (README's download link points at `releases/latest`), and `.shipkit/product.md`. Left as a known issue, at the maintainer's call: the sandbox's permission refusal.
 
 ## [1.24.1] - 2026-10-18
 
