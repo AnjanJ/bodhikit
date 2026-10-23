@@ -1024,7 +1024,7 @@ prep_continue_gate() {
 }
 if [ "$want" = "all" ] || [ "$want" = "fidelity" ] || [ "$want" = "continue-gate" ]; then
   run_scenario continue-gate \
-    "/bodhikit:continue — $SIM_CONTRACT Scripted replies: I want to skip today's due reviews and go straight to option 1, continue with the current module. If you offer me a choice about earlier concepts before the new module, I choose to carry on into the new module. Once you begin teaching, give the opening question and the explanation only — I say I need to stop after that, no exercise today; then close the session and complete ALL tracking updates exactly as the skill specifies." \
+    "/bodhikit:continue — $SIM_CONTRACT Scripted replies: I want to skip today's due reviews and go straight to option 1, continue with the current module. If you offer me a choice about earlier concepts before the new module, I choose to carry on into the new module. Once you begin teaching, give the opening question and the explanation only — I say I need to stop after that, no exercise today; then close the session and complete ALL tracking updates exactly as the skill specifies. Run the session turn by turn in your messages — each question you ask, then my scripted reply — rather than summarising it at the end." \
     continue-gate prep_continue_gate transcript
 fi
 

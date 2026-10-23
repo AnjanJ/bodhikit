@@ -624,8 +624,10 @@ KB_LOAD_RE = re.compile(
 # heading ("## Recap", "## Session wrap-up") or a bold lead ("**Recap of what
 # was written**"). 2026-10-21: teach-vocabulary closed to the learner in
 # outcome words, then wrote "## Session wrap-up (what happened and what was
-# recorded)" about "the learner", listing "Bloom 3, Box 1".
-RECAP_RE = re.compile(r"^(?:#{1,4}\s*|\*\*)(Recap|Harness recap|Writes completed|Session wrap-?up)\b.*$", re.M | re.I)
+# recorded)" about "the learner", listing "Bloom 3, Box 1". 2026-10-23:
+# continue-gate's was "## What happened and what was recorded", with "Box 1".
+RECAP_RE = re.compile(r"^(?:#{1,4}\s*|\*\*)(Recap|Harness recap|Writes completed|Session wrap-?up|"
+                      r"What happened and what was recorded)\b.*$", re.M | re.I)
 
 
 GATE_CHECK_RE = re.compile(r"bodhi-state[^\n\]]*\bgate-check\b")
@@ -645,12 +647,22 @@ def assert_continue_gate(project, transcript):
         fail("bodhi-state gate-check was never run — /teach skipped the gate "
              "on a chained module-start (the --invoked-from bypass)")
     ok("gate-check ran on the chained /teach")
-    after = text[GATE_CHECK_RE.search(text).end():]
-    if "Query planning" not in after:
+    # Learner-facing lines only: a Write to progress.md that preserves the
+    # fixture's older entries verbatim ("demoted to Box 1") is the skill
+    # doing its job, not the gate speaking a number (2026-09-30 false FAIL).
+    # Nor is a recap for the harness: 2026-10-23, a run printed the session at
+    # the end, and the offer appeared only in its recap, beside "Box 1".
+    # Start past the gate-check line too: its --prereqs names Query planning.
+    eol = text.find("\n", GATE_CHECK_RE.search(text).end())
+    after = text[eol + 1:] if eol != -1 else ""
+    spoken = "\n".join(line for line in after.split("\n")
+                       if not line.startswith("[tool_use "))
+    spoken = RECAP_RE.split(spoken, 1)[0]
+    if "Query planning" not in spoken:
         fail("the gap prerequisite 'Query planning' was never surfaced after the "
-             "gate ran — the offer did not reach the learner")
+             "gate ran — the offer did not reach the learner (a recap does not count)")
     ok("gap prerequisite surfaced")
-    if not GATE_OFFER_RE.search(after):
+    if not GATE_OFFER_RE.search(spoken):
         fail("no offer wording (revisit / carry on / end here) after the gate — "
              "read the transcript before judging")
     ok("offer wording present")
@@ -663,11 +675,6 @@ def assert_continue_gate(project, transcript):
         fail(f"Query planning gained a teach-sourced correct today without a "
              f"reconfirm: {unearned}")
     ok("no unearned correct on the carried-on gap")
-    # Learner-facing lines only: a Write to progress.md that preserves the
-    # fixture's older entries verbatim ("demoted to Box 1") is the skill
-    # doing its job, not the gate speaking a number (2026-09-30 false FAIL).
-    spoken = "\n".join(line for line in after.split("\n")
-                       if not line.startswith("[tool_use "))
     bare = re.search(r"\(Bloom \d\)|Bloom \d\b|[Bb]ox \d\b", spoken)
     if bare:
         fail(f"bare level/box number in learner-facing gate text: {bare.group(0)!r}")

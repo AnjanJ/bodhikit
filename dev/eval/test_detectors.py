@@ -514,6 +514,38 @@ def t_harness_recap(root):
          (None, good), (None, bad))
 
 
+def t_continue_gate(root):
+    # The live continue-gate run, 2026-10-23: no turn-by-turn line, so it printed
+    # the session at the end. The gate offer appeared only in the recap written
+    # for the harness, beside the box the concept stays in.
+    proj = fresh(root, "v2-project", "sql-deep-dive", "continue-gate")
+    state(proj, "migrate-spaced-review")
+    gate = bash(BS + 'gate-check --prereqs "B-tree indexes, Query planning"')
+    offer = ("Before the new module: you can explain what the query planner does, but you "
+             "haven't used it on a slow query of your own yet. We can revisit Query planning "
+             "first, or carry on into Query Optimization now.")
+    closing = "> Good work today. You opened the Query Optimization module."
+    recap_gate = ("\n\n## What happened and what was recorded\n\n"
+                  "- **Prerequisite gate:** fired at the module boundary (declared prereqs), "
+                  "verdict **offer** — `Query planning` is a gap (explain-level, no applied "
+                  "evidence). The learner chose to carry on.")
+    recap_box = ("\n- **Teaching:** no `record-review` was written. The concept stays at its "
+                 "tracked position (Box 1, due tomorrow).")
+    good = transcript(root, "gate-good", gate, ("text", offer),
+                      ("text", closing + recap_gate + recap_box))
+    pair("continue gate (the offer reaches the learner, not only the recap)",
+         A.assert_continue_gate, (proj, good),
+         (proj, transcript(root, "gate-recap-only", gate, ("text", closing + recap_gate))))
+    # The gate-check command names the prerequisite itself; the offer must too.
+    unnamed = "We can revisit an earlier concept first, or carry on into Query Optimization now."
+    pair("continue gate (the offer names the gap)", A.assert_continue_gate, (proj, good),
+         (proj, transcript(root, "gate-unnamed", gate, ("text", unnamed),
+                           ("text", closing + recap_gate + recap_box))))
+    pair("continue gate (no box number in the offer)", A.assert_continue_gate, (proj, good),
+         (proj, transcript(root, "gate-boxed", gate, ("text", offer + " It is in Box 1."),
+                           ("text", closing + recap_gate + recap_box))))
+
+
 def main():
     with tempfile.TemporaryDirectory() as root:
         for t in (t_code_never_loads_kinds, t_teach_no_code, t_quiz_no_code, t_offers,
@@ -522,7 +554,7 @@ def main():
                   t_review_no_rewrite, t_performed_debrief_first, t_performed_no_debrief,
                   t_performed_practice_sets_rep, t_kind_gate_reconfirm_rep,
                   t_performed_repless_review, t_performed_by_your_account, t_photo_inspected,
-                  t_safety_canning, t_safety_medical, t_harness_recap):
+                  t_safety_canning, t_safety_medical, t_harness_recap, t_continue_gate):
             print(f"-- {t.__name__}")
             sub = os.path.join(root, t.__name__)
             os.makedirs(sub)
