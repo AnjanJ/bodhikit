@@ -8,7 +8,7 @@ This is the full, unabridged, patch-by-patch changelog kept for the maintainer �
 
 All notable changes to BodhiKit will be documented in this file.
 
-## [1.25.0] - 2026-10-22
+## [1.25.0] - 2026-10-23
 
 Both releases of the learn-anything spec (`.shipkit/specs/learn-anything/`, REQ-1–43; decision 0001 lifts the freeze for it). Release 2 was fast-forwarded onto master before 1.25.0 was tagged, and the maintainer chose to fold it into this version rather than add 1.26.0 (`1ac6b23`). One commit per task, T0–T36, each with `dev/check.sh` green. Every engine task kept `t_golden_code_path` passing.
 
@@ -66,8 +66,13 @@ The independent reviewer passed 41 requirements and failed two. REQ-17 had no ev
 ### Before the sweep: the context audit
 `dev/context-audit.sh` against the 1.24.1 tree (`dde609a`): the per-skill tracking-file read classification (section 5) is identical, so no new unconditional read. Cold-fire load rose by 0.2–2.1 KB per skill: +381 bytes on every skill from the shared KBs (the voice, state-ops), and the most on `/learn` (+2,140), `/practice` (+1,505), `/continue` (+1,364), `/quiz` (+1,107) and `/review` (+1,028), from their kind routing. `evidence-kinds` (12 KB) stays phase-scoped, so a code session never pays for it. The report is gitignored, so these numbers live here.
 
+### The sweep on the release tree (2026-10-22/23, fable-5)
+Recorded in `dev/eval/README.md`: 23 of 24 scenarios pass. Executor-discipline (both reflect scenarios on re-run after a usage-limit INCONCLUSIVE), all twelve grading scenarios with `BODHI_EVAL_RUNS=3` at their recorded levels, `learn-scaffold`, `continue-discovery` (its first run since 1.14.1), and the first live runs of `performed-practice-sets-rep` and `kind-gate-reconfirm-rep`. `kind-teach-writing` passed twice, including T40's check. REQ-44 was read in the kept transcript: the lesson used school uniforms, library hours, votes at 16 and the learner's dishwasher, and the task's downtown congestion charge was not mentioned before the task.
+- `continue-gate` re-ran because T39 changed `prerequisite-gate.md`, which code sessions read. The first run FAILED on the detector (`dbdecd8`). Its prompt lacked the turn-by-turn line, so it printed the session at the end, and the offer appeared only in "## What happened and what was recorded", beside "Box 1". Reading it also showed the "gap surfaced" check matching the rest of the `gate-check` line, whose `--prereqs` names Query planning. The detector now reads learner text from the next line with the recap cut, the prompt asks for turns, and four pairs in `test_detectors.py` come from the live text (110 checks). The re-run passed, the offer its own turn in outcome words.
+- `kb-load` FAILED for real: mid-turn, "The answer crossed Bloom 3 (crossedBloom3: true), which per state-ops triggers the profile counter bump." The key predates 1.25.0 (kb-load passed on 2026-10-21), so 1.25.0 ships with it known. 1.25.1 renames it: `scripts/bodhi-state` emits it, `/teach`, `understanding-only.md`, state-ops and CLAUDE.md name it, and 16 golden files pin it, so `t_golden_code_path` (REQ-1) fails on the rename and it needs a spec note and a decision record first.
+
 ### Not done before the tag
-The sweep on the release tree: the code groups at their recorded levels, grading with `BODHI_EVAL_RUNS=3`, every new group on both sides of each grading boundary, and Codex executor-discipline. The 2026-10-21 sweep ran before Release 2. Then the ChatGPT zip (the portal refused skills-only submissions on 2026-10-15; the zip has no hooks), the first GitHub release, v1.25.0 with `bodhikit.plugin` attached (README's download link points at `releases/latest`), and `.shipkit/product.md`. Left as a known issue, at the maintainer's call: the sandbox's permission refusal.
+The rest of the release-tree sweep, run overnight after the tag and listed under *Pending for 1.25.0* in `dev/eval/README.md`: the other fidelity scenarios, lifecycle, every new group on both sides of each grading boundary, and Codex executor-discipline. Then the final `/shipkit:ship`, the ChatGPT zip (the portal refused skills-only submissions on 2026-10-15; the zip has no hooks) and the first GitHub release, v1.25.0 with `bodhikit.plugin` attached (README's download link points at `releases/latest`). `.shipkit/product.md` landed before the tag (`9ebe04f`). Left as a known issue, at the maintainer's call: the sandbox's permission refusal.
 
 ## [1.24.1] - 2026-10-18
 
