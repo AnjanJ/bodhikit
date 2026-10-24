@@ -57,7 +57,12 @@ Restart Claude Code after installing. (To try a checkout without installing: `cl
 
 ### Claude chats with your computer connected
 
-A chat on claude.ai can keep your learning project in a folder on your computer, through the Claude Desktop app. Download [`bodhikit.plugin`](https://github.com/AnjanJ/bodhikit/releases/latest/download/bodhikit.plugin) from the latest release, then upload it under Customize → Plugins → Add → Upload plugin. To build it from a checkout instead:
+A chat on claude.ai can keep your learning project in a folder on your computer, through the Claude Desktop app. Add BodhiKit in one of two ways:
+
+- **From its marketplace, which updates in place.** Customize → Plugins → Add → Add marketplace → Add from a repository, enter `AnjanJ/bodhikit` and choose Sync, then open Bodhikit and choose Add. When a new release is out: Add → Manage marketplaces → ⋯ beside bodhikit → Check for updates.
+- **As a file.** Download [`bodhikit.plugin`](https://github.com/AnjanJ/bodhikit/releases/latest/download/bodhikit.plugin) from the latest release, then upload it under Customize → Plugins → Add → Upload plugin. It stays at that version until you upload a newer one.
+
+To build `bodhikit.plugin` from a checkout instead:
 
 ```bash
 python3 platforms/cowork/build_plugin.py --archive dist/bodhikit.plugin
@@ -65,20 +70,26 @@ python3 platforms/cowork/build_plugin.py --archive dist/bodhikit.plugin
 
 Keep one BodhiKit plugin switched on, since two copies both register `/bodhikit:*`. In each new chat, with Claude Desktop open, choose + → Devices and tick your computer. When the chat asks for a folder, allow `learningWithBodhi/` rather than a single project, because your profile lives there. How this was checked, and what wasn't, is in [docs/cowork-probe.md](./docs/cowork-probe.md).
 
-### Codex and ChatGPT
+### ChatGPT
 
-Build the isolated OpenAI-native package, then install it through a personal
-marketplace or upload it through the OpenAI plugin flow:
+BodhiKit is listed in ChatGPT's Plugin Directory: find **BodhiKit** there and
+install it. OpenAI reviews each version before it goes live, so the listing can
+trail the latest release here.
+
+### Codex
+
+Codex installs plugins through a marketplace. From a checkout, build the
+OpenAI-native package:
 
 ```bash
-python3 platforms/openai/build_plugin.py \
-  --archive dist/bodhikit-openai.zip
+python3 platforms/openai/build_plugin.py
 ```
 
-See [BodhiKit for Codex and ChatGPT](./docs/openai.md) for local marketplace,
-Plugin Directory, invocation, platform-parity, and verification instructions.
-The public data and usage terms are in [PRIVACY.md](./PRIVACY.md) and
-[TERMS.md](./TERMS.md).
+Then add `dist/openai/bodhikit` to your personal marketplace with Codex's
+`$plugin-creator` skill and run `codex plugin add bodhikit@personal`.
+[BodhiKit for Codex and ChatGPT](./docs/openai.md) has the full steps,
+invocation, platform parity and verification. The public data and usage terms
+are in [PRIVACY.md](./PRIVACY.md) and [TERMS.md](./TERMS.md).
 
 ## Your first 15 minutes
 
