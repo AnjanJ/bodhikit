@@ -5,14 +5,14 @@
   },
   "metadata": {
     "description": "Research-informed tutor for any subject, code first-class — learn by doing, not by copying. 18 skills, 4 agents, 19 knowledge bases.",
-    "version": "1.25.0"
+    "version": "1.25.1"
   },
   "plugins": [
     {
       "name": "bodhikit",
       "source": "./",
       "description": "Learn anything, with code first-class, from a wise, patient guide. Personalized learning plans, hands-on exercises checked against saved answers or criteria, practice reps debriefed and labelled as your account where the tutor cannot see them, spaced repetition, Feynman technique, Bloom's taxonomy assessment, optional Socratic teach-back capstone. 18 skills, 4 agents, 19 knowledge bases, 1 path-scoped rule, deterministic state layer.",
-      "version": "1.25.0",
+      "version": "1.25.1",
       "keywords": ["claude-code", "learning", "tutor", "education", "spaced-repetition"]
     }
   ]

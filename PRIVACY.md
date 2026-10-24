@@ -1,6 +1,6 @@
 # BodhiKit Privacy Policy
 
-Effective date: September 28, 2026
+Effective date: October 24, 2026
 
 BodhiKit is an open-source, local-first learning plugin published by Abhaya
 Code Labs ("the publisher"). The publisher does not operate a server for the

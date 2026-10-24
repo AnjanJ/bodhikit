@@ -1,6 +1,6 @@
 # BodhiKit Terms of Use
 
-Effective date: August 26, 2026
+Effective date: October 24, 2026
 
 These terms apply to use of the BodhiKit plugin, published by Abhaya Code Labs
 ("the publisher"). By using BodhiKit, you agree to these terms and to the terms
