@@ -2,8 +2,9 @@
 
 Effective date: August 26, 2026
 
-These terms apply to use of the BodhiKit plugin. By using BodhiKit, you agree
-to these terms and to the terms of the platform on which you run it.
+These terms apply to use of the BodhiKit plugin, published by Abhaya Code Labs
+("the publisher"). By using BodhiKit, you agree to these terms and to the terms
+of the platform on which you run it.
 
 ## Purpose
 

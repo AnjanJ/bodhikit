@@ -413,4 +413,4 @@ If this project saves you time, consider sponsoring. It keeps development going 
 
 ---
 
-**Made with ❤️ by [Anjan](https://anjan.dev)**
+**Made with ❤️ by [Abhaya Code Labs](https://github.com/AnjanJ)**

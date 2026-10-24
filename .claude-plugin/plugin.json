@@ -3,7 +3,7 @@
   "version": "1.25.0",
   "description": "A research-informed tutor for any subject, with code first-class. It checks what it can (code that runs, answers and criteria saved before the attempt) and labels what it can't (practice you report).",
   "author": {
-    "name": "Anjan",
+    "name": "Abhaya Code Labs",
     "url": "https://github.com/AnjanJ"
   },
   "repository": "https://github.com/AnjanJ/bodhikit",

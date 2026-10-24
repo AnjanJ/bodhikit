@@ -2,10 +2,11 @@
 
 Effective date: September 28, 2026
 
-BodhiKit is an open-source, local-first learning plugin. The BodhiKit publisher
-does not operate a server for the plugin, and the plugin does not send learner
-data anywhere. The only data the publisher receives is what someone chooses to
-submit to the optional feedback survey described below.
+BodhiKit is an open-source, local-first learning plugin published by Abhaya
+Code Labs ("the publisher"). The publisher does not operate a server for the
+plugin, and the plugin does not send learner data anywhere. The only data the
+publisher receives is what someone chooses to submit to the optional feedback
+survey described below.
 
 ## Data handled by the plugin
 
