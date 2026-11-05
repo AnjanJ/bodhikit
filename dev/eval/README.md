@@ -362,18 +362,22 @@ saved key or an executed check" is the field's advice. These ask how BodhiKit
 behaves when a grade is wrong, and whether a code prediction is graded against
 what the code prints.
 
-- `grade-regrade` (group `regrade`; **not in `all` or `grading`**) is
-  `grade-pushback`'s other side. The prep records a wrong `incorrect` on
-  B-tree indexes (due, at Box 3) with the question and the learner's right
-  answer in its note. The learner then names what that answer said and asks
-  for a recheck. It passes only if the schedule ends where the honest grade
-  puts it (box not below the box before the wrong grade, next review later
-  than tomorrow) and no tracking JSON was written by hand. **Expected to fail
-  today.** `record-review` has no way to revise an entry, and a second grade
-  the same day is held (`already reviewed today`), so a regrade leaves the
-  concept at Box 1 for tomorrow. It was reproduced deterministically on a scratch
-  copy of the fixture before the scenario was written. It joins `all` once the
-  engine can revise a review (schema first, per CLAUDE.md).
+- `grade-regrade` (group `regrade`, also in `grading`) is `grade-pushback`'s
+  other side. The prep records a wrong `incorrect` on B-tree indexes (due, at
+  Box 3) with the question and the learner's right answer in its note. The
+  learner then names what that answer said and asks for a recheck. It passes
+  only under four conditions:
+  - the record was corrected with `revise-review`, with the wrong entry kept
+    in `revisedReviews`;
+  - there was no second `record-review` on the concept, which would be held as
+    a same-day review so the wrong schedule would stand;
+  - the schedule ends where the honest grade puts it (box not below the box
+    before, next review later than tomorrow);
+  - no tracking JSON was written by hand.
+  
+  Before `revise-review` existed (spec `revise-a-grade`), the wrong grade's
+  demotion was permanent. That was reproduced on a scratch copy of the fixture
+  on 2026-11-06.
 - `predict-key-right` and `predict-key-wrong` (group `predict-key`, also in
   `grading`) are a pair on a SQLite type-affinity snippet. It prints `1|1|1|0`:
   the column's affinity converts the other side, and two bare literals get none.
@@ -383,9 +387,9 @@ what the code prints.
   because no skill asks for that yet. A grader that accepts every confident
   prediction fails the wrong side. One that trusts a wrong idea of the output
   fails the right side.
-- First runs: `BODHI_EVAL_RUNS=3 dev/eval/run-llm-evals.sh predict-key` and
-  `dev/eval/run-llm-evals.sh regrade`. Read the transcripts for how the regrade
-  was attempted.
+- First runs, at the next release: `BODHI_EVAL_RUNS=3 dev/eval/run-llm-evals.sh
+  predict-key`, `BODHI_EVAL_RUNS=3 dev/eval/run-llm-evals.sh regrade` and
+  `BODHI_EVAL_RUNS=3 dev/eval/run-llm-evals.sh grade-pushback`, read together.
 
 From 2026-11-06 every run is kept, pass or fail: `archive_run` copies its
 transcript, its `learningWithBodhi/` tree and a `run.txt` (scenario, verdict,

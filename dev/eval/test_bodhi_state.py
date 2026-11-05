@@ -4244,7 +4244,7 @@ def _learned(proj):
 
 
 def t_revise_review_restores_a_wrong_incorrect():
-    """revise-a-grade/REQ-1, REQ-4, REQ-7: a right answer graded `incorrect`
+    """revise-a-grade/REQ-1, revise-a-grade/REQ-4, revise-a-grade/REQ-7: a right answer graded `incorrect`
     on a due review, then revised, ends where the honest `correct` puts it —
     not at the start, re-tested tomorrow."""
     with tempfile.TemporaryDirectory() as root:
@@ -4263,7 +4263,7 @@ def t_revise_review_restores_a_wrong_incorrect():
 
 
 def t_revise_review_lowers_a_wrong_correct():
-    """revise-a-grade/REQ-1, REQ-4: a generous `correct` at level 4, revised
+    """revise-a-grade/REQ-1, revise-a-grade/REQ-4: a generous `correct` at level 4, revised
     to `incorrect`, takes back the promotion, the streak, the level and the
     learned count — the one place the level goes down."""
     with tempfile.TemporaryDirectory() as root:
@@ -4303,7 +4303,7 @@ def t_revise_review_keeps_the_wrong_entry():
 
 
 def t_revise_review_readers_match_honest():
-    """revise-a-grade/REQ-3, REQ-8: every reader says of the revised record
+    """revise-a-grade/REQ-3, revise-a-grade/REQ-8: every reader says of the revised record
     exactly what it says of the honest one, and verify accepts it."""
     with tempfile.TemporaryDirectory() as root:
         revised, honest, _ = _revise_pair(root, ("incorrect", 2), ("correct", 3))
@@ -4327,7 +4327,7 @@ def t_revise_review_readers_match_honest():
 
 
 def t_revise_review_refusals():
-    """revise-a-grade/REQ-5, REQ-6: anything but today's latest graded entry,
+    """revise-a-grade/REQ-5, revise-a-grade/REQ-6: anything but today's latest graded entry,
     or a revision with no reason, is refused, and no file changes."""
     today = TODAY.isoformat()
     yesterday = (TODAY - datetime.timedelta(days=1)).isoformat()

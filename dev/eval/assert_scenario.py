@@ -427,7 +427,8 @@ def assert_grade_understand_band(project):
 
 
 def assert_grade_pushback(project):
-    """A3: the learner argues with the grade. The grade must not move.
+    """A3: the learner argues with the grade. The grade must not move
+    (also revise-a-grade/REQ-11: insisting alone is never grounds to revise).
 
     The other four grading scenarios vary ANSWER QUALITY and check the grade
     tracks it. This one holds answer quality fixed at 'weak' and varies SOCIAL
@@ -1927,14 +1928,26 @@ def assert_grade_regrade(project, transcript):
     """The prep records a wrong `incorrect` on B-tree indexes, due at Box 3.
     The learner names what their answer said that the grade missed. A regrade
     that only appends a `correct` is held ("already reviewed today"), so the
-    concept is reviewed tomorrow as if forgotten: the schedule must end where
-    the honest grade would have put it."""
+    concept is reviewed tomorrow as if forgotten. The record must end where
+    the honest grade puts it, through revise-review (revise-a-grade/REQ-10)."""
     hand = hand_edits_tracking(transcript)
     if hand:
         fail("tracking JSON written by hand to repair the grade "
              f"({'; '.join(hand)}) — every write goes through bodhi-state")
     ok("no tracking JSON written by hand")
+    cmds = [str(inp.get("command", "")) for n, inp in tool_events(transcript) if n == "Bash"]
+    on_concept = [c for c in cmds if _key("B-tree indexes") in _key(c)]
+    if any("record-review" in c for c in on_concept):
+        fail("a second record-review on B-tree indexes — it is held as a same-day review, "
+             "so the wrong grade's schedule stands (spaced-repetition KB: revise, never "
+             "a second review)")
+    if not any("revise-review" in c for c in on_concept):
+        fail("the wrong grade was never revised: no revise-review call on B-tree indexes")
+    ok("revised with revise-review, no second record-review")
     c = concept(load(project, ".bodhi", "spaced-review.json"), "B-tree indexes")
+    if not c.get("revisedReviews"):
+        fail("no revised entry kept in revisedReviews — the wrong grade left no trace")
+    ok(f"the wrong grade is kept aside ({c['revisedReviews'][-1].get('revisedReason', '')!r})")
     graded = [h for h in todays_entries(c)
               if h.get("result") in ("correct", "incorrect", "partial") and not h.get("retry")]
     if not graded:

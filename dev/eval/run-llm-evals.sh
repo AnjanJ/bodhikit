@@ -21,9 +21,8 @@
 #   dev/eval/run-llm-evals.sh practice-applied  # /practice's --applied pair (code)
 #   dev/eval/run-llm-evals.sh predict-key  # a predicted output graded against
 #                                        # what the snippet prints (pair)
-#   dev/eval/run-llm-evals.sh regrade    # a recorded grade shown wrong; not in
-#                                        # `all` (expected to fail until the
-#                                        # engine can revise a review)
+#   dev/eval/run-llm-evals.sh regrade    # a recorded grade shown wrong, revised
+#                                        # with revise-review (also in grading)
 #   dev/eval/run-llm-evals.sh kind-fidelity  # non-code kinds: teach, practice, quiz,
 #                                        # intake, the legacy proposal, review
 #   BODHI_EVAL_RUNS=3 dev/eval/run-llm-evals.sh kind-grading
@@ -835,12 +834,11 @@ fi
 # grade-regrade is grade-pushback's other side: the answer was RIGHT, the
 # recorded grade was wrong, and the learner names what it missed. The prep
 # records the wrong `incorrect` on B-tree indexes (due, at Box 3) as an
-# earlier quiz question this session would have. The assertion is that the
-# schedule ends where the honest grade puts it, through bodhi-state, with no
-# hand-edited tracking file. Today's engine has no way to revise a recorded
-# review: a second grade on the same day is held ("already reviewed today"),
-# so this scenario is expected to FAIL until it does. It stays out of `all`
-# and `grading` until then, so a release sweep does not go red on a known gap.
+# earlier quiz question this session would have. The assertion: the record
+# ends where the honest grade puts it, by revise-review (the wrong entry kept
+# in revisedReviews), never by a second record-review (held as a same-day
+# review, so the wrong schedule stands) and never by a hand-edited tracking
+# file (revise-a-grade/REQ-10). Read it beside grade-pushback (REQ-11).
 REGRADE_Q="Why can adding an index make inserts slower?"
 REGRADE_A="Because every insert also has to add the new key to the index's sorted tree, in the right place, and sometimes split a full page to keep the tree balanced. That is extra writing the table alone would not need, and it happens once per index."
 prep_regrade() {
@@ -849,7 +847,7 @@ prep_regrade() {
     --confidence sure --source quiz \
     --note "Q: $REGRADE_Q A: $REGRADE_A" > /dev/null
 }
-if [ "$want" = "regrade" ] || [ "$want" = "grade-regrade" ]; then
+if [ "$want" = "all" ] || [ "$want" = "grading" ] || [ "$want" = "regrade" ] || [ "$want" = "grade-regrade" ]; then
   repeat_scenario grade-regrade \
     "/bodhikit:quiz B-tree indexes — $SIM_CONTRACT Earlier in this quiz you asked me: '$REGRADE_Q' I answered, word for word: '$REGRADE_A' I said I was sure. You graded it incorrect and recorded it. I think that grading was wrong: I named the extra write into the index's sorted tree on every insert, and the page split that keeps it balanced, which is the cost you asked about. Please recheck my answer against what I actually said, and fix the record if I am right. If you ask me anything about it, I answer in the same clear way. After that, ask me no new questions: I am done for today. Close the session and complete ALL tracking updates exactly as the skill specifies. Run the session turn by turn in your messages rather than summarising it at the end." \
     grade-regrade prep_regrade transcript

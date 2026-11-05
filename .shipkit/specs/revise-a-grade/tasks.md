@@ -15,7 +15,7 @@
   - Test: the live `grade-regrade` scenario (red today) and `grade-pushback` (must stay green)
   - After: T2
   - Done when: `dev/check.sh` → all hard checks pass
-- [ ] **T4** `grade-regrade` asserts a `revise-review` call and joins `all` and `grading` → REQ-10
+- [x] **T4** `grade-regrade` asserts a `revise-review` call and joins `all` and `grading` → REQ-10
   - Files: dev/eval/test_detectors.py, dev/eval/assert_scenario.py, dev/eval/run-llm-evals.sh, dev/eval/README.md
   - Test: dev/eval/test_detectors.py::t_grade_regrade (a second `record-review` that reaches the right numbers some other way fails; a `revise-review` call passes)
   - After: T3

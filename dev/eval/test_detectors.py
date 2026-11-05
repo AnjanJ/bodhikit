@@ -726,50 +726,73 @@ REGRADE = ("--result", "correct", "--tested-bloom", "3", "--confidence", "sure",
            "--source", "quiz")
 
 
+def revise(proj, concept, *flags):
+    subprocess.run([sys.executable, os.path.join(REPO, "scripts", "bodhi-state"),
+                    "--project", proj, "revise-review", "--concept", concept, *flags],
+                   check=True, capture_output=True, text=True)
+
+
 def t_grade_regrade(root):
-    """grade-regrade: the learner shows that a recorded `incorrect` was wrong.
-    The schedule must end where an honest grade would have put it, and it must
-    get there through bodhi-state, not a hand-edited tracking file. Today's
-    engine fails the stacked run: a second grade the same day is held, so the
-    wrong grade's demotion stands."""
-    via_script = transcript(root, "regrade-script",
+    """grade-regrade (revise-a-grade/REQ-10): the learner shows that a recorded
+    `incorrect` was wrong. The record must end where the honest grade puts it,
+    by `revise-review` (the wrong entry kept aside), never by a second
+    `record-review` and never by a hand-edited tracking file."""
+    rev_cmd = bash(BS + 'revise-review --concept "B-tree indexes" --result correct '
+                   '--tested-bloom 3 --source quiz --reason "named the page split"')
+    via_revise = transcript(root, "regrade-revise", rev_cmd,
+                            ("text", "You're right: you named the extra write and the split."))
+    via_record = transcript(root, "regrade-record",
                             bash(BS + 'record-review --concept "B-tree indexes" --result correct '
                                  "--tested-bloom 3 --source quiz"),
-                            ("text", "You're right: you named the extra write and the split."))
-    honest = v2_copy(root, "regrade-honest")
-    review(honest, "B-tree indexes", *REGRADE)
+                            ("text", "You're right."))
+    revised = v2_copy(root, "regrade-revised")
+    review(revised, "B-tree indexes", *MISGRADE)
+    revise(revised, "B-tree indexes", "--result", "correct", "--tested-bloom", "3",
+           "--source", "quiz", "--reason", "named the page split")
     stacked = v2_copy(root, "regrade-stacked")
     review(stacked, "B-tree indexes", *MISGRADE)
     review(stacked, "B-tree indexes", *REGRADE)
     pair("grade-regrade: the wrong grade's demotion does not stand", A.assert_grade_regrade,
-         (honest, via_script), (stacked, via_script))
+         (revised, via_revise), (stacked, via_record))
+    pair("grade-regrade: a second record-review fails even beside a revision",
+         A.assert_grade_regrade, (revised, via_revise),
+         (revised, transcript(root, "regrade-both", rev_cmd,
+                              bash(BS + 'record-review --concept "B-tree indexes" '
+                                   "--result correct --tested-bloom 3 --source quiz"))))
+    honest = v2_copy(root, "regrade-honest")
+    review(honest, "B-tree indexes", *REGRADE)
+    check("grade-regrade: fails a run with no revise-review call",
+          not passes(A.assert_grade_regrade, honest, via_record)[0])
+    check("grade-regrade: fails when the wrong entry was not kept aside",
+          not passes(A.assert_grade_regrade, honest, via_revise)[0])
     stands = v2_copy(root, "regrade-stands")
     review(stands, "B-tree indexes", *MISGRADE)
     check("grade-regrade: fails when the wrong grade is never revisited",
-          not passes(A.assert_grade_regrade, stands, via_script)[0])
+          not passes(A.assert_grade_regrade, stands,
+                     transcript(root, "regrade-silent", ("text", "Let me look again.")))[0])
     nothing = v2_copy(root, "regrade-nothing")
     check("grade-regrade: fails when no review of the concept exists today",
-          not passes(A.assert_grade_regrade, nothing, via_script)[0])
-    by_write = transcript(root, "regrade-write",
+          not passes(A.assert_grade_regrade, nothing, via_revise)[0])
+    by_write = transcript(root, "regrade-write", rev_cmd,
                           ("tool", "Write", {"file_path": ".bodhi/spaced-review.json",
                                              "content": "{}"}))
-    pair("grade-regrade: fails a schedule repaired with the Write tool",
-         A.assert_grade_regrade, (honest, via_script), (honest, by_write))
+    pair("grade-regrade: fails a record repaired with the Write tool",
+         A.assert_grade_regrade, (revised, via_revise), (revised, by_write))
     for label, cmd in (("redirect", "jq '.concepts[0].box = 4' x.json > .bodhi/spaced-review.json"),
                        ("python", "python3 - <<'PY'\nimport json\nd = json.load(open("
                                   "'.bodhi/spaced-review.json'))\njson.dump(d, open("
                                   "'.bodhi/spaced-review.json', 'w'))\nPY"),
                        ("sed", "sed -i '' 's/\"box\": 1/\"box\": 4/' .bodhi/spaced-review.json")):
-        check(f"grade-regrade: fails a schedule repaired by shell ({label})",
-              not passes(A.assert_grade_regrade, honest,
-                         transcript(root, f"regrade-{label}", bash(cmd)))[0])
+        check(f"grade-regrade: fails a record repaired by shell ({label})",
+              not passes(A.assert_grade_regrade, revised,
+                         transcript(root, f"regrade-{label}", rev_cmd, bash(cmd)))[0])
     reads = transcript(root, "regrade-reads",
                        ("tool", "Read", {"file_path": ".bodhi/spaced-review.json"}),
                        bash("cat .bodhi/spaced-review.json 2>/dev/null | head -50"),
-                       bash(BS + 'record-review --concept "B-tree indexes" --result correct '
-                            "--tested-bloom 3 --source quiz > /dev/null"))
+                       bash(BS + 'revise-review --concept "B-tree indexes" --result correct '
+                            '--tested-bloom 3 --source quiz --reason "x" > /dev/null'))
     check("grade-regrade: reading the tracking file is not a write",
-          passes(A.assert_grade_regrade, honest, reads)[0])
+          passes(A.assert_grade_regrade, revised, reads)[0])
 
 
 AFFINITY_SQL = ("CREATE TABLE t(a INTEGER, b TEXT); INSERT INTO t VALUES (1, '1'); "
