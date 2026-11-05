@@ -105,4 +105,4 @@ learner's word and labels it as the learner's word everywhere it shows.
 - Run the Cowork probe by hand and record the result.
 - Per release: `dev/check.sh`, the full LLM eval suite with code groups unchanged, and the new groups for `problems`, `writing` and `performed` on both sides of each grading boundary.
 - Write `.shipkit/product.md` with the four goals from the intake.
-- Re-upload the ChatGPT listing once the OpenAI portal accepts skills-only submissions.
+- Re-upload the ChatGPT listing once the OpenAI portal accepts skills-only submissions. *(Submitted 2026-10-24 as 1.25.1, in review with no blocking findings; the public listing stays at 1.23.0 until OpenAI publishes it. `docs/openai-submission.md` has the record.)*

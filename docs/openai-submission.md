@@ -9,21 +9,24 @@ plugin. Keep it synchronized with the generated package and the public listing.
 - **Submission type:** Skills only
 - **Category:** Productivity
 - **Short description:** Learn through guided practice (the portal caps this at 30 characters)
-- **Long description:** A research-informed Socratic tutor for personalized
-  learning plans, guided coding practice, active recall, spaced repetition,
-  reflection, and evidence-based progress tracking.
+- **Long description:** A research-informed Socratic tutor for any subject:
+  personalized learning plans, guided practice (code that runs, problems and
+  essays checked against answers or criteria saved first, practice reps
+  debriefed and labelled as the learner's account), active recall, spaced
+  repetition, reflection, and evidence-based progress tracking.
 - **Website:** https://github.com/AnjanJ/bodhikit
 - **Support:** https://github.com/AnjanJ/bodhikit/discussions
 - **Privacy:** https://github.com/AnjanJ/bodhikit/blob/master/PRIVACY.md
 - **Terms:** https://github.com/AnjanJ/bodhikit/blob/master/TERMS.md
 - **Logo:** `platforms/openai/bodhikit/assets/bodhikit-icon.png`
+- **Developer name:** Abhaya Code Labs
 - **Developer identity:** Select the verified individual or business identity
   that matches the repository publisher.
 
 ## Starter prompts
 
-1. Help me learn Rust ownership through guided practice.
-2. Quiz me on the technical concepts I am due to review.
+1. Help me learn a topic through guided practice.
+2. Quiz me on what I am currently learning.
 3. Help me reflect on today's learning session.
 
 ## Positive reviewer tests
@@ -117,14 +120,16 @@ must make the final selection in the portal.
 
 ## Release notes
 
-BodhiKit 1.24.0 adds a unified syllabus view across learning plans and progress,
-module position indicators, a short vocabulary introduction for new lessons,
-and clearer feedback when concepts are waiting for their next review day.
-Session closing now explicitly verifies local learning state and prepares
-revision notes on hosts without lifecycle hooks. No learning-data migration is
-required.
+BodhiKit 1.25.1 expands guided learning beyond programming to worked problems,
+writing, and performed skills, with subject-specific exercises and clear labels
+for evidence the tutor cannot observe. Since the published 1.23.0 package, it
+also adds a unified syllabus and module position view, vocabulary previews,
+clearer review scheduling, and fixes for non-code plans and prerequisites.
+Session closing explicitly verifies available local learning state and prepares
+revision notes on hosts without lifecycle hooks. This release updates the
+publisher to Abhaya Code Labs. No learning-data migration is required.
 
-The skills-only package includes 18 learner workflows, 18 knowledge references,
+The skills-only package includes 18 learner workflows, 19 knowledge references,
 four portable role procedures, and the deterministic local state engine. Local
 persistence requires shell and filesystem access; otherwise learning stays in
 the conversation with a saveable summary. The public ZIP omits lifecycle hooks.
@@ -139,13 +144,49 @@ python3 platforms/openai/build_plugin.py --archive dist/bodhikit-openai.zip
 
 The generated directory retains optional Codex hooks for local development;
 the upload ZIP excludes hooks and their helper scripts. Its manifest includes
-the support URL above. OpenAI's current
+the support URL above. Follow OpenAI's
 [submission guidance](https://developers.openai.com/plugins/deploy/submission)
-requires public-directory packages to omit lifecycle hooks.
+for the portal checks, review, and publication steps.
 
 Before uploading, complete the manual ChatGPT writing-workflow smoke test in
 [openai.md](./openai.md#verify-the-conversion). Use the existing BodhiKit listing
 and upload the complete ZIP as an update.
+
+## Submission record
+
+### 24 October 2026 — 1.25.1 in review
+
+The existing BodhiKit listing now shows **1.25.1 · In review**, under Abhaya Code
+Labs. All 18 skills passed the portal checks, with no blocking findings. The
+earlier skills-only intake restriction was no longer present. The category
+confirmation and privacy-policy notices remained non-blocking; reviewer context
+explained the Productivity category and the policy's distinction between local
+learning files, conversation-only sessions, and optional feedback submissions.
+
+[Submitted package version](https://platform.openai.com/plugins/manage/plugins_6a92f758e210819187a7ef049f41c41d?version=pluginrel_7cba94efa7ec819189b467cd0da9ae96).
+The public listing remains at **1.23.0** pending approval and publication of the
+update; submission is not publication.
+
+The [manual ChatGPT writing-workflow smoke test](https://chatgpt.com/c/6adce2ff-d5d8-83ec-a704-d4d7ed2591b0)
+used the generated 1.25.1 package from the public `v1.25.1` tag on remote Linux.
+All changes stayed inside `/tmp/bodhikit-1.25.1-smoke-rCgH0h`; no real learning
+data was used. `bodhi-state verify` returned `ok: true` with no errors or
+warnings. `assert_scenario.py quiz` exited 0: three concepts had fresh review
+history, the session used a canonical type, state stayed v2-clean, and the
+day's revision sheet existed with the required sections, the studied concepts,
+and no bare Bloom or box numbers. The legacy fixture's concepts were
+unclassified and marked `quizzed-only`; the quiz proceeded under the explicit
+test instruction.
+
+The generated 1.25.1 package also passed all five Codex executor-discipline
+checks on `gpt-6.1-sol`: `migrate`, `forget`, `quiz`, `reflect`, and
+`reflect-difficulty`. These checked the actual tracking writes, same-day review
+guard, outcome-based grading despite difficulty or low confidence, and revision
+sheets. Initial sandboxed attempts could not reach the model service; the
+network-enabled runs completed successfully. This certifies those scenarios on
+that executor, not the full behavioral suite or every ChatGPT surface.
+
+### 15 October 2026 — historical 1.24.0 blocker, superseded
 
 On October 15, 2026, the existing 1.24.0 draft reported three blocking metadata
 findings: lifecycle hooks in the package, a missing support URL, and
@@ -154,6 +195,6 @@ findings: lifecycle hooks in the package, a missing support URL, and
 findings cleared, all 18 skills showed checks passed, and the intake restriction
 remained the only blocking finding. The submission dialog required resolving
 blocking findings and kept Submit disabled. Category confirmation and privacy
-policy review were also flagged as non-blocking findings. The intake
-restriction must be resolved through the portal or OpenAI support. Publication
-remained at 1.23.0; the corrected 1.24.0 package was not submitted or published.
+policy review were also flagged as non-blocking findings. Publication remained
+at 1.23.0; the corrected 1.24.0 package was not submitted or published. The
+24 October record above supersedes this intake-blocked status.
