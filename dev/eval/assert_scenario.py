@@ -1114,6 +1114,58 @@ def assert_plan_view(project, transcript):
     if m:
         fail(f"learner-facing text quotes a bare level/box ({m.group(0)!r})")
     ok("no bare Bloom/Box numbers in learner-facing text")
+    m = KIND_LINE_RE.search(prose)
+    if m:
+        fail(f"a code project's view names how work is checked ({m.group(0)!r}); the kind "
+             "line is for projects with a kind other than code (learn-anything/REQ-1)")
+    ok("no kind line on a code project")
+
+
+# How the work is checked, in /plan view and /progress (learn-anything
+# design, "The kind lives in state.json": the learner sees each module's
+# kind through the syllabus rows). The fixture is the cooking project with
+# Emulsions set to `problems`.
+KIND_LINE_RE = re.compile(r"(?i)how (?:your|the) work (?:is|gets|will be) checked")
+KIND_RAW_RE = re.compile(r"`(?:code|problems|writing|performed)`")
+PERFORMED_PLAIN_RE = re.compile(r"(?i)away from the screen|you practi[cs]e|practice reps?")
+
+
+def assert_plan_view_kind(project, transcript, module="Emulsions",
+                          others=("Knife skills", "Pan sauces")):
+    if not SYLLABUS_CALL_RE.search(assistant_text(transcript)):
+        fail("no `bodhi-state syllabus` call — the view did not come from the script's rows")
+    ok("bodhi-state syllabus was run")
+    prose = assistant_prose(transcript)
+    if not prose.strip():
+        fail("empty transcript — run did not produce assistant output")
+    lines = prose.splitlines()
+    rows = [ln for ln in lines if ln.lstrip().startswith("|")]
+    outside = "\n".join(ln for ln in lines if not ln.lstrip().startswith("|"))
+    # The table's own "Solid, by your account" must not stand in for the line.
+    if not PERFORMED_PLAIN_RE.search(outside):
+        fail("the project's kind is not said in plain words above the table (practice away "
+             "from the screen, counted as the learner's account)")
+    ok("the project's kind is said in plain words")
+    mine = [r for r in rows if module.lower() in r.lower()]
+    if not mine:
+        fail(f"no table row for {module}")
+    if not any(re.search(r"(?i)\bproblems?\b", r) for r in mine):
+        fail(f"{module}'s row does not say its work is problems, though its kind differs "
+             "from the project's")
+    ok(f"{module}'s row names its own kind")
+    for other in others:
+        for r in rows:
+            if other.lower() in r.lower() and re.search(r"(?i)\bproblems?\b", r):
+                fail(f"{other}'s row carries a kind note, though its kind is the project's")
+    ok("rows that share the project's kind carry no note")
+    m = KIND_RAW_RE.search(prose)
+    if m:
+        fail(f"the raw kind {m.group(0)} reaches the learner; render it in plain words")
+    ok("no raw kind names in learner-facing text")
+    m = BARE_LEVEL_RE.search(prose)
+    if m:
+        fail(f"learner-facing text quotes a bare level/box ({m.group(0)!r})")
+    ok("no bare Bloom/Box numbers in learner-facing text")
 
 
 
@@ -1910,6 +1962,7 @@ def main():
                        "quiz-unlabelled": assert_quiz_unlabelled,
                        "teach-vocabulary": assert_teach_vocabulary,
                        "plan-view": assert_plan_view,
+                       "plan-view-kind": assert_plan_view_kind,
                        "kind-teach-problems": assert_kind_teach,
                        "kind-teach-writing": assert_kind_teach_writing,
                        "kind-practice-problems": assert_kind_practice,

@@ -1,6 +1,20 @@
 # Rendering a module row — shared by `/progress` (Module Breakdown) and `/plan view`
 
-Loaded by the phase that prints a per-module table. The rows come from `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> syllabus` — `modules[]` in plan order, each with `status`, `targetBloom*`, and an `evidence` block (the module's tally plus `summaryTier`, `nextDue`, `dueToday`) — followed by `unplanned[]` (tracked modules the plan never declared). Render every row the script returns; never reorder, never drop one, never re-derive a status or a tier from the files.
+Loaded by the phase that prints a per-module table. The rows come from `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> syllabus` — `modules[]` in plan order, each with `status`, `targetBloom*`, `evidenceKind`, and an `evidence` block (the module's tally plus `summaryTier`, `nextDue`, `dueToday`) — followed by `unplanned[]` (tracked modules the plan never declared). Render every row the script returns; never reorder, never drop one, never re-derive a status or a tier from the files.
+
+## How the work is checked (from `evidenceKind`)
+
+`syllabus` gives the project's `evidenceKind` and each row's. When the project's kind and every row's kind are `code`, say nothing about it: that is the view code learners have always had. Otherwise, in plain words and never the raw kind name:
+
+- Above the table, one line for the project: `How your work is checked: <line>`.
+- On a row whose `evidenceKind` differs from the project's (an `unplanned` row too), add `(<short>)` after the module's name.
+
+| `evidenceKind` | `<line>` | `<short>` |
+|---|---|---|
+| `code` | you write code, and we run it | code you run |
+| `problems` | you work problems, checked against answers I save before you start | problems, checked against saved answers |
+| `writing` | you write short pieces applying an idea to a new case, read against criteria I save first | writing, read against saved criteria |
+| `performed` | you practise away from the screen and tell me how it went, and it counts as your account | practice, by your account |
 
 ## Status (from `status`)
 

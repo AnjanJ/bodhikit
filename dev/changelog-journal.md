@@ -8,6 +8,10 @@ This is the full, unabridged, patch-by-patch changelog kept for the maintainer â
 
 All notable changes to BodhiKit will be documented in this file.
 
+## [Unreleased]
+
+**Module kinds on the syllabus view (T41).** The design record *The kind lives in `state.json`* argued "`/plan view` and `/progress` render `syllabus` output, so the learner still sees each module's kind". `syllabus` emitted `evidenceKind` per row from 1.25.0, but `module-row.md`, the one renderer both skills share, never read it. The 2026-10-22 ship-gate reviewer flagged it under *Decisions not followed*; the 2026-11-05 drift check confirmed nothing renders it. `module-row.md` gains *How the work is checked*: on a project whose kind or any row's kind is not `code`, one plain-words line above the table and a short note on each row whose kind differs from the project's. A code project prints neither, so code learners see the view they had (REQ-1). New scenario `plan-view-kind` (the cooking fixture with Emulsions set to `problems`); `assert_plan_view` now also fails a code view that prints a kind line. `test_detectors.py`: 122 checks. Neither live run has been made.
+
 ## [1.25.1] - 2026-10-24
 
 The publisher is Abhaya Code Labs, the maintainer's newly incorporated studio (`fca9517`): `author` in `plugin.json` and the Codex manifest, the marketplace `owner` (was "AJ"), the Codex `developerName` (the ChatGPT portal's Developer field, which said "Anjan" against the Business identity), LICENSE's copyright, the README credit, and the publisher named at the top of PRIVACY.md and TERMS.md, both now effective 2026-10-24. The marketplace and plugin names stay `bodhikit`: they are the install identifier (`bodhikit@bodhikit`), and on claude.ai the "from bodhikit" label is the marketplace name, not its owner (shipkit's owner is "AJ" and it shows "from shipkit"). The `crossedBloom3` rename moves to 1.25.2. No LLM evals before the tag: no skill, KB, agent, rule or script changed since v1.25.0.

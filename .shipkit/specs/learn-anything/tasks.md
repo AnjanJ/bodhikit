@@ -220,6 +220,13 @@ touch the same files.
   - Test: dev/eval/assert_scenario.py::assert_kind_task_before_attempt, exercised by dev/eval/test_detectors.py::t_task_before_attempt (task and criteria before the piece passes; a task written after the piece, or none, fails). REQ-44 is untested: read in the `kind-teach-writing` transcript at each sweep, run with `BODHI_EVAL_KEEP=1`
   - After: T39
   - Done when: `python3 dev/eval/test_detectors.py` → "0 failed"; `dev/check.sh` passes; the live run joins the release sweep
+### Found after 1.25.1 (the 2026-11-05 drift check; ships in the next release)
+
+- [x] **T41** `/plan view` and `/progress` show how the work is checked: one plain-words line for a project whose kind is not code, and a note on any module whose kind differs from the project's; a code project's view is unchanged. The design record *The kind lives in `state.json`* promised this, and the 2026-11-05 drift check found it rendered nowhere → REQ-7, REQ-1
+  - Files: skills/progress/references/module-row.md, dev/eval/assert_scenario.py, dev/eval/run-llm-evals.sh, dev/eval/test_detectors.py, dev/eval/README.md, CHANGELOG.md, dev/changelog-journal.md
+  - Test: dev/eval/assert_scenario.py::assert_plan_view_kind, exercised by dev/eval/test_detectors.py::t_plan_view_kind (a good run passes; no kind line, no row note, a note on every row, raw kind names, and no `syllabus` call fail); assert_plan_view fails a code view that prints a kind line
+  - After: T40
+  - Done when: `python3 dev/eval/test_detectors.py` → "0 failed"; `dev/check.sh` passes; the live `plan-view-kind` and `plan-view` runs join the next sweep
 
 ## The release: both ship as 1.25.0
 

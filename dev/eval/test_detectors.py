@@ -436,6 +436,53 @@ def t_performed_by_your_account(root):
          A.assert_performed_by_your_account, (None, table), (None, labelled))
 
 
+SYLLABUS = bash(BS + "syllabus")
+KIND_LINE = ("How your work is checked: you practise away from the screen and tell me how "
+             "it went, and it counts as your account.\n\n")
+KIND_TABLE = ("| # | Module | Status | Where you are |\n|---|---|---|---|\n"
+              "| 1 | Knife skills{k} | Done | **Solid, by your account** — can find where "
+              "it breaks and explain the trade-offs |\n"
+              "| 2 | Emulsions{e} | ◀ Current | **Working** — can use it with guidance |\n"
+              "| 3 | Pan sauces | Upcoming | — |")
+PROBLEMS_NOTE = " (problems, checked against saved answers)"
+
+
+def t_plan_view_kind(root):
+    good = transcript(root, "kind-view-good", SYLLABUS,
+                      ("text", KIND_LINE + KIND_TABLE.format(k="", e=PROBLEMS_NOTE)))
+    no_line = transcript(root, "kind-view-no-line", SYLLABUS,
+                         ("text", KIND_TABLE.format(k="", e=PROBLEMS_NOTE)))
+    pair("plan view kind (the project's kind, in plain words)", A.assert_plan_view_kind,
+         (None, good), (None, no_line))
+    no_row = transcript(root, "kind-view-no-row", SYLLABUS,
+                        ("text", KIND_LINE + KIND_TABLE.format(k="", e="")))
+    pair("plan view kind (the module that differs says so)", A.assert_plan_view_kind,
+         (None, good), (None, no_row))
+    every_row = transcript(root, "kind-view-every-row", SYLLABUS,
+                           ("text", KIND_LINE + KIND_TABLE.format(k=PROBLEMS_NOTE, e=PROBLEMS_NOTE)))
+    pair("plan view kind (only the module that differs)", A.assert_plan_view_kind,
+         (None, good), (None, every_row))
+    raw = transcript(root, "kind-view-raw", SYLLABUS,
+                     ("text", "Evidence kind: `performed`.\n\n"
+                      + KIND_TABLE.format(k="", e=" (`problems`)")))
+    pair("plan view kind (plain words, not the raw kind)", A.assert_plan_view_kind,
+         (None, good), (None, raw))
+    unread = transcript(root, "kind-view-unread",
+                        ("text", KIND_LINE + KIND_TABLE.format(k="", e=PROBLEMS_NOTE)))
+    pair("plan view kind (rows from syllabus)", A.assert_plan_view_kind,
+         (None, good), (None, unread))
+    # A code project's view is the one code learners have always had
+    # (learn-anything/REQ-1): no line about how the work is checked.
+    code_table = ("You are on Module 3 of 3.\n\n| Module | Status |\n|---|---|\n"
+                  "| Schema design | Done |\n| Indexing | Done |\n| Query optimization | ◀ Current |")
+    code_good = transcript(root, "code-view-good", SYLLABUS, ("text", code_table))
+    code_bad = transcript(root, "code-view-kind", SYLLABUS,
+                          ("text", "How your work is checked: you write code, and we run it.\n\n"
+                           + code_table))
+    pair("code plan view prints no kind line", A.assert_plan_view,
+         (None, code_good), (None, code_bad))
+
+
 def t_photo_inspected(root):
     proj = fresh(root, "performed-project", "drawing", "photo")
     photo = "exercises/01-box-and-road/my-drawing.png"
@@ -553,7 +600,8 @@ def main():
                   t_legacy_proposal,
                   t_review_no_rewrite, t_performed_debrief_first, t_performed_no_debrief,
                   t_performed_practice_sets_rep, t_kind_gate_reconfirm_rep,
-                  t_performed_repless_review, t_performed_by_your_account, t_photo_inspected,
+                  t_performed_repless_review, t_performed_by_your_account, t_plan_view_kind,
+                  t_photo_inspected,
                   t_safety_canning, t_safety_medical, t_harness_recap, t_continue_gate):
             print(f"-- {t.__name__}")
             sub = os.path.join(root, t.__name__)

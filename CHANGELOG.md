@@ -2,6 +2,10 @@
 
 Notable changes to BodhiKit, summarized for readers. Patch-level development notes live in `dev/changelog-journal.md`.
 
+## [Unreleased]
+
+- **Your plan says how your work is checked.** On a subject that isn't code, `/plan view` and `/progress` now say once, in plain words, how the work is checked (problems against saved answers, writing against saved criteria, or practice by your account), and mark any module checked a different way. 1.25.0 recorded each module's kind but never showed it, so a learner could ask to change a kind they could not see. A code project's view is unchanged.
+
 ## [1.25.1] - 2026-10-24
 
 BodhiKit is now published by Abhaya Code Labs, the maintainer's software studio. Nothing about how BodhiKit teaches, grades or tracks changes.

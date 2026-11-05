@@ -1007,6 +1007,20 @@ if [ "$want" = "all" ] || [ "$want" = "fidelity" ] || [ "$want" = "plan-view" ];
     plan-view "" transcript
 fi
 
+# The same view on a mixed project (learn-anything design, "The kind lives in
+# state.json"): the cooking project with Emulsions set to problems. The view
+# says once how the project's work is checked, in plain words, and marks only
+# the module whose kind differs. A code project prints neither (plan-view).
+prep_plan_view_kind() {
+  python3 "$REPO/scripts/bodhi-state" --project "$1" set-evidence-kind \
+    --module "Emulsions" --kind problems > /dev/null
+}
+if [ "$want" = "all" ] || [ "$want" = "kind-fidelity" ] || [ "$want" = "plan-view-kind" ]; then
+  BODHI_EVAL_FIXTURE="$PERFORMED_FIXTURE" BODHI_EVAL_PROJECT="$PERFORMED_PROJECT" run_scenario plan-view-kind \
+    "/bodhikit:plan view — headless eval run. Show me my learning plan: where I am in it and how the modules I have done went. Print the table the skill specifies." \
+    plan-view-kind prep_plan_view_kind transcript
+fi
+
 # --- Gate-on-chain scenario (review finding 2a/2b) ---------------------------
 # /continue -> /teach must run the prerequisite gate at a module boundary.
 # Before this scenario, /teach skipped the gate for ANY concept passed via
