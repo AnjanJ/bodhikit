@@ -2182,7 +2182,10 @@ def t_write_on_v2_backs_up():
         with open(marker) as f:
             check("v2 write: marker names the write path and the version",
                   "write" in f.read() and "v2 -> v3" in open(marker).read())
-        write_path_keys = [sorted(c) for c in read_sr(proj)["concepts"]]
+        # beforeLastReview is the review's own snapshot (revise-a-grade), not
+        # an upgrade field: migrate never reviews, so it never writes one.
+        write_path_keys = [sorted(k for k in c if k != "beforeLastReview")
+                           for c in read_sr(proj)["concepts"]]
     with tempfile.TemporaryDirectory() as root:
         proj = make_project(root, spaced_review=json.loads(json.dumps(V2_SR)))
         run(proj, "migrate-spaced-review")
@@ -3067,6 +3070,19 @@ def t_verify_implies_readers():
         check("invariant: clean fixture verifies", run(proj, "verify")["ok"] is True)
         check("invariant: every reader runs on a verified fixture",
               readers_ok(proj) is None, readers_ok(proj))
+        # revise-a-grade/REQ-8: a record holding a revised review verifies,
+        # and every reader runs on it.
+        rev_root = os.path.join(root, "revised")
+        os.makedirs(rev_root)
+        rev = make_project(rev_root, spaced_review=json.loads(json.dumps(V2_SR)))
+        run(rev, "migrate-spaced-review")
+        run(rev, "record-review", "--concept", "B-tree indexes", "--result", "correct",
+            "--tested-bloom", "4", "--applied")
+        run(rev, "revise-review", "--concept", "B-tree indexes", "--result", "partial",
+            "--tested-bloom", "2", "--reason", "the code it pointed to never ran")
+        check("invariant: a revised record verifies", run(rev, "verify")["ok"] is True)
+        check("invariant: every reader runs on a revised record",
+              readers_ok(rev) is None, readers_ok(rev))
         good = read_sr(proj)
         # The reviewer's mutation, plus its siblings: each must fail verify
         # with the repair named, die cleanly in readers, and be repaired.
@@ -4040,14 +4056,41 @@ GOLDEN_FILE_CHANGES = {
 }
 
 
+def _golden_strip_snapshot(text):
+    """revise-a-grade: record-review now saves each concept's state before
+    the review (beforeLastReview). Dropping that one key from a file the
+    current engine wrote gives the bytes 1.24.1 wrote: the same writer
+    (indent 2, ensure_ascii off, trailing newline), the same key order."""
+    if '"beforeLastReview"' not in text:
+        return text     # a file this engine never reviewed in (a backup): bytes as they are
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError:
+        return text
+    for c in data.get("concepts", []) if isinstance(data, dict) else []:
+        if isinstance(c, dict):
+            c.pop("beforeLastReview", None)
+    return json.dumps(data, indent=2, ensure_ascii=False) + "\n"
+
+
+# Keys the current engine adds to a file, stripped from its side before the
+# byte-for-byte compare, matched on the file's name.
+GOLDEN_GOT_STRIPS = {
+    "spaced-review.json": _golden_strip_snapshot,   # revise-a-grade
+}
+
+
 def _golden_files_differ(want, got):
     """The files that differ from the recording once GOLDEN_FILE_CHANGES has
-    rewritten it."""
+    rewritten it and GOLDEN_GOT_STRIPS has stripped the current side."""
     expected = {p: (GOLDEN_FILE_CHANGES[p](t, want["steps"])
                     if p in GOLDEN_FILE_CHANGES else t)
                 for p, t in want["files"].items()}
-    return [p for p in sorted(set(expected) | set(got["files"]))
-            if expected.get(p) != got["files"].get(p)]
+    current = {p: (GOLDEN_GOT_STRIPS[os.path.basename(p)](t)
+                   if os.path.basename(p) in GOLDEN_GOT_STRIPS else t)
+               for p, t in got["files"].items()}
+    return [p for p in sorted(set(expected) | set(current))
+            if expected.get(p) != current.get(p)]
 
 
 def _golden_step_differs(readers, cmd, want, got):
@@ -4160,6 +4203,214 @@ def t_golden_rename_is_narrow():
           == ["a/.bodhi-profile.json"])
 
 
+# --- revise-a-grade: a grade the tutor recorded wrongly today ----------------
+
+REVISE_FIELDS = ("box", "nextReview", "consecutiveCorrectAtL4Plus", "bloomLevel",
+                 "lastReviewed", "lastResult")
+
+
+def _revise_pair(root, wrong, right):
+    """Two copies of the migrated V2 fixture, each with a profile: one graded
+    `wrong` then revised to `right`, one graded `right` the first time.
+    `wrong` and `right` are (result, tested-bloom). Returns (revised, honest,
+    the revise-review output)."""
+    projs = []
+    for label in ("revised", "honest"):
+        base = os.path.join(root, label)
+        os.makedirs(base)
+        proj = make_project(base, spaced_review=json.loads(json.dumps(V2_SR)))
+        with open(os.path.join(base, ".bodhi-profile.json"), "w") as f:
+            json.dump({"cumulativeStats": {"totalConceptsLearned": 5}}, f)
+        run(proj, "migrate-spaced-review")
+        projs.append(proj)
+    revised, honest = projs
+    run(revised, "record-review", "--concept", "B-tree indexes", "--result", wrong[0],
+        "--tested-bloom", str(wrong[1]), "--confidence", "sure", "--source", "quiz")
+    out = run(revised, "revise-review", "--concept", "B-tree indexes", "--result", right[0],
+              "--tested-bloom", str(right[1]), "--confidence", "sure", "--source", "quiz",
+              "--reason", "the answer named the page split the grade missed")
+    run(honest, "record-review", "--concept", "B-tree indexes", "--result", right[0],
+        "--tested-bloom", str(right[1]), "--confidence", "sure", "--source", "quiz")
+    return revised, honest, out
+
+
+def _btree(proj):
+    return next(c for c in read_sr(proj)["concepts"] if c["name"] == "B-tree indexes")
+
+
+def _learned(proj):
+    with open(os.path.join(os.path.dirname(proj), ".bodhi-profile.json")) as f:
+        return json.load(f)["cumulativeStats"]["totalConceptsLearned"]
+
+
+def t_revise_review_restores_a_wrong_incorrect():
+    """revise-a-grade/REQ-1, REQ-4, REQ-7: a right answer graded `incorrect`
+    on a due review, then revised, ends where the honest `correct` puts it —
+    not at the start, re-tested tomorrow."""
+    with tempfile.TemporaryDirectory() as root:
+        revised, honest, out = _revise_pair(root, ("incorrect", 2), ("correct", 3))
+        r, h = _btree(revised), _btree(honest)
+        for k in REVISE_FIELDS:
+            check(f"revise up: {k} matches the honest grade", r.get(k) == h.get(k),
+                  f"revised {r.get(k)!r} vs honest {h.get(k)!r}")
+        check("revise up: the due concept moved up a box (3 -> 4)", r.get("box") == 4, r.get("box"))
+        check("revise up: the learned count matches the honest crossing",
+              _learned(revised) == _learned(honest) == 6, (_learned(revised), _learned(honest)))
+        check("revise up: the schedule is said in words", out.get("schedule") == "moved up", out)
+        check("revise up: no box number in the output",
+              "box" not in out and "boxBefore" not in out, out)
+        check("revise up: the level is rendered", out.get("bloomOutcome"), out)
+
+
+def t_revise_review_lowers_a_wrong_correct():
+    """revise-a-grade/REQ-1, REQ-4: a generous `correct` at level 4, revised
+    to `incorrect`, takes back the promotion, the streak, the level and the
+    learned count — the one place the level goes down."""
+    with tempfile.TemporaryDirectory() as root:
+        revised, honest, out = _revise_pair(root, ("correct", 4), ("incorrect", 2))
+        r, h = _btree(revised), _btree(honest)
+        for k in REVISE_FIELDS:
+            check(f"revise down: {k} matches the honest grade", r.get(k) == h.get(k),
+                  f"revised {r.get(k)!r} vs honest {h.get(k)!r}")
+        check("revise down: the level went back below 3", r.get("bloomLevel", 0) < 3, r)
+        check("revise down: the learned count went back down",
+              _learned(revised) == _learned(honest) == 5, (_learned(revised), _learned(honest)))
+        check("revise down: the schedule is said in words",
+              out.get("schedule") == "back to the start", out)
+
+
+def t_revise_review_keeps_the_wrong_entry():
+    """revise-a-grade/REQ-2: the wrong entry stays in the concept's record,
+    marked with the day and the reason, out of the history readers count."""
+    with tempfile.TemporaryDirectory() as root:
+        revised, _, _ = _revise_pair(root, ("incorrect", 2), ("correct", 3))
+        c = _btree(revised)
+        today = TODAY.isoformat()
+        hist = c.get("reviewHistory", [])
+        kept = c.get("revisedReviews", [])
+        check("revise keeps: one wrong entry kept aside", len(kept) == 1, kept)
+        w = kept[0] if kept else {}
+        check("revise keeps: as recorded", w.get("result") == "incorrect"
+              and w.get("bloomLevel") == 2 and w.get("date") == today, w)
+        check("revise keeps: marked with the day and the reason",
+              w.get("revisedOn") == today
+              and w.get("revisedReason") == "the answer named the page split the grade missed", w)
+        check("revise keeps: the history no longer holds the wrong grade",
+              not any(h.get("date") == today and h.get("result") == "incorrect" for h in hist), hist)
+        check("revise keeps: the replacing entry is flagged",
+              hist and hist[-1].get("result") == "correct" and hist[-1].get("revision") is True,
+              hist[-1:] if hist else hist)
+
+
+def t_revise_review_readers_match_honest():
+    """revise-a-grade/REQ-3, REQ-8: every reader says of the revised record
+    exactly what it says of the honest one, and verify accepts it."""
+    with tempfile.TemporaryDirectory() as root:
+        revised, honest, _ = _revise_pair(root, ("incorrect", 2), ("correct", 3))
+        check("revise readers: verify accepts a revised record", run(revised, "verify")["ok"] is True)
+        for argv in READERS:
+            a = subprocess.run([sys.executable, SCRIPT, "--project", revised, *argv],
+                               capture_output=True, text=True)
+            b = subprocess.run([sys.executable, SCRIPT, "--project", honest, *argv],
+                               capture_output=True, text=True)
+            # Parsed, not raw: calibration's buckets come from a set, so their
+            # order differs between any two processes.
+            def parsed(r, proj):
+                try:
+                    return json.loads(r.stdout.replace(proj, "<P>"))
+                except json.JSONDecodeError:
+                    return r.stdout
+            same = (a.returncode, parsed(a, revised)) == (b.returncode, parsed(b, honest))
+            check(f"revise readers: {argv[0]} reads the revised record as the honest one",
+                  same, f"\n--- revised\n{a.stdout[:600]}{a.stderr[-200:]}\n"
+                        f"--- honest\n{b.stdout[:600]}{b.stderr[-200:]}")
+
+
+def t_revise_review_refusals():
+    """revise-a-grade/REQ-5, REQ-6: anything but today's latest graded entry,
+    or a revision with no reason, is refused, and no file changes."""
+    today = TODAY.isoformat()
+    yesterday = (TODAY - datetime.timedelta(days=1)).isoformat()
+    def files(proj):
+        out = {}
+        for d, _, names in os.walk(os.path.dirname(proj)):
+            for n in names:
+                with open(os.path.join(d, n), "rb") as f:
+                    out[os.path.join(d, n)] = f.read()
+        return out
+    def fresh(root, label):
+        base = os.path.join(root, label)
+        os.makedirs(base)
+        proj = make_project(base, spaced_review=json.loads(json.dumps(V2_SR)))
+        run(proj, "migrate-spaced-review")
+        return proj
+    rec = ("record-review", "--concept", "B-tree indexes", "--tested-bloom", "2")
+    rev = ("revise-review", "--concept", "B-tree indexes", "--result", "correct",
+           "--tested-bloom", "3")
+    reason = ("--reason", "named the page split")
+    cases = []
+    with tempfile.TemporaryDirectory() as root:
+        p = fresh(root, "no-reason"); run(p, *rec, "--result", "incorrect")
+        cases.append(("an empty reason", p, rev + ("--reason", "  ")))
+        p = fresh(root, "nothing-today")
+        cases.append(("no graded entry today", p, rev + reason))
+        p = fresh(root, "yesterday"); run(p, *rec, "--result", "incorrect", on=yesterday)
+        cases.append(("the latest entry is yesterday's", p, rev + reason))
+        p = fresh(root, "retry"); run(p, *rec, "--result", "incorrect")
+        run(p, *rec, "--result", "correct", "--retry")
+        cases.append(("the latest entry is a relearning retry", p, rev + reason))
+        p = fresh(root, "forget"); run(p, *rec, "--result", "incorrect")
+        run(p, "forget", "--concept", "B-tree indexes")
+        cases.append(("the latest entry is a /forget reset", p, rev + reason))
+        p = fresh(root, "defer"); run(p, *rec, "--result", "correct")
+        run(p, "defer", "--concept", "B-tree indexes")
+        cases.append(("the latest entry is a deferral", p, rev + reason))
+        p = fresh(root, "no-snapshot")
+        sr = read_sr(p)
+        c = next(c for c in sr["concepts"] if c["name"] == "B-tree indexes")
+        c["reviewHistory"].append({"date": today, "result": "incorrect", "boxBefore": 3})
+        with open(os.path.join(p, ".bodhi", "spaced-review.json"), "w") as f:
+            json.dump(sr, f, indent=2)
+        cases.append(("today's entry has no saved prior state", p, rev + reason))
+        p = fresh(root, "untracked")
+        cases.append(("the concept is not tracked", p,
+                      ("revise-review", "--concept", "Nope", "--result", "correct") + reason))
+        for label, proj, argv in cases:
+            before = files(proj)
+            out = run(proj, *argv, expect_fail=True)
+            check(f"revise refused: {label}", out.get("ok") is False or "error" in out, out)
+            check(f"revise refused: {label} changes no file", files(proj) == before)
+
+
+def t_golden_snapshot_strip_is_narrow():
+    """revise-a-grade/REQ-9: the golden compare drops only beforeLastReview
+    from a spaced-review file the current engine wrote; any other change
+    still differs."""
+    rec = {"version": 3, "concepts": [{"name": "X", "box": 2}]}
+    want = json.dumps(rec, indent=2, ensure_ascii=False) + "\n"
+    def got(**extra):
+        c = dict(rec["concepts"][0], **extra)
+        return json.dumps(dict(rec, concepts=[c]), indent=2, ensure_ascii=False) + "\n"
+    snap = {"date": "2026-05-21", "box": 1}
+    def differ(text, path="p/.bodhi/spaced-review.json"):
+        return _golden_files_differ({"steps": [], "files": {path: want}},
+                                    {"files": {path: text}})
+    check("golden snapshot: beforeLastReview alone reads as unchanged",
+          differ(got(beforeLastReview=snap)) == [])
+    check("golden snapshot: another new key still differs",
+          differ(got(beforeLastReview=snap, other=1)) != [])
+    check("golden snapshot: a changed field still differs",
+          differ(got(beforeLastReview=snap, box=3)) != [])
+    check("golden snapshot: a backup copy is stripped the same way",
+          differ(got(beforeLastReview=snap), "p/.bodhi/.pre-normalize-backup/spaced-review.json") == [])
+    check("golden snapshot: other files are not stripped",
+          differ(got(beforeLastReview=snap), "p/.bodhi/state.json") != [])
+    odd = '{"version": 2, "concepts": []}\n'
+    check("golden snapshot: a file without the key keeps its own bytes",
+          _golden_files_differ({"steps": [], "files": {"p/.bodhi/spaced-review.json": odd}},
+                               {"files": {"p/.bodhi/spaced-review.json": odd}}) == [])
+
+
 def t_golden_code_path():
     """learn-anything/REQ-1, REQ-3: on a project with no evidence kind, the
     engine does what release 1.24.1 did. dev/eval/make_golden.py recorded
@@ -4223,7 +4474,10 @@ def main():
               t_evidence_kind_resolver, t_evidence_kind_shapes,
               t_set_evidence_kind, t_basis_filter_every_reader, t_single_applied_reader,
               t_applied_basis_write, t_applied_cli_back_compat, t_kind_read_surfaces,
-              t_solid_by_report, t_kind_breakdowns, t_performed_solid_needs_graded_parts):
+              t_solid_by_report, t_kind_breakdowns, t_performed_solid_needs_graded_parts,
+              t_revise_review_restores_a_wrong_incorrect, t_revise_review_lowers_a_wrong_correct,
+              t_revise_review_keeps_the_wrong_entry, t_revise_review_readers_match_honest,
+              t_revise_review_refusals, t_golden_snapshot_strip_is_narrow):
         print(f"-- {t.__name__}")
         try:
             t()

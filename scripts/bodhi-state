@@ -849,22 +849,9 @@ def cmd_record_review(args):
         concept = new_concept(args.concept, args.module, args.question or "")
         data.setdefault("concepts", []).append(concept)
         created = True
-    kind = effective_kind(concept)
-    if args.evidence is not None and args.applied is None:
-        die("--evidence is the path of applied work; pass it with --applied")
-    if args.applied is not None and not admits(kind, args.applied):
-        die(f"concept {concept['name']!r} is a {kind} concept: --applied "
-            f"{args.applied} (the learner's word, or a photo the tutor examined) "
-            f"counts only on a performed concept — record it without --applied, "
-            f"or as --applied observed with the saved work")
-    evidence = None
-    if args.evidence is not None:
-        evidence = evidence_path(args.project, args.evidence, kind, args.applied)
-    elif args.applied == "observed" and kind != "code":
-        die(f"--applied observed on a {kind} concept needs --evidence <path>: the "
-            f"learner's work saved in the project, beside the exercise's key "
-            f"({' or '.join(KEY_FILES)})")
+    evidence = applied_evidence_arg(args, concept)
     old_bloom = concept.get("bloomLevel", 0)
+    snapshot_before_review(concept)
     change = apply_review(concept, args.result, args.tested_bloom,
                           confidence=args.confidence, note=args.note,
                           source=args.source, retry=args.retry,
@@ -885,6 +872,104 @@ def cmd_record_review(args):
     change["created"] = created
     if created:
         change["newModule"] = new_module
+    emit(change)
+
+
+def applied_evidence_arg(args, concept):
+    """Check --applied and --evidence against the concept's kind; returns the
+    checked evidence path or None. Shared by record-review and revise-review."""
+    kind = effective_kind(concept)
+    if args.evidence is not None and args.applied is None:
+        die("--evidence is the path of applied work; pass it with --applied")
+    if args.applied is not None and not admits(kind, args.applied):
+        die(f"concept {concept['name']!r} is a {kind} concept: --applied "
+            f"{args.applied} (the learner's word, or a photo the tutor examined) "
+            f"counts only on a performed concept — record it without --applied, "
+            f"or as --applied observed with the saved work")
+    evidence = None
+    if args.evidence is not None:
+        evidence = evidence_path(args.project, args.evidence, kind, args.applied)
+    elif args.applied == "observed" and kind != "code":
+        die(f"--applied observed on a {kind} concept needs --evidence <path>: the "
+            f"learner's work saved in the project, beside the exercise's key "
+            f"({' or '.join(KEY_FILES)})")
+    return evidence
+
+
+# revise-a-grade: what a review overwrites on the concept. The fields are set
+# at write time and never recomputed from history, so the state before a
+# wrong grade survives only if it is saved before the grade lands.
+SNAPSHOT_FIELDS = ("box", "nextReview", "consecutiveCorrectAtL4Plus", "bloomLevel",
+                   "lastReviewed", "lastResult")
+
+
+def snapshot_before_review(concept):
+    """Save the concept as it is before a review (state-schema KB
+    beforeLastReview). A field the concept lacks is left out, so a restore
+    can remove it again."""
+    snap = {"date": iso(today())}
+    for k in SNAPSHOT_FIELDS:
+        if k in concept:
+            snap[k] = concept[k]
+    concept["beforeLastReview"] = snap
+
+
+def cmd_revise_review(args):
+    """Correct today's latest graded review of a concept (revise-a-grade).
+    The wrong entry moves to revisedReviews, where no reader counts it; the
+    concept goes back to its state before that review; the right grade is
+    applied through apply_review in its place. The one path that can lower
+    bloomLevel: the level the wrong entry produced was never earned."""
+    reason = (args.reason or "").strip()
+    if not reason:
+        die("--reason is required: what the grade missed — the part of the "
+            "learner's answer it did not credit, or what the recheck found")
+    path, data = load_spaced_review(args.project)
+    concept = find_concept(data, args.concept)
+    if concept is None:
+        die(f"concept {args.concept!r} not tracked")
+    t = iso(today())
+    history = concept.get("reviewHistory") or []
+    last = history[-1] if history else None
+    if (not isinstance(last, dict) or last.get("date") != t or last.get("deferred")
+            or last.get("result") not in ("correct", "incorrect", "partial")):
+        die(f"nothing to revise on {concept['name']!r}: only the latest entry, "
+            f"graded today, can be revised, and its latest entry is not")
+    if last.get("retry"):
+        die(f"the latest entry on {concept['name']!r} is a relearning retry, which "
+            f"moved nothing; the graded review before it can no longer be revised")
+    if is_self_report(last):
+        die(f"the latest entry on {concept['name']!r} is a /forget reset the learner "
+            f"asked for, not a grade")
+    snap = concept.get("beforeLastReview")
+    if not isinstance(snap, dict) or snap.get("date") != t:
+        die(f"today's review of {concept['name']!r} has no saved prior state "
+            f"(beforeLastReview), so it cannot be revised")
+    evidence = applied_evidence_arg(args, concept)
+    old_bloom = concept.get("bloomLevel", 0)
+    wrong = dict(history.pop())
+    wrong["revisedOn"] = t
+    wrong["revisedReason"] = reason
+    concept.setdefault("revisedReviews", []).append(wrong)
+    for k in SNAPSHOT_FIELDS:
+        if k in snap:
+            concept[k] = snap[k]
+        else:
+            concept.pop(k, None)
+    change = apply_review(concept, args.result, args.tested_bloom,
+                          confidence=args.confidence, note=args.note,
+                          source=args.source, applied=args.applied, evidence=evidence)
+    concept["reviewHistory"][-1]["revision"] = True
+    # Decision 0004, both ways: the learned count follows the level across 3.
+    new_bloom = change["bloomLevel"]
+    delta = 1 if old_bloom < 3 <= new_bloom else -1 if new_bloom < 3 <= old_bloom else 0
+    profile_path = find_profile(args.project) if delta else None
+    profile = load_json(profile_path) if profile_path else None
+    data["lastReviewCheck"] = now_iso()
+    write_spaced_review(path, data)
+    if profile is not None:
+        bump_stat(profile_path, profile, "totalConceptsLearned", by=delta)
+    change["revisedFrom"] = wrong["result"]
     emit(change)
 
 
@@ -1162,12 +1247,14 @@ def cmd_set_evidence_kind(args):
           "moduleEvidenceKinds": state.get("moduleEvidenceKinds", {})})
 
 
-def bump_stat(path, profile, counter):
+def bump_stat(path, profile, counter, by=1):
     """Add one to a cumulativeStats counter and write the profile. The one
     path for bump-profile and for the counters the script keeps itself
-    (touch-state's totalSessions, record-review's totalConceptsLearned)."""
+    (touch-state's totalSessions, record-review's totalConceptsLearned).
+    `by=-1` is revise-review taking back a crossing; a count never goes
+    below zero."""
     stats = profile.setdefault("cumulativeStats", {})
-    stats[counter] = stats.get(counter, 0) + 1
+    stats[counter] = max(0, stats.get(counter, 0) + by)
     profile["lastUpdated"] = now_iso()
     write_json(path, profile)
     return stats[counter]
@@ -3246,6 +3333,23 @@ def main():
                    help="successive-relearning retry: history entry only, no "
                         "box/counter/bloom movement (the original demotion stands)")
     s.set_defaults(fn=cmd_record_review)
+
+    s = sub.add_parser("revise-review",
+                       help="correct today's latest graded review of a concept, graded "
+                            "wrong: the concept returns to its state before it and the "
+                            "right grade is applied in its place")
+    s.add_argument("--concept", required=True)
+    s.add_argument("--result", required=True, choices=["correct", "incorrect", "partial"])
+    s.add_argument("--tested-bloom", type=int, choices=range(0, 7), default=None)
+    s.add_argument("--confidence", choices=sorted(CONFIDENCE_VALUES), default=None)
+    s.add_argument("--note", default=None, help="short lastResult note")
+    s.add_argument("--source", default=None, help="which skill produced this review")
+    s.add_argument("--applied", nargs="?", const="observed", default=None,
+                   choices=APPLIED_BASES, help="as record-review --applied")
+    s.add_argument("--evidence", default=None, help="as record-review --evidence")
+    s.add_argument("--reason", default=None,
+                   help="required: what the wrong grade missed")
+    s.set_defaults(fn=cmd_revise_review)
 
     s = sub.add_parser("set-feynman", help="mark a concept's Feynman explain-back gate passed")
     s.add_argument("--concept", required=True)
