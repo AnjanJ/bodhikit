@@ -1136,6 +1136,55 @@ def t_session_brief():
         check("brief: carries currentModule", out["currentModule"] == "Module B", out)
 
 
+def box_move(proj, name):
+    """The Leitner move of the latest review, read from the tracking file
+    (decision 0003: record-review's output says it in words, not numbers)."""
+    c = next(x for x in read_sr(proj)["concepts"] if x["name"] == name)
+    return f'{c["reviewHistory"][-1]["boxBefore"]} -> {c["box"]}'
+
+
+def t_writers_say_no_box():
+    """Decision 0003: the write commands print no box number. record-review
+    says the move in words; forget and add-concept drop the field. The
+    tracking files keep every number."""
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review={"version": 3, "concepts": [],
+                                                  "sessionHistory": []})
+        out = run(proj, "add-concept", "--concept", "Maps", "--module", "M1", on="2026-10-01")
+        check("no box: add-concept prints no box", "box" not in out, out)
+        check("no box: add-concept still files Box 1",
+              read_sr(proj)["concepts"][0]["box"] == 1)
+        cases = [  # (day, result, extra, schedule, move)
+            ("2026-10-01", "correct", [], "held", "1 -> 1"),            # first review
+            ("2026-10-02", "correct", [], "moved up", "1 -> 2"),
+            ("2026-10-03", "correct", [], "held", "2 -> 2"),            # not yet due
+            ("2026-10-05", "partial", [], "held", "2 -> 2"),
+            ("2026-10-06", "correct", ["--retry"], "held", "2 -> 2"),   # relearning rep
+            ("2026-10-06", "incorrect", [], "back to the start", "2 -> 1"),
+            ("2026-10-07", "incorrect", [], "back to the start", "1 -> 1"),
+        ]
+        for day, result, extra, word, move in cases:
+            out = run(proj, "record-review", "--concept", "Maps", "--result", result,
+                      "--tested-bloom", "2", *extra, on=day)
+            label = f"{day} {result}{' retry' if extra else ''}"
+            check(f"no box: record-review {label} says {word!r}",
+                  out.get("schedule") == word, out)
+            check(f"no box: record-review {label} prints no box",
+                  "box" not in out, out)
+            check(f"no box: record-review {label} still moves {move}",
+                  box_move(proj, "Maps") == move, box_move(proj, "Maps"))
+        run(proj, "record-review", "--concept", "Maps", "--result", "correct",
+            "--tested-bloom", "2", on="2026-10-08")
+        out = run(proj, "forget", "--concept", "Maps", on="2026-10-09")
+        check("no box: forget prints no boxChanges", "boxChanges" not in out, out)
+        check("no box: forget names the concept", out.get("concepts") == ["Maps"], out)
+        sr = read_sr(proj)
+        check("no box: forget still files Box 1", sr["concepts"][0]["box"] == 1)
+        check("no box: the session entry keeps its boxChanges",
+              sr["sessionHistory"][-1].get("boxChanges") == {"Maps": "2 -> 1"},
+              sr["sessionHistory"][-1])
+
+
 def t_newly_learned():
     """Decision 0002: the crossing that triggers bump-profile is reported as
     newlyLearned, a name without a rung the tutor could read aloud."""
@@ -1894,7 +1943,8 @@ def t_date_travel():
         out = run(proj, "record-review", "--concept", "B-tree indexes",
                   "--result", "correct", "--tested-bloom", "4", on="2026-06-01")
         check("travel: promotion recorded on the pinned day",
-              out.get("box") == "3 -> 4", out)
+              box_move(proj, "B-tree indexes") == "3 -> 4"
+              and out.get("schedule") == "moved up", out)
         c = next(x for x in read_sr(proj)["concepts"] if x["name"] == "B-tree indexes")
         check("travel: nextReview is the box-4 interval from the pinned day",
               c["nextReview"] == "2026-06-15" and c["lastReviewed"] == "2026-06-01", c)
@@ -2593,12 +2643,14 @@ def t_same_day_promotion():
                     "--result", "correct", "--tested-bloom", "3", "--source", "teach",
                     on="2026-09-06")
         check("same-day: the lesson's check is a first review",
-              first["box"] == "1 -> 1" and first.get("boxHeld") == "first review", first)
+              box_move(proj, "Loops") == "1 -> 1" and first.get("boxHeld") == "first review", first)
         d0 = "2026-09-07"
         promoted = run(proj, "record-review", "--concept", "Loops",
                        "--result", "correct", "--tested-bloom", "3", "--source", "quiz",
                        on=d0)
-        check("same-day: the next day's recall promotes", promoted["box"] == "1 -> 2", promoted)
+        check("same-day: the next day's recall promotes",
+              box_move(proj, "Loops") == "1 -> 2" and promoted["schedule"] == "moved up",
+              promoted)
         second = run(proj, "record-review", "--concept", "Loops",
                      "--result", "correct", "--tested-bloom", "4", "--source", "practice",
                      "--applied", on=d0)
@@ -2636,7 +2688,8 @@ def t_same_day_promotion():
         for day, box in (("2026-09-08", 2), ("2026-09-11", 3), ("2026-09-18", 4)):
             out = run(proj, "record-review", "--concept", "Loops",
                       "--result", "correct", "--tested-bloom", "4", "--applied", on=day)
-            check(f"same-day: {day} promotes to {box}", out["box"].endswith(f"-> {box}"), out)
+            check(f"same-day: {day} promotes to {box}",
+                  box_move(proj, "Loops").endswith(f"-> {box}"), out)
         c = read_sr(proj)["concepts"][0]
         check("same-day: streak counts spaced days only",
               c["consecutiveCorrectAtL4Plus"] == 3, c["consecutiveCorrectAtL4Plus"])
@@ -2653,7 +2706,7 @@ def t_same_day_promotion():
               out.get("boxHeld") == "not yet due", out)
         out = run(proj2, "record-review", "--concept", "Maps",
                   "--result", "correct", "--tested-bloom", "2", on="2026-09-08")
-        check("same-day: the deferred date promotes", out["box"] == "1 -> 2", out)
+        check("same-day: the deferred date promotes", box_move(proj2, "Maps") == "1 -> 2", out)
 
 
 def t_due_gated_promotion():
@@ -2670,10 +2723,11 @@ def t_due_gated_promotion():
         for day in ("2026-10-01", "2026-10-02", "2026-10-03", "2026-10-04"):
             out = run(proj, "record-review", "--concept", "Closures", "--result", "correct",
                       "--tested-bloom", "4", "--source", "quiz", on=day)
-            boxes.append((out["box"], out.get("boxHeld")))
+            boxes.append((box_move(proj, "Closures"), out.get("schedule"), out.get("boxHeld")))
         check("due-gate: consecutive days climb one box, not four",
-              boxes == [("1 -> 1", "first review"), ("1 -> 2", None),
-                        ("2 -> 2", "not yet due"), ("2 -> 2", "not yet due")], boxes)
+              boxes == [("1 -> 1", "held", "first review"), ("1 -> 2", "moved up", None),
+                        ("2 -> 2", "held", "not yet due"),
+                        ("2 -> 2", "held", "not yet due")], boxes)
         run(proj, "set-feynman", "--concept", "Closures", on="2026-10-04")
         out = run(proj, "record-review", "--concept", "Closures", "--result", "correct",
                   "--tested-bloom", "4", "--applied", "--source", "practice", on="2026-10-04")
@@ -2689,7 +2743,7 @@ def t_due_gated_promotion():
                          ("2026-10-12", "3 -> 4")):
             out = run(proj, "record-review", "--concept", "Closures", "--result", "correct",
                       "--tested-bloom", "4", "--source", "quiz", on=day)
-            check(f"due-gate: {day} -> {box}", out["box"] == box, out)
+            check(f"due-gate: {day} -> {box}", box_move(proj, "Closures") == box, out)
         c = read_sr(proj)["concepts"][0]
         check("due-gate: streak counts due corrects only",
               c["consecutiveCorrectAtL4Plus"] == 3, c)
@@ -2700,7 +2754,7 @@ def t_due_gated_promotion():
         out = run(proj, "record-review", "--concept", "Closures", "--result", "correct",
                   "--tested-bloom", "4", on="2026-11-20")
         check("due-gate: overdue correct promotes from today",
-              out["box"] == "4 -> 5" and out["nextReview"] == "2026-12-20", out)
+              box_move(proj, "Closures") == "4 -> 5" and out["nextReview"] == "2026-12-20", out)
         # An early miss still demotes; an early partial still resets the streak.
         out = run(proj, "record-review", "--concept", "Closures", "--result", "partial",
                   "--tested-bloom", "4", on="2026-11-25")
@@ -2710,7 +2764,9 @@ def t_due_gated_promotion():
               and c["nextReview"] == "2026-11-26", c)
         out = run(proj, "record-review", "--concept", "Closures", "--result", "incorrect",
                   "--tested-bloom", "4", on="2026-11-26")
-        check("due-gate: a miss demotes whenever it happens", out["box"] == "5 -> 1", out)
+        check("due-gate: a miss demotes whenever it happens",
+              box_move(proj, "Closures") == "5 -> 1"
+              and out["schedule"] == "back to the start", out)
 
         # A /learn seed taught weeks later is overdue on paper: the lesson's
         # check is still first contact, and it restarts the clock.
@@ -2718,13 +2774,14 @@ def t_due_gated_promotion():
         out = run(proj, "record-review", "--concept", "Seeded", "--result", "correct",
                   "--tested-bloom", "3", "--source", "teach", on="2026-09-20")
         check("due-gate: first review of an overdue seed holds at box 1",
-              out["box"] == "1 -> 1" and out.get("boxHeld") == "first review"
+              box_move(proj, "Seeded") == "1 -> 1" and out.get("boxHeld") == "first review"
               and out["nextReview"] == "2026-09-21", out)
         due = [d["name"] for d in run(proj, "due", on="2026-09-20")["concepts"]]
         check("due-gate: a just-taught seed leaves today's due list", "Seeded" not in due, due)
         out = run(proj, "record-review", "--concept", "Seeded", "--result", "correct",
                   "--tested-bloom", "3", on="2026-09-21")
-        check("due-gate: the first spaced recall promotes", out["box"] == "1 -> 2", out)
+        check("due-gate: the first spaced recall promotes",
+              box_move(proj, "Seeded") == "1 -> 2", out)
 
         # No readable nextReview: measured from lastReviewed + the box interval.
         sr = read_sr(proj)
@@ -2748,11 +2805,11 @@ def t_due_gated_promotion():
             out = run(proj, "record-review", "--concept", name, "--result", "correct",
                       "--tested-bloom", "3", on="2026-09-15")
             check(f"due-gate: {name} past the box interval promotes",
-                  out["box"] == "3 -> 4", out)
+                  box_move(proj, name) == "3 -> 4", out)
         out = run(proj, "record-review", "--concept", "Legacy", "--result", "correct",
                   "--tested-bloom", "3", on="2026-09-07")
         check("due-gate: no date at all is nothing to be early against",
-              out["box"] == "2 -> 3" and out["nextReview"] == "2026-09-14", out)
+              box_move(proj, "Legacy") == "2 -> 3" and out["nextReview"] == "2026-09-14", out)
 
 
 def t_mastered_due_for_check():
@@ -3797,28 +3854,52 @@ def _drop(obj, parts, dropped):
             _drop(kid, rest, dropped)
 
 
-# Output keys renamed since 1.24.1 by a decision record, per writer. The
-# recording is rewritten with the new name in the same position and then
-# compared byte for byte, so nothing else about the output may drift.
-GOLDEN_RENAMED_KEYS = {
-    "record-review": {"crossedBloom3": "newlyLearned"},   # decision 0002
+def _golden_schedule(argv, box):
+    """The word record-review prints for a recorded "a -> b" (decision 0003)."""
+    old, new = (int(x) for x in box.split(" -> "))
+    if "--retry" in argv:
+        return "held"
+    if argv[argv.index("--result") + 1] == "incorrect":
+        return "back to the start"
+    return "moved up" if new > old else "held"
+
+
+def _golden_record_review(argv, pairs):
+    out = []
+    for k, v in pairs:
+        if k == "crossedBloom3":
+            out.append(("newlyLearned", v))                       # decision 0002
+        elif k == "box":
+            out.append(("schedule", _golden_schedule(argv, v)))   # decision 0003
+        else:
+            out.append((k, v))
+    return out
+
+
+# Writer outputs changed since 1.24.1 by a decision record. Each rewrites the
+# recording in place, keeping every other key where it was, and the result is
+# then compared byte for byte, so nothing else about the output may drift.
+GOLDEN_OUTPUT_CHANGES = {
+    "record-review": _golden_record_review,
+    "forget": lambda argv, pairs: [(k, v) for k, v in pairs if k != "boxChanges"],  # 0003
+    "add-concept": lambda argv, pairs: [(k, v) for k, v in pairs if k != "box"],    # 0003
 }
 
 
-def _golden_renamed(cmd, stdout):
-    renames = GOLDEN_RENAMED_KEYS.get(cmd)
-    if not renames:
+def _golden_changed(cmd, argv, stdout):
+    change = GOLDEN_OUTPUT_CHANGES.get(cmd)
+    if not change:
         return stdout
     try:
-        obj = json.loads(stdout, object_pairs_hook=list)
+        obj = json.loads(stdout)   # dicts keep the recorded key order
     except json.JSONDecodeError:
         return stdout
-    if not isinstance(obj, list):
+    if not isinstance(obj, dict):
         return stdout
     tail = stdout[len(stdout.rstrip("\n")):]
-    if json.dumps(dict(obj), indent=2, ensure_ascii=False) + tail != stdout:
+    if json.dumps(obj, indent=2, ensure_ascii=False) + tail != stdout:
         return stdout   # not emit()'s shape: leave it to the strict compare
-    return json.dumps({renames.get(k, k): v for k, v in obj},
+    return json.dumps(dict(change(argv, list(obj.items()))),
                       indent=2, ensure_ascii=False) + tail
 
 
@@ -3826,7 +3907,8 @@ def _golden_step_differs(readers, cmd, want, got):
     if (want["rc"], want["stderr"]) != (got["rc"], got["stderr"]):
         return "exit code or stderr"
     if cmd not in readers:
-        return "output" if _golden_renamed(cmd, want["stdout"]) != got["stdout"] else None
+        expected = _golden_changed(cmd, want.get("argv", [cmd]), want["stdout"])
+        return "output" if expected != got["stdout"] else None
     try:
         w, g = json.loads(want["stdout"]), json.loads(got["stdout"])
     except json.JSONDecodeError:
@@ -3840,28 +3922,56 @@ def _golden_step_differs(readers, cmd, want, got):
 
 
 def t_golden_rename_is_narrow():
-    """Decision 0002: the golden comparison maps record-review's one renamed
-    key and nothing else, so the tripwire still fails on any other drift."""
-    def step(obj):
-        return {"rc": 0, "stderr": "",
+    """Decisions 0002 and 0003: the golden comparison rewrites only the
+    outputs those records changed, so the tripwire still fails on any other
+    drift."""
+    def step(obj, argv=("record-review", "--concept", "X", "--result", "correct")):
+        return {"rc": 0, "stderr": "", "argv": list(argv),
                 "stdout": json.dumps(obj, indent=2, ensure_ascii=False) + "\n"}
-    old = {"concept": "X", "crossedBloom3": True, "crossedLevel": True, "ok": True}
-    new = {"concept": "X", "newlyLearned": True, "crossedLevel": True, "ok": True}
-    readers = {"due"}
-    check("golden rename: the renamed key alone reads as unchanged",
-          _golden_step_differs(readers, "record-review", step(old), step(new)) is None)
+    def differs(cmd, want, got):
+        return _golden_step_differs({"due"}, cmd, want, got)
+    old = {"concept": "X", "box": "1 -> 2", "crossedBloom3": True,
+           "crossedLevel": True, "ok": True}
+    new = {"concept": "X", "schedule": "moved up", "newlyLearned": True,
+           "crossedLevel": True, "ok": True}
+    check("golden rename: the recorded changes alone read as unchanged",
+          differs("record-review", step(old), step(new)) is None)
+    check("golden rename: a wrong schedule word still differs",
+          differs("record-review", step(old), step(dict(new, schedule="held"))) is not None)
+    miss = ("record-review", "--concept", "X", "--result", "incorrect")
+    check("golden rename: a miss reads as back to the start",
+          differs("record-review", step(dict(old, box="4 -> 1"), miss),
+                  step(dict(new, schedule="back to the start"), miss)) is None)
+    retry = ("record-review", "--concept", "X", "--result", "correct", "--retry")
+    check("golden rename: a retry reads as held",
+          differs("record-review", step(dict(old, box="1 -> 1"), retry),
+                  step(dict(new, schedule="held"), retry)) is None)
     check("golden rename: a changed value still differs",
-          _golden_step_differs(readers, "record-review", step(old),
-                               step(dict(new, newlyLearned=False))) is not None)
+          differs("record-review", step(old), step(dict(new, newlyLearned=False))) is not None)
     check("golden rename: another key's change still differs",
-          _golden_step_differs(readers, "record-review", step(old),
-                               step(dict(new, crossedLevel=False))) is not None)
+          differs("record-review", step(old), step(dict(new, crossedLevel=False))) is not None)
     check("golden rename: the key's position still matters",
-          _golden_step_differs(readers, "record-review", step(old),
-                               step({"newlyLearned": True, "concept": "X",
-                                     "crossedLevel": True, "ok": True})) is not None)
-    check("golden rename: only record-review is mapped",
-          _golden_step_differs(readers, "set-feynman", step(old), step(new)) is not None)
+          differs("record-review", step(old),
+                  step({"schedule": "moved up", "concept": "X", "newlyLearned": True,
+                        "crossedLevel": True, "ok": True})) is not None)
+    check("golden rename: only the recorded commands are rewritten",
+          differs("set-feynman", step(old), step(new)) is not None)
+    f_old = {"action": "demoted", "concepts": ["X"], "boxChanges": {"X": "4 -> 1"}, "ok": True}
+    f_new = {"action": "demoted", "concepts": ["X"], "ok": True}
+    check("golden rename: forget without boxChanges reads as unchanged",
+          differs("forget", step(f_old, ("forget",)), step(f_new, ("forget",))) is None)
+    check("golden rename: forget losing another key still differs",
+          differs("forget", step(f_old, ("forget",)),
+                  step({"action": "demoted", "ok": True}, ("forget",))) is not None)
+    a_old = {"concept": "X", "box": 1, "nextReview": "2026-10-02", "ok": True}
+    check("golden rename: add-concept without box reads as unchanged",
+          differs("add-concept", step(a_old, ("add-concept",)),
+                  step({"concept": "X", "nextReview": "2026-10-02", "ok": True},
+                       ("add-concept",))) is None)
+    check("golden rename: add-concept with a changed date still differs",
+          differs("add-concept", step(a_old, ("add-concept",)),
+                  step({"concept": "X", "nextReview": "2026-10-03", "ok": True},
+                       ("add-concept",))) is not None)
 
 
 def t_golden_code_path():
@@ -3910,7 +4020,7 @@ def main():
               t_box_before, t_retention, t_export_anonymized,
               t_defer, t_verify_flags_drift, t_normalize, t_last_activity_threshold,
               t_profile_project_list_shape,
-              t_session_brief, t_newly_learned, t_snapshot,
+              t_session_brief, t_writers_say_no_box, t_newly_learned, t_snapshot,
               t_due_never_taught, t_concept_tiers,
               t_profile_project_lifecycle, t_profile_patterns, t_park,
               t_bloom_render, t_gate_evidence,

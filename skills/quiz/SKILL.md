@@ -136,7 +136,7 @@ The writes are the product of the quiz; the results table is the receipt. Per th
    "${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> touch-state --activity "<one line, e.g. 'Quizzed indexing: 5/7, planner cost model still shaky'>"
    ```
 
-4. **Append the quiz entry to `.bodhi/progress.md` with the Write tool** (markdown surfaces are written directly, per the `state-ops` KB): new entry at top — `## YYYY-MM-DD — Quiz (<topic>)`, score, concepts with box/Bloom movements (from the script outputs, Bloom as `Label (N)`), confidence-calibration observations — existing content preserved verbatim below.
+4. **Append the quiz entry to `.bodhi/progress.md` with the Write tool** (markdown surfaces are written directly, per the `state-ops` KB): new entry at top — `## YYYY-MM-DD — Quiz (<topic>)`, score, concepts with their schedule and Bloom movements (from the script outputs: `schedule` in its own words, Bloom as `Label (N)`), confidence-calibration observations — existing content preserved verbatim below.
 
 **Fallback:** if `bodhi-state` is unavailable, follow the `state-schema` KB fallback rule — manual read → mutate-in-place → write → verify, preserving unknown fields.
 

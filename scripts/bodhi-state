@@ -742,7 +742,15 @@ def apply_review(concept, result, tested_bloom, confidence=None, note=None,
         archive_history(concept, history[:overflow])
         del history[:overflow]
     new_bloom = concept.get("bloomLevel", 0)
-    out = {"concept": concept["name"], "box": f"{old_box} -> {concept['box']}",
+    # The move in words, never the box number (decision 0003): a learner
+    # never sees a Leitner box, and the tutor repeated "box 1 -> 2" to one.
+    if retry:
+        schedule = "held"
+    elif result == "incorrect":
+        schedule = "back to the start"
+    else:
+        schedule = "moved up" if concept["box"] > old_box else "held"
+    out = {"concept": concept["name"], "schedule": schedule,
             "retry": retry,
             "applied": bool(applied),
             "appliedEvidence": applied_evidence(concept),
@@ -813,7 +821,7 @@ def cmd_add_concept(args):
         new_concept(args.concept, args.module, args.question or "", bloom))
     write_spaced_review(path, data)
     emit({"action": "added", "concept": args.concept, "module": args.module,
-          "box": 1, "nextReview": data["concepts"][-1]["nextReview"],
+          "nextReview": data["concepts"][-1]["nextReview"],
           "bloomLevel": bloom, **bloom_render(bloom)})
 
 
@@ -969,7 +977,9 @@ def cmd_forget(args):
     write_spaced_review(path, data)
     note_activity(args.project, args.activity or
                   f"Demoted {len(names)} concept(s): {', '.join(names)}")
-    emit({"action": "demoted", "concepts": names, "boxChanges": box_changes})
+    # boxChanges stays in the session entry above; the output carries no box
+    # number for the tutor to repeat (decision 0003).
+    emit({"action": "demoted", "concepts": names})
 
 
 def cmd_park(args):

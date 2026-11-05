@@ -56,7 +56,7 @@ One call performs the whole demote (box → 1, review tomorrow, `consecutiveCorr
 
 (For a concept whose name itself contains a comma, use the repeatable exact-name flag instead: `--concept "ACID, isolation levels"`.)
 
-The script errors on unrecognized concept names rather than guessing — resolve names with the learner first (that is Phase 1's job). Report the box changes from the script's JSON output.
+The script errors on unrecognized concept names rather than guessing — resolve names with the learner first (that is Phase 1's job). Tell the learner each concept is back for review tomorrow; the script's output names them and carries no box number to report.
 
 **Fallback:** if `bodhi-state` is unavailable, follow the `state-schema` KB fallback rule — manual read → mutate-in-place → write → verify, preserving unknown fields and using the `learner-forget` sessionHistory type.
 
