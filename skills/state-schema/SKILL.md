@@ -230,7 +230,7 @@ Cross-project learner profile (v2 split layout: this file holds top-level fields
 }
 ```
 
-- `cumulativeStats` counters are incremented via `bodhi-state bump-profile` (the skill decides WHEN — e.g. `/teach` bumps `totalConceptsLearned` only when a concept first reaches Bloom 3+ and `progress.md` shows no prior count for it). Exception: `totalSessions` is bumped automatically by `touch-state` on the first touch of a new day — no skill calls it directly.
+- `cumulativeStats` counters are incremented via `bodhi-state bump-profile` (the skill decides WHEN — e.g. `/practice` bumps `totalExercises` on each completed exercise). Two counters the script keeps itself, so no skill calls them: `totalSessions`, bumped by `touch-state` on the first touch of a new day, and `totalConceptsLearned`, bumped by `record-review` on the write that moves a concept's `bloomLevel` from below 3 to 3 or above (`bump-profile` refuses it; with no profile the count is skipped).
 - `patterns.persistentChallenges` / `patterns.consistentStrengths` are appended by `bodhi-state profile-update-patterns`, which counts the project's `assessment-history.json`: a sub-topic with 3+ entries at Bloom <3 appends to `persistentChallenges`; 3+ at Bloom 4+ appends to `consistentStrengths`. Append-only and deduplicated — the script does the counting; skills never tally assessments in prose.
 - `learnerBackground.domains[]` / `analogyHistory[]`: populated by the analogy-escalation protocol (see `feynman-technique` KB). Read-then-append; never overwrite.
 

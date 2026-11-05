@@ -546,6 +546,71 @@ def t_safety_medical(root):
          (None, transcript(root, "med-bad-2", ("text", "It's a dominant allele, so one in two."))))
 
 
+def v2_copy(root, name):
+    """A fresh copy of the v2 fixture workspace kb-load runs on; returns the
+    project path."""
+    dest = os.path.join(root, name)
+    shutil.copytree(os.path.join(FIXTURES, "v2-project"), dest)
+    return os.path.join(dest, "sql-deep-dive")
+
+
+def set_learned(proj, delta):
+    """Move the profile's totalConceptsLearned by hand, as a skill still doing
+    the old bump (or a run that skipped the count) would leave it."""
+    path = os.path.join(os.path.dirname(proj), ".bodhi-profile.json")
+    with open(path, encoding="utf-8") as f:
+        prof = json.load(f)
+    prof["cumulativeStats"]["totalConceptsLearned"] += delta
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(prof, f, indent=2)
+
+
+def review(proj, concept, *flags):
+    subprocess.run([sys.executable, os.path.join(REPO, "scripts", "bodhi-state"),
+                    "--project", proj, "record-review", "--concept", concept, *flags],
+                   check=True, capture_output=True, text=True)
+
+
+def t_kb_load_learned_counter(root):
+    """Decision 0004: kb-load's file state shows totalConceptsLearned moved by
+    exactly the number of crossing writes since the fixture."""
+    kb = ("tool", "Skill", {"skill": "bodhikit:teaching-personality"})
+    clean = transcript(root, "learned-clean", kb, ("text", "Good: you can apply it to a "
+                                                   "real case with some guidance."))
+    crossed = v2_copy(root, "learned-crossed")
+    review(crossed, "Query planning", "--result", "correct", "--tested-bloom", "3")
+    check("kb-load: a crossing counted once by record-review",
+          passes(A.assert_kb_load, crossed, clean)[0])
+    double = v2_copy(root, "learned-double")
+    review(double, "Query planning", "--result", "correct", "--tested-bloom", "3")
+    set_learned(double, +1)
+    pair("kb-load: fails a crossing counted twice (the old bump-profile duty)",
+         A.assert_kb_load, (crossed, clean), (double, clean))
+    missed = v2_copy(root, "learned-missed")
+    review(missed, "Query planning", "--result", "correct", "--tested-bloom", "3")
+    set_learned(missed, -1)
+    pair("kb-load: fails a crossing that was not counted", A.assert_kb_load,
+         (crossed, clean), (missed, clean))
+    below = v2_copy(root, "learned-below")
+    review(below, "Query planning", "--result", "correct", "--tested-bloom", "2")
+    bumped = v2_copy(root, "learned-bumped")
+    review(bumped, "Query planning", "--result", "correct", "--tested-bloom", "2")
+    set_learned(bumped, +1)
+    pair("kb-load: fails a count with no crossing", A.assert_kb_load,
+         (below, clean), (bumped, clean))
+    retried = v2_copy(root, "learned-retry")
+    review(retried, "Query planning", "--result", "incorrect", "--tested-bloom", "2")
+    review(retried, "Query planning", "--result", "correct", "--tested-bloom", "3",
+           "--retry")
+    check("kb-load: a retry is not a crossing",
+          passes(A.assert_kb_load, retried, clean)[0])
+    added = v2_copy(root, "learned-new-concept")
+    review(added, "Covering indexes", "--module", "Indexing", "--result", "correct",
+           "--tested-bloom", "3")
+    check("kb-load: a concept tracked and crossed today counts once",
+          passes(A.assert_kb_load, added, clean)[0])
+
+
 def t_harness_recap(root):
     # The live teach-vocabulary run, 2026-10-21: a clean closing to the learner,
     # then a wrap-up for the harness that names the level and box it recorded.
@@ -555,24 +620,25 @@ def t_harness_recap(root):
              "- `record-review` — write-ahead logging: correct, Bloom 3, Box 1, next review "
              "2026-10-22 (first review, box held by design).")
     kb = ("tool", "Skill", {"skill": "bodhikit:teaching-personality"})
+    v2 = v2_copy(root, "recap-v2")   # untouched: nothing crossed, nothing counted
     good = transcript(root, "recap-good", kb, ("text", closing + recap))
     bad = transcript(root, "recap-bad", kb, ("text", "That puts you at Bloom 3." + recap))
     pair("harness recap ('Session wrap-up') is not learner-facing", A.assert_kb_load,
-         (None, good), (None, bad))
+         (v2, good), (v2, bad))
     # The live kb-load run, 2026-10-22: between tool calls the tutor read the
     # record-review key aloud (decision 0002 renames it to newlyLearned).
     leak = transcript(root, "kb-leak", kb, ("text", "The answer crossed Bloom 3 "
                                             "(crossedBloom3: true), which per state-ops "
                                             "triggers the profile counter bump."))
     pair("kb-load fails the read-aloud crossedBloom3 key", A.assert_kb_load,
-         (None, good), (None, leak))
+         (v2, good), (v2, leak))
     # The live kb-load run, 2026-11-05: the closing line to the learner gave
     # the box in lower case, which a case-sensitive match let through.
     lower = transcript(root, "kb-lower-box", kb, ("text", "**Bookkeeping (all writes "
                                                   "completed):** review recorded (box 1 → 2, "
                                                   "you will see it again on 2026-11-08)."))
     pair("kb-load fails a lower-case box number", A.assert_kb_load,
-         (None, good), (None, lower))
+         (v2, good), (v2, lower))
 
 
 def t_continue_gate(root):
@@ -616,7 +682,8 @@ def main():
                   t_performed_practice_sets_rep, t_kind_gate_reconfirm_rep,
                   t_performed_repless_review, t_performed_by_your_account, t_plan_view_kind,
                   t_photo_inspected,
-                  t_safety_canning, t_safety_medical, t_harness_recap, t_continue_gate):
+                  t_safety_canning, t_safety_medical, t_kb_load_learned_counter,
+                  t_harness_recap, t_continue_gate):
             print(f"-- {t.__name__}")
             sub = os.path.join(root, t.__name__)
             os.makedirs(sub)

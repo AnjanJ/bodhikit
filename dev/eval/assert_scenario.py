@@ -739,6 +739,48 @@ def assert_kb_load(project, transcript):
         fail(f"learner-facing text quotes a bare level/box ({m.group(0)!r}) — "
              "render the bloomOutcome clause (blooms-taxonomy KB)")
     ok("no bare Bloom/Box numbers in learner-facing text")
+    assert_learned_counter(project)
+
+
+def _level(c):
+    v = c.get("bloomLevel", 0)
+    return v if isinstance(v, int) and not isinstance(v, bool) else 0
+
+
+def assert_learned_counter(project, fixture=None):
+    """Decision 0004: record-review counts a concept in the profile's
+    totalConceptsLearned on the write that moves its level from below 3 to 3
+    or above, and no skill bumps it. The ratchet lets a concept cross once, so
+    the crossings since the run began are the concepts below 3 in the fixture
+    and at 3 or above now; a concept first tracked today counts if a graded
+    correct at 3 or above (not a retry) is in today's history. The counter
+    must have moved by exactly that many."""
+    fixture = fixture or os.path.join(
+        os.environ.get("BODHI_EVAL_FIXTURE")
+        or os.path.join(REPO, "dev", "eval", "fixtures", "v2-project"),
+        os.path.basename(os.path.normpath(project)))
+    before = {_key(c["name"]): _level(c)
+              for c in load(fixture, ".bodhi", "spaced-review.json")["concepts"]}
+    crossings = 0
+    for c in load(project, ".bodhi", "spaced-review.json")["concepts"]:
+        start = before.get(_key(c["name"]))
+        if start is None:
+            crossed = _level(c) >= 3 and any(
+                h.get("result") == "correct" and not h.get("retry")
+                and isinstance(h.get("bloomLevel"), int) and h["bloomLevel"] >= 3
+                for h in todays_entries(c))
+        else:
+            crossed = start < 3 <= _level(c)
+        crossings += crossed
+    def learned(proj):
+        prof = load(os.path.dirname(os.path.normpath(proj)), ".bodhi-profile.json")
+        return prof.get("cumulativeStats", {}).get("totalConceptsLearned", 0)
+    moved = learned(project) - learned(fixture)
+    if moved != crossings:
+        fail(f"totalConceptsLearned moved by {moved}, but {crossings} concept(s) "
+             f"crossed into the apply level — record-review counts each crossing "
+             f"itself and no skill bumps it (decision 0004)")
+    ok(f"totalConceptsLearned moved by {moved}, one per crossing write")
 
 
 def assert_continue_discovery(project, transcript):

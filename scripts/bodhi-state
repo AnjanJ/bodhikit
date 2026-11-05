@@ -110,6 +110,13 @@ PROFILE_COUNTERS = {
     "teachBacksPublished",
 }
 
+# Counters a write command keeps itself, so bump-profile refuses them: a skill
+# that still remembers the old duty would otherwise count twice (decision 0004).
+SCRIPT_COUNTED = {
+    "totalConceptsLearned": "record-review counts it itself, on the review that "
+                            "first reaches the apply level; no skill bumps it",
+}
+
 # Required fields on .bodhi-profile.projects.json list entries (state-schema
 # KB). Since 1.16.0 the profile-* subcommands own these mutations and construct
 # schema-complete entries; verify additionally backstops the shape so a
@@ -756,12 +763,6 @@ def apply_review(concept, result, tested_bloom, confidence=None, note=None,
             "appliedEvidence": applied_evidence(concept),
             "bloomLevel": new_bloom,
             **bloom_render(new_bloom),
-            # 1.14.0: THIS write crossed the Bloom-3 line — the exact condition
-            # for /teach's bump-profile totalConceptsLearned duty. Executors
-            # previously re-derived it ("if unsure, scan progress.md").
-            # Named for the duty, not the rung (decision 0002): as
-            # crossedBloom3 the tutor read it aloud as a bare Bloom number.
-            "newlyLearned": old_bloom < 3 <= new_bloom,
             "crossedLevel": new_bloom > old_bloom,   # the one moment the label is spoken
             "consecutiveCorrectAtL4Plus": concept.get("consecutiveCorrectAtL4Plus", 0),
             "nextReview": concept["nextReview"]}
@@ -863,12 +864,24 @@ def cmd_record_review(args):
         die(f"--applied observed on a {kind} concept needs --evidence <path>: the "
             f"learner's work saved in the project, beside the exercise's key "
             f"({' or '.join(KEY_FILES)})")
+    old_bloom = concept.get("bloomLevel", 0)
     change = apply_review(concept, args.result, args.tested_bloom,
                           confidence=args.confidence, note=args.note,
                           source=args.source, retry=args.retry,
                           applied=args.applied, evidence=evidence)
+    # Decision 0004: the write that moves the level from below 3 to 3 or
+    # above counts the concept as learned in the profile, and says nothing
+    # about it — as a key (crossedBloom3, then newlyLearned) the tutor read
+    # it aloud. The ratchet lets a concept cross once; a retry never moves
+    # the level. The profile is read before anything is written, so a broken
+    # one fails the call with no review recorded; with none (a project not
+    # made by /learn) the count is skipped.
+    profile_path = find_profile(args.project) if old_bloom < 3 <= change["bloomLevel"] else None
+    profile = load_json(profile_path) if profile_path else None
     data["lastReviewCheck"] = now_iso()
     write_spaced_review(path, data)
+    if profile is not None:
+        bump_stat(profile_path, profile, "totalConceptsLearned")
     change["created"] = created
     if created:
         change["newModule"] = new_module
@@ -1068,11 +1081,7 @@ def cmd_touch_state(args):
         # on which skill in the chain happens to run touch-state first.
         pp = find_profile(args.project)
         if pp:
-            profile = load_json(pp)
-            stats = profile.setdefault("cumulativeStats", {})
-            stats["totalSessions"] = stats.get("totalSessions", 0) + 1
-            profile["lastUpdated"] = now_iso()
-            write_json(pp, profile)
+            bump_stat(pp, load_json(pp), "totalSessions")
             profile_bumped = True
     state["lastSessionAt"] = now_iso()
     if args.activity:
@@ -1153,20 +1162,29 @@ def cmd_set_evidence_kind(args):
           "moduleEvidenceKinds": state.get("moduleEvidenceKinds", {})})
 
 
+def bump_stat(path, profile, counter):
+    """Add one to a cumulativeStats counter and write the profile. The one
+    path for bump-profile and for the counters the script keeps itself
+    (touch-state's totalSessions, record-review's totalConceptsLearned)."""
+    stats = profile.setdefault("cumulativeStats", {})
+    stats[counter] = stats.get(counter, 0) + 1
+    profile["lastUpdated"] = now_iso()
+    write_json(path, profile)
+    return stats[counter]
+
+
 def cmd_bump_profile(args):
+    if args.counter in SCRIPT_COUNTED:
+        die(f"{args.counter} is not bumped by hand: {SCRIPT_COUNTED[args.counter]}")
     if args.counter not in PROFILE_COUNTERS:
-        die(f"counter must be one of {sorted(PROFILE_COUNTERS)}")
+        die(f"counter must be one of {sorted(PROFILE_COUNTERS - set(SCRIPT_COUNTED))}")
     p = find_profile(args.project)
     if not p:
         die("no .bodhi-profile.json found walking up from the project "
             "(it is created by /learn)")
-    profile = load_json(p)
-    stats = profile.setdefault("cumulativeStats", {})
-    stats[args.counter] = stats.get(args.counter, 0) + 1
-    profile["lastUpdated"] = now_iso()
-    write_json(p, profile)
+    value = bump_stat(p, load_json(p), args.counter)
     emit({"action": "profile-bumped", "counter": args.counter,
-          "value": stats[args.counter], "file": p})
+          "value": value, "file": p})
 
 
 # --- Cross-project profile-list ownership (1.16.0) --------------------------

@@ -234,7 +234,7 @@ The capstone TCP server is built. Tests pass. `state.json` shows 100% module com
 /bodhikit:evaluate
 ```
 
-This time the evaluation moves the project from `activeProjects` to `completedProjects`. `cumulativeStats.totalConceptsLearned` and `totalMilestonesReached` bump. The closing section emits a one-paragraph **opt-in offer**:
+This time the evaluation moves the project from `activeProjects` to `completedProjects`. `cumulativeStats.totalMilestonesReached` bumps. The closing section emits a one-paragraph **opt-in offer**:
 
 > "You have walked this path well. There is one optional thing to consider before we close the book on this project: a teach-back. It is not a victory lap — it is a chance to write something defensible on a topic that was once hard for you. The candidates I would suggest are lifetimes, trait bounds, and tokio's spawn semantics — each of these climbed from below Apply to Analyze or better in your history, and each has at least one demote-and-recover in your spaced review. Would you like to write a teach-back? You can skip this — completion already happened."
 

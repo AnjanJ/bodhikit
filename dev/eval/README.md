@@ -307,4 +307,18 @@ counts for 1.25.0:
 - Codex (`BODHI_EVAL_RUNTIME=codex`, after rebuilding `dist/openai/bodhikit`):
   `migrate`, `forget`, `quiz`, `reflect`.
 
+### Pending for decision 0004
+
+`record-review` now counts `totalConceptsLearned` itself and prints no
+`newlyLearned` key. Run live on the tree that builds it:
+
+- `kb-load` ×3 (`BODHI_EVAL_RUNS=3`). Its file state now checks that the
+  profile's `totalConceptsLearned` moved by exactly the number of crossing
+  writes (the v2 fixture's profile starts at 2). Read each transcript for the
+  tutor telling the learner about the profile counter, the key or
+  `bump-profile`: no detector catches that, and 0004 is revisited at 2 in the
+  next 10 `kb-load` or `/teach` transcripts.
+- `teach-vocabulary` ×1. Read the transcript the same way, and check the
+  counter by hand: its assertion does not read the profile.
+
 `kb-load` re-ran three times with the `newlyLearned` rename on 2026-11-05: 3 PASS under the old detector, 1 PASS under the case-insensitive one (see its row). Earlier passes of every scenario using `BARE_LEVEL_RE` were judged by the capitalised match; their transcripts were not kept, so they cannot be re-checked.

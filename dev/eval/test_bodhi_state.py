@@ -13,6 +13,7 @@ with backup, and the gate verdict logic (including the 1.11.0 recency rule).
 import datetime
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -1185,29 +1186,90 @@ def t_writers_say_no_box():
               sr["sessionHistory"][-1])
 
 
-def t_newly_learned():
-    """Decision 0002: the crossing that triggers bump-profile is reported as
-    newlyLearned, a name without a rung the tutor could read aloud."""
+def read_profile(root):
+    with open(os.path.join(root, ".bodhi-profile.json")) as f:
+        return json.load(f)
+
+
+def t_record_review_counts_learned():
+    """Decision 0004: record-review counts the profile's totalConceptsLearned
+    itself, on the write that moves bloomLevel from below 3 to 3 or above,
+    and prints no key for it. bump-profile refuses that counter."""
     with tempfile.TemporaryDirectory() as root:
         proj = make_project(root, spaced_review=json.loads(json.dumps(V2_SR)))
+        with open(os.path.join(root, ".bodhi-profile.json"), "w") as f:
+            json.dump({"version": 2, "cumulativeStats": {"totalConceptsLearned": 5,
+                                                         "totalExercises": 7},
+                       "lastUpdated": "2026-01-01T10:00:00", "custom": "keep"}, f)
+        def learned():
+            return read_profile(root)["cumulativeStats"]["totalConceptsLearned"]
         out = run(proj, "record-review", "--concept", "B-tree indexes",
                   "--result", "correct", "--tested-bloom", "4")
-        check("newlyLearned: reported on the crossing write",
-              out.get("newlyLearned") is True, out)
-        check("newlyLearned: the old crossedBloom3 key is gone",
-              "crossedBloom3" not in out, out)
+        check("learned: the crossing write counts one", learned() == 6, learned())
+        check("learned: no newlyLearned key", "newlyLearned" not in out, out)
+        check("learned: no crossedBloom3 key", "crossedBloom3" not in out, out)
+        check("learned: the profile's other fields survive",
+              read_profile(root)["custom"] == "keep"
+              and read_profile(root)["cumulativeStats"]["totalExercises"] == 7)
+        check("learned: the profile's lastUpdated moves",
+              read_profile(root)["lastUpdated"].startswith(TODAY.isoformat()),
+              read_profile(root)["lastUpdated"])
         out = run(proj, "record-review", "--concept", "B-tree indexes",
                   "--result", "correct", "--tested-bloom", "5")
-        check("newlyLearned: false once already past 3",
-              out.get("newlyLearned") is False, out)
-        out = run(proj, "record-review", "--concept", "Query planning",
-                  "--result", "correct", "--tested-bloom", "2")
-        check("newlyLearned: false below the line",
-              out.get("newlyLearned") is False, out)
-        out = run(proj, "record-review", "--concept", "Query planning",
-                  "--result", "incorrect", "--tested-bloom", "3")
-        check("newlyLearned: false on incorrect (no ratchet movement)",
-              out.get("newlyLearned") is False, out)
+        check("learned: no count once already at 3 or above", learned() == 6, learned())
+        steps = [("correct", "2", [], "below the line"),
+                 ("incorrect", "3", [], "an incorrect"),
+                 ("partial", "3", [], "a partial"),
+                 ("correct", "3", ["--retry"], "a retry")]
+        for result, bloom, extra, label in steps:
+            out = run(proj, "record-review", "--concept", "Query planning",
+                      "--result", result, "--tested-bloom", bloom, *extra)
+            check(f"learned: no count on {label}", learned() == 6, learned())
+            check(f"learned: no newlyLearned key on {label}", "newlyLearned" not in out, out)
+        run(proj, "record-review", "--concept", "Query planning",
+            "--result", "correct", "--tested-bloom", "3")
+        check("learned: a later crossing counts once more", learned() == 7, learned())
+
+        out = run(proj, "bump-profile", "--counter", "totalConceptsLearned",
+                  expect_fail=True)
+        check("learned: bump-profile refuses the counter, naming record-review",
+              "record-review" in out.get("error", ""), out)
+        check("learned: the refused bump leaves the counter", learned() == 7, learned())
+        out = run(proj, "bump-profile", "--counter", "totalExercises")
+        check("learned: bump-profile still bumps another counter", out["value"] == 8, out)
+
+
+def t_record_review_without_profile():
+    """Decision 0004: a project with no .bodhi-profile.json still records its
+    review; the count is skipped without a word."""
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review=json.loads(json.dumps(V2_SR)))
+        r = subprocess.run([sys.executable, SCRIPT, "--project", proj, "record-review",
+                            "--concept", "B-tree indexes", "--result", "correct",
+                            "--tested-bloom", "4"], capture_output=True, text=True)
+        check("no profile: the crossing write succeeds", r.returncode == 0, r.stderr)
+        check("no profile: nothing on stderr", r.stderr == "", r.stderr)
+        concept = next(c for c in read_sr(proj)["concepts"] if c["name"] == "B-tree indexes")
+        check("no profile: the review is recorded", concept["bloomLevel"] == 4, concept)
+        check("no profile: no profile is created",
+              not os.path.exists(os.path.join(root, ".bodhi-profile.json"))
+              and not os.path.exists(os.path.join(proj, ".bodhi-profile.json")))
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review={"version": 3, "concepts": [],
+                                                  "sessionHistory": []})
+        run(proj, "add-concept", "--concept", "Maps", "--module", "M1")
+        with open(os.path.join(root, ".bodhi-profile.json"), "w") as f:
+            f.write("{ not json")
+        before = read_sr(proj)
+        out = run(proj, "record-review", "--concept", "Maps", "--result", "correct",
+                  "--tested-bloom", "3", expect_fail=True)
+        check("broken profile: a crossing write fails, naming the file",
+              ".bodhi-profile.json" in out.get("error", ""), out)
+        check("broken profile: no review is recorded", read_sr(proj) == before)
+        run(proj, "record-review", "--concept", "Maps", "--result", "correct",
+            "--tested-bloom", "2")
+        check("broken profile: a write that crosses nothing still records",
+              read_sr(proj)["concepts"][0]["bloomLevel"] == 2)
 
 
 def t_snapshot():
@@ -1656,15 +1718,15 @@ def t_bloom_render():
         check("render: record-review carries outcome clause",
               out["bloomOutcome"].startswith("you can apply it"), out)
         check("render: first classification is a crossing",
-              out["crossedLevel"] is True and out["newlyLearned"] is True, out)
+              out["crossedLevel"] is True and "newlyLearned" not in out, out)
         out2 = run(proj, "record-review", "--concept", "B-tree indexes",
                    "--result", "correct", "--tested-bloom", "3")
         check("render: same rung again is not a crossing",
-              out2["crossedLevel"] is False and out2["newlyLearned"] is False, out2)
+              out2["crossedLevel"] is False and "newlyLearned" not in out2, out2)
         out3 = run(proj, "record-review", "--concept", "B-tree indexes",
                    "--result", "correct", "--tested-bloom", "4")
-        check("render: a rung above 3 is a crossing but not the Bloom-3 line",
-              out3["crossedLevel"] is True and out3["newlyLearned"] is False, out3)
+        check("render: a rung above 3 is a crossing",
+              out3["crossedLevel"] is True and "newlyLearned" not in out3, out3)
         out = run(proj, "session-brief", "--concept", "Query planning")
         check("render: unclassified has no label (not a zero)",
               out["bloomLevel"] == 0 and out["bloomLabel"] is None
@@ -3868,8 +3930,8 @@ def _golden_record_review(argv, pairs):
     out = []
     for k, v in pairs:
         if k == "crossedBloom3":
-            out.append(("newlyLearned", v))                       # decision 0002
-        elif k == "box":
+            continue                                              # decision 0004
+        if k == "box":
             out.append(("schedule", _golden_schedule(argv, v)))   # decision 0003
         else:
             out.append((k, v))
@@ -3903,6 +3965,49 @@ def _golden_changed(cmd, argv, stdout):
                       indent=2, ensure_ascii=False) + tail
 
 
+def _golden_crossings(steps):
+    """The recorded record-review writes that crossed the Bloom-3 line: the
+    ones decision 0004 has count themselves in the profile."""
+    return [s["on"] for s in steps
+            if s["argv"][0] == "record-review" and s["rc"] == 0
+            and json.loads(s["stdout"]).get("crossedBloom3") is True]
+
+
+def _golden_profile(text, steps):
+    """Decision 0004: each crossing write adds one to totalConceptsLearned and
+    stamps lastUpdated with its day. The 1.24.1 recording left both to a
+    bump-profile call the golden script never makes."""
+    days = _golden_crossings(steps)
+    if not days:
+        return text
+    count = re.compile(r'("totalConceptsLearned": )(\d+)')
+    if len(count.findall(text)) != 1:
+        return text   # not the shape written: leave it to the strict compare
+    text = count.sub(lambda m: f"{m.group(1)}{int(m.group(2)) + len(days)}", text)
+    stamp = re.compile(r'("lastUpdated": ")(\d{4}-\d{2}-\d{2})(T[^"]*)"')
+    found = stamp.findall(text)
+    if len(found) == 1 and found[0][1] < days[-1]:
+        text = stamp.sub(lambda m: f'{m.group(1)}{days[-1]}T<time>"', text)
+    return text
+
+
+# Files changed since 1.24.1 by a decision record, rewritten in the recording
+# before the byte-for-byte compare.
+GOLDEN_FILE_CHANGES = {
+    ".bodhi-profile.json": _golden_profile,   # decision 0004
+}
+
+
+def _golden_files_differ(want, got):
+    """The files that differ from the recording once GOLDEN_FILE_CHANGES has
+    rewritten it."""
+    expected = {p: (GOLDEN_FILE_CHANGES[p](t, want["steps"])
+                    if p in GOLDEN_FILE_CHANGES else t)
+                for p, t in want["files"].items()}
+    return [p for p in sorted(set(expected) | set(got["files"]))
+            if expected.get(p) != got["files"].get(p)]
+
+
 def _golden_step_differs(readers, cmd, want, got):
     if (want["rc"], want["stderr"]) != (got["rc"], got["stderr"]):
         return "exit code or stderr"
@@ -3932,7 +4037,7 @@ def t_golden_rename_is_narrow():
         return _golden_step_differs({"due"}, cmd, want, got)
     old = {"concept": "X", "box": "1 -> 2", "crossedBloom3": True,
            "crossedLevel": True, "ok": True}
-    new = {"concept": "X", "schedule": "moved up", "newlyLearned": True,
+    new = {"concept": "X", "schedule": "moved up",
            "crossedLevel": True, "ok": True}
     check("golden rename: the recorded changes alone read as unchanged",
           differs("record-review", step(old), step(new)) is None)
@@ -3946,13 +4051,13 @@ def t_golden_rename_is_narrow():
     check("golden rename: a retry reads as held",
           differs("record-review", step(dict(old, box="1 -> 1"), retry),
                   step(dict(new, schedule="held"), retry)) is None)
-    check("golden rename: a changed value still differs",
-          differs("record-review", step(old), step(dict(new, newlyLearned=False))) is not None)
+    check("golden rename: a newlyLearned key still differs",
+          differs("record-review", step(old), step(dict(new, newlyLearned=True))) is not None)
     check("golden rename: another key's change still differs",
           differs("record-review", step(old), step(dict(new, crossedLevel=False))) is not None)
     check("golden rename: the key's position still matters",
           differs("record-review", step(old),
-                  step({"schedule": "moved up", "concept": "X", "newlyLearned": True,
+                  step({"schedule": "moved up", "concept": "X",
                         "crossedLevel": True, "ok": True})) is not None)
     check("golden rename: only the recorded commands are rewritten",
           differs("set-feynman", step(old), step(new)) is not None)
@@ -3972,6 +4077,45 @@ def t_golden_rename_is_narrow():
           differs("add-concept", step(a_old, ("add-concept",)),
                   step({"concept": "X", "nextReview": "2026-10-03", "ok": True},
                        ("add-concept",))) is not None)
+
+    # Decision 0004: the profile file is rewritten by the crossings recorded.
+    def profile(learned, day, exercises=4):
+        return (f'{{\n  "cumulativeStats": {{\n    "totalExercises": {exercises},\n'
+                f'    "totalConceptsLearned": {learned}\n  }},\n'
+                f'  "lastUpdated": "{day}T<time>"\n}}\n')
+    def run_of(*crossed):
+        steps = [dict(step(dict(old, crossedBloom3=c)), on=d) for d, c in crossed]
+        return steps
+    def files_differ(steps, want_text, got_text):
+        return _golden_files_differ(
+            {"steps": steps, "files": {".bodhi-profile.json": want_text, "x": "same"}},
+            {"files": {".bodhi-profile.json": got_text, "x": "same"}})
+    steps = run_of(("2026-05-21", True), ("2026-05-22", False), ("2026-05-24", True))
+    check("golden profile: the count plus each crossing reads as unchanged",
+          files_differ(steps, profile(2, "2026-05-21"), profile(4, "2026-05-24")) == [])
+    check("golden profile: one short still differs",
+          files_differ(steps, profile(2, "2026-05-21"), profile(3, "2026-05-24"))
+          == [".bodhi-profile.json"])
+    check("golden profile: one over still differs",
+          files_differ(steps, profile(2, "2026-05-21"), profile(5, "2026-05-24"))
+          == [".bodhi-profile.json"])
+    check("golden profile: another counter's change still differs",
+          files_differ(steps, profile(2, "2026-05-21"), profile(4, "2026-05-24", 5))
+          == [".bodhi-profile.json"])
+    check("golden profile: a stale lastUpdated still differs",
+          files_differ(steps, profile(2, "2026-05-21"), profile(4, "2026-05-21"))
+          == [".bodhi-profile.json"])
+    check("golden profile: a later recorded lastUpdated is kept",
+          files_differ(steps, profile(2, "2026-06-01"), profile(4, "2026-06-01")) == [])
+    check("golden profile: no crossing, no rewrite",
+          files_differ(run_of(("2026-05-21", False)), profile(2, "2026-05-21"),
+                       profile(3, "2026-05-21")) == [".bodhi-profile.json"])
+    check("golden profile: other files are not rewritten",
+          _golden_files_differ({"steps": steps, "files": {"a/.bodhi-profile.json":
+                                                         profile(2, "2026-05-21")}},
+                               {"files": {"a/.bodhi-profile.json":
+                                          profile(4, "2026-05-24")}})
+          == ["a/.bodhi-profile.json"])
 
 
 def t_golden_code_path():
@@ -4002,8 +4146,7 @@ def t_golden_code_path():
                              f"--- now\n{g['stdout'][:800]}{g['stderr'][:400]}")
         check(f"golden {name}: {len(want['steps'])} calls print what 1.24.1 printed",
               not diffs, f"{len(diffs)} differ; first: {diffs[0] if diffs else ''}")
-        files = [p for p in sorted(set(want["files"]) | set(got["files"]))
-                 if want["files"].get(p) != got["files"].get(p)]
+        files = _golden_files_differ(want, got)
         check(f"golden {name}: {len(want['files'])} files byte-identical to 1.24.1",
               not files, f"differ: {files}")
 
@@ -4020,7 +4163,8 @@ def main():
               t_box_before, t_retention, t_export_anonymized,
               t_defer, t_verify_flags_drift, t_normalize, t_last_activity_threshold,
               t_profile_project_list_shape,
-              t_session_brief, t_writers_say_no_box, t_newly_learned, t_snapshot,
+              t_session_brief, t_writers_say_no_box, t_record_review_counts_learned,
+              t_record_review_without_profile, t_snapshot,
               t_due_never_taught, t_concept_tiers,
               t_profile_project_lifecycle, t_profile_patterns, t_park,
               t_bloom_render, t_gate_evidence,
