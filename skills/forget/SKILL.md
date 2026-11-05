@@ -1,5 +1,5 @@
 ---
-description: "Demote one or more concepts back to Box 1 for review tomorrow. Use when you feel a concept has slipped."
+description: "Send one or more concepts back for review tomorrow, starting their schedule again. Use when you feel a concept has slipped."
 user-invocable: true
 argument-hint: "[--park|--unpark] <concept>[, <concept>, ...]"
 ---
@@ -28,7 +28,7 @@ Strip any `--invoked-from=*` flag from `$ARGUMENTS`. If `--park` or `--unpark` i
 
 For each concept name, check `.bodhi/spaced-review.json`:
 - Match found: queue for demotion.
-- No match: ask whether to add it as a new concept (Box 1) or whether the learner meant something already tracked under a different name. Resolve before continuing.
+- No match: ask whether to add it as a new concept (first review tomorrow) or whether the learner meant something already tracked under a different name. Resolve before continuing.
 
 ---
 
