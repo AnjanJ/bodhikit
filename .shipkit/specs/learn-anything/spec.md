@@ -1,7 +1,7 @@
 # Spec: Learn anything
 
 > Spec accepted at commit `dde609a` on master.
-> Status: open
+> Status: shipped
 > Paths: skills/, agents/, rules/, scripts/, hooks/, dev/, platforms/, docs/, README.md, GUIDE.md, CLAUDE.md, .claude-plugin/
 
 ## Purpose
