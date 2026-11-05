@@ -38,6 +38,7 @@ The *voice* comes from four named teachers (Gautama Buddha, Dr. B.R. Ambedkar, M
 - **Deeply personalized**: Assesses your unique skill level, builds a custom learning plan, adapts to your pace
 - **Proactive teaching**: `/teach` walks you through concepts step by step, not just answering questions
 - **Hands-on, in any subject**: Learn by doing — code that runs, problems checked against saved answers, essays read against saved criteria, practice reps debriefed. Never just reading.
+- **An auditable tutor**: The syllabus, the answer keys and your record are files written before or outside the conversation, so the tutor is graded against them, not against itself. This is the design the AI-tutoring trials reward. See [The Science](#what-the-ai-tutoring-trials-say-and-why-bodhikit-is-built-as-an-auditable-tutor)
 - **Honest about evidence**: Every piece of applied work says how it was seen: observed, a photo examined, or your own report. Your word counts only where nothing else is possible, and it is labelled as yours
 - **Remembers your journey**: Spaced repetition, progress tracking, cross-session continuity
 - **Metacognitive reflection**: End-of-session `/reflect` builds your awareness of HOW you learn
@@ -285,6 +286,30 @@ One command. Complete learning session. No need to remember which skills to invo
 ## The Science
 
 BodhiKit integrates these methodologies from the learning-science literature. We stand on the shoulders of giants.
+
+#### What the AI-tutoring trials say, and why BodhiKit is built as an auditable tutor
+
+The controlled trials of AI tutors so far do not say "AI helps you learn." They say it depends on whether the tutor is held to something it cannot talk its way around.
+
+- **An unconstrained chatbot can make you worse on your own.** In a field experiment in Turkish high-school maths classes, a ChatGPT-style assistant raised practice scores by 48% and then left those students 17% worse than the control group on an exam taken without it. A version with learning safeguards largely removed the harm. Hamsa Bastani et al., *[Generative AI without guardrails can harm learning: Evidence from high school mathematics](https://doi.org/10.1073/pnas.2422633122)*, PNAS (2025).
+- **How you use it decides what you keep.** In a randomized study of 52 mostly junior engineers learning a new Python library, the group with an AI assistant scored 50% on a follow-up quiz against 67% for the group that coded by hand. Those who asked conceptual questions, or generated code and then worked to understand it, kept scores of 65% or more. Those who delegated, or let the assistant debug for them, fell below 40%. Judy Hanwen Shen and Alex Tamkin, *[How AI Impacts Skill Formation](https://arxiv.org/abs/2601.20245)* (2026); [Anthropic's summary](https://www.anthropic.com/research/AI-assistance-coding-skills).
+- **A tutor beside the course can crowd the course out.** In a randomized trial with 2,379 undergraduates, access to a course-integrated AI tutor lowered final grades by 0.37 standard deviations and course participation by 0.90, with larger losses for first-generation students. Jing Liu, Tracy Sweet et al., *[The Effects of Course-Integrated AI Tutoring on Student Performance and Engagement](https://edworkingpapers.com/ai26-1598)*, EdWorkingPaper 26-1598 (2026).
+- **The tutor that worked was on a leash.** In Harvard's introductory physics course, an AI tutor more than doubled median learning gains over an in-class active-learning lesson (0.73–1.3 SD by quantile regression). Its authors did not let the model work out the answers. They gave it pre-written step-by-step solutions, and the platform, not the prompt, kept each student moving through the parts of a problem in order. Greg Kestin et al., *[AI tutoring outperforms in-class active learning](https://pmc.ncbi.nlm.nih.gov/articles/PMC12179260/)*, Scientific Reports (2025).
+- **The grader is fallible too.** Against human graders, GPT-4o matched short-answer quiz scores exactly in only 55% of cases, even with a correlation up to 0.98. Grace Byun, Swati Rajwal and Jinho Choi, *[LLM-as-a-Grader](https://arxiv.org/abs/2511.10819)* (2025).
+
+Andrej Karpathy puts the design lesson plainly. A request like "teach me physics" fails because the AI "gets lost in the woods". What works is a course written ahead of time that serves as an auditable intermediate artifact, so that "the AI is kept on the leash with respect to a certain syllabus" (*Software Is Changing (Again)*, Y Combinator AI Startup School, June 2025).
+
+That is how BodhiKit is built:
+
+- **The course is written down before you study.** `plan.md` is the syllabus, and a lesson works through it.
+- **Answers and criteria are saved before you attempt them.** That way a grade cannot drift toward whatever you wrote. Code is run, not just read.
+- **The record is kept by a script, not by the model's prose.** Every review, level and schedule change goes through `bodhi-state`, and the files are yours to inspect.
+- **What counts is recall later, on your own.** A concept's review schedule moves out only on a recall after the gap, never on how the lesson felt, and the outcome numbers are published so they can be checked.
+- **You do the work.** The tutor asks; it does not write your code or your essay. That is the "conceptual inquiry" pattern above, not delegation.
+
+Two gaps are open, and this README says so. A grade the tutor gets wrong and later corrects cannot yet be revised in the record: the correction is held as a same-day second review. And a code-output prediction is graded against the tutor's reading of the code, not a run of it. Both have evals (`grade-regrade`, `predict-key`) written before any fix.
+
+These trials tested other tutors, not BodhiKit. They say what to guard against. They are not evidence that BodhiKit works, which only outcome data from its own learners can show (below).
 
 #### An honest note on the claim
 
