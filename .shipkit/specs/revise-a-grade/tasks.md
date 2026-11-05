@@ -1,6 +1,6 @@
 # Tasks: Revise a grade
 
-- [ ] **T1** Document `beforeLastReview`, `revisedReviews`, the `revision` flag and the ratchet exception in the schema KB → REQ-2, REQ-8
+- [x] **T1** Document `beforeLastReview`, `revisedReviews`, the `revision` flag and the ratchet exception in the schema KB → REQ-2, REQ-8
   - Files: skills/state-schema/SKILL.md
   - Test: dev/eval/test_bodhi_state.py::t_revise_review_keeps_the_wrong_entry (written in T2; red until T2's code lands)
   - After: none
