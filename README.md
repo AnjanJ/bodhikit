@@ -307,7 +307,7 @@ That is how BodhiKit is built:
 - **What counts is recall later, on your own.** A concept's review schedule moves out only on a recall after the gap, never on how the lesson felt, and the outcome numbers are published so they can be checked.
 - **You do the work.** The tutor asks; it does not write your code or your essay. That is the "conceptual inquiry" pattern above, not delegation.
 
-Two gaps are open, and this README says so. A grade the tutor gets wrong and later corrects cannot yet be revised in the record: the correction is held as a same-day second review. And a code-output prediction is graded against the tutor's reading of the code, not a run of it. Both have evals (`grade-regrade`, `predict-key`) written before any fix.
+A grade the tutor gets wrong can be corrected the same day. `revise-review` puts the record where the right grade would have, and keeps the wrong grade beside it with the reason, so the correction is visible. One gap is open, and this README says so: a code-output prediction is graded against the tutor's reading of the code, not a run of it. Both have evals (`grade-regrade`, `predict-key`), written before the fix and the check.
 
 These trials tested other tutors, not BodhiKit. They say what to guard against. They are not evidence that BodhiKit works, which only outcome data from its own learners can show (below).
 
