@@ -195,7 +195,7 @@ The session is invisible to every future skill until these land. Per the `state-
      --activity "<one line>" [--module "<next module>" --module-index N] [--completion N]
    ```
 
-4. **Profile counter** — only if the `record-review` output reports `crossedBloom3: true`: `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> bump-profile --counter totalConceptsLearned`.
+4. **Profile counter** — only if the `record-review` output reports `newlyLearned: true`: `"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <project> bump-profile --counter totalConceptsLearned`.
 
 5. **Append the session entry to `.bodhi/progress.md` with the Write tool**: `## YYYY-MM-DD — Session N — <concept>`, then **Phases covered** (I-Do / We-Do / You-Do), **Outcomes**, **Bloom adjustments** (`Label (N)` from the script output, so prose and state agree), **Next**. Existing content preserved verbatim below.
 

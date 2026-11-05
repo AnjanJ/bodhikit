@@ -559,6 +559,13 @@ def t_harness_recap(root):
     bad = transcript(root, "recap-bad", kb, ("text", "That puts you at Bloom 3." + recap))
     pair("harness recap ('Session wrap-up') is not learner-facing", A.assert_kb_load,
          (None, good), (None, bad))
+    # The live kb-load run, 2026-10-22: between tool calls the tutor read the
+    # record-review key aloud (decision 0002 renames it to newlyLearned).
+    leak = transcript(root, "kb-leak", kb, ("text", "The answer crossed Bloom 3 "
+                                            "(crossedBloom3: true), which per state-ops "
+                                            "triggers the profile counter bump."))
+    pair("kb-load fails the read-aloud crossedBloom3 key", A.assert_kb_load,
+         (None, good), (None, leak))
 
 
 def t_continue_gate(root):

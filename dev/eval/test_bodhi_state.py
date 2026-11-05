@@ -1136,25 +1136,29 @@ def t_session_brief():
         check("brief: carries currentModule", out["currentModule"] == "Module B", out)
 
 
-def t_crossed_bloom3():
+def t_newly_learned():
+    """Decision 0002: the crossing that triggers bump-profile is reported as
+    newlyLearned, a name without a rung the tutor could read aloud."""
     with tempfile.TemporaryDirectory() as root:
         proj = make_project(root, spaced_review=json.loads(json.dumps(V2_SR)))
         out = run(proj, "record-review", "--concept", "B-tree indexes",
                   "--result", "correct", "--tested-bloom", "4")
-        check("crossedBloom3: reported on the crossing write",
-              out.get("crossedBloom3") is True, out)
+        check("newlyLearned: reported on the crossing write",
+              out.get("newlyLearned") is True, out)
+        check("newlyLearned: the old crossedBloom3 key is gone",
+              "crossedBloom3" not in out, out)
         out = run(proj, "record-review", "--concept", "B-tree indexes",
                   "--result", "correct", "--tested-bloom", "5")
-        check("crossedBloom3: false once already past 3",
-              out.get("crossedBloom3") is False, out)
+        check("newlyLearned: false once already past 3",
+              out.get("newlyLearned") is False, out)
         out = run(proj, "record-review", "--concept", "Query planning",
                   "--result", "correct", "--tested-bloom", "2")
-        check("crossedBloom3: false below the line",
-              out.get("crossedBloom3") is False, out)
+        check("newlyLearned: false below the line",
+              out.get("newlyLearned") is False, out)
         out = run(proj, "record-review", "--concept", "Query planning",
                   "--result", "incorrect", "--tested-bloom", "3")
-        check("crossedBloom3: false on incorrect (no ratchet movement)",
-              out.get("crossedBloom3") is False, out)
+        check("newlyLearned: false on incorrect (no ratchet movement)",
+              out.get("newlyLearned") is False, out)
 
 
 def t_snapshot():
@@ -1603,15 +1607,15 @@ def t_bloom_render():
         check("render: record-review carries outcome clause",
               out["bloomOutcome"].startswith("you can apply it"), out)
         check("render: first classification is a crossing",
-              out["crossedLevel"] is True and out["crossedBloom3"] is True, out)
+              out["crossedLevel"] is True and out["newlyLearned"] is True, out)
         out2 = run(proj, "record-review", "--concept", "B-tree indexes",
                    "--result", "correct", "--tested-bloom", "3")
         check("render: same rung again is not a crossing",
-              out2["crossedLevel"] is False and out2["crossedBloom3"] is False, out2)
+              out2["crossedLevel"] is False and out2["newlyLearned"] is False, out2)
         out3 = run(proj, "record-review", "--concept", "B-tree indexes",
                    "--result", "correct", "--tested-bloom", "4")
         check("render: a rung above 3 is a crossing but not the Bloom-3 line",
-              out3["crossedLevel"] is True and out3["crossedBloom3"] is False, out3)
+              out3["crossedLevel"] is True and out3["newlyLearned"] is False, out3)
         out = run(proj, "session-brief", "--concept", "Query planning")
         check("render: unclassified has no label (not a zero)",
               out["bloomLevel"] == 0 and out["bloomLabel"] is None
@@ -3793,11 +3797,36 @@ def _drop(obj, parts, dropped):
             _drop(kid, rest, dropped)
 
 
+# Output keys renamed since 1.24.1 by a decision record, per writer. The
+# recording is rewritten with the new name in the same position and then
+# compared byte for byte, so nothing else about the output may drift.
+GOLDEN_RENAMED_KEYS = {
+    "record-review": {"crossedBloom3": "newlyLearned"},   # decision 0002
+}
+
+
+def _golden_renamed(cmd, stdout):
+    renames = GOLDEN_RENAMED_KEYS.get(cmd)
+    if not renames:
+        return stdout
+    try:
+        obj = json.loads(stdout, object_pairs_hook=list)
+    except json.JSONDecodeError:
+        return stdout
+    if not isinstance(obj, list):
+        return stdout
+    tail = stdout[len(stdout.rstrip("\n")):]
+    if json.dumps(dict(obj), indent=2, ensure_ascii=False) + tail != stdout:
+        return stdout   # not emit()'s shape: leave it to the strict compare
+    return json.dumps({renames.get(k, k): v for k, v in obj},
+                      indent=2, ensure_ascii=False) + tail
+
+
 def _golden_step_differs(readers, cmd, want, got):
     if (want["rc"], want["stderr"]) != (got["rc"], got["stderr"]):
         return "exit code or stderr"
     if cmd not in readers:
-        return "output" if want["stdout"] != got["stdout"] else None
+        return "output" if _golden_renamed(cmd, want["stdout"]) != got["stdout"] else None
     try:
         w, g = json.loads(want["stdout"]), json.loads(got["stdout"])
     except json.JSONDecodeError:
@@ -3808,6 +3837,31 @@ def _golden_step_differs(readers, cmd, want, got):
     if not all(GOLDEN_CODE_VALUES[k](v) for k, v in dropped):
         return f"a new key does not read as code ({dropped})"
     return "output" if w != g else None
+
+
+def t_golden_rename_is_narrow():
+    """Decision 0002: the golden comparison maps record-review's one renamed
+    key and nothing else, so the tripwire still fails on any other drift."""
+    def step(obj):
+        return {"rc": 0, "stderr": "",
+                "stdout": json.dumps(obj, indent=2, ensure_ascii=False) + "\n"}
+    old = {"concept": "X", "crossedBloom3": True, "crossedLevel": True, "ok": True}
+    new = {"concept": "X", "newlyLearned": True, "crossedLevel": True, "ok": True}
+    readers = {"due"}
+    check("golden rename: the renamed key alone reads as unchanged",
+          _golden_step_differs(readers, "record-review", step(old), step(new)) is None)
+    check("golden rename: a changed value still differs",
+          _golden_step_differs(readers, "record-review", step(old),
+                               step(dict(new, newlyLearned=False))) is not None)
+    check("golden rename: another key's change still differs",
+          _golden_step_differs(readers, "record-review", step(old),
+                               step(dict(new, crossedLevel=False))) is not None)
+    check("golden rename: the key's position still matters",
+          _golden_step_differs(readers, "record-review", step(old),
+                               step({"newlyLearned": True, "concept": "X",
+                                     "crossedLevel": True, "ok": True})) is not None)
+    check("golden rename: only record-review is mapped",
+          _golden_step_differs(readers, "set-feynman", step(old), step(new)) is not None)
 
 
 def t_golden_code_path():
@@ -3856,7 +3910,7 @@ def main():
               t_box_before, t_retention, t_export_anonymized,
               t_defer, t_verify_flags_drift, t_normalize, t_last_activity_threshold,
               t_profile_project_list_shape,
-              t_session_brief, t_crossed_bloom3, t_snapshot,
+              t_session_brief, t_newly_learned, t_snapshot,
               t_due_never_taught, t_concept_tiers,
               t_profile_project_lifecycle, t_profile_patterns, t_park,
               t_bloom_render, t_gate_evidence,
@@ -3867,7 +3921,7 @@ def main():
               t_due_shape, t_same_day_promotion, t_due_gated_promotion,
               t_mastered_due_for_check, t_feynman_after_last_miss,
               t_gate_seeded_module, t_exposure_routes, t_add_concept_bloom,
-              t_verify_implies_readers, t_history_cap_keeps_facts,
+              t_verify_implies_readers, t_golden_rename_is_narrow, t_history_cap_keeps_facts,
               t_syllabus, t_plan_single_number_headings, t_module_prefix_join,
               t_gate_declared_none, t_golden_code_path,
               t_evidence_kind_resolver, t_evidence_kind_shapes,

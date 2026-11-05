@@ -751,7 +751,9 @@ def apply_review(concept, result, tested_bloom, confidence=None, note=None,
             # 1.14.0: THIS write crossed the Bloom-3 line — the exact condition
             # for /teach's bump-profile totalConceptsLearned duty. Executors
             # previously re-derived it ("if unsure, scan progress.md").
-            "crossedBloom3": old_bloom < 3 <= new_bloom,
+            # Named for the duty, not the rung (decision 0002): as
+            # crossedBloom3 the tutor read it aloud as a bare Bloom number.
+            "newlyLearned": old_bloom < 3 <= new_bloom,
             "crossedLevel": new_bloom > old_bloom,   # the one moment the label is spoken
             "consecutiveCorrectAtL4Plus": concept.get("consecutiveCorrectAtL4Plus", 0),
             "nextReview": concept["nextReview"]}

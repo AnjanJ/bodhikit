@@ -5,6 +5,7 @@ Notable changes to BodhiKit, summarized for readers. Patch-level development not
 ## [Unreleased]
 
 - **Your plan says how your work is checked.** On a subject that isn't code, `/plan view` and `/progress` now say once, in plain words, how the work is checked (problems against saved answers, writing against saved criteria, or practice by your account), and mark any module checked a different way. 1.25.0 recorded each module's kind but never showed it, so a learner could ask to change a kind they could not see. A code project's view is unchanged.
+- **No Bloom number slips out after a correct answer.** The state engine flagged the moment a concept counted as learned with a key named `crossedBloom3`, and the tutor once read it aloud to a learner as "crossed Bloom 3". The key is now `newlyLearned`, with the same meaning and the same trigger for the profile counter (decision 0002). Nothing else in the output and no file write changed.
 
 ## [1.25.1] - 2026-10-24
 
