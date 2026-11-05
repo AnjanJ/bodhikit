@@ -522,13 +522,13 @@ These three skills keep what you have learned from leaking out.
 ```
 /bodhikit:quiz async
 ```
-> 5 questions on async/await semantics — return types, executor pinning, send-bound futures, cancellation safety, the cost of `.await`. Box updates write to `spaced-review.json`.
+> 5 questions on async/await semantics — return types, executor pinning, send-bound futures, cancellation safety, the cost of `.await`. Each answer updates its review schedule in `spaced-review.json`.
 
 **Pedagogy:** [Spaced Repetition](#2-spaced-repetition-ebbinghaus--leitner), [Desirable Difficulties](#6-desirable-difficulties-bjork) (retrieval > recognition).
 
 #### `/bodhikit:forget <concept>[, <concept>, ...]`
 
-**What it does.** Learner-initiated demotion of one or more concepts back to Box 1 — they will be re-quizzed tomorrow. Honest self-assessment. Auto-invoked by `/reflect` when you self-rate confidence 1–4 on a concept.
+**What it does.** Sends one or more concepts back for review tomorrow, starting their schedule again — learner-initiated. Honest self-assessment. Auto-invoked by `/reflect` when you self-rate confidence 1–4 on a concept.
 
 **When to use.** The moment you notice a concept has slipped. You "passed" a quiz on it but felt unsure. You can no longer recall something you knew last week. You read your own code from a month ago and could not explain a section.
 
@@ -536,13 +536,13 @@ These three skills keep what you have learned from leaking out.
 
 **Pairs well with.**
 - `/reflect` — auto-invokes `/forget` for low-confidence concepts.
-- `/teach` — once a concept is back in Box 1, an understanding-only deep dive makes the next quiz land.
+- `/teach` — once a concept is back for review, an understanding-only deep dive makes the next quiz land.
 
 **Example.**
 ```
 /bodhikit:forget lifetime elision, trait bounds
 ```
-> "Demoted: 'lifetime elision' (was Box 3), 'trait bounds' (was Box 2). Both back to Box 1, reviewing tomorrow. Honest self-assessment is how mastery sticks — well-named."
+> "Sent back for review: 'lifetime elision' and 'trait bounds'. Both start their schedule again, reviewing tomorrow. Honest self-assessment is how mastery sticks — well-named."
 
 **Pedagogy:** [Metacognition](#8-metacognition-flavell), [Spaced Repetition](#2-spaced-repetition-ebbinghaus--leitner).
 
@@ -740,7 +740,7 @@ These three skills are the long-arc ones — for evaluating where you have been 
 ```
 /bodhikit:teach-back
 ```
-> "Three topics from your history that meet the formerly-shaky-now-solid signal: (1) lifetimes — went from blank-wall in Week 1 to Analyze (you can debug it and work with it independently) by Week 9, with a demote-and-recover in Week 5; (2) trait bounds — three rounds of demote-and-recover, now stable at Box 4; (3) tokio spawn semantics — the bug you debugged in Week 6 knocked this back to Box 1, and it climbed back to Analyze by Week 9. Which one do you want to write?"
+> "Three topics from your history that meet the formerly-shaky-now-solid signal: (1) lifetimes — went from blank-wall in Week 1 to Analyze (you can debug it and work with it independently) by Week 9, with a demote-and-recover in Week 5; (2) trait bounds — three rounds of demote-and-recover, now holding on two-week reviews; (3) tokio spawn semantics — the bug you debugged in Week 6 sent this back for daily review, and it climbed back to Analyze by Week 9. Which one do you want to write?"
 
 **Pedagogy:** [Feynman](#4-feynman-technique) (writing as gap-revealer), [Desirable Difficulties](#6-desirable-difficulties-bjork) (formerly-shaky topics on purpose).
 

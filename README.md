@@ -180,7 +180,7 @@ BodhiKit currently has a very small number of real learners. If you try it, your
 | `/mentor` | Career and learning path guidance using the GROW model |
 | `/pair` | Pair programming: strong-style, ping-pong, or navigator mode |
 | `/debug-together` | Scientific debugging: reproduce, hypothesize, probe, isolate, fix |
-| `/forget` | Demote a concept back to Box 1 — for honest self-assessment |
+| `/forget` | Send one or more concepts back for review tomorrow, starting their schedule again — for honest self-assessment |
 | `/housekeep` | Rotate tracking files into archive + summary form; one-shot 1.7.0 migration |
 | `/teach-back` | Optional capstone after completion: Socratic-style blog post on a formerly-shaky topic, master comparison, learner-decided publish |
 

@@ -28,7 +28,7 @@ Determine the learner's current level for exercise targeting.
 
 3. If `$ARGUMENTS` is "next" or absent, read `.bodhi/spaced-review.json` for Box-1 concepts tied to the current module. **Prefer one of those for the exercise topic if available** — Box 1 means either freshly introduced or recently demoted, and either way it is the highest-leverage deliberate-practice target the system can name. Announce the choice in the opening line:
 
-   > "Targeting `<concept>` — it has been in Box 1 since `<date>`. A targeted rep here is more valuable than moving forward right now."
+   > "Targeting `<concept>` — it has been back for review since `<date>`. A targeted rep here is more valuable than moving forward right now."
 
    Fall through to the plan-position topic only if no Box-1 concept exists for the current module.
 
