@@ -3816,6 +3816,48 @@ def t_solid_by_report():
               and m["solidBasis"]["Julienne"] == "observed", m)
 
 
+def t_performed_solid_needs_graded_parts():
+    """learn-anything/REQ-24: on a performed concept the learner's word can
+    stand for applied work, and nothing else. A rep reported since the last
+    miss leaves Solid still needing the level, the streak, the box and an
+    explain-back that postdates the miss. The control has all of them; each
+    other concept lacks exactly one."""
+    def c(name, **over):
+        base = {"name": name, "module": "Sauces", "introduced": "2026-02-01", "box": 4,
+                "nextReview": "2026-04-01", "lastReviewed": "2026-03-20", "question": "",
+                "lastResult": "correct", "bloomLevel": 4, "feynmanPassed": True,
+                "feynmanPassedAt": "2026-03-10", "consecutiveCorrectAtL4Plus": 3,
+                "reviewHistory": [
+                    {"date": "2026-03-01", "result": "incorrect", "bloomLevel": 4,
+                     "source": "quiz", "boxBefore": 3},
+                    {"date": "2026-03-20", "result": "correct", "bloomLevel": 4,
+                     "source": "practice", "boxBefore": 3, "applied": True,
+                     "appliedBasis": "reported"}]}
+        base.update(over)
+        return base
+    lacking = {"level": c("Level", bloomLevel=3),
+               "streak": c("Streak", consecutiveCorrectAtL4Plus=2),
+               "box": c("Box", box=3),
+               "explain-back": c("Explain", feynmanPassed=False, feynmanPassedAt=None),
+               "a current explain-back": c("Stale", feynmanPassedAt="2026-02-20")}
+    sr = {"version": 3, "lastReviewCheck": None, "sessionHistory": [],
+          "concepts": [c("Control")] + list(lacking.values())}
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review=sr)
+        run(proj, "set-evidence-kind", "--kind", "performed")
+        m = run(proj, "mastery", on="2026-03-21")
+        check("performed solid: the control, reported rep and all graded parts, is Solid",
+              m["solidBasis"].get("Control") == "reported", m["solidBasis"])
+        for what, concept in lacking.items():
+            check(f"performed solid: a reported rep without {what} is not Solid",
+                  concept["name"] not in m["solidBasis"], m["solidBasis"])
+        check("performed solid: the module counts only the control",
+              m["modules"]["Sauces"]["mastered"] == 1, m["modules"]["Sauces"])
+        snap = run(proj, "snapshot", on="2026-03-21")
+        check("performed solid: snapshot agrees",
+              snap["mastery"]["solidBasis"] == m["solidBasis"], snap["mastery"])
+
+
 def t_kind_breakdowns():
     """learn-anything/REQ-27: retention and the anonymized export break their
     counts down by evidence kind and by applied-work basis. A practice rep's
@@ -4181,7 +4223,7 @@ def main():
               t_evidence_kind_resolver, t_evidence_kind_shapes,
               t_set_evidence_kind, t_basis_filter_every_reader, t_single_applied_reader,
               t_applied_basis_write, t_applied_cli_back_compat, t_kind_read_surfaces,
-              t_solid_by_report, t_kind_breakdowns):
+              t_solid_by_report, t_kind_breakdowns, t_performed_solid_needs_graded_parts):
         print(f"-- {t.__name__}")
         try:
             t()

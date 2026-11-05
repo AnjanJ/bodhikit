@@ -236,6 +236,26 @@ touch the same files.
   - After: T25, T30, T40
   - Done when: `python3 dev/eval/test_detectors.py` → "0 failed"; `dev/check.sh` passes; the live `plan-view-kind` and `plan-view` runs join the next sweep
 
+## Found by the 2026-11-06 coverage check (the 2026-10-22 ship reviewer's gaps, re-verified)
+
+- [x] **T42** A rep reported on a performed concept leaves *Solid* needing the level, the streak, the box and a current explain-back: a deterministic negative case beside the control that has all of them → REQ-24
+  - Files: dev/eval/test_bodhi_state.py, dev/changelog-journal.md
+  - Test: dev/eval/test_bodhi_state.py::t_performed_solid_needs_graded_parts (the control is Solid by report; one concept lacking each graded part is not; checked by dropping the streak and the explain-back conjuncts from `is_mastered`, which fails it)
+  - After: T41
+  - Done when: `python3 dev/eval/test_bodhi_state.py` → "0 failed"; `dev/check.sh` passes
+- [ ] **T43** `/learn`'s change path: the learner changes the proposed kind, and the one `set-evidence-kind` records the learner's choice, after the change; eval scenario `kind-intake-change` → REQ-5
+  - Files: dev/eval/assert_scenario.py, dev/eval/run-llm-evals.sh, dev/eval/test_detectors.py, dev/eval/README.md, dev/changelog-journal.md
+  - Test: dev/eval/assert_scenario.py::assert_kind_intake_change, exercised by dev/eval/test_detectors.py::t_intake_change (a run that records the learner's kind after the change passes; one that records the proposed kind, records before the learner answers, or records twice fails)
+  - After: T42
+  - Done when: `python3 dev/eval/test_detectors.py` → "0 failed"; `dev/check.sh` passes; the live run joins the next sweep
+- [ ] **T44** `/review` on a `problems` concept: quotes the learner's own working, says what it shows about understanding, and leaves the work file unchanged; eval scenario `kind-review-problems` on the genetics fixture → REQ-18
+  - Files: dev/eval/assert_scenario.py, dev/eval/run-llm-evals.sh, dev/eval/test_detectors.py, dev/eval/README.md, dev/changelog-journal.md
+  - Test: dev/eval/assert_scenario.py::assert_kind_review_no_rewrite with the problems piece, exercised by dev/eval/test_detectors.py::t_review_no_rewrite_problems (a review quoting the working passes; a rewritten file, no quote, or a corrected answer handed over fails)
+  - After: T43
+  - Done when: `python3 dev/eval/test_detectors.py` → "0 failed"; `dev/check.sh` passes; the live run joins the next sweep
+
+Known gaps, not tasks: REQ-13's `/teach` path (a rep set by `/teach` on a performed concept; only `/practice` is tested) and REQ-14's last analogy rung (no non-code scenario drives the ladder to its end). Revisit when a real learner reaches either.
+
 ## After the gate
 
 Releases 1 and 2 ship together as 1.25.0, so there is one sweep and one tag:
