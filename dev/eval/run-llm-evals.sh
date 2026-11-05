@@ -890,6 +890,16 @@ if [ "$want" = "all" ] || [ "$want" = "kind-fidelity" ] || [ "$want" = "kind-int
     kind-intake "" 60 transcript
 fi
 
+# The change path of the same intake (learn-anything/REQ-5): the learner
+# changes a worked-problems proposal to practice at the keyboard, and the one
+# record is `performed`, made after the change was shown. A run whose tutor
+# proposes practice outright never reaches the change and fails saying so.
+if [ "$want" = "all" ] || [ "$want" = "kind-fidelity" ] || [ "$want" = "kind-intake-change" ]; then
+  run_parent_scenario kind-intake-change \
+    "/bodhikit:learn music theory: reading notes, intervals and chords — $SIM_CONTRACT My scripted answers for the whole flow: Scoping: I want to read lead sheets and understand why chords work; about three hours a week, steady pace; purpose: depth. My background: I played recorder at school, read treble clef slowly, cannot read bass clef, and have never studied harmony. When you surface my existing SQL project: this is unrelated — start a NEW standalone project and leave sql-deep-dive exactly as it is. When you propose how my work will be checked: if it is worked problems or exercises checked against answers, I change it — I would rather sit at the keyboard and play the notes, intervals and chords myself, then tell you how each session went, and I do not want written problem sets. If you already propose practice at the keyboard, I agree. Assessment: I answer honestly at the level I just described. The proposed plan looks good — no adjustments. Name the new project directory exactly music-theory inside the existing learningWithBodhi folder. I accept the first exercise. Complete ALL scaffolding and tracking writes exactly as the skill specifies. Run the session turn by turn in your messages — each question you ask, then my scripted reply — rather than summarising it at the end." \
+    kind-intake-change "" 60 transcript
+fi
+
 if [ "$want" = "all" ] || [ "$want" = "kind-fidelity" ] || [ "$want" = "kind-legacy-proposal" ]; then
   BODHI_EVAL_FIXTURE="$NONCODE_FIXTURE" BODHI_EVAL_PROJECT="$NONCODE_PROJECT" run_scenario kind-legacy-proposal \
     "/bodhikit:continue — $SIM_CONTRACT Scripted replies: if you propose how my work in this project will be checked, I agree with your proposal. After that I want to stop for today; close the session and complete ALL tracking updates exactly as the skill specifies. Run the session turn by turn in your messages — each question you ask, then my scripted reply — rather than summarising it at the end." \

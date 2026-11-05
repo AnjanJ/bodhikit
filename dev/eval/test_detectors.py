@@ -232,6 +232,58 @@ def t_intake(root):
          (proj, good), (proj, bad))
 
 
+def t_intake_change(root):
+    """learn-anything/REQ-5, the change path: /learn proposes worked problems,
+    the learner asks to practise at the keyboard instead, and the one
+    set-evidence-kind records the learner's kind after the change."""
+    def music(name, kind):
+        proj = v2_copy(root, name)
+        parent = os.path.dirname(proj)
+        mt = os.path.join(parent, "music-theory")
+        write(os.path.join(mt, ".bodhi", "state.json"),
+              json.dumps({"version": 2, "projectName": "music-theory", "evidenceKind": kind}))
+        write(os.path.join(mt, ".bodhi", "resources.md"),
+              "# Resources\n\n- Kostka and Payne, *Tonal Harmony* (McGraw-Hill)\n"
+              "- Open Music Theory — https://viva.pressbooks.pub/openmusictheory/\n")
+        lists_path = os.path.join(parent, ".bodhi-profile.projects.json")
+        with open(lists_path) as f:
+            lists = json.load(f)
+        lists["activeProjects"].append({"name": "music-theory"})
+        write(lists_path, json.dumps(lists))
+        return proj, mt
+    proj, mt = music("change-performed", "performed")
+    ask = ("text", "What have you played or read in music so far? Can you read treble clef?")
+    propose = ("text", "Your work here will be worked problems — intervals and chords to name — "
+                       "checked against worked answers I save before you try. Does that fit?")
+    changed = ("text", "You'd rather play it at the keyboard and tell me how it went. Then your "
+                       "work is practice reps away from the screen, and after each one I'll ask "
+                       "you three questions — a debrief — before anything is recorded.")
+    def record(kind, where=mt):
+        return bash(f'"${{CLAUDE_PLUGIN_ROOT}}/scripts/bodhi-state" --project {where} '
+                    f"set-evidence-kind --kind {kind}")
+    good = transcript(root, "change-good", ask, propose, changed, record("performed"))
+    check("intake change: the learner's kind recorded after the change passes",
+          passes(A.assert_kind_intake_change, proj, good)[0],
+          passes(A.assert_kind_intake_change, proj, good)[1][-300:])
+    kept, kept_mt = music("change-kept", "problems")
+    bad = transcript(root, "change-kept", ask, propose, changed, record("problems", kept_mt))
+    ok_bad, out = passes(A.assert_kind_intake_change, kept, bad)
+    check("intake change: fails the proposed kind recorded over the change", not ok_bad,
+          out[-300:])
+    bad = transcript(root, "change-early", ask, propose, record("performed"), changed)
+    ok_bad, out = passes(A.assert_kind_intake_change, proj, bad)
+    check("intake change: fails a record made before the change was shown", not ok_bad,
+          out[-300:])
+    bad = transcript(root, "change-twice", ask, propose, record("problems"), changed,
+                     record("performed"))
+    ok_bad, out = passes(A.assert_kind_intake_change, proj, bad)
+    check("intake change: fails a kind recorded twice", not ok_bad, out[-300:])
+    bad = transcript(root, "change-unexercised", ask, changed, record("performed"))
+    ok_bad, out = passes(A.assert_kind_intake_change, proj, bad)
+    check("intake change: fails, saying so, when no other kind was proposed first",
+          not ok_bad and "change path" in out, out[-300:])
+
+
 def t_legacy_proposal(root):
     proj = project(root, "non-code-project", "political-theory")
     st_path = os.path.join(proj, ".bodhi", "state.json")
@@ -833,7 +885,7 @@ def main():
                   t_photo_inspected,
                   t_safety_canning, t_safety_medical, t_kb_load_learned_counter,
                   t_internal_names, t_bare_level_source, t_teach_vocabulary_names,
-                  t_archive_run,
+                  t_archive_run, t_intake_change,
                   t_harness_recap, t_continue_gate):
             print(f"-- {t.__name__}")
             sub = os.path.join(root, t.__name__)

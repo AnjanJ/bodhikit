@@ -1695,6 +1695,47 @@ def assert_kind_intake(project, transcript):
     assert_kind_sources(proj, transcript, must_name=False)
 
 
+PROBLEMS_PLAIN_RE = re.compile(
+    r"(?i)worked (?:problems?|exercises?)|problems? (?:with|against) (?:worked )?answers|"
+    r"answer keys?|worked answers")
+
+
+def assert_kind_intake_change(project, transcript):
+    """learn-anything/REQ-5, the change path: /learn proposes worked problems
+    for music theory, the scripted learner changes it to practice at the
+    keyboard, and the one set-evidence-kind records `performed` after the
+    learner has read the change. A tutor that proposes practice outright never
+    reaches the change path, and the failure says so."""
+    prose = assistant_prose(transcript)
+    if not prose.strip():
+        fail("empty transcript — run did not produce assistant output")
+    m = PROGRAMMING_Q_RE.search(prose)
+    if m:
+        fail(f"the intake asked about programming ({m.group(0)!r}) on a non-code subject")
+    ok("no programming questions in the intake")
+    proj = new_project(project)
+    kind = load(proj, ".bodhi", "state.json").get("evidenceKind")
+    if kind != "performed":
+        fail(f"the new project's evidenceKind is {kind!r}; the learner changed the proposal "
+             "to practice at the keyboard (performed)")
+    ok("evidenceKind 'performed' recorded, the learner's choice")
+    proposal_then_record(transcript, "performed")
+    items = stream_items(transcript)
+    call = next(i for i, it in enumerate(items) if it[0] == "tool" and it[1] == "Bash"
+                and any("--module" not in seg for seg in
+                        SET_KIND_SEGMENT_RE.findall(str(it[2].get("command", "")))))
+    before = protocol_text(items, call)
+    first = PROBLEMS_PLAIN_RE.search(before)
+    if not first:
+        fail("no worked-problems proposal before the record: the tutor proposed practice "
+             "itself, so the change path did not run (read the transcript; re-run)")
+    if not PERFORMED_PLAIN_RE.search(before, first.end()):
+        fail("the record came before the learner read the change: no practice-rep wording "
+             "follows the worked-problems proposal")
+    ok("worked problems proposed, then the learner's change shown, then recorded")
+    assert_kind_sources(proj, transcript, must_name=False)
+
+
 def assert_kind_legacy_proposal(project, transcript):
     """learn-anything/REQ-9: a kind-less project whose topic is not code gets
     one proposal from /continue, recorded once on the learner's yes. The yes
@@ -2100,6 +2141,7 @@ def main():
                        "kind-practice-problems": assert_kind_practice,
                        "kind-quiz": assert_kind_quiz_no_code,
                        "kind-intake": assert_kind_intake,
+                       "kind-intake-change": assert_kind_intake_change,
                        "kind-legacy-proposal": assert_kind_legacy_proposal,
                        "kind-legacy-unanswered": assert_kind_legacy_unanswered,
                        "kind-review": assert_kind_review_no_rewrite,

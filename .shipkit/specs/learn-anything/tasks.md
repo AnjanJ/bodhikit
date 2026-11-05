@@ -243,7 +243,7 @@ touch the same files.
   - Test: dev/eval/test_bodhi_state.py::t_performed_solid_needs_graded_parts (the control is Solid by report; one concept lacking each graded part is not; checked by dropping the streak and the explain-back conjuncts from `is_mastered`, which fails it)
   - After: T41
   - Done when: `python3 dev/eval/test_bodhi_state.py` → "0 failed"; `dev/check.sh` passes
-- [ ] **T43** `/learn`'s change path: the learner changes the proposed kind, and the one `set-evidence-kind` records the learner's choice, after the change; eval scenario `kind-intake-change` → REQ-5
+- [x] **T43** `/learn`'s change path: the learner changes the proposed kind, and the one `set-evidence-kind` records the learner's choice, after the change; eval scenario `kind-intake-change` → REQ-5
   - Files: dev/eval/assert_scenario.py, dev/eval/run-llm-evals.sh, dev/eval/test_detectors.py, dev/eval/README.md, dev/changelog-journal.md
   - Test: dev/eval/assert_scenario.py::assert_kind_intake_change, exercised by dev/eval/test_detectors.py::t_intake_change (a run that records the learner's kind after the change passes; one that records the proposed kind, records before the learner answers, or records twice fails)
   - After: T42

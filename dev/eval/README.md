@@ -200,7 +200,11 @@ assistant transcript:
   (the key before the work), `kind-quiz` (a problem posed from the subject,
   no code, no "define X"), `kind-intake` (`/learn` on music theory: no
   programming questions, the kind proposed in plain words before the one
-  `set-evidence-kind`, two subject sources saved), `kind-legacy-proposal`
+  `set-evidence-kind`, two subject sources saved), `kind-intake-change` (the
+  same intake, but the learner changes a worked-problems proposal to practice
+  at the keyboard: one record, `performed`, after the change; a tutor that
+  proposes practice outright fails it as "the change path did not run"),
+  `kind-legacy-proposal`
   (`/continue` on the kind-less political-theory fixture proposes
   `writing` once and records it), `kind-review` (`/review` quotes the
   learner's own lines and never rewrites the piece). The headless learner
@@ -299,8 +303,8 @@ counts for 1.25.0:
 - `kind-grading`: all six with `BODHI_EVAL_RUNS=3`, both sides of each
   boundary, levels read against the code bands.
 - `kind-fidelity`: `kind-teach-problems`, `kind-practice-problems`,
-  `kind-quiz`, `kind-intake`, `kind-legacy-proposal`,
-  `kind-legacy-unanswered`, `kind-review`.
+  `kind-quiz`, `kind-intake`, `kind-intake-change` (new, T43; never run),
+  `kind-legacy-proposal`, `kind-legacy-unanswered`, `kind-review`.
 - `performed`: `performed-debrief-first`, `performed-no-debrief`,
   `performed-repless-review`, `performed-by-your-account`.
 - `photo`: `photo-inspected`. `safety`: `safety-canning`, `safety-medical`.
