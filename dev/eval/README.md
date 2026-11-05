@@ -207,7 +207,10 @@ assistant transcript:
   `kind-legacy-proposal`
   (`/continue` on the kind-less political-theory fixture proposes
   `writing` once and records it), `kind-review` (`/review` quotes the
-  learner's own lines and never rewrites the piece). The headless learner
+  learner's own lines and never rewrites the piece), `kind-review-problems`
+  (the same on the genetics fixture's `02-dominance-check`, whose working
+  holds a misconception: the file untouched, the learner's lines quoted, and
+  neither corrected answer, 3 : 1 or no white offspring, handed over). The headless learner
   cannot write files, so the scripted learner dictates their work and asks
   for it to be saved verbatim; the key detector checks the key came first.
 - `kind-grading` (learn-anything REQ-20) — the code grading boundaries on a
@@ -304,7 +307,8 @@ counts for 1.25.0:
   boundary, levels read against the code bands.
 - `kind-fidelity`: `kind-teach-problems`, `kind-practice-problems`,
   `kind-quiz`, `kind-intake`, `kind-intake-change` (new, T43; never run),
-  `kind-legacy-proposal`, `kind-legacy-unanswered`, `kind-review`.
+  `kind-legacy-proposal`, `kind-legacy-unanswered`, `kind-review`,
+  `kind-review-problems` (new, T44; never run).
 - `performed`: `performed-debrief-first`, `performed-no-debrief`,
   `performed-repless-review`, `performed-by-your-account`.
 - `photo`: `photo-inspected`. `safety`: `safety-canning`, `safety-medical`.

@@ -927,6 +927,19 @@ if [ "$want" = "all" ] || [ "$want" = "kind-fidelity" ] || [ "$want" = "kind-rev
     kind-review prep_kind_review transcript
 fi
 
+# /review on a problems concept (learn-anything/REQ-18, T44). The saved working
+# holds a misconception, that a heterozygote shows the recessive colour. The
+# review quotes the learner's lines and asks; it never edits the file and never
+# hands over the corrected answers.
+prep_kind_review_problems() {
+  cp -R "$REPO/dev/eval/fixtures/applied/02-dominance-check" "$1/exercises/"
+}
+if [ "$want" = "all" ] || [ "$want" = "kind-fidelity" ] || [ "$want" = "kind-review-problems" ]; then
+  BODHI_EVAL_FIXTURE="$PROBLEMS_FIXTURE" BODHI_EVAL_PROJECT="$PROBLEMS_PROJECT" run_scenario kind-review-problems \
+    "/bodhikit:review exercises/02-dominance-check/my-work.md — $SIM_CONTRACT I worked these crosses myself. Review what my working shows about my understanding. If you ask me questions, I answer briefly and consistently with what I wrote: I still think a plant needs two purple alleles to be purple. Complete ALL tracking updates exactly as the skill specifies." \
+    kind-review-problems prep_kind_review_problems transcript
+fi
+
 # --- Performed skills and photos (learn-anything) ---------------------------
 # A rep happens away from the screen. The tutor debriefs it before recording
 # anything, grades the debrief, records the rep as the learner's account, and

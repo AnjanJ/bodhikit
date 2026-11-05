@@ -248,9 +248,9 @@ touch the same files.
   - Test: dev/eval/assert_scenario.py::assert_kind_intake_change, exercised by dev/eval/test_detectors.py::t_intake_change (a run that records the learner's kind after the change passes; one that records the proposed kind, records before the learner answers, or records twice fails)
   - After: T42
   - Done when: `python3 dev/eval/test_detectors.py` → "0 failed"; `dev/check.sh` passes; the live run joins the next sweep
-- [ ] **T44** `/review` on a `problems` concept: quotes the learner's own working, says what it shows about understanding, and leaves the work file unchanged; eval scenario `kind-review-problems` on the genetics fixture → REQ-18
-  - Files: dev/eval/assert_scenario.py, dev/eval/run-llm-evals.sh, dev/eval/test_detectors.py, dev/eval/README.md, dev/changelog-journal.md
-  - Test: dev/eval/assert_scenario.py::assert_kind_review_no_rewrite with the problems piece, exercised by dev/eval/test_detectors.py::t_review_no_rewrite_problems (a review quoting the working passes; a rewritten file, no quote, or a corrected answer handed over fails)
+- [x] **T44** `/review` on a `problems` concept: quotes the learner's own working, says what it shows about understanding, and leaves the work file unchanged; eval scenario `kind-review-problems` on the genetics fixture → REQ-18
+  - Files: dev/eval/assert_scenario.py, dev/eval/run-llm-evals.sh, dev/eval/test_detectors.py, dev/eval/README.md, dev/eval/fixtures/applied/02-dominance-check/, dev/changelog-journal.md
+  - Test: dev/eval/assert_scenario.py::assert_kind_review_problems (assert_kind_review_no_rewrite with the problems piece, plus no corrected answer handed over), exercised by dev/eval/test_detectors.py::t_review_problems (a review quoting the working and asking passes; an edited file, no quote, a rewritten version, or a corrected answer handed over fails; quoting the learner's own wrong ratio passes)
   - After: T43
   - Done when: `python3 dev/eval/test_detectors.py` → "0 failed"; `dev/check.sh` passes; the live run joins the next sweep
 

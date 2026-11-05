@@ -1799,6 +1799,31 @@ def assert_kind_review_no_rewrite(project, transcript, piece="exercises/02-claim
     ok("no rewritten version offered")
 
 
+# The correct answers to exercises/02-dominance-check: stated by the tutor,
+# they rework the problem the learner should fix (evidence-kinds KB *Review*).
+HANDED_OVER_RE = re.compile(
+    r"(?i)\b3\s*:\s*1\b|\b3/4\b|three[- ]quarters|"
+    r"\b(?:all|every)\b[^.?\n]{0,40}\bpurple\b|\bno white (?:offspring|flowers|plants)\b")
+
+
+def assert_kind_review_problems(project, transcript,
+                                piece="exercises/02-dominance-check/my-work.md"):
+    """learn-anything/REQ-18 on problems: the learner's working holds a
+    misconception (a heterozygote shows the recessive colour). /review quotes
+    their lines, says what they show and asks; it never edits the file and
+    never hands over the corrected answers."""
+    original = os.path.join(REPO, "dev", "eval", "fixtures", "applied", "02-dominance-check",
+                            "my-work.md")
+    assert_kind_review_no_rewrite(project, transcript, piece=piece, original=original)
+    unquoted = "\n".join(l for l in assistant_prose(transcript).splitlines()
+                         if not l.lstrip().startswith(">"))
+    m = HANDED_OVER_RE.search(unquoted)
+    if m:
+        fail(f"the review handed over a corrected answer ({m.group(0)!r}) — point at the line "
+             "and ask; the learner fixes it")
+    ok("no corrected answer handed over")
+
+
 def assert_kind_teach(project, transcript):
     """A non-code /teach with an exercise: no code, no code-tool offers, a
     source named, the key before the attempt."""
@@ -2145,6 +2170,7 @@ def main():
                        "kind-legacy-proposal": assert_kind_legacy_proposal,
                        "kind-legacy-unanswered": assert_kind_legacy_unanswered,
                        "kind-review": assert_kind_review_no_rewrite,
+                       "kind-review-problems": assert_kind_review_problems,
                        "performed-debrief-first": assert_performed_debrief_first,
                        "performed-no-debrief": assert_performed_no_debrief_no_record,
                        "performed-practice-sets-rep": assert_performed_practice_sets_rep,

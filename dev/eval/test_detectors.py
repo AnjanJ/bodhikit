@@ -339,6 +339,47 @@ def t_review_no_rewrite(root):
          (proj, good), (edited, good))
 
 
+def t_review_problems(root):
+    """learn-anything/REQ-18 on problems: /review quotes the learner's own
+    working, says what it shows, asks, and neither edits the file nor hands
+    over the corrected answers (3 : 1; no white offspring)."""
+    proj = fresh(root, "problems-project", "genetics", "review-problems")
+    src_dir = os.path.join(FIXTURES, "applied", "02-dominance-check")
+    shutil.copytree(src_dir, os.path.join(proj, "exercises", "02-dominance-check"))
+    review = ("> Only PP has two purple alleles, so only PP plants are purple.\n\n"
+              "Your square is right, and the 1 : 2 : 1 follows from it. This line is where the "
+              "colour comes in: what does it mean for purple to be dominant?\n\n"
+              "> A Pp plant has a white allele in it, so it comes out white like pp.\n\n"
+              "What colour would a plant with one P and one p show, if P is dominant?")
+    good = transcript(root, "review-problems-good", ("text", review))
+    ok_good, out = passes(A.assert_kind_review_problems, proj, good)
+    check("review problems: quoting the working and asking passes", ok_good, out[-300:])
+    for label, extra in (("states the 3 : 1 ratio", "\n\nThe phenotype ratio is actually 3 : 1."),
+                         ("states all purple", "\n\nIn question 2 they all come out purple."),
+                         ("reworks the problem", "\n\nHere's a corrected version: PP and Pp "
+                                                 "are purple, pp is white.")):
+        bad = transcript(root, f"review-problems-{label.replace(' ', '-')}",
+                         ("text", review + extra))
+        ok_bad, out = passes(A.assert_kind_review_problems, proj, bad)
+        check(f"review problems: fails a review that {label}", not ok_bad, out[-300:])
+    bad = transcript(root, "review-problems-noquote", ("text", "Nice working; check question 1."))
+    check("review problems: fails a review with no quotes",
+          not passes(A.assert_kind_review_problems, proj, bad)[0])
+    edited = fresh(root, "problems-project", "genetics", "review-problems-edited")
+    shutil.copytree(src_dir, os.path.join(edited, "exercises", "02-dominance-check"))
+    work = os.path.join(edited, "exercises", "02-dominance-check", "my-work.md")
+    with open(work, encoding="utf-8") as f:
+        text = f.read()
+    write(work, text.replace("**1 : 3**", "**3 : 1**"))
+    check("review problems: fails an edited work file",
+          not passes(A.assert_kind_review_problems, edited, good)[0])
+    quoted_key = transcript(root, "review-problems-quoted-own", ("text", review +
+                            "\n\n> Phenotype ratio: purple : white = **1 : 3**.\n\n"
+                            "How does that follow from the square?"))
+    check("review problems: quoting the learner's own wrong ratio passes",
+          passes(A.assert_kind_review_problems, proj, quoted_key)[0])
+
+
 def state(proj, *argv):
     """A real bodhi-state write, dated today: the detectors read today's entries."""
     env = {k: v for k, v in os.environ.items() if k != "BODHI_TODAY"}
@@ -885,7 +926,7 @@ def main():
                   t_photo_inspected,
                   t_safety_canning, t_safety_medical, t_kb_load_learned_counter,
                   t_internal_names, t_bare_level_source, t_teach_vocabulary_names,
-                  t_archive_run, t_intake_change,
+                  t_archive_run, t_intake_change, t_review_problems,
                   t_harness_recap, t_continue_gate):
             print(f"-- {t.__name__}")
             sub = os.path.join(root, t.__name__)
