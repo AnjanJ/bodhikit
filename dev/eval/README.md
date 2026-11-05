@@ -323,4 +323,13 @@ counts for 1.25.0:
 - `teach-vocabulary` ×1. Same prose checks; check the counter by hand: its
   assertion does not read the profile.
 
+From 2026-11-06 the harness system prompt (`SYS_HARNESS`) also asks for the
+tracking writes without describing them to the learner, since every prompt's
+"complete ALL tracking updates" may be what drew the "Bookkeeping" receipts
+behind decisions 0002 and 0004. A run before that date had no such line, so
+when counting narration toward 0004's limit, note which prompt a run used. A
+receipt that still appears now is the skill's doing, not the harness's. The
+cost: the harness now asks for something a real session does not, so a
+receipt the skills provoke on their own is less likely to show here.
+
 `kb-load` re-ran three times with the `newlyLearned` rename on 2026-11-05: 3 PASS under the old detector, 1 PASS under the case-insensitive one (see its row). Earlier passes of every scenario using `BARE_LEVEL_RE` were judged by the capitalised match; their transcripts were not kept, so they cannot be re-checked.
