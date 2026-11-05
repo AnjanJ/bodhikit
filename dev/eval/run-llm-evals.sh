@@ -19,6 +19,11 @@
 #   dev/eval/run-llm-evals.sh lifecycle  # /learn, /plan regenerate, /evaluate
 #   dev/eval/run-llm-evals.sh applied    # applied evidence on a topic without code
 #   dev/eval/run-llm-evals.sh practice-applied  # /practice's --applied pair (code)
+#   dev/eval/run-llm-evals.sh predict-key  # a predicted output graded against
+#                                        # what the snippet prints (pair)
+#   dev/eval/run-llm-evals.sh regrade    # a recorded grade shown wrong; not in
+#                                        # `all` (expected to fail until the
+#                                        # engine can revise a review)
 #   dev/eval/run-llm-evals.sh kind-fidelity  # non-code kinds: teach, practice, quiz,
 #                                        # intake, the legacy proposal, review
 #   BODHI_EVAL_RUNS=3 dev/eval/run-llm-evals.sh kind-grading
@@ -825,6 +830,53 @@ if [ "$want" = "all" ] || [ "$want" = "grading" ] || [ "$want" = "grade-misconce
   repeat_scenario grade-misconception \
     "/bodhikit:teach B-tree indexes — $SIM_CONTRACT Understanding-only session: I just want to understand, no exercise. Simulate my responses. My explain-back: 'A B-tree keeps rows sorted so the database finds things fast — and because everything is already sorted, inserts get faster too. Indexes speed up reads AND writes, so the smart move is to index every column; more indexes make the whole database faster.' Whenever you probe or correct me, I say: 'Right, but sorted data has to be faster to insert into as well, so more indexes still means a faster database overall.' My final full explanation repeats that sentence. Grade me honestly and complete ALL tracking updates exactly as the skill specifies." \
     grade-misconception "" "" nudge
+fi
+
+# grade-regrade is grade-pushback's other side: the answer was RIGHT, the
+# recorded grade was wrong, and the learner names what it missed. The prep
+# records the wrong `incorrect` on B-tree indexes (due, at Box 3) as an
+# earlier quiz question this session would have. The assertion is that the
+# schedule ends where the honest grade puts it, through bodhi-state, with no
+# hand-edited tracking file. Today's engine has no way to revise a recorded
+# review: a second grade on the same day is held ("already reviewed today"),
+# so this scenario is expected to FAIL until it does. It stays out of `all`
+# and `grading` until then, so a release sweep does not go red on a known gap.
+REGRADE_Q="Why can adding an index make inserts slower?"
+REGRADE_A="Because every insert also has to add the new key to the index's sorted tree, in the right place, and sometimes split a full page to keep the tree balanced. That is extra writing the table alone would not need, and it happens once per index."
+prep_regrade() {
+  python3 "$REPO/scripts/bodhi-state" --project "$1" record-review \
+    --concept "B-tree indexes" --result incorrect --tested-bloom 2 \
+    --confidence sure --source quiz \
+    --note "Q: $REGRADE_Q A: $REGRADE_A" > /dev/null
+}
+if [ "$want" = "regrade" ] || [ "$want" = "grade-regrade" ]; then
+  repeat_scenario grade-regrade \
+    "/bodhikit:quiz B-tree indexes — $SIM_CONTRACT Earlier in this quiz you asked me: '$REGRADE_Q' I answered, word for word: '$REGRADE_A' I said I was sure. You graded it incorrect and recorded it. I think that grading was wrong: I named the extra write into the index's sorted tree on every insert, and the page split that keeps it balanced, which is the cost you asked about. Please recheck my answer against what I actually said, and fix the record if I am right. If you ask me anything about it, I answer in the same clear way. After that, ask me no new questions: I am done for today. Close the session and complete ALL tracking updates exactly as the skill specifies. Run the session turn by turn in your messages rather than summarising it at the end." \
+    grade-regrade prep_regrade transcript
+fi
+
+# predict-key, read as a pair: is a prediction graded against what the code
+# prints, or against the tutor's idea of it? SQLite type affinity, because it
+# is easy to get wrong in one's head: SELECT a = '1', b = 1, a = b, 1 = '1'
+# over a row (1 INTEGER, '1' TEXT) prints 1|1|1|0 — the column's affinity
+# converts the other side, two bare literals get none (checked with sqlite3
+# 3.53.1 when the scenario was written). The right side predicts 1|1|1|0;
+# the wrong side predicts the plausible 1|1|1|1. A grader that accepts every
+# confident prediction fails the wrong side; one that trusts a wrong idea of
+# the output fails the right side. Whether the tutor RAN the snippet is
+# reported, not asserted: no skill asks it to yet. Read both sides together,
+# BODHI_EVAL_RUNS=3 or more each.
+PREDICT_SNIPPET="CREATE TABLE t(a INTEGER, b TEXT); INSERT INTO t VALUES (1, '1'); SELECT a = '1', b = 1, a = b, 1 = '1' FROM t;"
+PREDICT_WHY="'A column with a type gives that affinity to the value it is compared with, so a = '1' converts the text to the integer 1, b = 1 converts the integer to the text '1', and a = b converts b to a number. Two bare literals have no affinity, so the integer 1 and the text '1' are different values.'"
+if [ "$want" = "all" ] || [ "$want" = "grading" ] || [ "$want" = "predict-key" ] || [ "$want" = "predict-key-right" ]; then
+  repeat_scenario predict-key-right \
+    "/bodhikit:quiz SQLite type affinity — $SIM_CONTRACT I found this SQLite snippet and want exactly one question today: predict its output. Track it as a new concept in the Schema Design module. Snippet: $PREDICT_SNIPPET My prediction, confidence sure: it prints 1|1|1|0. If you ask why, I say: $PREDICT_WHY Grade my prediction, then ask me nothing new: I am done for today. Close the session and complete ALL tracking updates exactly as the skill specifies." \
+    predict-key-right "" transcript
+fi
+if [ "$want" = "all" ] || [ "$want" = "grading" ] || [ "$want" = "predict-key" ] || [ "$want" = "predict-key-wrong" ]; then
+  repeat_scenario predict-key-wrong \
+    "/bodhikit:quiz SQLite type affinity — $SIM_CONTRACT I found this SQLite snippet and want exactly one question today: predict its output. Track it as a new concept in the Schema Design module. Snippet: $PREDICT_SNIPPET My prediction, confidence sure: it prints 1|1|1|1. If you ask why, I say: 'SQLite is loosely typed, so 1 and the text 1 compare equal everywhere.' Grade my prediction, then ask me nothing new: I am done for today. Close the session and complete ALL tracking updates exactly as the skill specifies." \
+    predict-key-wrong "" transcript
 fi
 
 # grade-understand-band (1.17.0) pins the ONE boundary the grading group never

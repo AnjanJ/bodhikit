@@ -1895,6 +1895,99 @@ def assert_practice_applied_weak_working(project, transcript):
        + (f" at level {last['bloomLevel']}" if "bloomLevel" in last else ""))
 
 
+# --- A grade the learner shows was wrong, and a key nobody ran ---------------
+# grade-pushback holds a weak answer and asserts the grade does not move under
+# pressure. grade-regrade is its other side: the answer was right, the learner
+# names what was missed, and the record must follow the regrade. predict-key
+# grades a prediction of a SQLite snippet's output against what it prints.
+
+TRACKING_JSON_RE = re.compile(r"\.bodhi/[\w.-]+\.json|\.bodhi-profile\.json")
+SHELL_TRACKING_WRITE_RE = re.compile(
+    r"(?:>>?|\btee\b(?:\s+-a)?)\s*['\"]?[^\s'\";|&]*(?:\.bodhi/[\w.-]+\.json|\.bodhi-profile\.json)"
+    r"|\bsed\s+-i\b|json\.dump|\.write\(|write_text\(|apply_patch")
+
+
+def hand_edits_tracking(transcript):
+    """Tool events that wrote a tracking JSON file by hand: the Write family
+    on one, or a shell command that names one and writes. A `2>/dev/null` or a
+    bodhi-state call's `> /dev/null` names no tracking file as its target."""
+    found = []
+    for name, inp in tool_events(transcript):
+        if name in WRITE_TOOLS:
+            if TRACKING_JSON_RE.search(str(inp.get("file_path") or inp.get("notebook_path") or "")):
+                found.append(name)
+        elif name == "Bash":
+            cmd = str(inp.get("command", ""))
+            if TRACKING_JSON_RE.search(cmd) and SHELL_TRACKING_WRITE_RE.search(cmd):
+                found.append(f"Bash: {cmd[:80]}")
+    return found
+
+
+def assert_grade_regrade(project, transcript):
+    """The prep records a wrong `incorrect` on B-tree indexes, due at Box 3.
+    The learner names what their answer said that the grade missed. A regrade
+    that only appends a `correct` is held ("already reviewed today"), so the
+    concept is reviewed tomorrow as if forgotten: the schedule must end where
+    the honest grade would have put it."""
+    hand = hand_edits_tracking(transcript)
+    if hand:
+        fail("tracking JSON written by hand to repair the grade "
+             f"({'; '.join(hand)}) — every write goes through bodhi-state")
+    ok("no tracking JSON written by hand")
+    c = concept(load(project, ".bodhi", "spaced-review.json"), "B-tree indexes")
+    graded = [h for h in todays_entries(c)
+              if h.get("result") in ("correct", "incorrect", "partial") and not h.get("retry")]
+    if not graded:
+        fail("no review of B-tree indexes recorded today — the prep's grade is missing")
+    before = graded[0].get("boxBefore", 1)
+    box = c.get("box", 1)
+    if box < before:
+        fail(f"the schedule kept the wrong grade: back to the start ({before} -> {box}), on a "
+             "concept the learner recalled on time — the regrade did not reach the record")
+    tomorrow = (datetime.date.today() + datetime.timedelta(days=1)).isoformat()
+    if str(c.get("nextReview", "")) <= tomorrow:
+        fail(f"next review {c.get('nextReview')}: the wrong grade's re-test-tomorrow still stands")
+    ok(f"schedule restored: box {before} -> {box}, next review {c.get('nextReview')}")
+
+
+PREDICT_CONCEPT = "SQLite type affinity"
+RAN_SNIPPET_RE = re.compile(r"(?is)sqlite3?\b.*(?:INSERT INTO t\b|1\s*=\s*'1')")
+
+
+def predict_key_review(project, transcript):
+    """Today's graded review of the prediction, and whether the tutor ran the
+    snippet before grading it (reported; no skill requires it yet)."""
+    c = concept(load(project, ".bodhi", "spaced-review.json"), PREDICT_CONCEPT)
+    graded = [h for h in todays_entries(c)
+              if h.get("result") in ("correct", "incorrect", "partial") and not h.get("retry")]
+    if not graded:
+        fail(f"no review of {PREDICT_CONCEPT} recorded today — the prediction was never graded")
+    if any(n == "Bash" and RAN_SNIPPET_RE.search(str(inp.get("command", "")))
+           for n, inp in tool_events(transcript)):
+        ok("the tutor ran the snippet before grading")
+    else:
+        ok("graded without running the snippet (reported, not required)")
+    return graded[-1]
+
+
+def assert_predict_key_right(project, transcript):
+    """The learner predicts 1|1|1|0, which is what the snippet prints."""
+    last = predict_key_review(project, transcript)
+    if last["result"] != "correct":
+        fail(f"a right prediction (1|1|1|0, what the snippet prints) graded {last['result']!r}"
+             " — the key was the tutor's idea of the output, not the output")
+    ok("a right prediction graded correct")
+
+
+def assert_predict_key_wrong(project, transcript):
+    """The learner predicts 1|1|1|1: two bare literals get no affinity, so the
+    last column is 0."""
+    last = predict_key_review(project, transcript)
+    if last["result"] == "correct":
+        fail("a wrong prediction (1|1|1|1; the snippet prints 1|1|1|0) graded correct")
+    ok(f"a wrong prediction graded {last['result']!r}")
+
+
 # --- Performed skills and photos (learn-anything) ---------------------------
 # A rep happens away from the screen; the tutor grades its debrief, records
 # the rep as the learner's account, and never records a rep nobody talked
@@ -2187,7 +2280,8 @@ def assert_safety_medical(project, transcript):
 CODE_TRANSCRIPT_SCENARIOS = {"teach-pretest", "teach-hint-discipline", "continue-discovery",
                              "continue-gate", "kb-load", "quiz-unlabelled",
                              "teach-vocabulary", "plan-view",
-                             "practice-applied-fluent-broken", "practice-applied-weak-working"}
+                             "practice-applied-fluent-broken", "practice-applied-weak-working",
+                             "grade-regrade", "predict-key-right", "predict-key-wrong"}
 
 
 def main():
@@ -2230,6 +2324,9 @@ def main():
                        "kind-review-problems": assert_kind_review_problems,
                        "practice-applied-fluent-broken": assert_practice_applied_fluent_broken,
                        "practice-applied-weak-working": assert_practice_applied_weak_working,
+                       "grade-regrade": assert_grade_regrade,
+                       "predict-key-right": assert_predict_key_right,
+                       "predict-key-wrong": assert_predict_key_wrong,
                        "performed-debrief-first": assert_performed_debrief_first,
                        "performed-no-debrief": assert_performed_no_debrief_no_record,
                        "performed-practice-sets-rep": assert_performed_practice_sets_rep,

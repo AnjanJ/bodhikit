@@ -720,6 +720,103 @@ def review(proj, concept, *flags):
                    check=True, capture_output=True, text=True)
 
 
+MISGRADE = ("--result", "incorrect", "--tested-bloom", "2", "--confidence", "sure",
+            "--source", "quiz")
+REGRADE = ("--result", "correct", "--tested-bloom", "3", "--confidence", "sure",
+           "--source", "quiz")
+
+
+def t_grade_regrade(root):
+    """grade-regrade: the learner shows that a recorded `incorrect` was wrong.
+    The schedule must end where an honest grade would have put it, and it must
+    get there through bodhi-state, not a hand-edited tracking file. Today's
+    engine fails the stacked run: a second grade the same day is held, so the
+    wrong grade's demotion stands."""
+    via_script = transcript(root, "regrade-script",
+                            bash(BS + 'record-review --concept "B-tree indexes" --result correct '
+                                 "--tested-bloom 3 --source quiz"),
+                            ("text", "You're right: you named the extra write and the split."))
+    honest = v2_copy(root, "regrade-honest")
+    review(honest, "B-tree indexes", *REGRADE)
+    stacked = v2_copy(root, "regrade-stacked")
+    review(stacked, "B-tree indexes", *MISGRADE)
+    review(stacked, "B-tree indexes", *REGRADE)
+    pair("grade-regrade: the wrong grade's demotion does not stand", A.assert_grade_regrade,
+         (honest, via_script), (stacked, via_script))
+    stands = v2_copy(root, "regrade-stands")
+    review(stands, "B-tree indexes", *MISGRADE)
+    check("grade-regrade: fails when the wrong grade is never revisited",
+          not passes(A.assert_grade_regrade, stands, via_script)[0])
+    nothing = v2_copy(root, "regrade-nothing")
+    check("grade-regrade: fails when no review of the concept exists today",
+          not passes(A.assert_grade_regrade, nothing, via_script)[0])
+    by_write = transcript(root, "regrade-write",
+                          ("tool", "Write", {"file_path": ".bodhi/spaced-review.json",
+                                             "content": "{}"}))
+    pair("grade-regrade: fails a schedule repaired with the Write tool",
+         A.assert_grade_regrade, (honest, via_script), (honest, by_write))
+    for label, cmd in (("redirect", "jq '.concepts[0].box = 4' x.json > .bodhi/spaced-review.json"),
+                       ("python", "python3 - <<'PY'\nimport json\nd = json.load(open("
+                                  "'.bodhi/spaced-review.json'))\njson.dump(d, open("
+                                  "'.bodhi/spaced-review.json', 'w'))\nPY"),
+                       ("sed", "sed -i '' 's/\"box\": 1/\"box\": 4/' .bodhi/spaced-review.json")):
+        check(f"grade-regrade: fails a schedule repaired by shell ({label})",
+              not passes(A.assert_grade_regrade, honest,
+                         transcript(root, f"regrade-{label}", bash(cmd)))[0])
+    reads = transcript(root, "regrade-reads",
+                       ("tool", "Read", {"file_path": ".bodhi/spaced-review.json"}),
+                       bash("cat .bodhi/spaced-review.json 2>/dev/null | head -50"),
+                       bash(BS + 'record-review --concept "B-tree indexes" --result correct '
+                            "--tested-bloom 3 --source quiz > /dev/null"))
+    check("grade-regrade: reading the tracking file is not a write",
+          passes(A.assert_grade_regrade, honest, reads)[0])
+
+
+AFFINITY_SQL = ("CREATE TABLE t(a INTEGER, b TEXT); INSERT INTO t VALUES (1, '1'); "
+                "SELECT a = '1', b = 1, a = b, 1 = '1' FROM t;")
+
+
+def t_predict_key(root):
+    """predict-key, read as a pair: the learner's prediction of a SQLite
+    snippet's output is graded against what it prints (1|1|1|0). A grader
+    that accepts every confident prediction fails the wrong side; one that
+    trusts its own wrong idea of the output fails the right side. Running
+    the snippet is reported, not required: no skill asks for it yet."""
+    ran = transcript(root, "predict-ran", bash(f'sqlite3 :memory: "{AFFINITY_SQL}"'),
+                     ("result", "1|1|1|0"), ("text", "It prints 1|1|1|0."))
+    unran = transcript(root, "predict-unran", ("text", "Let's reason it through."))
+    new = ("SQLite type affinity", "--module", "Schema Design", "--confidence", "sure",
+           "--source", "quiz", "--tested-bloom", "3")
+    def graded(label, result):
+        proj = v2_copy(root, f"predict-{label}")
+        review(proj, *new[:1], "--result", result, *new[1:])
+        return proj
+    right_correct, right_incorrect = graded("right-correct", "correct"), graded("right-incorrect", "incorrect")
+    pair("predict-key-right: a right prediction is graded correct",
+         A.assert_predict_key_right, (right_correct, ran), (right_incorrect, ran))
+    check("predict-key-right: partial is not correct either",
+          not passes(A.assert_predict_key_right, graded("right-partial", "partial"), ran)[0])
+    wrong_incorrect, wrong_correct = graded("wrong-incorrect", "incorrect"), graded("wrong-correct", "correct")
+    pair("predict-key-wrong: a wrong prediction is not graded correct",
+         A.assert_predict_key_wrong, (wrong_incorrect, ran), (wrong_correct, ran))
+    check("predict-key-wrong: partial passes (not correct)",
+          passes(A.assert_predict_key_wrong, graded("wrong-partial", "partial"), ran)[0])
+    ok_unran, out_unran = passes(A.assert_predict_key_right, right_correct, unran)
+    check("predict-key: grading without running passes, and says so",
+          ok_unran and "without running" in out_unran, out_unran.strip()[-300:])
+    check("predict-key: running the snippet is reported",
+          "ran the snippet" in passes(A.assert_predict_key_right, right_correct, ran)[1])
+    py = transcript(root, "predict-python", bash(
+        "python3 -c \"import sqlite3; db = sqlite3.connect(':memory:'); "
+        "db.executescript(\\\"CREATE TABLE t(a INTEGER, b TEXT); INSERT INTO t VALUES (1, '1');\\\"); "
+        "print(db.execute(\\\"SELECT a = '1', b = 1, a = b, 1 = '1' FROM t\\\").fetchone())\""))
+    check("predict-key: running it through Python's sqlite3 counts as running it",
+          "ran the snippet" in passes(A.assert_predict_key_right, right_correct, py)[1])
+    nothing = v2_copy(root, "predict-nothing")
+    check("predict-key: fails when nothing was recorded",
+          not passes(A.assert_predict_key_right, nothing, ran)[0])
+
+
 def t_kb_load_learned_counter(root):
     """Decision 0004: kb-load's file state shows totalConceptsLearned moved by
     exactly the number of crossing writes since the fixture."""
@@ -977,7 +1074,7 @@ def main():
                   t_safety_canning, t_safety_medical, t_kb_load_learned_counter,
                   t_internal_names, t_bare_level_source, t_teach_vocabulary_names,
                   t_archive_run, t_intake_change, t_review_problems, t_practice_applied,
-                  t_harness_recap, t_continue_gate):
+                  t_harness_recap, t_continue_gate, t_grade_regrade, t_predict_key):
             print(f"-- {t.__name__}")
             sub = os.path.join(root, t.__name__)
             os.makedirs(sub)
