@@ -10,7 +10,7 @@
   - Test: dev/eval/test_bodhi_state.py::t_revise_review_restores_a_wrong_incorrect, t_revise_review_lowers_a_wrong_correct, t_revise_review_refusals, t_revise_review_readers_match_honest, t_revise_review_keeps_the_wrong_entry, t_verify_implies_readers (revised state), t_golden_code_path (snapshot registered)
   - After: T1
   - Done when: `python3 dev/eval/test_bodhi_state.py` → 0 failed
-- [ ] **T3** Teach the skills when to revise → REQ-10, REQ-11
+- [x] **T3** Teach the skills when to revise → REQ-10, REQ-11
   - Files: skills/spaced-repetition/SKILL.md, skills/feynman-technique/SKILL.md, CLAUDE.md
   - Test: the live `grade-regrade` scenario (red today) and `grade-pushback` (must stay green)
   - After: T2

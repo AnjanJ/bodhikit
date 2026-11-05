@@ -88,7 +88,7 @@ Schemas are pinned in `skills/state-schema/SKILL.md`. If a new field is needed, 
 ## Glossary (internal vocabulary you will meet in commits and the journal)
 
 - **Executor discipline** — whether the model actually *performs* the file writes a skill describes (vs. narrating them, inventing vocabulary, dropping fields). The 1.10.x dogfood passes showed prose cannot guarantee it; `bodhi-state` + file-state evals can. Hence "don't fix executor-discipline bugs with louder markdown."
-- **Bloom ratchet** — `bloomLevel` only rises (`max(current, tested)`, and only on a `correct` result). Forgetting is carried by the Leitner box and the streak, never by lowering the level.
+- **Bloom ratchet** — `bloomLevel` only rises (`max(current, tested)`, and only on a `correct` result). Forgetting is carried by the Leitner box and the streak, never by lowering the level. The one exception is `revise-review`, which restores the level a concept held before a grade recorded wrongly that day.
 - **Prerequisite gate / verdicts** — `/teach`'s module-boundary check, computed by `gate-check`. Verdicts: `satisfied`, `stale-reconfirm` (reason `stale` or `single-evidence`), `no-opinion`, `apply-equivalent`, `gap`. Defined in the `state-ops` KB.
 - **Legacy fallthrough** — a `bloomLevel: 0` concept has never been classified by a v3 writer: gates allow it, `/progress` shows `—` not 0%. **Apply-equivalent fallthrough** — a sub-3 concept with Box ≥ 3 and two straight corrects passes the gate at read time without touching the level.
 - **Carve-out** — the few places a skill may still hand-edit JSON (plan scaffolding, the Bloom maps in `/assess`/`/evaluate`/`/mentor`, `/housekeep`); they load `state-schema`, everything else loads only `state-ops`.
