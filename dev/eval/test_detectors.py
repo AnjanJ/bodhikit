@@ -566,6 +566,13 @@ def t_harness_recap(root):
                                             "triggers the profile counter bump."))
     pair("kb-load fails the read-aloud crossedBloom3 key", A.assert_kb_load,
          (None, good), (None, leak))
+    # The live kb-load run, 2026-11-05: the closing line to the learner gave
+    # the box in lower case, which a case-sensitive match let through.
+    lower = transcript(root, "kb-lower-box", kb, ("text", "**Bookkeeping (all writes "
+                                                  "completed):** review recorded (box 1 → 2, "
+                                                  "you will see it again on 2026-11-08)."))
+    pair("kb-load fails a lower-case box number", A.assert_kb_load,
+         (None, good), (None, lower))
 
 
 def t_continue_gate(root):

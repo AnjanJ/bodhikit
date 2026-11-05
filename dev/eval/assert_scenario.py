@@ -707,7 +707,9 @@ def assistant_prose(transcript_path):
     return RECAP_RE.split("\n".join(texts), 1)[0]
 
 
-BARE_LEVEL_RE = re.compile(r"\b(Bloom(?:'s)?(?: level)?|Level|Box)\s*[0-6]\b")
+# Case-insensitive since 2026-11-05: a live /quiz closing told the learner
+# "box 1 → 2", which the capitalised match let through.
+BARE_LEVEL_RE = re.compile(r"(?i)\b(Bloom(?:'s)?(?: level)?|Level|Box)\s*[0-6]\b")
 
 
 def assert_kb_load(project, transcript):
