@@ -35,6 +35,6 @@ A research-informed tutor for any subject, with code first-class, that teaches b
 - The ChatGPT listing depends on the OpenAI portal, which refused skills-only submissions on 2026-10-15.
 
 ## Now / Next / Later
-- **Now:** finish 1.25.x. Shipped: 1.25.0 (2026-10-23) and 1.25.1 (2026-10-24), and 1.25.1 submitted to ChatGPT (in review; the listing shows 1.23.0 until published). Done on master, untagged: the `crossedBloom3` → `newlyLearned` rename (decision 0002; `kb-load` passes 3/3) and the module kind on the syllabus view. Left: tagging the next release, and the live evals still pending on the release tree (`dev/eval/README.md`).
+- **Now:** finish 1.25.x. Shipped: 1.25.0 (2026-10-23) and 1.25.1 (2026-10-24), and 1.25.1 published on ChatGPT (confirmed 2026-11-05). Done on master, untagged: the `crossedBloom3` → `newlyLearned` rename (decision 0002; `kb-load` passes 3/3) and the module kind on the syllabus view. Left: tagging the next release, and the live evals still pending on the release tree (`dev/eval/README.md`).
 - **Next:** reach outside learners on non-code subjects, and the maintainer's own non-code project toward 5 *Solid*.
 - **Later:** saved state on a phone or claude.ai with no computer connected, after a research spike on keeping state between chats.

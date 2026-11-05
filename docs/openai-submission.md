@@ -154,6 +154,13 @@ and upload the complete ZIP as an update.
 
 ## Submission record
 
+### 5 November 2026 — 1.25.1 published
+
+The maintainer confirmed on 5 November 2026 that the BodhiKit listing shows
+**1.25.1 Published**. The maintainer did the attestations and submitted by hand
+after the 24 October upload below. The publication date was not recorded. The
+1.23.0 note in the 24 October entry is superseded.
+
 ### 24 October 2026 — 1.25.1 in review
 
 The existing BodhiKit listing now shows **1.25.1 · In review**, under Abhaya Code
