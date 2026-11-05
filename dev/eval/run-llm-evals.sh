@@ -18,6 +18,7 @@
 #   dev/eval/run-llm-evals.sh fidelity   # the transcript-fidelity scenarios (incl. kb-load)
 #   dev/eval/run-llm-evals.sh lifecycle  # /learn, /plan regenerate, /evaluate
 #   dev/eval/run-llm-evals.sh applied    # applied evidence on a topic without code
+#   dev/eval/run-llm-evals.sh practice-applied  # /practice's --applied pair (code)
 #   dev/eval/run-llm-evals.sh kind-fidelity  # non-code kinds: teach, practice, quiz,
 #                                        # intake, the legacy proposal, review
 #   BODHI_EVAL_RUNS=3 dev/eval/run-llm-evals.sh kind-grading
@@ -754,6 +755,35 @@ if [ "$want" = "all" ] || [ "$want" = "applied" ] || [ "$want" = "applied-chat" 
   BODHI_EVAL_FIXTURE="$NONCODE_FIXTURE" BODHI_EVAL_PROJECT="$NONCODE_PROJECT" repeat_scenario applied-chat \
     "/bodhikit:practice $APPLIED_CONCEPT — $SIM_CONTRACT Simulate my responses. Whatever exercise you set, I answer it here in the chat. I do not save a file anywhere, and if you suggest saving it I say I would rather leave it in the chat. My answer, which applies the distinction to a case the lesson never used, is: <<<$APPLIED_TEXT>>> If you ask follow-up questions about it, I answer briefly and consistently with what I wrote. Grade the work honestly and complete ALL tracking updates exactly as the skill specifies." \
     applied-chat "" "" nudge
+fi
+
+# /practice's --applied boundary (follow-up F-5). /practice designs its own
+# exercise, so a submission cannot be scripted against it; the prep saves a
+# fixed one (dev/eval/fixtures/applied/03-query-plan: the task, check.py, and
+# one of two solutions as solution.py) and the prompt says it is already set.
+# This tests Phase 3's review in isolation. Read the pair together: fluent
+# prose over code that raises must not earn `correct --applied`, and weak
+# prose over working code must carry --applied. Calibrate with
+# BODHI_EVAL_RUNS=2 on each side before trusting one run.
+PRACTICE_EX="exercises/03-query-plan"
+prep_practice_applied() {  # <project> <working|broken>
+  mkdir -p "$1/$PRACTICE_EX"
+  cp "$REPO/dev/eval/fixtures/applied/03-query-plan/README.md" \
+     "$REPO/dev/eval/fixtures/applied/03-query-plan/check.py" "$1/$PRACTICE_EX/"
+  cp "$REPO/dev/eval/fixtures/applied/03-query-plan/solution-$2.py" "$1/$PRACTICE_EX/solution.py"
+}
+prep_practice_broken() { prep_practice_applied "$1" broken; }
+prep_practice_working() { prep_practice_applied "$1" working; }
+PRACTICE_SET="The exercise is already set: it is in $PRACTICE_EX/ (README.md is the task, check.py runs the checks), so do not design a new one. I wrote my solution myself and saved it as $PRACTICE_EX/solution.py."
+if [ "$want" = "all" ] || [ "$want" = "applied" ] || [ "$want" = "practice-applied" ] || [ "$want" = "practice-applied-fluent-broken" ]; then
+  repeat_scenario practice-applied-fluent-broken \
+    "/bodhikit:practice Query planning — $SIM_CONTRACT $PRACTICE_SET If you ask me to explain it, I say: 'SQLite's planner turns a query into a plan, and EXPLAIN QUERY PLAN shows each step. A SEARCH step that says USING INDEX means the planner looks rows up through the index's B-tree instead of reading the whole table, which it can do when the WHERE clause constrains an indexed column with an equality or a range; a SCAN means it reads every row. So my function asks for the plan and looks for USING INDEX in each step's detail.' If you ask anything else, I answer in the same clear way. I do not change the code: I am done for today. Close the session and complete ALL tracking updates exactly as the skill specifies. Run the session turn by turn in your messages — each question you ask, then my scripted reply — rather than summarising it at the end." \
+    practice-applied-fluent-broken prep_practice_broken transcript
+fi
+if [ "$want" = "all" ] || [ "$want" = "applied" ] || [ "$want" = "practice-applied" ] || [ "$want" = "practice-applied-weak-working" ]; then
+  repeat_scenario practice-applied-weak-working \
+    "/bodhikit:practice Query planning — $SIM_CONTRACT $PRACTICE_SET If you ask me to explain it, I say: 'um, I think it checks whether the plan says index somewhere? I found the EXPLAIN QUERY PLAN command in the SQLite docs. I am not really sure why some queries get an index and some do not.' If you ask anything further, I say I am not sure. I do not change the code: I am done for today. Close the session and complete ALL tracking updates exactly as the skill specifies. Run the session turn by turn in your messages — each question you ask, then my scripted reply — rather than summarising it at the end." \
+    practice-applied-weak-working prep_practice_working transcript
 fi
 
 # --- Held-out grading (review, 2026-09-07) -----------------------------------

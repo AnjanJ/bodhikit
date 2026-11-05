@@ -331,23 +331,28 @@ counts for 1.25.0:
 - `teach-vocabulary` ×1. Same prose checks; check the counter by hand: its
   assertion does not read the profile.
 
-### Scoped, not built: `/practice`'s `--applied` boundary (follow-up F-5)
+### Built, never run: `/practice`'s `--applied` boundary (follow-up F-5)
 
-No live scenario drives `/practice`, so the model's choice to pass or withhold
-`record-review --applied` is tested only on the script side. `/practice` designs
-its own exercise, so a submission cannot be scripted in advance. The plan, after
-the internal-name detector and T43/T44:
+`practice-applied-fluent-broken` and `practice-applied-weak-working` (group
+`practice-applied`, also in `applied`) cover the model's choice to pass or
+withhold `record-review --applied` on code. `/practice` designs its own
+exercise, so the prep saves a fixed one
+(`dev/eval/fixtures/applied/03-query-plan`: the task, `check.py`, and one of two
+solutions as `solution.py`), and the prompt says it is already set. That tests
+Phase 3's review in isolation, not the exercise design.
 
-- A prep step saves one fixed code exercise (a `README.md` and a stub) in
-  `exercises/<module>/`. The prompt says it is already posted and hands over a
-  scripted submission, which tests Phase 3's review in isolation.
-- `practice-applied-fluent-broken`: a fluent explanation over code that raises.
-  It must be recorded without `--applied`.
-- `practice-applied-weak-working`: a halting explanation over code that runs and
-  is correct. It must be recorded with `--applied`.
-- Read both together, as with the grading pairs: a run that never passes
-  `--applied` passes the first scenario and fails the second.
-- Calibrate with `BODHI_EVAL_RUNS=2` on each side before trusting a single run.
+- Fluent-broken: a clear, correct explanation of query planning over a solution
+  that raises `TypeError` (`row["detail"]` on a tuple). Passes unless today's
+  review is `correct --applied`, the only entry the gate and *Solid* count.
+- Weak-working: "um, I think it checks whether the plan says index somewhere?"
+  over a solution that passes `check.py`. Passes only if today's review carries
+  `--applied`; the result and level are printed for reading.
+- Both fail when the learner's code was never run.
+- Read them together. A tutor that never passes the flag passes the first side
+  and fails the second. One that always records `correct --applied` fails the
+  first.
+- First run: `BODHI_EVAL_RUNS=2 dev/eval/run-llm-evals.sh practice-applied`,
+  then read the recorded levels as well as the verdicts.
 
 From 2026-11-06 every run is kept, pass or fail: `archive_run` copies its
 transcript, its `learningWithBodhi/` tree and a `run.txt` (scenario, verdict,

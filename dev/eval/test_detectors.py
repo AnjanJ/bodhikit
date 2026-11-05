@@ -380,6 +380,56 @@ def t_review_problems(root):
           passes(A.assert_kind_review_problems, proj, quoted_key)[0])
 
 
+def t_practice_applied(root):
+    """F-5: /practice's --applied boundary, read as a pair. Fluent prose over
+    code that raises must not be recorded `correct --applied` (the only entry
+    the gate and mastery count); weak prose over code that runs must carry
+    --applied. A tutor that never passes the flag passes the first and fails
+    the second; one that always passes it with `correct` fails the first."""
+    src = os.path.join(FIXTURES, "applied", "03-query-plan")
+    def proj_with(label, version):
+        proj = v2_copy(root, f"practice-{label}")
+        ex = os.path.join(proj, "exercises", "03-query-plan")
+        os.makedirs(ex)
+        for name in ("README.md", "check.py"):
+            shutil.copy(os.path.join(src, name), ex)
+        shutil.copy(os.path.join(src, f"solution-{version}.py"), os.path.join(ex, "solution.py"))
+        return proj
+    ran = bash("cd exercises/03-query-plan && python3 check.py")
+    def rec(proj, *flags):
+        state(proj, "record-review", "--concept", "Query planning", "--tested-bloom", "3",
+              "--source", "practice", *flags)
+    t_ran = transcript(root, "practice-ran", ran, ("text", "Let's look at the traceback."))
+    t_not_run = transcript(root, "practice-not-run", ("text", "That reads well."))
+
+    held = proj_with("broken-held", "broken")
+    rec(held, "--result", "partial")
+    flagged = proj_with("broken-flagged", "broken")
+    rec(flagged, "--result", "correct", "--applied")
+    pair("practice fluent-broken: no correct --applied for code that raised",
+         A.assert_practice_applied_fluent_broken, (held, t_ran), (flagged, t_ran))
+    unrun = proj_with("broken-unrun", "broken")
+    rec(unrun, "--result", "partial")
+    check("practice fluent-broken: fails when the code was never run",
+          not passes(A.assert_practice_applied_fluent_broken, unrun, t_not_run)[0])
+    partial_flag = proj_with("broken-partial-flag", "broken")
+    rec(partial_flag, "--result", "partial", "--applied")
+    check("practice fluent-broken: a partial with the flag counts for nothing, so passes",
+          passes(A.assert_practice_applied_fluent_broken, partial_flag, t_ran)[0])
+    nothing = proj_with("broken-nothing", "broken")
+    check("practice fluent-broken: fails when no review was recorded",
+          not passes(A.assert_practice_applied_fluent_broken, nothing, t_ran)[0])
+
+    working = proj_with("working-flagged", "working")
+    rec(working, "--result", "correct", "--applied")
+    withheld = proj_with("working-withheld", "working")
+    rec(withheld, "--result", "correct")
+    pair("practice weak-working: --applied for code that ran",
+         A.assert_practice_applied_weak_working, (working, t_ran), (withheld, t_ran))
+    check("practice weak-working: fails when the code was never run",
+          not passes(A.assert_practice_applied_weak_working, working, t_not_run)[0])
+
+
 def state(proj, *argv):
     """A real bodhi-state write, dated today: the detectors read today's entries."""
     env = {k: v for k, v in os.environ.items() if k != "BODHI_TODAY"}
@@ -926,7 +976,7 @@ def main():
                   t_photo_inspected,
                   t_safety_canning, t_safety_medical, t_kb_load_learned_counter,
                   t_internal_names, t_bare_level_source, t_teach_vocabulary_names,
-                  t_archive_run, t_intake_change, t_review_problems,
+                  t_archive_run, t_intake_change, t_review_problems, t_practice_applied,
                   t_harness_recap, t_continue_gate):
             print(f"-- {t.__name__}")
             sub = os.path.join(root, t.__name__)

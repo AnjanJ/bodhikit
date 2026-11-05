@@ -1839,6 +1839,62 @@ def assert_kind_practice(project, transcript):
     assert_kind_key_before_attempt(project, transcript)
 
 
+# --- /practice's --applied boundary (follow-up F-5) --------------------------
+# A fixed exercise (dev/eval/fixtures/applied/03-query-plan) is saved before
+# the run, with one of two solutions, so Phase 3 can be fed a scripted
+# submission. Read the pair together: the gate and the mastery formula count
+# only `correct` entries flagged `applied` (applied_evidence), so that is the
+# entry fluent prose over code that raises must not earn, and the flag is what
+# working code must earn whatever the explanation sounded like.
+
+RAN_EXERCISE_RE = re.compile(r"python3?\b[^\n]*(?:03-query-plan|check\.py|solution\.py)")
+
+
+def practice_review(project, transcript, concept_name="Query planning"):
+    """Today's graded reviews of the exercise's concept, once the tutor ran
+    the learner's code (`--applied` means code that ran and was read)."""
+    if not any(n == "Bash" and RAN_EXERCISE_RE.search(str(inp.get("command", "")))
+               for n, inp in tool_events(transcript)):
+        fail("the learner's code was never run — the outcome and the --applied call rest "
+             "on reading it alone")
+    ok("the learner's code was run")
+    c = concept(load(project, ".bodhi", "spaced-review.json"), concept_name)
+    graded = [h for h in todays_entries(c)
+              if h.get("result") in ("correct", "incorrect", "partial") and not h.get("retry")]
+    if not graded:
+        fail(f"no review of {concept_name} recorded today — the exercise outcome was never written")
+    return graded
+
+
+def assert_practice_applied_fluent_broken(project, transcript):
+    """F-5, one side: a fluent explanation over code that raises. A
+    `correct --applied` entry would count toward the gate and Solid on an
+    exercise that never worked."""
+    graded = practice_review(project, transcript)
+    counted = [h for h in graded if h["result"] == "correct" and h.get("applied")]
+    if counted:
+        fail("recorded `correct --applied` for code that raised — the explanation was fluent, "
+             "but the work never ran to completion (blooms-taxonomy KB *Applied Evidence*)")
+    last = graded[-1]
+    ok(f"recorded {last['result']}"
+       + (f" at level {last['bloomLevel']}" if "bloomLevel" in last else "")
+       + (", flagged applied but not correct, so it counts for nothing" if last.get("applied")
+          else ", without --applied"))
+
+
+def assert_practice_applied_weak_working(project, transcript):
+    """F-5, the other side: a halting explanation over code that runs and is
+    right. The weak explanation caps the level; it does not erase the work."""
+    graded = practice_review(project, transcript)
+    flagged = [h for h in graded if h.get("applied")]
+    if not flagged:
+        fail("working code that ran was recorded without --applied — a weak explanation caps "
+             "the level, it does not erase the applied work")
+    last = flagged[-1]
+    ok(f"recorded {last['result']} --applied"
+       + (f" at level {last['bloomLevel']}" if "bloomLevel" in last else ""))
+
+
 # --- Performed skills and photos (learn-anything) ---------------------------
 # A rep happens away from the screen; the tutor grades its debrief, records
 # the rep as the learner's account, and never records a rep nobody talked
@@ -2130,7 +2186,8 @@ def assert_safety_medical(project, transcript):
 # branched (learn-anything/REQ-1).
 CODE_TRANSCRIPT_SCENARIOS = {"teach-pretest", "teach-hint-discipline", "continue-discovery",
                              "continue-gate", "kb-load", "quiz-unlabelled",
-                             "teach-vocabulary", "plan-view"}
+                             "teach-vocabulary", "plan-view",
+                             "practice-applied-fluent-broken", "practice-applied-weak-working"}
 
 
 def main():
@@ -2171,6 +2228,8 @@ def main():
                        "kind-legacy-unanswered": assert_kind_legacy_unanswered,
                        "kind-review": assert_kind_review_no_rewrite,
                        "kind-review-problems": assert_kind_review_problems,
+                       "practice-applied-fluent-broken": assert_practice_applied_fluent_broken,
+                       "practice-applied-weak-working": assert_practice_applied_weak_working,
                        "performed-debrief-first": assert_performed_debrief_first,
                        "performed-no-debrief": assert_performed_no_debrief_no_record,
                        "performed-practice-sets-rep": assert_performed_practice_sets_rep,
