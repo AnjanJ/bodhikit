@@ -49,3 +49,8 @@ reason against option 2 is weaker than it read.
 **Falsifiability.** We would move to option 2 if `newlyLearned`, or the profile bump it triggers,
 is narrated to the learner in 2 or more of the next 10 live `kb-load` or `/teach` transcripts.
 **Fired-if.** manual
+
+*Status 2026-11-06: the reversal condition is met.* Of the first six live `kb-load` runs after
+the rename (three on 2026-11-05, three on 2026-11-06), four told the learner about
+`newlyLearned` or the profile bump it triggers (`dev/eval/README.md`, `kb-load` row). The
+condition names option 2; it is not adopted until the maintainer decides.
