@@ -1,5 +1,7 @@
 # 0002: `record-review` names the duty, not the rung: `crossedBloom3` becomes `newlyLearned`
 
+> **Superseded 2026-11-06 by 0004** (its reversal condition was met: 4 of 6 runs). Kept as the record.
+
 > Decided 2026-11-05. Amends learn-anything REQ-1's "exactly as 1.24.1" for one output key.
 
 **Context.** Since 1.14.0, `record-review` reports `crossedBloom3: true` when a write moves a
