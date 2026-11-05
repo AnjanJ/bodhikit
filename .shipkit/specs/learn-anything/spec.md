@@ -31,7 +31,7 @@ learner's word and labels it as the learner's word everywhere it shows.
 ## Requirements (EARS)
 
 ### Coding stays as it is
-- **REQ-1.** Where a concept's effective evidence kind is `code`, the plugin shall teach, grade, schedule and track it exactly as release 1.24.1 does.
+- **REQ-1.** Where a concept's effective evidence kind is `code`, the plugin shall teach, grade, schedule and track it exactly as release 1.24.1 does. *(Amended 2026-11-05: one approved exception. `/progress`'s Spaced Repetition Health rows no longer print "(Box 4-5)", "(Box 2-3)" or "(Box 1)" (`f59a52b`), because a learner never sees a box number. It changes what a code learner reads, not how a code concept is taught, graded, scheduled or tracked, and `bodhi-state` output is unchanged.)*
 - **REQ-2.** If a review records the learner's word as applied work on a concept whose effective kind is `code`, `problems` or `writing`, then `bodhi-state` shall reject the write with an error naming the concept's kind.
 - **REQ-3.** If a project has no recorded evidence kind, then `bodhi-state` shall treat the project as `code`.
 
