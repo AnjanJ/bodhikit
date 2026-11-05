@@ -314,11 +314,13 @@ counts for 1.25.0:
 
 - `kb-load` ×3 (`BODHI_EVAL_RUNS=3`). Its file state now checks that the
   profile's `totalConceptsLearned` moved by exactly the number of crossing
-  writes (the v2 fixture's profile starts at 2). Read each transcript for the
-  tutor telling the learner about the profile counter, the key or
-  `bump-profile`: no detector catches that, and 0004 is revisited at 2 in the
-  next 10 `kb-load` or `/teach` transcripts.
-- `teach-vocabulary` ×1. Read the transcript the same way, and check the
-  counter by hand: its assertion does not read the profile.
+  writes (the v2 fixture's profile starts at 2). Its prose check now fails a
+  bodhi-state subcommand or output key told to the learner
+  (`assert_no_internal_names`), and a failure names the tool output the
+  word came from. Still read each transcript for the profile counter told in
+  plain words ("profile counter bumped"), which no detector catches; 0004 is
+  revisited at 2 in the next 10 `kb-load` or `/teach` transcripts.
+- `teach-vocabulary` ×1. Same prose checks; check the counter by hand: its
+  assertion does not read the profile.
 
 `kb-load` re-ran three times with the `newlyLearned` rename on 2026-11-05: 3 PASS under the old detector, 1 PASS under the case-insensitive one (see its row). Earlier passes of every scenario using `BARE_LEVEL_RE` were judged by the capitalised match; their transcripts were not kept, so they cannot be re-checked.

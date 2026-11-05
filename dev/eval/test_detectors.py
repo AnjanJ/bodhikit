@@ -50,12 +50,18 @@ def passes(fn, *args, **kw):
 
 
 def transcript(root, name, *items):
-    """A claude stream-json transcript: ("text", str) or ("tool", name, input)."""
+    """A claude stream-json transcript: ("text", str), ("tool", name, input),
+    or ("result", str) — the output of the tool call just before it."""
     path = os.path.join(root, f"{name}.jsonl")
     with open(path, "w", encoding="utf-8") as f:
-        for it in items:
+        for i, it in enumerate(items):
+            if it[0] == "result":
+                f.write(json.dumps({"type": "user", "message": {"content": [
+                    {"type": "tool_result", "tool_use_id": f"t{i - 1}",
+                     "content": it[1]}]}}) + "\n")
+                continue
             block = ({"type": "text", "text": it[1]} if it[0] == "text"
-                     else {"type": "tool_use", "name": it[1], "input": it[2]})
+                     else {"type": "tool_use", "id": f"t{i}", "name": it[1], "input": it[2]})
             f.write(json.dumps({"type": "assistant", "message": {"content": [block]}}) + "\n")
     return path
 
@@ -611,6 +617,110 @@ def t_kb_load_learned_counter(root):
           passes(A.assert_kb_load, added, clean)[0])
 
 
+def t_internal_names(root):
+    """The tutor must not tell the learner bodhi-state's subcommands or output
+    keys. Decisions 0002 and 0004 counted these by hand; the bad runs are the
+    live lines from 2026-11-05/06."""
+    kb = ("tool", "Skill", {"skill": "bodhikit:teaching-personality"})
+    v2 = v2_copy(root, "names-v2")
+    good = transcript(root, "names-good", kb, ("text",
+                      "Good: you can apply it to a real case with some guidance. Your review "
+                      "schedule moved up, so you'll see it again on 2026-11-09. If it slips, "
+                      "`/bodhikit:forget` sends it back for review tomorrow."))
+    check("names: the clean closing passes kb-load", passes(A.assert_kb_load, v2, good)[0])
+    live = {
+        "newlyLearned fired": "**Bookkeeping:** review recorded; profile counter "
+                              "(`newlyLearned` fired).",
+        "bump-profile receipt": "Writes done: `bump-profile --counter totalConceptsLearned` "
+                                "(triggered by `newlyLearned`, now 3).",
+        "crossedLevel receipt": "Review recorded (next review 2026-11-08, `crossedLevel: "
+                                "true` to Understand).",
+        "state-ops trigger": "`newlyLearned: true` — per the state-ops KB that triggers the "
+                             "profile counter bump.",
+        "unquoted subcommand": "I ran record-review for that answer.",
+    }
+    for label, line in live.items():
+        bad = transcript(root, f"names-{label.replace(' ', '-')}", kb, ("text", line))
+        ok_bad, out = passes(A.assert_kb_load, v2, bad)
+        check(f"names: kb-load fails the {label} line", not ok_bad, out.strip()[-300:])
+    recap = transcript(root, "names-recap", kb, ("text", "You can apply it with some "
+                       "guidance.\n\n## Recap\n\n- `record-review` with `--tested-bloom 3`; "
+                       "`crossedLevel: true`."))
+    check("names: a harness recap may name them", passes(A.assert_kb_load, v2, recap)[0])
+    tool_only = transcript(root, "names-tool-only", kb,
+                           bash(BS + "record-review --concept X --result correct"),
+                           ("result", '{"crossedLevel": true, "ok": true}'),
+                           ("text", "You can apply it with some guidance."))
+    check("names: a name in a tool call or its output is not learner-facing",
+          passes(A.assert_kb_load, v2, tool_only)[0])
+    # Where the leak came from: the failure names the tool output that held it.
+    sourced = transcript(root, "names-sourced", kb,
+                         bash(BS + "record-review --concept X --result correct"),
+                         ("result", '{"schedule": "moved up", "crossedLevel": true}'),
+                         ("text", "Recorded (`crossedLevel: true`)."))
+    ok_s, out = passes(A.assert_kb_load, v2, sourced)
+    check("names: the failure names the tool output it came from",
+          not ok_s and "record-review" in out.split("assert FAIL", 1)[-1], out.strip()[-300:])
+    with open(os.path.join(REPO, "scripts", "bodhi-state"), encoding="utf-8") as f:
+        src = f.read()
+    every = [n for n in A.INTERNAL_KEYS if f'"{n}"' not in src]
+    check("names: every listed key is one bodhi-state really prints", not every, every)
+    gone = [n for n in A.RETIRED_KEYS if f'"{n}"' in src]
+    check("names: the retired keys are printed no more", not gone, gone)
+    check("names: the subcommands are read from bodhi-state",
+          {"record-review", "bump-profile", "session-brief"} <= set(A.SUBCOMMANDS),
+          A.SUBCOMMANDS)
+
+
+def t_bare_level_source(root):
+    """Decision 0003 extends to the read commands if 2 of the next 10 live
+    transcripts leak a box number from one. The bare-level failure names the
+    tool output that carried the number."""
+    kb = ("tool", "Skill", {"skill": "bodhikit:teaching-personality"})
+    v2 = v2_copy(root, "source-v2")
+    run = transcript(root, "source-brief", kb,
+                     bash(BS + "session-brief --concept 'Query planning'"),
+                     ("result", '{"concept": "Query planning", "box": 1, "bloomLevel": 2}'),
+                     bash(BS + "record-review --concept 'Query planning' --result correct"),
+                     ("result", '{"schedule": "moved up", "bloomLevel": 2}'),
+                     ("text", "Query planning has been in box 1 since Tuesday."))
+    ok_r, out = passes(A.assert_kb_load, v2, run)
+    tail = out.split("assert FAIL", 1)[-1]
+    check("source: the box number fails", not ok_r, out.strip()[-300:])
+    check("source: the failure names session-brief", "session-brief" in tail, tail)
+    check("source: and not the writer that printed no box", "record-review" not in tail, tail)
+    lvl = transcript(root, "source-level", kb,
+                     bash(BS + "record-review --concept 'Query planning' --result correct"),
+                     ("result", '{"schedule": "moved up", "bloomLevel": 3}'),
+                     ("text", "That puts you at Bloom 3."))
+    tail = passes(A.assert_kb_load, v2, lvl)[1].split("assert FAIL", 1)[-1]
+    check("source: a level names the output carrying it", "record-review" in tail, tail)
+    none = transcript(root, "source-none", kb, ("text", "That is Box 4 now."))
+    tail = passes(A.assert_kb_load, v2, none)[1].split("assert FAIL", 1)[-1]
+    check("source: with no tool output carrying it, the failure says so",
+          "no tool output" in tail, tail)
+
+
+def t_teach_vocabulary_names(root):
+    """teach-vocabulary runs the same internal-name check as kb-load."""
+    proj = os.path.join(root, "vocab", "proj")
+    today = __import__("datetime").date.today().isoformat()
+    write(os.path.join(proj, "revision", f"{today}-wal.md"),
+          "# Write-ahead logging\n\n## What we covered\nWrite-ahead logging.\n\n"
+          "## Words\n- write-ahead log\n- checkpoint\n- redo\n\n## Try it yourself\nx\n\n"
+          "## Next review\nx\n\n## Answers\nx\n")
+    lesson = ("You have not seen this yet — take a guess anyway.\n\n**Words for today**\n"
+              "- **write-ahead log** — a journal written before the data\n"
+              "- **checkpoint** — the moment the journal is folded in\n"
+              "- **redo** — replaying the journal after a crash\n\n## I Do\nThe idea...")
+    good = transcript(root, "vocab-good", ("text", lesson + "\n\nYou can explain it in "
+                                                    "your own words."))
+    bad = transcript(root, "vocab-bad", ("text", lesson + "\n\nRecorded; profile counter "
+                                                   "(`newlyLearned` fired)."))
+    pair("teach-vocabulary fails an internal key told to the learner",
+         A.assert_teach_vocabulary, (proj, good), (proj, bad))
+
+
 def t_harness_recap(root):
     # The live teach-vocabulary run, 2026-10-21: a clean closing to the learner,
     # then a wrap-up for the harness that names the level and box it recorded.
@@ -683,6 +793,7 @@ def main():
                   t_performed_repless_review, t_performed_by_your_account, t_plan_view_kind,
                   t_photo_inspected,
                   t_safety_canning, t_safety_medical, t_kb_load_learned_counter,
+                  t_internal_names, t_bare_level_source, t_teach_vocabulary_names,
                   t_harness_recap, t_continue_gate):
             print(f"-- {t.__name__}")
             sub = os.path.join(root, t.__name__)

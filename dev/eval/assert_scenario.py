@@ -709,7 +709,23 @@ def assistant_prose(transcript_path):
 
 # Case-insensitive since 2026-11-05: a live /quiz closing told the learner
 # "box 1 → 2", which the capitalised match let through.
-BARE_LEVEL_RE = re.compile(r"(?i)\b(Bloom(?:'s)?(?: level)?|Level|Box)\s*[0-6]\b")
+BARE_LEVEL_RE = re.compile(r"(?i)\b(Bloom(?:'s)?(?: level)?|Level|Box)\s*([0-6])\b")
+
+
+def assert_no_bare_level(prose, transcript):
+    """No bare Bloom level or box number in what the learner reads. A failure
+    names the tool output that carried the number: decision 0003 extends to
+    the read commands (session-brief, gate-check, revision-brief) only if live
+    transcripts show a leak from one, so the source has to be on record."""
+    m = BARE_LEVEL_RE.search(prose)
+    if m:
+        n = m.group(2)
+        key = (r'"box(?:Before)?"' if m.group(1).lower() == "box"
+               else r'"(?:bloomLevel|testedBloom|level)"')
+        carried = re.compile(rf'{key}\s*:\s*{n}(?!\d)|(?i:\b{re.escape(m.group(1))}\s*{n}\b)')
+        fail(f"learner-facing text quotes a bare level/box ({m.group(0)!r}) — render the "
+             f"bloomOutcome clause (blooms-taxonomy KB){leak_sources(transcript, carried)}")
+    ok("no bare Bloom/Box numbers in learner-facing text")
 
 
 def assert_kb_load(project, transcript):
@@ -734,11 +750,8 @@ def assert_kb_load(project, transcript):
     ok("no 'Unknown skill' responses for KB loads")
     # Learner-facing rendering (1.18.0): outcome clauses, never a bare number.
     prose = assistant_prose(transcript)
-    m = BARE_LEVEL_RE.search(prose)
-    if m:
-        fail(f"learner-facing text quotes a bare level/box ({m.group(0)!r}) — "
-             "render the bloomOutcome clause (blooms-taxonomy KB)")
-    ok("no bare Bloom/Box numbers in learner-facing text")
+    assert_no_bare_level(prose, transcript)
+    assert_no_internal_names(prose, transcript)
     assert_learned_counter(project)
 
 
@@ -811,6 +824,92 @@ def assert_continue_discovery(project, transcript):
 # never performed it" slips through. File-state assertions only.
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+
+
+def _subcommands():
+    with open(os.path.join(REPO, "scripts", "bodhi-state"), encoding="utf-8") as f:
+        return sorted(set(re.findall(r'sub\.add_parser\(\s*"([a-z][a-z-]*)"', f.read())))
+
+
+# bodhi-state's vocabulary, which the tutor must not hand the learner.
+# Decisions 0002 and 0004 counted these leaks by hand ("profile counter
+# (`newlyLearned` fired)", "`bump-profile --counter totalConceptsLearned`",
+# "`crossedLevel: true` to Understand"). Subcommands are read from the script;
+# only the hyphenated ones are matched, since `due` or `forget` are words.
+SUBCOMMANDS = _subcommands()
+INTERNAL_KEYS = ("crossedLevel", "boxHeld", "consecutiveCorrectAtL4Plus",
+                 "totalConceptsLearned", "cumulativeStats", "bloomLevel", "bloomLabel",
+                 "bloomOutcome", "nextReview", "appliedEvidence", "isReteach",
+                 "pretestApplies", "firstExposure", "profileSessionsBumped",
+                 "reviewHistory")
+RETIRED_KEYS = ("newlyLearned", "crossedBloom3")   # decisions 0002, 0004
+INTERNAL_NAME_RE = re.compile(r"(?<![\w-])(" + "|".join(
+    re.escape(n) for n in sorted({"bodhi-state", *INTERNAL_KEYS, *RETIRED_KEYS,
+                                  *(c for c in SUBCOMMANDS if "-" in c)},
+                                 key=len, reverse=True)) + r")(?![\w-])")
+
+
+def tool_outputs(transcript_path):
+    """[(label, output text)] for each tool call whose result the transcript
+    recorded (claude stream-json; the codex and bodhi-cli shapes carry none).
+    A bodhi-state call is labelled by its subcommand."""
+    calls, outs = {}, []
+    with open(transcript_path) as f:
+        for line in f:
+            try:
+                ev = json.loads(line.strip() or "{}")
+            except json.JSONDecodeError:
+                continue
+            for block in (ev.get("message", {}) or {}).get("content", []) or []:
+                if not isinstance(block, dict):
+                    continue
+                if block.get("type") == "tool_use":
+                    calls[block.get("id")] = (block.get("name", ""), block.get("input") or {})
+                elif block.get("type") == "tool_result":
+                    body = block.get("content")
+                    if isinstance(body, list):
+                        body = "\n".join(b.get("text", "") for b in body if isinstance(b, dict))
+                    name, inp = calls.get(block.get("tool_use_id"), ("?", {}))
+                    outs.append((_tool_label(name, inp), body if isinstance(body, str) else ""))
+    return outs
+
+
+def _tool_label(name, inp):
+    cmd = inp.get("command", "") if isinstance(inp, dict) else ""
+    if name == "Bash" and "bodhi-state" in cmd:
+        after = cmd.split("bodhi-state", 1)[1]
+        words = re.findall(r"(?<![\w/.-])([a-z][a-z-]*)(?![\w/.-])", after)
+        return next((w for w in words if w in SUBCOMMANDS), "bodhi-state")
+    if name == "Read":
+        return f"Read {os.path.basename(str(inp.get('file_path', '')))}"
+    if name == "Skill":
+        return f"Skill {inp.get('skill', '')}"
+    return name
+
+
+def leak_sources(transcript_path, pattern):
+    """' — found in the output of: …' naming each tool output that matches
+    `pattern`, or a note that none did."""
+    found = []
+    for label, text in tool_outputs(transcript_path):
+        if pattern.search(text) and label not in found:
+            found.append(label)
+    if found:
+        return f" — found in the output of: {', '.join(found)}"
+    return " — no tool output carried it (KB or skill text, or the model's own wording)"
+
+
+def assert_no_internal_names(prose, transcript):
+    """The tutor never tells the learner a bodhi-state subcommand or output key
+    (decision 0004 is revisited at 2 such transcripts in 10). A harness recap
+    is cut off by assistant_prose; tool calls and their output are not prose."""
+    m = INTERNAL_NAME_RE.search(prose)
+    if m:
+        name = re.compile(rf"(?<![\w-]){re.escape(m.group(1))}(?![\w-])")
+        fail(f"learner-facing text names bodhi-state internals ({m.group(1)!r} in "
+             f"{prose[max(0, m.start() - 40):m.end() + 40]!r}) — say what happened in plain "
+             f"words{leak_sources(transcript, name)}")
+    ok("no bodhi-state subcommands or keys in learner-facing text")
 
 
 def run_bodhi_state(project, *args):
@@ -1103,10 +1202,8 @@ def assert_teach_vocabulary(project, transcript):
         fail(f"words block lists {len(terms)} terms ({terms}); the rule is 3–6, "
              "one plain line each")
     ok(f"{len(terms)} terms previewed: {terms}")
-    m = BARE_LEVEL_RE.search(text)
-    if m:
-        fail(f"learner-facing text quotes a bare level/box ({m.group(0)!r})")
-    ok("no bare Bloom/Box numbers in learner-facing text")
+    assert_no_bare_level(text, transcript)
+    assert_no_internal_names(text, transcript)
     assert_revision_sheet(project, must_mention=("Write-ahead logging",))
     today = datetime.date.today().isoformat()
     rev = os.path.join(project, "revision")
@@ -1154,10 +1251,7 @@ def assert_plan_view(project, transcript):
     if order != sorted(order):
         fail(f"modules are not in plan order (positions {order})")
     ok("all three modules present, in plan order")
-    m = BARE_LEVEL_RE.search(prose)
-    if m:
-        fail(f"learner-facing text quotes a bare level/box ({m.group(0)!r})")
-    ok("no bare Bloom/Box numbers in learner-facing text")
+    assert_no_bare_level(prose, transcript)
     m = KIND_LINE_RE.search(prose)
     if m:
         fail(f"a code project's view names how work is checked ({m.group(0)!r}); the kind "
@@ -1206,10 +1300,7 @@ def assert_plan_view_kind(project, transcript, module="Emulsions",
     if m:
         fail(f"the raw kind {m.group(0)} reaches the learner; render it in plain words")
     ok("no raw kind names in learner-facing text")
-    m = BARE_LEVEL_RE.search(prose)
-    if m:
-        fail(f"learner-facing text quotes a bare level/box ({m.group(0)!r})")
-    ok("no bare Bloom/Box numbers in learner-facing text")
+    assert_no_bare_level(prose, transcript)
 
 
 
@@ -1867,10 +1958,7 @@ def assert_performed_by_your_account(project, transcript, concept="Knife grip"):
         fail(f"{concept} is Solid on the learner's word alone, and no mention of it says so "
              "(\"by your account\")")
     ok(f"{concept} shown as Solid by the learner's account")
-    m = BARE_LEVEL_RE.search(prose)
-    if m:
-        fail(f"learner-facing text quotes a bare level/box ({m.group(0)!r})")
-    ok("no bare Bloom/Box numbers in learner-facing text")
+    assert_no_bare_level(prose, transcript)
 
 
 CAN_JUDGE_RE = re.compile(r"(?i)(I can see|from the (?:photo|image|picture|drawing)|in the "
