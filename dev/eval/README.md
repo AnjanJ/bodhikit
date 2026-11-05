@@ -323,6 +323,24 @@ counts for 1.25.0:
 - `teach-vocabulary` ×1. Same prose checks; check the counter by hand: its
   assertion does not read the profile.
 
+### Scoped, not built: `/practice`'s `--applied` boundary (follow-up F-5)
+
+No live scenario drives `/practice`, so the model's choice to pass or withhold
+`record-review --applied` is tested only on the script side. `/practice` designs
+its own exercise, so a submission cannot be scripted in advance. The plan, after
+the internal-name detector and T43/T44:
+
+- A prep step saves one fixed code exercise (a `README.md` and a stub) in
+  `exercises/<module>/`. The prompt says it is already posted and hands over a
+  scripted submission, which tests Phase 3's review in isolation.
+- `practice-applied-fluent-broken`: a fluent explanation over code that raises.
+  It must be recorded without `--applied`.
+- `practice-applied-weak-working`: a halting explanation over code that runs and
+  is correct. It must be recorded with `--applied`.
+- Read both together, as with the grading pairs: a run that never passes
+  `--applied` passes the first scenario and fails the second.
+- Calibrate with `BODHI_EVAL_RUNS=2` on each side before trusting a single run.
+
 From 2026-11-06 every run is kept, pass or fail: `archive_run` copies its
 transcript, its `learningWithBodhi/` tree and a `run.txt` (scenario, verdict,
 commit, runtime, model) to `dev/eval/runs/<date>/<scenario>.XXXXXX/`, which is
