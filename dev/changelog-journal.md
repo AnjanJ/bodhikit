@@ -8,7 +8,7 @@ This is the full, unabridged, patch-by-patch changelog kept for the maintainer â
 
 All notable changes to BodhiKit will be documented in this file.
 
-## [Unreleased]
+## [1.26.0] - 2026-11-06
 
 **Module kinds on the syllabus view (T41).** The design record *The kind lives in `state.json`* argued "`/plan view` and `/progress` render `syllabus` output, so the learner still sees each module's kind". `syllabus` emitted `evidenceKind` per row from 1.25.0, but `module-row.md`, the one renderer both skills share, never read it. The 2026-10-22 ship-gate reviewer flagged it under *Decisions not followed*; the 2026-11-05 drift check confirmed nothing renders it. `module-row.md` gains *How the work is checked*: on a project whose kind or any row's kind is not `code`, one plain-words line above the table and a short note on each row whose kind differs from the project's. A code project prints neither, so code learners see the view they had (REQ-1). New scenario `plan-view-kind` (the cooking fixture with Emulsions set to `problems`); `assert_plan_view` now also fails a code view that prints a kind line. `test_detectors.py`: 122 checks. Neither live run has been made.
 
