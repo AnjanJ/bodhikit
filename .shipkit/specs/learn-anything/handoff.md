@@ -1,5 +1,11 @@
 # Handoff: BodhiKit "learn anything" (written 2026-10-19)
 
+> **Superseded 2026-11-05. Historical.** Everything this note asks for has been built: all tasks in
+> `tasks.md` are ticked, and the work shipped as 1.25.0 (2026-10-23) and 1.25.1 (2026-10-24).
+> "Nothing has been implemented yet" was true only when this was written. For the current state,
+> read `git log`, `.shipkit/product.md` (*Now*) and the "Pending for 1.25.0" list in
+> `dev/eval/README.md`. The rest is kept as the record of how the work was planned.
+
 You are picking up work on BodhiKit at `/Users/anjan/code/bodhi-projects/bodhikit`, a Claude
 Code plugin that is a Socratic tutor. The maintainer is Anjan, its one real learner so far. The
 previous session planned and specced a major expansion. Nothing has been implemented yet. Read

@@ -1,6 +1,6 @@
 # Product: BodhiKit
 
-> Product reviewed on 2026-10-22.
+> Product reviewed on 2026-10-22. *Now* updated 2026-11-05.
 
 ## One line
 A research-informed tutor for any subject, with code first-class, that teaches by asking and keeps each learner's spaced-review record in files they own.
@@ -35,6 +35,6 @@ A research-informed tutor for any subject, with code first-class, that teaches b
 - The ChatGPT listing depends on the OpenAI portal, which refused skills-only submissions on 2026-10-15.
 
 ## Now / Next / Later
-- **Now:** ship 1.25.0: the release sweep, the tag, the `.plugin` release asset, the ChatGPT draft.
+- **Now:** finish 1.25.x. Shipped: 1.25.0 (2026-10-23) and 1.25.1 (2026-10-24), and 1.25.1 submitted to ChatGPT (in review; the listing shows 1.23.0 until published). Left: 1.25.2's `crossedBloom3` rename, which leaks into learner text (`kb-load` fails on the release tree), and the live evals still pending on the release tree (`dev/eval/README.md`).
 - **Next:** reach outside learners on non-code subjects, and the maintainer's own non-code project toward 5 *Solid*.
 - **Later:** saved state on a phone or claude.ai with no computer connected, after a research spike on keeping state between chats.
