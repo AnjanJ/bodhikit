@@ -18,6 +18,9 @@ learningWithBodhi/
 # Dev audit outputs (regenerable, do not version)
 dev/context-audit.txt
 
+# Kept LLM-eval runs (dev/eval/run-llm-evals.sh archive_run; local only)
+dev/eval/runs/
+
 # Personal analysis notes (not part of the plugin)
 analysis/
 

@@ -26,6 +26,9 @@
 #   dev/eval/run-llm-evals.sh photo      # a photo examined, then recorded as inspected
 #   dev/eval/run-llm-evals.sh safety     # a home-canning request, a personal medical question
 #
+#   Every run is kept under dev/eval/runs/<date>/ (gitignored) with its
+#   verdict; BODHI_EVAL_KEEP=0 keeps none (see archive_run).
+#
 #   BODHI_EVAL_RUNS=8 dev/eval/run-llm-evals.sh grade-apply-band
 #                                        # sample a grading scenario N times and
 #                                        # report a pass RATE + the level each
@@ -86,6 +89,28 @@ SYS_HARNESS="This session is a headless evaluation run of the BodhiKit plugin's 
 # bodhi-cli authenticates with ANTHROPIC_API_KEY (it has no OAuth login), so
 # the Max-login env scrub below is claude-runtime-only.
 RUNTIME="${BODHI_EVAL_RUNTIME:-claude}"
+
+# Every run is kept by default (2026-11-06). Passes before 2026-11-05 were
+# judged by a case-sensitive box check and their transcripts were deleted, so
+# they could not be re-checked. archive_run copies a finished run to
+# dev/eval/runs/<date>/<scenario>.XXXXXX (gitignored), with a run.txt naming
+# the verdict, commit and runtime. The workdir itself stays in /tmp: a run
+# started under the repo would load its CLAUDE.md. Only an allowlist is
+# copied, never codex-home, which holds a copy of the codex login.
+# BODHI_EVAL_KEEP=0 turns it off.
+EVAL_ARCHIVE="$REPO/dev/eval/runs/$(date +%F)"
+archive_run() {
+  [ "${BODHI_EVAL_KEEP:-1}" = "0" ] && return 0
+  mkdir -p "$EVAL_ARCHIVE"
+  ar_dest=$(mktemp -d "$EVAL_ARCHIVE/$1.XXXXXX") || return 0
+  for ar_item in learningWithBodhi transcript.jsonl transcript.txt codex-events.jsonl codex-stderr.txt; do
+    [ -e "$2/$ar_item" ] && cp -R "$2/$ar_item" "$ar_dest/"
+  done
+  printf 'scenario: %s\nverdict: %s\ncommit: %s\nruntime: %s\nmodel: %s\nkept: %s\n' \
+    "$1" "$3" "$(git -C "$REPO" rev-parse --short HEAD 2>/dev/null)$(git -C "$REPO" diff --quiet HEAD 2>/dev/null || echo ' (+ uncommitted changes)')" \
+    "$RUNTIME" "${BODHI_EVAL_MODEL:-default}" "$(date '+%F %T')" > "$ar_dest/run.txt"
+  echo "   kept at $ar_dest"
+}
 BODHI_CLI_ROOT="${BODHI_CLI_ROOT:-$REPO/../bodhi-cli}"
 if [ "$RUNTIME" = "bodhi-cli" ]; then
   CLI_TSX="$BODHI_CLI_ROOT/node_modules/.bin/tsx"
@@ -388,7 +413,7 @@ inconclusive_reason() {
 
 run_scenario() {
   name="$1"; prompt="$2"; assert="$3"; prep="${4:-}"; transcript_mode="${5:-}"; nudge="${6:-}"; maxturns="${7:-30}"
-  # BODHI_EVAL_SWEEP/KEEP are set by repeat_scenario so a sampled run lands in
+  # BODHI_EVAL_SWEEP is set by repeat_scenario so a sampled run lands in
   # a known directory and survives a PASS — the pass side is exactly the side
   # F-4 needs to inspect (every failure had the same shape; the question is
   # what level the PASSING runs recorded).
@@ -417,7 +442,8 @@ run_scenario() {
     transcript="$tmp/transcript.jsonl"
     run_headless "$tmp" "$tmp/learningWithBodhi/$proj" "$prompt" "$maxturns" "$transcript" stream
     if truncated_by_limit "$transcript"; then
-      echo "INCONCLUSIVE: $name — $(inconclusive_reason "$transcript") (transcript at $transcript)"; FAIL=1; return
+      echo "INCONCLUSIVE: $name — $(inconclusive_reason "$transcript") (transcript at $transcript)"; FAIL=1
+      archive_run "$name" "$tmp" INCONCLUSIVE; return
     fi
     if python3 "$REPO/dev/eval/assert_scenario.py" "$assert" "$tmp/learningWithBodhi/$proj" "$transcript"; then
       echo "PASS: $name"
@@ -425,12 +451,14 @@ run_scenario() {
       echo "FAIL: $name — transcript at $transcript, project left at $tmp"
       echo "      (transcript assertions are wording-tolerant detectors — read the transcript before judging)"
       FAIL=1
+      archive_run "$name" "$tmp" FAIL
       return
     fi
   else
     run_headless "$tmp" "$tmp/learningWithBodhi/$proj" "$prompt" "$maxturns" "$tmp/transcript.txt"
     if truncated_by_limit "$tmp/transcript.txt"; then
-      echo "INCONCLUSIVE: $name — $(inconclusive_reason "$tmp/transcript.txt") (transcript at $tmp/transcript.txt)"; FAIL=1; return
+      echo "INCONCLUSIVE: $name — $(inconclusive_reason "$tmp/transcript.txt") (transcript at $tmp/transcript.txt)"; FAIL=1
+      archive_run "$name" "$tmp" INCONCLUSIVE; return
     fi
     nudges=0
     while true; do
@@ -451,11 +479,14 @@ run_scenario() {
       else
         echo "FAIL: $name — transcript at $tmp/transcript.txt, project left at $tmp"
         FAIL=1
+        archive_run "$name" "$tmp" FAIL
         return
       fi
     done
   fi
-  [ -n "${BODHI_EVAL_KEEP:-}" ] || rm -rf "$tmp"
+  archive_run "$name" "$tmp" PASS
+  # A sweep reads every run's workdir after the last one, so it stays.
+  [ -n "${BODHI_EVAL_SWEEP:-}" ] || rm -rf "$tmp"
 }
 
 # Discovery scenario (1.14.x): unlike every other scenario, this one runs from
@@ -475,15 +506,18 @@ run_discovery_scenario() {
   transcript="$tmp/transcript.jsonl"
   run_headless "$tmp" "$tmp/learningWithBodhi" "$prompt" 30 "$transcript" stream
   if truncated_by_limit "$transcript"; then
-    echo "INCONCLUSIVE: $name — $(inconclusive_reason "$transcript") (transcript at $transcript)"; FAIL=1; return
+    echo "INCONCLUSIVE: $name — $(inconclusive_reason "$transcript") (transcript at $transcript)"; FAIL=1
+    archive_run "$name" "$tmp" INCONCLUSIVE; return
   fi
   if python3 "$REPO/dev/eval/assert_scenario.py" "$assert" "$tmp/learningWithBodhi/sql-deep-dive" "$transcript"; then
     echo "PASS: $name"
+    archive_run "$name" "$tmp" PASS
     rm -rf "$tmp"
   else
     echo "FAIL: $name — transcript at $transcript, project left at $tmp"
     echo "      (transcript assertion inspects tool_use inputs — read it before judging)"
     FAIL=1
+    archive_run "$name" "$tmp" FAIL
   fi
 }
 
@@ -509,14 +543,17 @@ run_parent_scenario() {
     run_headless "$tmp" "$tmp" "$prompt" "$maxturns" "$out"
   fi
   if truncated_by_limit "$out"; then
-    echo "INCONCLUSIVE: $name — $(inconclusive_reason "$out") (transcript at $out)"; FAIL=1; return
+    echo "INCONCLUSIVE: $name — $(inconclusive_reason "$out") (transcript at $out)"; FAIL=1
+    archive_run "$name" "$tmp" INCONCLUSIVE; return
   fi
   if python3 "$REPO/dev/eval/assert_scenario.py" "$assert" "$tmp/learningWithBodhi/sql-deep-dive" ${transcript_mode:+"$out"}; then
     echo "PASS: $name"
-    [ -n "${BODHI_EVAL_KEEP:-}" ] || rm -rf "$tmp"
+    archive_run "$name" "$tmp" PASS
+    rm -rf "$tmp"
   else
     echo "FAIL: $name — transcript at $out, project left at $tmp"
     FAIL=1
+    archive_run "$name" "$tmp" FAIL
   fi
 }
 
@@ -543,7 +580,7 @@ repeat_scenario() {
   for i in $(seq 1 "$EVAL_RUNS"); do
     echo "-- run $i/$EVAL_RUNS"
     FAIL=0
-    BODHI_EVAL_KEEP=1 BODHI_EVAL_SWEEP="$sweep/run-$i" run_scenario "$@"
+    BODHI_EVAL_SWEEP="$sweep/run-$i" run_scenario "$@"
     [ "$FAIL" -eq 0 ] && passes=$((passes + 1))
   done
   FAIL="$outer_fail"

@@ -194,8 +194,8 @@ assistant transcript:
   `/debug-together` offer, a source from `resources.md` named, the
   exercise's key saved before the learner's work; on writing, the task in
   `README.md` and the criteria both before the learner's piece, while whether
-  the task's case is new is read in the transcript: run it with
-  `BODHI_EVAL_KEEP=1`, since a passing run's workdir is deleted),
+  the task's case is new is read in the transcript, which every run keeps
+  under `dev/eval/runs/`),
   `kind-practice-problems`
   (the key before the work), `kind-quiz` (a problem posed from the subject,
   no code, no "define X"), `kind-intake` (`/learn` on music theory: no
@@ -322,6 +322,15 @@ counts for 1.25.0:
   revisited at 2 in the next 10 `kb-load` or `/teach` transcripts.
 - `teach-vocabulary` ×1. Same prose checks; check the counter by hand: its
   assertion does not read the profile.
+
+From 2026-11-06 every run is kept, pass or fail: `archive_run` copies its
+transcript, its `learningWithBodhi/` tree and a `run.txt` (scenario, verdict,
+commit, runtime, model) to `dev/eval/runs/<date>/<scenario>.XXXXXX/`, which is
+gitignored. The workdir still runs in `/tmp`, since a run started under the repo
+would load its CLAUDE.md, and codex's login copy is never archived.
+`BODHI_EVAL_KEEP=0` turns it off. A detector changed later can then be
+re-run over old transcripts with `assert_scenario.py <scenario> <project>
+<transcript>`.
 
 From 2026-11-06 the harness system prompt (`SYS_HARNESS`) also asks for the
 tracking writes without describing them to the learner, since every prompt's

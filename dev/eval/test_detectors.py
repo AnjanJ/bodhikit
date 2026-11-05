@@ -721,6 +721,45 @@ def t_teach_vocabulary_names(root):
          A.assert_teach_vocabulary, (proj, good), (proj, bad))
 
 
+def t_archive_run(root):
+    """Every eval run is kept by default, outside /tmp, with its verdict, and
+    never with codex-home (it holds a copy of the codex login)."""
+    with open(os.path.join(REPO, "dev", "eval", "run-llm-evals.sh"), encoding="utf-8") as f:
+        sh = f.read()
+    start = sh.index("archive_run() {")
+    fn = sh[start:sh.index("\n}\n", start) + 3]
+    work = os.path.join(root, "archive-work")
+    write(os.path.join(work, "learningWithBodhi", "proj", ".bodhi", "state.json"), "{}")
+    write(os.path.join(work, "transcript.jsonl"), "{}\n")
+    write(os.path.join(work, "codex-home", "auth.json"), "secret")
+    def archive(keep=None):
+        repo = os.path.join(root, f"archive-repo-{keep}")
+        os.makedirs(repo, exist_ok=True)
+        env = dict(os.environ, REPO=repo, RUNTIME="claude",
+                   EVAL_ARCHIVE=os.path.join(repo, "dev", "eval", "runs", "2026-11-06"))
+        env.pop("BODHI_EVAL_KEEP", None)
+        if keep is not None:
+            env["BODHI_EVAL_KEEP"] = keep
+        subprocess.run(["bash", "-c", fn + '\narchive_run kb-load "$1" PASS', "_", work],
+                       env=env, check=True, capture_output=True, text=True)
+        day = os.path.join(repo, "dev", "eval", "runs", "2026-11-06")
+        return [os.path.join(day, d) for d in sorted(os.listdir(day))] if os.path.isdir(day) else []
+    kept = archive()
+    check("archive: a run is kept by default", len(kept) == 1, kept)
+    if kept:
+        names = sorted(os.listdir(kept[0]))
+        check("archive: the transcript and the project are copied",
+              {"learningWithBodhi", "transcript.jsonl", "run.txt"} <= set(names), names)
+        check("archive: codex-home (the login copy) is not", "codex-home" not in names, names)
+        with open(os.path.join(kept[0], "run.txt"), encoding="utf-8") as f:
+            meta = f.read()
+        check("archive: run.txt names the scenario and verdict",
+              "scenario: kb-load" in meta and "verdict: PASS" in meta, meta)
+    check("archive: BODHI_EVAL_KEEP=0 keeps nothing", archive("0") == [])
+    with open(os.path.join(REPO, ".gitignore"), encoding="utf-8") as f:
+        check("archive: dev/eval/runs/ is gitignored", "dev/eval/runs/" in f.read())
+
+
 def t_harness_recap(root):
     # The live teach-vocabulary run, 2026-10-21: a clean closing to the learner,
     # then a wrap-up for the harness that names the level and box it recorded.
@@ -794,6 +833,7 @@ def main():
                   t_photo_inspected,
                   t_safety_canning, t_safety_medical, t_kb_load_learned_counter,
                   t_internal_names, t_bare_level_source, t_teach_vocabulary_names,
+                  t_archive_run,
                   t_harness_recap, t_continue_gate):
             print(f"-- {t.__name__}")
             sub = os.path.join(root, t.__name__)
