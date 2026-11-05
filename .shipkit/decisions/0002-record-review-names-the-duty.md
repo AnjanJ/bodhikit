@@ -35,6 +35,16 @@ start counting toward `totalConceptsLearned`, which today only `/teach` bumps. T
 would change on writes where 1.24.1 left it alone, so the golden files would differ in their
 files, not only in one key.
 
+*Corrected 2026-11-05, after the live `kb-load` runs.* The premise above is wrong. The
+state-ops KB calls the key "the one trigger" for `bump-profile --counter
+totalConceptsLearned`, so every skill that loads state-ops bumps on a crossing, `/quiz`
+included. A 2026-11-05 `kb-load` run did so, and so did the 2026-10-22 run that caught the
+leak. Option 2 would not start counting new crossings. What it would still change is the
+golden files: the profile write would move inside `record-review`, on calls where 1.24.1 left
+the profile alone because no skill was running. Counting every crossing is correct. The
+ratchet means a concept crosses once, whichever skill grades it. The decision stands; this
+reason against option 2 is weaker than it read.
+
 **Decision.** We chose option 3.
 **Falsifiability.** We would move to option 2 if `newlyLearned`, or the profile bump it triggers,
 is narrated to the learner in 2 or more of the next 10 live `kb-load` or `/teach` transcripts.
