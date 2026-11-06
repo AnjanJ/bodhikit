@@ -1,7 +1,7 @@
 # Spec: Revise a grade
 
 > Spec accepted at commit `b6d6eb6` on karpathy-followups.
-> Status: open
+> Status: shipped
 > Paths: scripts/bodhi-state, skills/state-schema/, skills/state-ops/, skills/feynman-technique/, dev/eval/, dev/outcomes.py
 
 ## Purpose
