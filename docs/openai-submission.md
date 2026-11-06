@@ -120,14 +120,12 @@ must make the final selection in the portal.
 
 ## Release notes
 
-BodhiKit 1.25.1 expands guided learning beyond programming to worked problems,
-writing, and performed skills, with subject-specific exercises and clear labels
-for evidence the tutor cannot observe. Since the published 1.23.0 package, it
-also adds a unified syllabus and module position view, vocabulary previews,
-clearer review scheduling, and fixes for non-code plans and prerequisites.
-Session closing explicitly verifies available local learning state and prepares
-revision notes on hosts without lifecycle hooks. This release updates the
-publisher to Abhaya Code Labs. No learning-data migration is required.
+BodhiKit 1.26.1 lets the tutor correct a grade it got wrong the same day, with
+the mistake kept visible in the learner's record, and keeps the state engine's
+internal names (commands, keys, box numbers) out of what the learner reads: the
+tutor says what a step means instead. Since the published 1.25.1 package, a
+non-code plan also says how its work is checked. No learning-data migration is
+required.
 
 The skills-only package includes 18 learner workflows, 19 knowledge references,
 four portable role procedures, and the deterministic local state engine. Local
@@ -153,6 +151,18 @@ Before uploading, complete the manual ChatGPT writing-workflow smoke test in
 and upload the complete ZIP as an update.
 
 ## Submission record
+
+### 7 November 2026 — 1.26.1 published
+
+The maintainer uploaded the 1.26.1 package (`dist/bodhikit-openai.zip`, built
+from the `v1.26.1` tag, no lifecycle hooks) on 6 November 2026. All 18 skills
+passed the portal checks with no blocking findings. The two non-blocking notices
+came up again: category confirmation and privacy-policy review. `PRIVACY.md`
+was re-read against the package and needed no change, since neither 1.26.0 nor
+1.26.1 touched data handling. The maintainer submitted, and confirmed on
+7 November 2026 that the update was approved and published. 1.26.0 was never
+uploaded separately; 1.26.1 contains it. Headless Codex passed the
+executor-discipline group on both tags (`dev/eval/README.md`).
 
 ### 5 November 2026 — 1.25.1 published
 
