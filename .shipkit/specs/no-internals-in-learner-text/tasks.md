@@ -1,0 +1,22 @@
+# Tasks: No state-engine internals in learner text
+
+- [ ] **T1** Run the name check in every transcript scenario → REQ-1, REQ-2
+  - Files: dev/eval/assert_scenario.py, dev/eval/test_detectors.py
+  - Test: dev/eval/test_detectors.py::t_internal_names_everywhere (the two live 1.26.0 lines fail in scenarios that never called the check; a recap, a tool call and a tool output do not)
+  - After: none
+  - Done when: `python3 dev/eval/test_detectors.py` → 0 failed
+- [ ] **T2** Decision 0005: the tutor says what a step means → REQ-3, REQ-4
+  - Files: .shipkit/decisions/0005-the-tutor-says-what-a-step-means.md
+  - Test: none (a decision record)
+  - After: T1
+  - Done when: `sh <plugin root>/scripts/decision-check.sh . --run` → 0 fired, 0 errors
+- [ ] **T3** The voice rule in `teaching-personality` → REQ-3, REQ-4
+  - Files: skills/teaching-personality/SKILL.md
+  - Test: the live scenarios in T4; T1's check holds them
+  - After: T2
+  - Done when: `dev/check.sh` → all hard checks pass
+- [ ] **T4** Live runs on the tree that builds T1–T3 → REQ-5
+  - Files: dev/eval/README.md, dev/changelog-journal.md
+  - Test: `dev/eval/run-llm-evals.sh teach-vocabulary` ×3, `kb-load` ×3, `kind-intake-change` ×1, `fidelity` ×1
+  - After: T3
+  - Done when: the runs are recorded, and the leak count is read against decision 0005's threshold
