@@ -1,7 +1,7 @@
 # Spec: No state-engine internals in learner text
 
 > Spec accepted at commit `f0c4d52` on master (the maintainer asked on 2026-11-06 for the 1.26.1 fix to be carried through without a separate approval stop).
-> Status: open
+> Status: shipped
 > Paths: skills/teaching-personality/, dev/eval/, .shipkit/decisions/
 
 ## Purpose
