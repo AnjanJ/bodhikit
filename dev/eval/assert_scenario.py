@@ -2360,8 +2360,13 @@ TRANSCRIPT_ASSERTIONS = {"teach-pretest": assert_teach_pretest,
 def assert_transcript_scenario(name, project, transcript):
     """The scenario's own assertion, the code-path guard on code topics, and
     then, for every transcript scenario, the internal-name check
-    (no-internals-in-learner-text/REQ-1, REQ-2): learner text never names
-    bodhi-state, its subcommands or its output keys."""
+    (no-internals-in-learner-text/REQ-1, no-internals-in-learner-text/REQ-2):
+    learner text never names bodhi-state, its subcommands or its output keys.
+    Through it every live transcript run holds the voice rule:
+    no-internals-in-learner-text/REQ-3 (no engine name between tool calls) and
+    no-internals-in-learner-text/REQ-4 (say what a step means). The scenarios
+    that leaked on 1.26.0, teach-vocabulary and kind-intake-change, are
+    no-internals-in-learner-text/REQ-5."""
     TRANSCRIPT_ASSERTIONS[name](project, transcript)
     if name in CODE_TRANSCRIPT_SCENARIOS:
         assert_code_never_loads_kinds(project, transcript)

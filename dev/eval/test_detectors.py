@@ -950,7 +950,8 @@ def t_internal_names(root):
 
 
 def t_internal_names_everywhere(root):
-    """no-internals-in-learner-text/REQ-1, REQ-2: every transcript scenario runs
+    """no-internals-in-learner-text/REQ-1 and no-internals-in-learner-text/REQ-2:
+    every transcript scenario runs
     the internal-name check after its own assertion, not just kb-load and
     teach-vocabulary. Each scenario's own assertion and the code-path guard are
     stubbed, so only the shared check decides. The bad lines are the two live
