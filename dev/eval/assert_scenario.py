@@ -2315,6 +2315,54 @@ CODE_TRANSCRIPT_SCENARIOS = {"teach-pretest", "teach-hint-discipline", "continue
                              "grade-regrade", "predict-key-right", "predict-key-wrong"}
 
 
+# Every scenario that saves a stream transcript, by name. main() dispatches
+# through assert_transcript_scenario, which a test can run.
+TRANSCRIPT_ASSERTIONS = {"teach-pretest": assert_teach_pretest,
+                         "teach-hint-discipline": assert_teach_hint_discipline,
+                         "continue-discovery": assert_continue_discovery,
+                         "continue-gate": assert_continue_gate,
+                         "kb-load": assert_kb_load,
+                         "quiz-unlabelled": assert_quiz_unlabelled,
+                         "teach-vocabulary": assert_teach_vocabulary,
+                         "plan-view": assert_plan_view,
+                         "plan-view-kind": assert_plan_view_kind,
+                         "kind-teach-problems": assert_kind_teach,
+                         "kind-teach-writing": assert_kind_teach_writing,
+                         "kind-practice-problems": assert_kind_practice,
+                         "kind-quiz": assert_kind_quiz_no_code,
+                         "kind-intake": assert_kind_intake,
+                         "kind-intake-change": assert_kind_intake_change,
+                         "kind-legacy-proposal": assert_kind_legacy_proposal,
+                         "kind-legacy-unanswered": assert_kind_legacy_unanswered,
+                         "kind-review": assert_kind_review_no_rewrite,
+                         "kind-review-problems": assert_kind_review_problems,
+                         "practice-applied-fluent-broken": assert_practice_applied_fluent_broken,
+                         "practice-applied-weak-working": assert_practice_applied_weak_working,
+                         "grade-regrade": assert_grade_regrade,
+                         "predict-key-right": assert_predict_key_right,
+                         "predict-key-wrong": assert_predict_key_wrong,
+                         "performed-debrief-first": assert_performed_debrief_first,
+                         "performed-no-debrief": assert_performed_no_debrief_no_record,
+                         "performed-practice-sets-rep": assert_performed_practice_sets_rep,
+                         "kind-gate-reconfirm-rep": assert_kind_gate_reconfirm_rep,
+                         "performed-repless-review": assert_performed_repless_review,
+                         "performed-by-your-account": assert_performed_by_your_account,
+                         "photo-inspected": assert_photo_inspected,
+                         "safety-canning": assert_safety_canning,
+                         "safety-medical": assert_safety_medical}
+
+
+def assert_transcript_scenario(name, project, transcript):
+    """The scenario's own assertion, the code-path guard on code topics, and
+    then, for every transcript scenario, the internal-name check
+    (no-internals-in-learner-text/REQ-1, REQ-2): learner text never names
+    bodhi-state, its subcommands or its output keys."""
+    TRANSCRIPT_ASSERTIONS[name](project, transcript)
+    if name in CODE_TRANSCRIPT_SCENARIOS:
+        assert_code_never_loads_kinds(project, transcript)
+    assert_no_internal_names(assistant_prose(transcript), transcript)
+
+
 def main():
     name, project = sys.argv[1], sys.argv[2]
     transcript = sys.argv[3] if len(sys.argv) > 3 else None
@@ -2334,45 +2382,10 @@ def main():
                   "evaluate": assert_evaluate,
                   "applied-essay": assert_applied_essay,
                   "applied-chat": assert_applied_chat}
-    with_transcript = {"teach-pretest": assert_teach_pretest,
-                       "teach-hint-discipline": assert_teach_hint_discipline,
-                       "continue-discovery": assert_continue_discovery,
-                       "continue-gate": assert_continue_gate,
-                       "kb-load": assert_kb_load,
-                       "quiz-unlabelled": assert_quiz_unlabelled,
-                       "teach-vocabulary": assert_teach_vocabulary,
-                       "plan-view": assert_plan_view,
-                       "plan-view-kind": assert_plan_view_kind,
-                       "kind-teach-problems": assert_kind_teach,
-                       "kind-teach-writing": assert_kind_teach_writing,
-                       "kind-practice-problems": assert_kind_practice,
-                       "kind-quiz": assert_kind_quiz_no_code,
-                       "kind-intake": assert_kind_intake,
-                       "kind-intake-change": assert_kind_intake_change,
-                       "kind-legacy-proposal": assert_kind_legacy_proposal,
-                       "kind-legacy-unanswered": assert_kind_legacy_unanswered,
-                       "kind-review": assert_kind_review_no_rewrite,
-                       "kind-review-problems": assert_kind_review_problems,
-                       "practice-applied-fluent-broken": assert_practice_applied_fluent_broken,
-                       "practice-applied-weak-working": assert_practice_applied_weak_working,
-                       "grade-regrade": assert_grade_regrade,
-                       "predict-key-right": assert_predict_key_right,
-                       "predict-key-wrong": assert_predict_key_wrong,
-                       "performed-debrief-first": assert_performed_debrief_first,
-                       "performed-no-debrief": assert_performed_no_debrief_no_record,
-                       "performed-practice-sets-rep": assert_performed_practice_sets_rep,
-                       "kind-gate-reconfirm-rep": assert_kind_gate_reconfirm_rep,
-                       "performed-repless-review": assert_performed_repless_review,
-                       "performed-by-your-account": assert_performed_by_your_account,
-                       "photo-inspected": assert_photo_inspected,
-                       "safety-canning": assert_safety_canning,
-                       "safety-medical": assert_safety_medical}
-    if name in with_transcript:
+    if name in TRANSCRIPT_ASSERTIONS:
         if not transcript:
             fail(f"scenario {name} requires a transcript path")
-        with_transcript[name](project, transcript)
-        if name in CODE_TRANSCRIPT_SCENARIOS:
-            assert_code_never_loads_kinds(project, transcript)
+        assert_transcript_scenario(name, project, transcript)
     else:
         file_state[name](project)
     sys.exit(0)

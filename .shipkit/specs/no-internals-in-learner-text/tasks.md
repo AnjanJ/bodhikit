@@ -1,6 +1,6 @@
 # Tasks: No state-engine internals in learner text
 
-- [ ] **T1** Run the name check in every transcript scenario → REQ-1, REQ-2
+- [x] **T1** Run the name check in every transcript scenario → REQ-1, REQ-2
   - Files: dev/eval/assert_scenario.py, dev/eval/test_detectors.py
   - Test: dev/eval/test_detectors.py::t_internal_names_everywhere (the two live 1.26.0 lines fail in scenarios that never called the check; a recap, a tool call and a tool output do not)
   - After: none

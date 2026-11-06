@@ -949,6 +949,46 @@ def t_internal_names(root):
           A.SUBCOMMANDS)
 
 
+def t_internal_names_everywhere(root):
+    """no-internals-in-learner-text/REQ-1, REQ-2: every transcript scenario runs
+    the internal-name check after its own assertion, not just kb-load and
+    teach-vocabulary. Each scenario's own assertion and the code-path guard are
+    stubbed, so only the shared check decides. The bad lines are the two live
+    leaks from the 1.26.0 sweep."""
+    leaks = {
+        "pretestApplies": "The brief says this is a first exposure (`pretestApplies: true`), "
+                          "evidence kind `code` — so Phase 2 opens with a pretest.",
+        "bodhi-state verify": "Session 1 logged — `bodhi-state verify` reports no errors.",
+    }
+    clean = transcript(root, "everywhere-clean",
+                       bash(BS + "session-brief --concept 'write-ahead logging'"),
+                       ("result", '{"pretestApplies": true, "isReteach": false}'),
+                       ("text", "This is new to you, so a guess first.\n\n## Recap\n\n"
+                                "- `session-brief` said `pretestApplies: true`."))
+    saved = dict(A.TRANSCRIPT_ASSERTIONS), A.assert_code_never_loads_kinds
+    try:
+        for name in A.TRANSCRIPT_ASSERTIONS:
+            A.TRANSCRIPT_ASSERTIONS[name] = lambda project, t: None
+        A.assert_code_never_loads_kinds = lambda project, t: None
+        missed = []
+        for label, line in leaks.items():
+            bad = transcript(root, f"everywhere-{label.replace(' ', '-')}", ("text", line))
+            missed += [f"{n} ({label})" for n in A.TRANSCRIPT_ASSERTIONS
+                       if passes(A.assert_transcript_scenario, n, root, bad)[0]]
+        check("everywhere: each of the 1.26.0 leaks fails every transcript scenario",
+              not missed, missed[:6])
+        stopped = [n for n in A.TRANSCRIPT_ASSERTIONS
+                   if not passes(A.assert_transcript_scenario, n, root, clean)[0]]
+        check("everywhere: a tool call, its output and a recap fail none", not stopped,
+              stopped[:6])
+    finally:
+        A.TRANSCRIPT_ASSERTIONS.clear()
+        A.TRANSCRIPT_ASSERTIONS.update(saved[0])
+        A.assert_code_never_loads_kinds = saved[1]
+    check("everywhere: the scenarios that leaked on 1.26.0 are transcript scenarios",
+          {"teach-vocabulary", "kind-intake-change"} <= set(A.TRANSCRIPT_ASSERTIONS))
+
+
 def t_bare_level_source(root):
     """Decision 0003 extends to the read commands if 2 of the next 10 live
     transcripts leak a box number from one. The bare-level failure names the
@@ -1109,7 +1149,8 @@ def main():
                   t_performed_repless_review, t_performed_by_your_account, t_plan_view_kind,
                   t_photo_inspected,
                   t_safety_canning, t_safety_medical, t_kb_load_learned_counter,
-                  t_internal_names, t_bare_level_source, t_teach_vocabulary_names,
+                  t_internal_names, t_internal_names_everywhere, t_bare_level_source,
+                  t_teach_vocabulary_names,
                   t_archive_run, t_intake_change, t_review_problems, t_practice_applied,
                   t_harness_recap, t_continue_gate, t_grade_regrade, t_predict_key):
             print(f"-- {t.__name__}")
