@@ -2,6 +2,10 @@
 
 Notable changes to BodhiKit, summarized for readers. Patch-level development notes live in `dev/changelog-journal.md`.
 
+## [Unreleased]
+
+- **The tutor says what a step means, not what its tools printed.** In the 1.26.0 release sweep the tutor told a learner "The brief says this is a first exposure (`pretestApplies: true`)", and another "`bodhi-state verify` reports no errors": the state engine's own words, written between tool calls where the learner sees them. The voice every skill shares now says to describe a step in the learner's terms ("this is new to you, so a guess first") and never to name a script, a command, an output key or a tracking field. Your own files, such as a revision sheet, are still named. Decision 0005 records why the fix is in the voice and not the engine. Every eval scenario that keeps a full transcript now fails on such a name, not just two of them.
+
 ## [1.26.0] - 2026-11-06
 
 A grade the tutor gets wrong can now be corrected the same day, with the mistake kept in the record. The state engine no longer prints box numbers or bookkeeping keys for the tutor to repeat to the learner, and a non-code plan says how its work is checked. The README explains why BodhiKit is built as an auditable tutor.

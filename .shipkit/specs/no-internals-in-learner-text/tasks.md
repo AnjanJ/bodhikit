@@ -10,7 +10,7 @@
   - Test: none (a decision record)
   - After: T1
   - Done when: `sh <plugin root>/scripts/decision-check.sh . --run` → 0 fired, 0 errors
-- [ ] **T3** The voice rule in `teaching-personality` → REQ-3, REQ-4
+- [x] **T3** The voice rule in `teaching-personality` → REQ-3, REQ-4
   - Files: skills/teaching-personality/SKILL.md
   - Test: the live scenarios in T4; T1's check holds them
   - After: T2
