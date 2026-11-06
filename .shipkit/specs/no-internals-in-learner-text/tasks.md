@@ -5,7 +5,7 @@
   - Test: dev/eval/test_detectors.py::t_internal_names_everywhere (the two live 1.26.0 lines fail in scenarios that never called the check; a recap, a tool call and a tool output do not)
   - After: none
   - Done when: `python3 dev/eval/test_detectors.py` → 0 failed
-- [ ] **T2** Decision 0005: the tutor says what a step means → REQ-3, REQ-4
+- [x] **T2** Decision 0005: the tutor says what a step means → REQ-3, REQ-4
   - Files: .shipkit/decisions/0005-the-tutor-says-what-a-step-means.md
   - Test: none (a decision record)
   - After: T1
