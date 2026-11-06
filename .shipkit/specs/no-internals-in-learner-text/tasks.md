@@ -15,7 +15,7 @@
   - Test: the live scenarios in T4; T1's check holds them
   - After: T2
   - Done when: `dev/check.sh` → all hard checks pass
-- [ ] **T4** Live runs on the tree that builds T1–T3 → REQ-5
+- [x] **T4** Live runs on the tree that builds T1–T3 → REQ-5
   - Files: dev/eval/README.md, dev/changelog-journal.md
   - Test: `dev/eval/run-llm-evals.sh teach-vocabulary` ×3, `kb-load` ×3, `kind-intake-change` ×1, `fidelity` ×1
   - After: T3
