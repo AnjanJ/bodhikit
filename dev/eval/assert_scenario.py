@@ -627,8 +627,13 @@ KB_LOAD_RE = re.compile(
 # outcome words, then wrote "## Session wrap-up (what happened and what was
 # recorded)" about "the learner", listing "Bloom 3, Box 1". 2026-10-23:
 # continue-gate's was "## What happened and what was recorded", with "Box 1".
-RECAP_RE = re.compile(r"^(?:#{1,4}\s*|\*\*)(Recap|Harness recap|Writes completed|Session wrap-?up|"
-                      r"What happened and what was recorded)\b.*$", re.M | re.I)
+# 2026-11-06 (d6e504e): the model keeps naming the summary anew ("Eval-run
+# summary (for the harness)", "Session summary (for the eval record)"), so a
+# heading or bold lead that names the eval or the harness also starts it.
+# "eval" as a whole word: "## Your evaluation" is still the learner's.
+RECAP_RE = re.compile(r"^(?:#{1,4}\s*|\*\*)(?:(Recap|Harness recap|Writes completed|Session wrap-?up|"
+                      r"What happened and what was recorded)\b|[^\n]*\b(?:eval|harness)\b)"
+                      r".*$", re.M | re.I)
 
 
 GATE_CHECK_RE = re.compile(r"bodhi-state[^\n\]]*\bgate-check\b")

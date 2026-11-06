@@ -1105,6 +1105,24 @@ def t_harness_recap(root):
                                                   "you will see it again on 2026-11-08)."))
     pair("kb-load fails a lower-case box number", A.assert_kb_load,
          (v2, good), (v2, lower))
+    # The 2026-11-06 runs on d6e504e: three new headings for the harness's
+    # summary, each naming the eval or the harness. The learner text before
+    # them was clean; the summaries named record-session and Bloom 3.
+    for head in ("**Eval-run summary (for the harness):**",
+                 "**Eval-run summary (outside the session):**",
+                 "**Session summary (for the eval record):**",
+                 "## Notes for the eval harness"):
+        run = transcript(root, f"recap-{len(head)}", kb, ("text", closing + "\n\n---\n\n"
+                         + head + "\n\n- Recorded `correct` at Bloom 3 (`crossedLevel: "
+                         "true`); `record-session --type diagnostic-after-gap`."))
+        ok_r, out = passes(A.assert_kb_load, v2, run)
+        check(f"a summary headed {head!r} is not learner-facing", ok_r, out.strip()[-300:])
+    # A heading for the learner that only looks similar is still prose.
+    for head in ("**Session summary**", "## Your evaluation"):
+        run = transcript(root, f"learner-{len(head)}", kb, ("text", closing + "\n\n"
+                         + head + "\n\nThat puts you at Bloom 3."))
+        check(f"a learner heading {head!r} does not hide a bare level",
+              not passes(A.assert_kb_load, v2, run)[0])
 
 
 def t_continue_gate(root):
