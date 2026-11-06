@@ -354,8 +354,22 @@ def t_review_problems(root):
     good = transcript(root, "review-problems-good", ("text", review))
     ok_good, out = passes(A.assert_kind_review_problems, proj, good)
     check("review problems: quoting the working and asking passes", ok_good, out[-300:])
+    # The 2026-11-06 live run: a hint about Mendel's own cross (PP × pp), not
+    # the learner's, whose first generation is all purple too. Not a handover.
+    mendel = transcript(root, "review-problems-mendel", ("text", review +
+                        "\n\nWork the cross PP × pp. Every single offspring is Pp. Open OpenStax "
+                        "and see what colour Mendel's first generation actually was. Mendel's "
+                        "all-purple first generation is the experiment that forced the "
+                        "definition, and his cross had no white plants in it.\n\n"
+                        "Take your own \"half PP, half Pp\" from problem 2 and re-sort it."))
+    ok_mendel, out = passes(A.assert_kind_review_problems, proj, mendel)
+    check("review problems: a hint about Mendel's PP × pp cross passes", ok_mendel, out[-300:])
     for label, extra in (("states the 3 : 1 ratio", "\n\nThe phenotype ratio is actually 3 : 1."),
                          ("states all purple", "\n\nIn question 2 they all come out purple."),
+                         ("says Pp × PP is all purple", "\n\nPp × PP gives all purple offspring."),
+                         ("says problem 2 is all purple", "\n\nSo problem 2 is all-purple."),
+                         ("says the second cross has no white",
+                          "\n\nIn your second cross there are no white flowers at all."),
                          ("reworks the problem", "\n\nHere's a corrected version: PP and Pp "
                                                  "are purple, pp is white.")):
         bad = transcript(root, f"review-problems-{label.replace(' ', '-')}",

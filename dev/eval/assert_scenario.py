@@ -1802,9 +1802,27 @@ def assert_kind_review_no_rewrite(project, transcript, piece="exercises/02-claim
 
 # The correct answers to exercises/02-dominance-check: stated by the tutor,
 # they rework the problem the learner should fix (evidence-kinds KB *Review*).
-HANDED_OVER_RE = re.compile(
-    r"(?i)\b3\s*:\s*1\b|\b3/4\b|three[- ]quarters|"
-    r"\b(?:all|every)\b[^.?\n]{0,40}\bpurple\b|\bno white (?:offspring|flowers|plants)\b")
+# Problem 1's ratio is unique to it. Problem 2's answer (all purple, no white)
+# is also true of Mendel's PP × pp first generation, a fair hint, so it counts
+# only in a sentence that names the learner's cross (live run 2026-11-06).
+HANDED_OVER_RE = re.compile(r"(?i)\b3\s*:\s*1\b|\b3/4\b|three[- ]quarters")
+ALL_PURPLE_RE = re.compile(
+    r"(?i)\b(?:all|every)\b[^.?!\n]{0,40}\bpurple\b|\bno white (?:offspring|flowers|plants)\b")
+LEARNER_CROSS_RE = re.compile(
+    r"(?i:\b(?:question|problem|exercise)\s*(?:2|two)\b|#2\b|\bsecond (?:question|problem|cross)\b)"
+    r"|Pp\s*[×xX*]\s*PP|PP\s*[×xX*]\s*Pp")
+
+
+def handed_over(text):
+    """The first corrected answer to exercises/02-dominance-check in `text`, or None."""
+    m = HANDED_OVER_RE.search(text)
+    if m:
+        return m.group(0)
+    for sentence in re.split(r"(?<=[.?!])\s+|\n", text):
+        m = ALL_PURPLE_RE.search(sentence)
+        if m and LEARNER_CROSS_RE.search(sentence):
+            return m.group(0)
+    return None
 
 
 def assert_kind_review_problems(project, transcript,
@@ -1818,9 +1836,9 @@ def assert_kind_review_problems(project, transcript,
     assert_kind_review_no_rewrite(project, transcript, piece=piece, original=original)
     unquoted = "\n".join(l for l in assistant_prose(transcript).splitlines()
                          if not l.lstrip().startswith(">"))
-    m = HANDED_OVER_RE.search(unquoted)
-    if m:
-        fail(f"the review handed over a corrected answer ({m.group(0)!r}) — point at the line "
+    answer = handed_over(unquoted)
+    if answer:
+        fail(f"the review handed over a corrected answer ({answer!r}) — point at the line "
              "and ask; the learner fixes it")
     ok("no corrected answer handed over")
 
