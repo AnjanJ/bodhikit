@@ -2,9 +2,13 @@
 
 Notable changes to BodhiKit, summarized for readers. Patch-level development notes live in `dev/changelog-journal.md`.
 
-## [Unreleased]
+## [1.26.1] - 2026-11-06
+
+The tutor no longer shows you the state engine's internal names. Nothing about how BodhiKit teaches, grades or tracks changes.
 
 - **The tutor says what a step means, not what its tools printed.** In the 1.26.0 release sweep the tutor told a learner "The brief says this is a first exposure (`pretestApplies: true`)", and another "`bodhi-state verify` reports no errors": the state engine's own words, written between tool calls where the learner sees them. The voice every skill shares now says to describe a step in the learner's terms ("this is new to you, so a guess first") and never to name a script, a command, an output key or a tracking field. Your own files, such as a revision sheet, are still named. Decision 0005 records why the fix is in the voice and not the engine. Every eval scenario that keeps a full transcript now fails on such a name, not just two of them.
+- **Live sweep (fable-5).** On the release fix, 6 November, 12 of 12 scenarios pass, each now checked for state-engine names in what the learner sees: the fidelity group, `teach-vocabulary` and `kb-load` three times each, and `kind-intake-change`. None of the 12 shows the learner an engine name, including the two scenarios that did on 1.26.0. Three passed on re-check: they had failed on the summary the eval harness asks for at the end of a run, written under headings the check did not yet recognise, and the text before it was clean. A first attempt cut by the usage limit was re-run, not counted.
+- No tracking-file migration. Update the plugin and restart Claude Code. On claude.ai, sync the bodhikit marketplace (Customize → Plugins → Add → Manage marketplaces → Check for updates), or upload `bodhikit.plugin` from this release. ChatGPT users get it when the listing is re-uploaded.
 
 ## [1.26.0] - 2026-11-06
 

@@ -8,7 +8,7 @@ This is the full, unabridged, patch-by-patch changelog kept for the maintainer â
 
 All notable changes to BodhiKit will be documented in this file.
 
-## [Unreleased]
+## [1.26.1] - 2026-11-06
 
 **The name check runs in every transcript scenario (spec `no-internals-in-learner-text`, T1).** `assert_no_internal_names` ran only inside `assert_kb_load` and `assert_teach_vocabulary`, so the 1.26.0 sweep's `kind-intake-change` passed while telling the learner "`bodhi-state verify` reports no errors". The transcript dispatch moved out of `main()` into `TRANSCRIPT_ASSERTIONS` and `assert_transcript_scenario`, which runs the scenario's assertion, the code-path guard on code topics, then the name check, for all 32 transcript scenarios. The two inner calls stay, since their tests call those functions directly. Test first: `t_internal_names_everywhere` stubs each scenario's own assertion and the guard, and shows both live 1.26.0 lines fail all 32 while a tool call, its output and a recap fail none (red on the missing dispatch, then 211 checks pass). Re-asserting every kept stream run through the new dispatch changes one verdict: `kind-intake-change` now fails, on "recording tracking state through `bodhi-state`".
 
