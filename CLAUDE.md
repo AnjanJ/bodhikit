@@ -61,6 +61,7 @@ The plugin's audience is currently one real learner. No new skills, KBs, taxonom
 - `.claude-plugin/marketplace.json` — marketplace manifest. Keep `version` and counts in sync with `plugin.json` and README.
 - `CHANGELOG.md` — append entries on release. Use absolute dates.
 - `dev/` — dev-only scripts (lint, `outcomes.py`) and `dev/eval/` (deterministic tests + LLM evals + fixtures). Never referenced by skills. `dev/changelog-journal.md` is the patch-by-patch development journal; `CHANGELOG.md` is the reader-facing summary.
+- `dev/guide-writer/` — the maintainer's `/write-guide` skill: a personalised guide to using BodhiKit in Claude and ChatGPT for one learner or one role, researched and verified, rendered to PDF and DOCX (spec `write-guide`). Never shipped, and it runs only when typed. Link it once per clone: `mkdir -p .claude/skills && ln -s ../../dev/guide-writer .claude/skills/write-guide`. The guides it writes stay outside the repo; `output/` is ignored because guides hold personal details.
 - `docs/outcomes.md` — the maintainer's own anonymized learning data, regenerated with `python3 dev/outcomes.py <project-dirs…> > docs/outcomes.md`. `MIGRATION.md` — upgrade notes, out of the README's critical path.
 - `analysis/` — gitignored, local-only review notes (empirical/adversarial/fidelity passes, the honest review, follow-ups). Commit messages cite it; it is not part of the plugin.
 
