@@ -135,6 +135,21 @@ def t_facts_dated_and_sourced():
     check("REQ-11 every entry says verified or not verified", not unstated, unstated[:4])
 
 
+REFERENCED_DIRS = ("references/",)
+
+
+def t_referenced_files_exist():
+    """Every file SKILL.md tells the model to load or run is there."""
+    skill = SKILL / "SKILL.md"
+    named = sorted(set(re.findall(r"\$\{CLAUDE_SKILL_DIR\}/([A-Za-z0-9_./-]+)",
+                                  skill.read_text(encoding="utf-8"))))
+    named = [n.rstrip(".,;:`)") for n in named]
+    named = [n for n in named if n.startswith(REFERENCED_DIRS)]
+    check("SKILL.md names its reference files", len(named) > 0)
+    missing = [n for n in named if not (SKILL / n).is_file()]
+    check("every reference file SKILL.md names exists", not missing, missing)
+
+
 LEARNER_TEXT = ("references/commands.md", "references/guide-template.html")
 
 
@@ -161,6 +176,7 @@ def main():
     t_commands_match_skills()
     t_facts_dated_and_sourced()
     t_no_internals()
+    t_referenced_files_exist()
     print(f"\n{PASS} passed, {FAIL} failed")
     return 1 if FAIL else 0
 
