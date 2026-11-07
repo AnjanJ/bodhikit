@@ -15,9 +15,11 @@ from __future__ import annotations
 import importlib.util
 from pathlib import Path
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
+import zipfile
 
 REPO = Path(__file__).resolve().parents[2]
 SKILL = REPO / "dev" / "guide-writer"
@@ -135,7 +137,7 @@ def t_facts_dated_and_sourced():
     check("REQ-11 every entry says verified or not verified", not unstated, unstated[:4])
 
 
-REFERENCED_DIRS = ("references/",)
+REFERENCED_DIRS = ("references/", "scripts/")
 
 
 def t_referenced_files_exist():
@@ -148,6 +150,84 @@ def t_referenced_files_exist():
     check("SKILL.md names its reference files", len(named) > 0)
     missing = [n for n in named if not (SKILL / n).is_file()]
     check("every reference file SKILL.md names exists", not missing, missing)
+
+
+RENDER = SKILL / "scripts" / "render.sh"
+TOOLS = ("weasyprint", "pandoc", "pdftoppm", "magick")
+SAMPLE = """<!DOCTYPE html><html><head><meta charset="utf-8"><title>t</title></head><body>
+<h1>Sample guide</h1>
+<div class="prompt">@BodhiKit Help me learn sample-subject-xyz.</div>
+<table><thead><tr><th>Day</th><th>What</th></tr></thead>
+<tr><td>Monday</td><td>row-one-lesson</td></tr><tr><td>Tuesday</td><td>row-two-review</td></tr></table>
+</body></html>"""
+
+
+def render(html, name, env=None):
+    return subprocess.run(["bash", str(RENDER), str(html), name], capture_output=True,
+                          text=True, timeout=180, env=env)
+
+
+def t_render_refuses_repo():
+    """write-guide/REQ-20: a guide with personal details never lands in the repo."""
+    check("REQ-20 scripts/render.sh exists", RENDER.is_file())
+    if not RENDER.is_file():
+        return
+    inside = REPO / "output" / "write-guide-test"
+    inside.mkdir(parents=True, exist_ok=True)
+    try:
+        (inside / "guide.html").write_text(SAMPLE, encoding="utf-8")
+        result = render(inside / "guide.html", "Refused")
+        check("REQ-20 render.sh refuses a folder inside the repository", result.returncode != 0,
+              result.stdout[-200:])
+        check("REQ-20 the refusal says why", "inside the repository" in result.stderr,
+              result.stderr[-200:])
+        check("REQ-20 nothing was written there",
+              not (inside / "Refused.pdf").exists() and not (inside / "Refused.docx").exists())
+    finally:
+        shutil.rmtree(inside, ignore_errors=True)
+
+
+def t_render_names_missing_tool():
+    """write-guide/REQ-21: a missing tool is named, not a stack trace."""
+    if not RENDER.is_file():
+        return
+    with tempfile.TemporaryDirectory(prefix="bodhikit-gw-render-") as temp:
+        html = Path(temp) / "guide.html"
+        html.write_text(SAMPLE, encoding="utf-8")
+        bare = {"PATH": "/usr/bin:/bin", "HOME": str(Path.home()), "TMPDIR": temp}
+        hidden = [t for t in TOOLS if not any(Path(d, t).exists() for d in ("/usr/bin", "/bin"))]
+        result = render(html, "Missing", env=bare)
+        check("REQ-21 render.sh exits non-zero when a tool is missing", result.returncode != 0)
+        check("REQ-21 it names each missing tool",
+              hidden and all(t in result.stderr for t in hidden), result.stderr[-300:])
+
+
+def t_render_outputs():
+    """write-guide/REQ-19: PDF and DOCX beside the HTML, and a contact sheet."""
+    if not RENDER.is_file():
+        return
+    missing = [t for t in TOOLS if shutil.which(t) is None]
+    if missing:
+        print(f"skip  REQ-19 render outputs: {', '.join(missing)} not installed")
+        return
+    with tempfile.TemporaryDirectory(prefix="bodhikit-gw-render-") as temp:
+        html = Path(temp) / "guide.html"
+        html.write_text(SAMPLE, encoding="utf-8")
+        env = {**__import__("os").environ, "TMPDIR": temp}
+        result = render(html, "Sample-Guide", env=env)
+        check("REQ-19 render.sh exits zero", result.returncode == 0, result.stderr[-300:])
+        pdf, docx = Path(temp) / "Sample-Guide.pdf", Path(temp) / "Sample-Guide.docx"
+        check("REQ-19 the PDF is beside the HTML", pdf.is_file() and pdf.stat().st_size > 0)
+        check("REQ-19 the DOCX is beside the HTML", docx.is_file() and docx.stat().st_size > 0)
+        if docx.is_file():
+            with zipfile.ZipFile(docx) as d:
+                xml = d.read("word/document.xml").decode("utf-8")
+            check("REQ-19 the DOCX keeps a prompt's text and a table's rows",
+                  all(w in xml for w in ("sample-subject-xyz", "row-one-lesson", "row-two-review")))
+        sheets = list((Path(temp) / "write-guide-qa" / "Sample-Guide").glob("sheet*.png"))
+        check("REQ-19 a contact sheet of the pages is made", len(sheets) > 0)
+        check("REQ-19 render.sh prints where the contact sheets are",
+              "write-guide-qa" in result.stdout, result.stdout[-300:])
 
 
 LEARNER_TEXT = ("references/commands.md", "references/guide-template.html")
@@ -177,6 +257,9 @@ def main():
     t_facts_dated_and_sourced()
     t_no_internals()
     t_referenced_files_exist()
+    t_render_refuses_repo()
+    t_render_names_missing_tool()
+    t_render_outputs()
     print(f"\n{PASS} passed, {FAIL} failed")
     return 1 if FAIL else 0
 
