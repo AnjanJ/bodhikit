@@ -95,10 +95,52 @@ def t_not_in_any_package():
         check("REQ-2 OpenAI package carries nothing from dev/guide-writer/", not leaked, leaked[:4])
 
 
+def learner_commands():
+    return {f.parent.name for f in sorted((REPO / "skills").glob("*/SKILL.md"))
+            if re.search(r"^user-invocable: true$", f.read_text(encoding="utf-8"), re.M)}
+
+
+def t_commands_match_skills():
+    """write-guide/REQ-9: one entry per learner command, no more, no fewer."""
+    ref = SKILL / "references" / "commands.md"
+    check("REQ-9 references/commands.md exists", ref.is_file())
+    if not ref.is_file():
+        return
+    listed = re.findall(r"^### ([a-z][a-z-]*)\s*$", ref.read_text(encoding="utf-8"), re.M)
+    skills = learner_commands()
+    check("REQ-9 no command listed twice", len(listed) == len(set(listed)),
+          sorted(n for n in set(listed) if listed.count(n) > 1))
+    check("REQ-9 every learner command has an entry", not skills - set(listed),
+          sorted(skills - set(listed)))
+    check("REQ-9 no entry for a command that does not exist", not set(listed) - skills,
+          sorted(set(listed) - skills))
+
+
+LEARNER_TEXT = ("references/commands.md",)
+
+
+def t_no_internals():
+    """write-guide/REQ-16: decision 0005's detectors over the text guides copy from."""
+    sys.path.insert(0, str(REPO / "dev" / "eval"))
+    import assert_scenario as detectors
+    for rel in LEARNER_TEXT:
+        path = SKILL / rel
+        check(f"REQ-16 {rel} exists", path.is_file())
+        if not path.is_file():
+            continue
+        text = re.sub(r"<[^>]+>", " ", path.read_text(encoding="utf-8"))
+        hits = [m.group(0) for r in (detectors.BARE_LEVEL_RE, detectors.INTERNAL_NAME_RE)
+                for m in r.finditer(text)]
+        check(f"REQ-16 {rel} has no level or box number and no state-engine name",
+              not hits, hits[:6])
+
+
 def main():
     t_output_is_ignored()
     t_typed_only()
     t_not_in_any_package()
+    t_commands_match_skills()
+    t_no_internals()
     print(f"\n{PASS} passed, {FAIL} failed")
     return 1 if FAIL else 0
 
