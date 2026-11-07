@@ -135,7 +135,7 @@ def t_facts_dated_and_sourced():
     check("REQ-11 every entry says verified or not verified", not unstated, unstated[:4])
 
 
-LEARNER_TEXT = ("references/commands.md",)
+LEARNER_TEXT = ("references/commands.md", "references/guide-template.html")
 
 
 def t_no_internals():

@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>[Learning with BodhiKit: subjects]</title>
+<style>
+  @page {
+    size: A4;
+    margin: 18mm 17mm 20mm 17mm;
+    @bottom-left { content: "[FOOTER TITLE: Learning with BodhiKit: <subjects>]"; font: 8pt "Helvetica Neue", Helvetica, Arial, sans-serif; color: #7a8a89; }
+    @bottom-right { content: "Page " counter(page) " of " counter(pages); font: 8pt "Helvetica Neue", Helvetica, Arial, sans-serif; color: #7a8a89; }
+  }
+  @page :first { @bottom-left { content: none; } }
+  :root { --teal: #006B68; --teal-light: #e6f2f1; --amber: #fff5e0; --amber-line: #e0a526; --ink: #1d2626; --muted: #5d6b6a; }
+  body { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 10.3pt; line-height: 1.5; color: var(--ink); }
+  h1 { font-size: 24pt; color: var(--teal); margin: 0 0 4pt 0; line-height: 1.15; }
+  .subtitle { font-size: 12.5pt; color: var(--muted); margin: 0 0 14pt 0; }
+  h2 { font-size: 15pt; color: var(--teal); border-bottom: 1.5pt solid var(--teal); padding-bottom: 3pt; margin: 20pt 0 8pt 0; page-break-after: avoid; }
+  h3 { font-size: 11.5pt; color: var(--ink); margin: 13pt 0 4pt 0; page-break-after: avoid; }
+  .part { page-break-before: always; font-size: 9pt; font-weight: bold; letter-spacing: 1.5pt; text-transform: uppercase; color: var(--muted); margin: 0 0 -10pt 0; }
+  p { margin: 0 0 7pt 0; }
+  ul, ol { margin: 0 0 8pt 0; padding-left: 17pt; }
+  li { margin-bottom: 3pt; }
+  .box { border-radius: 5pt; padding: 8pt 11pt; margin: 9pt 0; page-break-inside: avoid; }
+  .key { background: var(--teal-light); border-left: 4pt solid var(--teal); }
+  .warn { background: var(--amber); border-left: 4pt solid var(--amber-line); }
+  .box p:last-child, .box ul:last-child, .box ol:last-child { margin-bottom: 0; }
+  .box-title { font-weight: bold; margin-bottom: 3pt; }
+  .prompt { font-size: 9.8pt; background: #f4f6f6; border: 0.75pt solid #cfd8d7; border-radius: 4pt; padding: 7pt 10pt; margin: 6pt 0 9pt 0; white-space: pre-wrap; page-break-inside: avoid; }
+  .prompt::before { content: "COPY THIS"; display: block; font-size: 7.5pt; font-weight: bold; letter-spacing: 1pt; color: var(--teal); margin-bottom: 2pt; }
+  .prompt[data-label]::before { content: attr(data-label); }
+  .mono { font-family: "Menlo", "Courier New", monospace; font-size: 9pt; }
+  .mono::before { content: none; }
+  .prompt-label { font-size: 9pt; font-weight: bold; color: var(--teal); margin: 8pt 0 0 0; page-break-after: avoid; }
+  code { font-family: "Menlo", "Courier New", monospace; font-size: 9pt; background: #f1f3f3; padding: 0 2pt; border-radius: 2pt; }
+  table { width: 100%; border-collapse: collapse; margin: 6pt 0 10pt 0; font-size: 9.6pt; }
+  tr, td, th { page-break-inside: avoid; }
+  table.whole { page-break-inside: avoid; }
+  .toc-page { page-break-before: always; }
+  th { background: var(--teal); color: white; text-align: left; padding: 5pt 6pt; font-weight: bold; }
+  td { border-bottom: 0.75pt solid #d4dcdb; padding: 5pt 6pt; vertical-align: top; }
+  tr:nth-child(even) td { background: #f7f9f9; }
+  td.phase { background: var(--teal-light) !important; font-weight: bold; color: var(--teal); }
+  .cover-meta { color: var(--muted); font-size: 9pt; margin-bottom: 14pt; }
+  .toc { columns: 2; column-gap: 18pt; font-size: 9.6pt; margin-bottom: 4pt; }
+  .toc li { margin-bottom: 1.5pt; }
+  .toc .toc-part { list-style: none; margin-left: -17pt; font-weight: bold; color: var(--teal); font-size: 8.5pt; letter-spacing: 0.8pt; text-transform: uppercase; margin-top: 4pt; }
+  .keep { page-break-inside: avoid; }
+  .small { font-size: 8.8pt; color: var(--muted); }
+  a { color: var(--teal); text-decoration: none; }
+  .yes { color: #1a7f37; font-weight: bold; }
+  .no { color: #b3261e; font-weight: bold; }
+  .cmd { font-family: "Menlo", "Courier New", monospace; font-size: 9pt; font-weight: bold; color: var(--teal); }
+  .chat { margin: 6pt 0 9pt 0; page-break-inside: avoid; font-size: 9.6pt; }
+  .chat p { margin: 0 0 4pt 0; padding: 4pt 8pt; border-radius: 4pt; }
+  .chat .tutor { background: #f4f6f6; border-left: 3pt solid #9fb5b3; }
+  .chat .you { background: #fffaf0; border-left: 3pt solid var(--amber-line); }
+  .chat b.who { font-size: 8pt; letter-spacing: 0.6pt; text-transform: uppercase; color: var(--muted); }
+</style>
+</head>
+<body>
+<!-- HOW TO USE THIS TEMPLATE (SKILL.md phase 5)
+  FILL: marks what you write for this learner. Remove every FILL comment and every [bracketed placeholder] before rendering.
+  FACTS: names the references/platform-facts.md entry or repository file a passage depends on. Re-check it (phase 3) and give it a claims.md row.
+  Cut sections that don't apply, then renumber the contents list and every "section N" reference.
+  Short tables that must not split: class="whole". Header rows go in thead so they repeat on a new page.
+-->
+
+<h1>Learning with BodhiKit in [ChatGPT and Claude]</h1>
+<p class="subtitle">[Subjects]: a step-by-step guide for [who it is for]</p>
+<p class="cover-meta">For BodhiKit [version from .claude-plugin/plugin.json] in [apps], on [the web, the desktop apps and the phone apps] &middot; [Month Year]</p>
+
+<div class="box key">
+  <div class="box-title">The short version</div>
+  <ol>
+    <!-- FILL: five to seven lines a reader could follow without the rest of the guide: the subjects, the home for each, install once, how to start a session, that they do the work, any gate to check first. -->
+    <li><b>[One line]</b> …</li>
+  </ol>
+</div>
+
+<div class="box key">
+  <div class="box-title">Your starting point is better than you think</div>
+  <!-- FILL: name what the learner already brings, from their background, and how it helps. No flattery; real strengths. -->
+  <p>[What their background gives them, and why it helps here.]</p>
+</div>
+
+<h3 class="toc-page">In this guide</h3>
+<ol class="toc">
+  <li class="toc-part">Part A: Getting started</li>
+  <li>What BodhiKit is, and why it asks so many questions</li>
+  <li>Your subjects, and what BodhiKit can and can't do</li>
+  <li>ChatGPT or Claude: a home for each subject</li>
+  <li>What you need before you start</li>
+  <li>Set up ChatGPT</li>
+  <li>Set up Claude</li>
+  <li>Privacy</li>
+  <li class="toc-part">Part B: Your subjects</li>
+  <li>[Subject 1]</li>
+  <li class="toc-part">Part C: Your schedule and routine</li>
+  <li>Your first two weeks</li>
+  <li>Your weekly rhythm</li>
+  <li>Your roadmap</li>
+  <li>A study session, step by step</li>
+  <li>Reviews and your learning record</li>
+  <li>Getting the best results</li>
+  <li>When something goes wrong</li>
+  <li class="toc-part">Part D: Reference</li>
+  <li>How to call BodhiKit in each app</li>
+  <li>Every BodhiKit command, with examples</li>
+  <li>Your learning log: a template</li>
+  <li>Sources and further reading</li>
+</ol>
+
+<!-- ============================================================ PART A -->
+<p class="part">Part A: Getting started</p>
+<h2>1. What BodhiKit is, and why it asks so many questions</h2>
+<!-- FACTS: README.md "The Science" (the studies below are vetted there). Keep the subject examples to the learner's subjects. -->
+<p>BodhiKit is a tutor that you add to [ChatGPT or Claude]. It works for any subject: [their subjects]. Ordinary [ChatGPT or Claude] hands you a finished answer. BodhiKit teaches the way a good tutor does. It finds out what you already know, makes a plan, explains one idea at a time, gives you something to do yourself, and asks you to explain it back.</p>
+<p><b>It will ask you questions when you just want the answer.</b> That is on purpose. In a study of high-school maths students, those who used a ChatGPT-style assistant did much better while practising, then scored worse in the exam without it than students who never had AI. A version that guided them instead of answering removed most of that harm (Bastani et al., <i>PNAS</i>, 2025). In a study of programmers learning something new, those who handed the work to the AI remembered the least, and those who asked questions to understand kept most of it (Shen &amp; Tamkin, 2026). Quizzing yourself helps in every subject studied (Yang et al., <i>Psychological Bulletin</i>, 2021).</p>
+<p>So the questions are the learning. But you set the pace: when you want an explanation now, or you're short on time, say so (section [N]).</p>
+
+<h2>2. Your subjects, and what BodhiKit can and can't do</h2>
+<table class="whole">
+  <thead><tr><th style="width:24%">Subject</th><th style="width:40%">Why</th><th>What you'll be able to do</th></tr></thead>
+  <!-- FILL: one row per subject, at most three. -->
+  <tr><td><b>[Subject]</b></td><td>[Their reason, in their words]</td><td>[Outcomes in plain words]</td></tr>
+</table>
+<!-- FACTS: skills/evidence-kinds/SKILL.md. Keep only the lines that matter for their subjects. -->
+<ul>
+  <li><span class="yes">It can</span> [what it can check for these subjects: code it reads and you run; problems against answers it works out first; writing against criteria it sets first; practice away from the screen that it debriefs].</li>
+  <li><span class="no">It can't</span> see or hear you. When you tell it how practice went, it records that as <i>your account</i> and says so.</li>
+  <li><span class="no">It isn't</span> a therapist or a doctor, and it won't do graded work for you.</li>
+</ul>
+
+<h2>3. ChatGPT or Claude: a home for each subject</h2>
+<!-- FACTS: platform-facts.md "Plugins need a paid Claude plan", "Plugins in ChatGPT", "Tracked study in a Claude chat", "ChatGPT keeps nothing between chats". Cut the columns for apps they won't use. -->
+<p>BodhiKit is the same tutor in both apps. The difference is <b>whether your progress is saved between chats</b>.</p>
+<table class="whole">
+  <thead><tr><th style="width:22%"></th><th style="width:26%">ChatGPT</th><th style="width:28%">Claude on your laptop, Claude Desktop open</th><th>Claude with no laptop connected</th></tr></thead>
+  <tr><td><b>Plan you need</b></td><td>An account that shows <b>Plugins</b></td><td>[Paid plan, per platform-facts]</td><td>[Paid plan, per platform-facts]</td></tr>
+  <tr><td><b>Remembers your plan and progress?</b></td><td><span class="no">No.</span> Your learning log does.</td><td><span class="yes">Yes.</span> Saved in a folder on your laptop.</td><td><span class="no">No.</span> Your learning log does.</td></tr>
+  <tr><td><b>Review schedule</b></td><td>You keep it in your log</td><td>BodhiKit keeps it and tells you what's due</td><td>You keep it in your log</td></tr>
+  <tr><td><b>Take-home notes</b></td><td>A summary note you copy into your log</td><td>A revision sheet written into your folder each study day</td><td>A summary note you copy into your log</td></tr>
+</table>
+<div class="box key">
+  <div class="box-title">Our recommendation</div>
+  <!-- FILL: the home for each subject, from their apps, plan and devices. Always: one home per subject. -->
+  <p>[Recommendation.] <b>Either way, one home per subject</b>, or your record splits in two.</p>
+</div>
+
+<h2>4. What you need before you start</h2>
+<table>
+  <thead><tr><th style="width:32%">What</th><th>Why</th></tr></thead>
+  <!-- FILL: accounts, a personal device, a learning log per untracked subject, the calendar, subject materials (textbook, syllabus, software), and any documents a gate needs. -->
+  <tr><td><b>[Item]</b></td><td>[Why]</td></tr>
+</table>
+
+<h2>5. Set up ChatGPT (web, desktop app, phone)</h2>
+<!-- FACTS: platform-facts.md "Plugins in ChatGPT", "The BodhiKit listing", "BodhiKit's availability by country in ChatGPT". -->
+<h3>Install (once)</h3>
+<ol>
+  <li>Open ChatGPT on the web (<a href="https://chatgpt.com">chatgpt.com</a>), in the desktop app or in the phone app.</li>
+  <li>Choose <b>Plugins</b> in the sidebar.</li>
+  <li>Search for <b>BodhiKit</b>. Check that the publisher is <b>Abhaya Code Labs</b>.</li>
+  <li>Open it and choose <b>Install plugin</b>.</li>
+  <li>Start a <b>new chat</b>. A plugin is available in chats started after you install it.</li>
+</ol>
+<h3>Start BodhiKit in a chat</h3>
+<p>Type <code>@</code>, choose <b>BodhiKit</b>, and in the same message say which subject and what you want.</p>
+<div class="prompt">@BodhiKit Continue my [subject]. Here is my note from last time: …</div>
+<h3>Does it stay on?</h3>
+<table class="whole">
+  <thead><tr><th style="width:44%">Question</th><th>Answer</th></tr></thead>
+  <tr><td>Install again for each chat or subject?</td><td><span class="no">No.</span> Once.</td></tr>
+  <tr><td>Type <code>@BodhiKit</code> in every new chat?</td><td><span class="yes">Yes, make it a habit.</span> ChatGPT sometimes picks the plugin by itself, but not always.</td></tr>
+  <tr><td>Before every message in one chat?</td><td><span class="no">No.</span> Once at the start; again if you switch activity, or if replies start handing you finished answers.</td></tr>
+  <tr><td>Does it remember me next chat?</td><td><span class="no">No.</span> Your learning log carries your plan and review dates. Paste your latest note at the start of each chat.</td></tr>
+</table>
+
+<h2>6. Set up Claude (web, desktop app, phone)</h2>
+<!-- FACTS: platform-facts.md "Plugins need a paid Claude plan", "The sidebar menu is Plugins", "Adding BodhiKit from its marketplace", "Calling a plugin's skills in Claude", "Claude chats run in the cloud", "Tracked study in a Claude chat", "A phone chat reaching the laptop's folder", "Where to get the apps". -->
+<h3>Step 1: A paid plan and the desktop app (once)</h3>
+<ol>
+  <li>[Plan requirement, per platform-facts.]</li>
+  <li>On your personal laptop, download <b>Claude Desktop</b> from <a href="https://claude.com/download">claude.com/download</a>, install it and sign in.</li>
+  <li>On your phone, get the Claude app and sign in to the same account.</li>
+</ol>
+<h3>Step 2: Make your learning folder (once)</h3>
+<p>In <b>Documents</b>, create a folder called exactly <code>learningWithBodhi</code>. Each subject will live in its own folder inside it, and BodhiKit creates those for you.</p>
+<h3>Step 3: Add BodhiKit (once)</h3>
+<ol>
+  <li>[Menu path, per platform-facts.]</li>
+</ol>
+<h3>Step 4: Start a study chat that saves your progress</h3>
+<ol>
+  <li><b>Open the Claude Desktop app</b> on your laptop and leave it open.</li>
+  <li>Start a <b>new chat</b>. [The tested way, per platform-facts.]</li>
+  <li>Click <b>+</b> &rarr; <b>Devices</b> and tick your laptop. <b>Do this in every new chat.</b></li>
+  <li>Type <code>/</code> to see BodhiKit's commands, or type <code>/bodhikit:learn</code> followed by your subject.</li>
+  <li>When Claude asks to use a folder, allow <b>learningWithBodhi</b> itself, not a folder inside it. Say no to any folder you don't recognise.</li>
+</ol>
+<p>Each time after that: new chat &rarr; <b>+</b> &rarr; <b>Devices</b> &rarr; tick your laptop &rarr; <code>/bodhikit:continue</code>.</p>
+<h3>Claude on the phone, or without your laptop</h3>
+<p>With no laptop connected, BodhiKit says once that it can teach but can't keep your schedule, then teaches normally and offers a summary note at the end. Copy it into your learning log.</p>
+
+<h2>7. Privacy</h2>
+<div class="box warn">
+  <div class="box-title">What never goes into a study chat</div>
+  <ul>
+    <!-- FILL: their employer's or school's rules on AI tools; client, patient or confidential data; that removing names may not be enough; personal life: describe the situation, not the person. -->
+    <li><b>[Rule]</b> …</li>
+  </ul>
+</div>
+
+<!-- ============================================================ PART B -->
+<p class="part">Part B: Your subjects</p>
+<!-- FILL: one h2 per subject, each with:
+  why it matters to them;
+  a gate check first, if any;
+  how BodhiKit will check the work (a small table);
+  a curriculum table with phase rows (td class="phase" colspan) and columns: module, you'll be able to, practice in real life;
+  "Start this subject": a ready-to-paste first message;
+  what happens next;
+  for practice away from the screen, how a real-life practice works (before, rehearse, during, after) with the three debrief questions;
+  a labelled example of the tutor's questioning;
+  a "Try this" box with its answer underneath;
+  verified resources.
+-->
+<h2>8. [Subject 1]</h2>
+<p>[Why this subject, for them.]</p>
+<h3>Start this subject</h3>
+<div class="prompt">Help me learn [subject].
+- Why: [goal]
+- Background: [what they know]
+- Time: about [N] hours a week, on [devices].
+- [ChatGPT only: nothing is saved between chats, so at the end give me my plan and a note to keep.]</div>
+
+<!-- ============================================================ PART C -->
+<p class="part">Part C: Your schedule and routine</p>
+<h2>[N]. Your first two weeks</h2>
+<table>
+  <thead><tr><th style="width:18%">When</th><th>What to do</th></tr></thead>
+  <!-- FILL: setup, first sessions, gate checks, and a smaller start for anyone already stretched. -->
+  <tr><td><b>Week 1, day 1</b><br>[minutes]</td><td>[Action]</td></tr>
+</table>
+
+<h2>[N]. Your weekly rhythm</h2>
+<table>
+  <thead><tr><th style="width:15%">Day</th><th style="width:15%">Time</th><th style="width:16%">Where</th><th>What</th></tr></thead>
+  <!-- FILL: in the hours they gave; phone for reviews, laptop for lessons; one rest day. -->
+  <tr><td><b>[Day]</b></td><td>[Time]</td><td>[Device]</td><td>[Activity]</td></tr>
+</table>
+<div class="box key">
+  <div class="box-title">A busy week</div>
+  <p>Keep the minimum: <b>one 15-minute review</b> and <b>one 15-minute practice</b>. Missing a week loses nothing: reviews that become overdue wait for you. [Where progress is saved: BodhiKit asks the overdue ones first. Otherwise: start with the overdue rows in your log.]</p>
+</div>
+<p class="small">Put the sessions in your calendar yourself and set your own reminders. BodhiKit doesn't book sessions or send reminders.</p>
+
+<h2>[N]. Your roadmap</h2>
+<table>
+  <!-- FILL: one row per month, one column per subject; gates and their outcomes as their own rows or tracks. -->
+  <thead><tr><th style="width:15%">When</th><th>[Subject]</th></tr></thead>
+  <tr><td><b>Month 1</b></td><td>[Focus]</td></tr>
+</table>
+
+<h2>[N]. A study session, step by step</h2>
+<!-- FACTS: README.md "How a Session Works"; skills/teach/SKILL.md; skills/reflect/SKILL.md. Cut the column for an app they don't use. -->
+<p>One session is one chat, on one subject, with <b>one new idea</b> in it: 25–60 minutes.</p>
+<table>
+  <thead><tr><th style="width:18%">Step</th><th style="width:41%">Claude on your laptop (saves for you)</th><th>ChatGPT, or Claude with no laptop</th></tr></thead>
+  <tr><td><b>1. Open</b></td><td>New chat &rarr; <b>+</b> &rarr; <b>Devices</b> &rarr; tick your laptop &rarr; <code>/bodhikit:continue</code></td><td><code>@BodhiKit Continue my [subject]. Here is my plan and my note from last time:</code> and paste them.</td></tr>
+  <tr><td><b>2. Review</b></td><td>BodhiKit quizzes you on what's due first.</td><td><code>Before we start, quiz me on these, one at a time, without naming the topic: [ideas due today from your log]</code></td></tr>
+  <tr><td><b>3. Learn one idea</b></td><td colspan="2">A guess first, then the new words for today, the explanation with an example, one example worked together, your own exercise, and your explain-back, which is graded.</td></tr>
+  <tr><td><b>4. Close</b></td><td>Say you're done. BodhiKit asks you to explain each idea before rating your confidence, and writes today's revision sheet into your folder.</td><td><code>@BodhiKit Let's reflect and close the session. Then give me a summary note to keep.</code> Copy it into your log.</td></tr>
+</table>
+
+<h2>[N]. Reviews and your learning record</h2>
+<!-- FACTS: skills/spaced-repetition/SKILL.md. The gaps are a convention, not a proven optimum (README "The Science"). -->
+<p>You forget a new idea fast unless you recall it again after a gap, and each successful recall makes the next gap longer. BodhiKit uses gaps of <b>1 &rarr; 3 &rarr; 7 &rarr; 14 &rarr; 30 days</b>.</p>
+<ul>
+  <li><b>Recalled it without help?</b> Move it to the next gap.</li>
+  <li><b>Wrong, or needed a hint?</b> Back to 1 day.</li>
+  <li><b>Not due yet?</b> Leave it. Reviewing early helps less than waiting for the gap.</li>
+</ul>
+
+<h2>[N]. Getting the best results</h2>
+<h3>Ask for the pace you need</h3>
+<table>
+  <thead><tr><th style="width:30%">When…</th><th>Say</th></tr></thead>
+  <tr><td>You want to understand, not practise</td><td><code>I just want to understand [topic] today. Explain it with one example. No exercise.</code></td></tr>
+  <tr><td>Time is short</td><td><code>I have 10 minutes. Give me the essential idea of [topic] and one tip.</code></td></tr>
+  <tr><td>The explanation doesn't click</td><td><code>That didn't work for me. Try a different example, from [something they know].</code></td></tr>
+  <tr><td>You're stuck</td><td><code>Here's my attempt: … Give me a hint, not the answer.</code> Hints come in three steps: the direction, the approach, then a near-answer.</td></tr>
+</table>
+<!-- FILL: prompts for their real days (work, class, lab, kitchen); habits; "what it won't do". -->
+
+<h2>[N]. When something goes wrong</h2>
+<table>
+  <thead><tr><th style="width:40%">What you see</th><th>What to do</th></tr></thead>
+  <tr><td>BodhiKit isn't in ChatGPT's <code>@</code> list</td><td>Check it's installed (Plugins &rarr; BodhiKit). Start a new chat. Update the app. If search can't find it at all, it may not be offered in your country yet.</td></tr>
+  <tr><td>Claude says it can't keep your schedule, but you're on your laptop</td><td>Open the Claude Desktop app. In the chat, <b>+</b> &rarr; <b>Devices</b> &rarr; tick your laptop.</td></tr>
+  <tr><td>Replies stopped teaching and just give answers</td><td>ChatGPT: type <code>@BodhiKit</code> again. Claude: run the command again. Or start a new chat.</td></tr>
+  <tr><td>ChatGPT says your progress was saved</td><td>It can't save between chats. Trust your log, not the message.</td></tr>
+  <tr><td>It graded you wrong</td><td>Tell it, and say what your answer showed. It re-checks and corrects the grade if it was wrong.</td></tr>
+  <!-- FILL: rows for their subjects (a fact that doesn't match their textbook or course, two subjects mixed up). -->
+</table>
+
+<!-- ============================================================ PART D -->
+<p class="part">Part D: Reference</p>
+<h2>[N]. How to call BodhiKit in each app</h2>
+<!-- FACTS: references/commands.md (top). -->
+<table class="whole">
+  <thead><tr><th style="width:22%"></th><th style="width:39%">Claude</th><th>ChatGPT</th></tr></thead>
+  <tr><td><b>Pick a command</b></td><td>Type <code>/</code> (or click <b>+</b>) and choose</td><td>Type <code>@</code>, choose <b>BodhiKit</b> or one of its commands</td></tr>
+  <tr><td><b>Type a command</b></td><td><code>/bodhikit:</code> plus the name</td><td><code>@BodhiKit</code> plus what you want in words</td></tr>
+  <tr><td><b>Saving progress</b></td><td>Only with Claude Desktop open and your laptop ticked under <b>+</b> &rarr; <b>Devices</b></td><td>Never: keep your log</td></tr>
+</table>
+
+<h2>[N]. Every BodhiKit command, with examples</h2>
+<!-- FILL: from references/commands.md. Group tables: Start and plan; Learn and practise; Remember and close; Look back and grow; For coding only, and housekeeping. Columns: Command (td class="cmd"), What it does and when, Examples drawn from their subjects. -->
+<table class="cmds">
+  <thead><tr><th style="width:17%">Command</th><th style="width:33%">What it does, and when</th><th>Examples</th></tr></thead>
+  <tr><td class="cmd">learn</td><td>[From commands.md]</td><td>[Their subject's example]</td></tr>
+</table>
+
+<h2>[N]. Your learning log: a template</h2>
+<div class="prompt mono" data-label="TEMPLATE">[SUBJECT] LEARNING LOG
+
+== MY PLAN (paste from the first session; update when it changes) ==
+Goal: …
+Deadline / exam: …
+Current module: …
+
+== REVIEW TABLE ==
+Idea                   | Learned | Next review   | Last result
+
+== REAL-LIFE PRACTICE (my account) ==
+Date   | What I practised          | Debriefed? | What I'll change
+
+== SESSIONS (newest first) ==
+## [date] — [topic]
+[paste BodhiKit's summary note here]
+Self-test 1: …   (answer: …)
+Self-test 2: …   (answer: …)
+Next: …</div>
+
+<h2>[N]. Sources and further reading</h2>
+<p>Checked on [date]. BodhiKit's <i>resources</i> command finds more, and checks that the links work.</p>
+<!-- FILL: only resources whose page you opened (title, author or publisher, year confirmed). Mark anything else "not verified". -->
+<ul>
+  <li>[Author], <i>[Title]</i> ([publisher], [year]).</li>
+</ul>
+<h3>Help and feedback</h3>
+<p>BodhiKit is made by one person, and honest feedback, especially about what annoys you, shapes what gets built next.</p>
+<ul>
+  <li>5-minute anonymous survey: <a href="https://docs.google.com/forms/d/e/1FAIpQLSdTfBrT3J3ot94JmDXwIQosYQaCoxd-K2hDTYWlctl1lKfEgQ/viewform">BodhiKit feedback form</a></li>
+  <li>Questions and discussion: <a href="https://github.com/AnjanJ/bodhikit/discussions">github.com/AnjanJ/bodhikit/discussions</a></li>
+</ul>
+<p class="small">Research cited: Bastani et al., "Generative AI without guardrails can harm learning," PNAS (2025); Shen &amp; Tamkin, "How AI Impacts Skill Formation" (2026); Yang et al., "Testing (quizzing) boosts classroom learning," Psychological Bulletin (2021); Leitner, <i>Learning to Learn</i> (1972). The 1-3-7-14-30 day gaps are a common convention, not a proven optimum. [Add studies a subject section cites.]</p>
+
+</body>
+</html>
