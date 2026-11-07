@@ -451,6 +451,18 @@ if [ -f dev/eval/test_bodhi_state.py ]; then
   else
     err "dev/eval/test_detectors.py missing"
   fi
+  # The maintainer's guide-writing skill (spec write-guide): its command
+  # reference matches the learner commands, it never ships, and render.sh
+  # keeps guides with personal details out of the repo.
+  if [ -f dev/eval/test_guide_writer.py ]; then
+    if ! python3 dev/eval/test_guide_writer.py >${TMPDIR:-/tmp}/bodhikit-guide-writer-tests.log 2>&1; then
+      err "guide-writer test suite failed — see ${TMPDIR:-/tmp}/bodhikit-guide-writer-tests.log"
+    else
+      ok "guide-writer test suite passed"
+    fi
+  else
+    err "dev/eval/test_guide_writer.py missing"
+  fi
   if [ -f dev/eval/test_openai_plugin.py ]; then
     if ! python3 dev/eval/test_openai_plugin.py >${TMPDIR:-/tmp}/bodhikit-openai-tests.log 2>&1; then
       err "OpenAI plugin test suite failed — see ${TMPDIR:-/tmp}/bodhikit-openai-tests.log"

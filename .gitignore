@@ -24,6 +24,9 @@ dev/eval/runs/
 # Personal analysis notes (not part of the plugin)
 analysis/
 
+# Guides written for real learners (dev/guide-writer); they hold personal details
+output/
+
 # Shipkit's session handoff note (rewritten every session; local only)
 .shipkit/state.md
 
