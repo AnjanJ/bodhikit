@@ -116,6 +116,25 @@ def t_commands_match_skills():
           sorted(set(listed) - skills))
 
 
+def t_facts_dated_and_sourced():
+    """write-guide/REQ-11: every platform fact can be re-checked at its source."""
+    ref = SKILL / "references" / "platform-facts.md"
+    check("REQ-11 references/platform-facts.md exists", ref.is_file())
+    if not ref.is_file():
+        return
+    entries = re.split(r"^### ", ref.read_text(encoding="utf-8"), flags=re.M)[1:]
+    check("REQ-11 platform-facts.md has entries", len(entries) > 0)
+    unsourced = [e.splitlines()[0] for e in entries
+                 if not re.search(r"^- Source: \S+", e, re.M)]
+    undated = [e.splitlines()[0] for e in entries
+               if not re.search(r"^- Checked: \d{4}-\d{2}-\d{2}\b", e, re.M)]
+    unstated = [e.splitlines()[0] for e in entries
+                if not re.search(r"^- Status: (verified|not verified)\b", e, re.M)]
+    check("REQ-11 every entry names its source", not unsourced, unsourced[:4])
+    check("REQ-11 every entry has a checked date (YYYY-MM-DD)", not undated, undated[:4])
+    check("REQ-11 every entry says verified or not verified", not unstated, unstated[:4])
+
+
 LEARNER_TEXT = ("references/commands.md",)
 
 
@@ -140,6 +159,7 @@ def main():
     t_typed_only()
     t_not_in_any_package()
     t_commands_match_skills()
+    t_facts_dated_and_sourced()
     t_no_internals()
     print(f"\n{PASS} passed, {FAIL} failed")
     return 1 if FAIL else 0
