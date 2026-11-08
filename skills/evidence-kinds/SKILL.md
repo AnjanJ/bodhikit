@@ -9,7 +9,7 @@ user-invocable: false
 
 Load this KB only when `bodhi-state` reports a concept's `evidenceKind` as `problems`, `writing` or `performed` (`session-brief`, `due`, a `gate-check` row, `snapshot`). On `code` nothing here applies: the skill's own text is the code path, unchanged.
 
-Teaching is the same in every subject: dialogue, retrieval, spacing, the explain-back. Quizzing helps across subjects (Yang et al. 2021, classroom quizzing g = 0.50 across 18 subject areas), including vocabulary (Karpicke & Roediger 2008, Swahili–English pairs) and history (Carpenter et al. 2009). What differs is the evidence: what an exercise is, what counts as applied work, and who can check it.
+Teaching is the same in every subject: dialogue, retrieval, spacing, the explain-back. Quizzing helps across subjects (Yang et al. 2021, classroom quizzing g = 0.50 across 222 studies), including vocabulary (Karpicke & Roediger 2008, Swahili–English pairs) and history (Carpenter et al. 2009). What differs is the evidence: what an exercise is, what counts as applied work, and who can check it.
 
 | Kind | Applied work | Who checks it | Recorded as |
 |---|---|---|---|
