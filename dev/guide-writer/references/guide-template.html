@@ -45,6 +45,7 @@
   .toc { columns: 2; column-gap: 18pt; font-size: 9.6pt; margin-bottom: 4pt; }
   .toc li { margin-bottom: 1.5pt; }
   .toc .toc-part { list-style: none; margin-left: -17pt; font-weight: bold; color: var(--teal); font-size: 8.5pt; letter-spacing: 0.8pt; text-transform: uppercase; margin-top: 4pt; }
+  .toc .toc-part { display: block; } /* a list-item would take a number; the renderer ignores <li value> */
   .keep { page-break-inside: avoid; }
   .small { font-size: 8.8pt; color: var(--muted); }
   a { color: var(--teal); text-decoration: none; }
@@ -129,7 +130,8 @@
 <ul>
   <li><span class="yes">It can</span> [what it can check for these subjects: code it reads and you run; problems against answers it works out first; writing against criteria it sets first; practice away from the screen that it debriefs].</li>
   <li><span class="no">It can't</span> see or hear you. When you tell it how practice went, it records that as <i>your account</i> and says so.</li>
-  <li><span class="no">It isn't</span> a therapist or a doctor, and it won't do graded work for you.</li>
+  <li><span class="no">It isn't</span> a therapist or a doctor.</li>
+  <li><span class="no">It is built not to do the work for you.</span> On code it won't write your code, and in any subject it teaches you to do the work yourself. [In ChatGPT: finished answers are still a request away, especially without <code>@BodhiKit</code>. Say so, and leave the choice to them.]</li>
 </ul>
 
 <h2>3. ChatGPT or Claude: a home for each subject</h2>
@@ -186,7 +188,7 @@
   <li>On your phone, get the Claude app and sign in to the same account.</li>
 </ol>
 <h3>Step 2: Make your learning folder (once)</h3>
-<p>In <b>Documents</b>, create a folder called exactly <code>learningWithBodhi</code>. Each subject will live in its own folder inside it, and BodhiKit creates those for you.</p>
+<p>In your home folder, the one that holds Documents and Downloads, create a folder called exactly <code>learningWithBodhi</code>. That's where BodhiKit looks by default. Each subject will live in its own folder inside it, and BodhiKit creates those for you.</p>
 <h3>Step 3: Add BodhiKit (once)</h3>
 <ol>
   <li>[Menu path, per platform-facts.]</li>
@@ -354,7 +356,7 @@ Next: …</div>
 <p>BodhiKit is made by one person, and honest feedback, especially about what annoys you, shapes what gets built next.</p>
 <ul>
   <li>5-minute anonymous survey: <a href="https://docs.google.com/forms/d/e/1FAIpQLSdTfBrT3J3ot94JmDXwIQosYQaCoxd-K2hDTYWlctl1lKfEgQ/viewform">BodhiKit feedback form</a></li>
-  <li>Questions and discussion: <a href="https://github.com/AnjanJ/bodhikit/discussions">github.com/AnjanJ/bodhikit/discussions</a></li>
+  <li>Report a problem: <a href="https://github.com/AnjanJ/bodhikit/issues">github.com/AnjanJ/bodhikit/issues</a></li>
 </ul>
 <p class="small">Research cited: Bastani et al., "Generative AI without guardrails can harm learning," PNAS (2025); Shen &amp; Tamkin, "How AI Impacts Skill Formation" (2026); Yang et al., "Testing (quizzing) boosts classroom learning," Psychological Bulletin (2021); Leitner, <i>Learning to Learn</i> (1972). The 1-3-7-14-30 day gaps are a common convention, not a proven optimum. [Add studies a subject section cites.]</p>
 

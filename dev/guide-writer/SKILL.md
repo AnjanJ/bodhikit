@@ -29,7 +29,7 @@ Arguments: `$ARGUMENTS`
 7. **Be honest about BodhiKit's limits.**
    - It can't see or hear the learner. Practice away from the screen counts as "your account".
    - It is a tutor, not a therapist or a doctor.
-   - It won't do graded work for the learner.
+   - It won't write the learner's code, and in any subject it teaches them to do the work themselves (README). Don't promise more: no rule refuses graded work, and in ChatGPT a finished answer is a request away.
    - It follows the safety limits in `rules/learning-project.md`.
 8. **Grep before a universal claim.** Before writing "only X does Y" or "every command can…", check the repository.
 
