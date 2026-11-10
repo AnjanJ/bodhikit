@@ -456,3 +456,55 @@ cost: the harness now asks for something a real session does not, so a
 receipt the skills provoke on their own is less likely to show here.
 
 `kb-load` re-ran three times with the `newlyLearned` rename on 2026-11-05: 3 PASS under the old detector, 1 PASS under the case-insensitive one (see its row). Earlier passes of every scenario using `BARE_LEVEL_RE` were judged by the capitalised match; their transcripts were not kept, so they cannot be re-checked.
+
+### The learning vault (spec `learning-vault`, built 2026-11-10)
+
+Two transcript scenarios, group `notes`, run from the `learningWithBodhi`
+parent with an empty `vault` folder beside the learning folder:
+
+- `notes-setup`: the scripted learner uses no notes app. The tutor must ask
+  (offering Obsidian, none and files only), suggest exactly one app with a
+  reason, say what is copied, where, that a synced vault carries it, that it
+  is optional and that it can be turned off, and only then record the vault
+  through `bodhi-state`. File state: `.bodhi-notes.json` records Obsidian at
+  the vault, and the course's `Syllabus.md` is in `vault/Learn with Bodhi/`.
+- `notes-setup-off`: Obsidian is on record; the learner turns it off. The
+  tutor shows the setting and offers a change, records `off`, and says the
+  files stay and will no longer be refreshed. The vault copy must survive.
+
+Live runs: see *Runs* below.
+
+**Hand checks before the first release that ships it.** The scenarios cannot
+see two things: what the learner's terminal shows when the Stop hook speaks,
+and what Obsidian makes of the copy. Record each as PASS or FAIL with the date
+and the BodhiKit commit in *Runs*.
+
+1. **The offer shows in Claude Code.** In a scratch folder, run
+   `/bodhikit:learn` on a small subject and take the first step. PASS: at the
+   end of that turn the terminal shows the offer, ending with
+   `/bodhikit:notes-setup`, and the session was not blocked for it. Run
+   `/bodhikit:continue` in the same folder afterwards: no second offer.
+   FAIL: no message appears. Then decision *the hook speaks through
+   `systemMessage`* in `.shipkit/specs/learning-vault/design.md` fires for
+   Claude Code.
+2. **A failed copy shows.** Turn notes on with a scratch vault, then rename
+   the vault folder and close a study session. PASS: the terminal says the
+   copy did not happen and why, and the session ends normally.
+3. **The same in Codex**, with its hooks trusted: checks 1 and 2. A FAIL
+   fires the same decision for Codex only.
+4. **Obsidian reads the home.** Open the scratch vault in Obsidian. PASS:
+   `Learn with Bodhi` appears in the file list, `Courses.md` opens and each
+   link opens that course's `Syllabus.md`, and a revision sheet reads as it
+   does on disk. Add a line to an earlier day's sheet in Obsidian, close
+   another study session, and check that the line is still there.
+5. **Timing.** `notes-sync` on the largest fixture stays under 5 seconds
+   (decision *the Stop hook performs the session-close writes*). Measured
+   2026-11-10 on `v2-project` with a vault: 0.04 s.
+
+#### Runs
+
+| Date | Commit | Executor | Scenario or check | Result |
+|---|---|---|---|---|
+| 2026-11-10 | `a6245e7` | Claude, fable-5 | `notes-setup` | PASS, all six checks: asked with Obsidian, none and files only; suggested Obsidian alone, with a reason; said what, where, sync, optional and off before recording; Obsidian recorded at the vault and the syllabus copied; no hand edits; no engine names. |
+| 2026-11-10 | `a6245e7` | Claude, fable-5 | `notes-setup-off` | **FAIL, REQ-5, a real miss** (transcript read): the tutor ran `notes-show` and then `notes-set --choice off` with no message between, so the learner never saw the setting or a choice. Its message after the change met REQ-6 (files stay, no longer refreshed, nothing deleted). Its closing recap says the setting "was shown"; it was not. One run: the rate is unknown. |
+| 2026-11-10 | `a6245e7` | — | check 5, timing | PASS: 0.04 s on `v2-project` with a vault. |
