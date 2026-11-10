@@ -3029,7 +3029,8 @@ def t_gate_seeded_module():
 READERS = (("due",), ("mastery",), ("calibration",), ("retention",),
            ("export-anonymized",), ("snapshot",), ("revision-brief",),
            ("session-brief", "--concept", "B-tree indexes"),
-           ("gate-check", "--prior-module", "Module A"))
+           ("gate-check", "--prior-module", "Module A"),
+           ("notes-show",))  # learning-vault: the notes file's reader
 
 
 def t_verify_implies_readers():
@@ -4317,7 +4318,9 @@ def t_revise_review_readers_match_honest():
             # order differs between any two processes.
             def parsed(r, proj):
                 try:
-                    return json.loads(r.stdout.replace(proj, "<P>"))
+                    # The learner folder too: notes-show names the notes file there.
+                    return json.loads(r.stdout.replace(proj, "<P>")
+                                      .replace(os.path.dirname(proj), "<L>"))
                 except json.JSONDecodeError:
                     return r.stdout
             same = (a.returncode, parsed(a, revised)) == (b.returncode, parsed(b, honest))
@@ -4444,6 +4447,211 @@ def t_golden_code_path():
               not files, f"differ: {files}")
 
 
+# --- The learning vault (spec learning-vault) ---------------------------------
+
+def run_env(project, *argv, env=None, expect_fail=False):
+    """`run` with extra environment. BODHI_CLOUD_MARKER defaults to a path
+    that does not exist, so the host reads as `local` on any machine."""
+    e = dict(os.environ, BODHI_CLOUD_MARKER=os.path.join(tempfile.gettempdir(),
+                                                         "bodhi-no-cloud-marker"))
+    e.update(env or {})
+    r = subprocess.run([sys.executable, SCRIPT, "--project", project, *argv],
+                       capture_output=True, text=True, env=e)
+    if not expect_fail and r.returncode != 0:
+        raise AssertionError(f"bodhi-state {' '.join(argv)} failed:\n{r.stdout}\n{r.stderr}")
+    if expect_fail and r.returncode == 0:
+        raise AssertionError(f"bodhi-state {' '.join(argv)} unexpectedly succeeded")
+    try:
+        return json.loads(r.stdout)
+    except json.JSONDecodeError:
+        return {"_raw": r.stdout}
+
+
+def make_learner(root, courses=("proj",)):
+    """A learningWithBodhi folder at `root`: a profile, and one course per
+    name with a state.json. Returns the course paths."""
+    with open(os.path.join(root, ".bodhi-profile.json"), "w") as f:
+        json.dump({"version": 2, "cumulativeStats": {}}, f)
+    out = []
+    for name in courses:
+        proj = os.path.join(root, name)
+        os.makedirs(os.path.join(proj, ".bodhi"))
+        with open(os.path.join(proj, ".bodhi", "state.json"), "w") as f:
+            json.dump({"version": 2, "projectName": name, "sessionDates": []}, f)
+        out.append(proj)
+    return out
+
+
+def read_notes(root):
+    p = os.path.join(root, ".bodhi-notes.json")
+    if not os.path.exists(p):
+        return None
+    with open(p) as f:
+        return json.load(f)
+
+
+def t_notes_set_records_the_choice():
+    """learning-vault/REQ-4: an agreed choice is recorded by bodhi-state with
+    the app, its location and the date; unknown fields survive a rewrite."""
+    with tempfile.TemporaryDirectory() as root, tempfile.TemporaryDirectory() as vault:
+        proj, = make_learner(root)
+        out = run_env(proj, "notes-set", "--choice", "vault", "--app", "obsidian",
+                      "--location", vault)
+        notes = read_notes(root)
+        check("notes-set vault: the file is written beside the profile", notes is not None)
+        notes = notes or {}
+        check("notes-set vault: choice, app and location recorded",
+              notes.get("choice") == "vault" and notes.get("app") == "obsidian"
+              and os.path.realpath(notes.get("location") or "") == os.path.realpath(vault),
+              notes)
+        check("notes-set vault: agreedOn is today", notes.get("agreedOn") == TODAY.isoformat(),
+              notes)
+        check("notes-set vault: the output names the home",
+              os.path.realpath(out.get("home") or "") ==
+              os.path.realpath(os.path.join(vault, "Learn with Bodhi")), out)
+        notes["keepMe"] = 1
+        with open(os.path.join(root, ".bodhi-notes.json"), "w") as f:
+            json.dump(notes, f)
+        later = (TODAY + datetime.timedelta(days=2)).isoformat()
+        run_env(proj, "notes-set", "--choice", "files", env={"BODHI_TODAY": later})
+        notes = read_notes(root)
+        check("notes-set files: the choice changes and the date moves",
+              notes.get("choice") == "files" and notes.get("agreedOn") == later, notes)
+        check("notes-set: unknown fields survive", notes.get("keepMe") == 1, notes)
+        run_env(proj, "notes-set", "--choice", "off")
+        check("notes-set off: recorded", read_notes(root).get("choice") == "off")
+        shown = run_env(proj, "notes-show")
+        check("notes-show reports the recorded choice", shown.get("choice") == "off", shown)
+        check("notes-set: the profile is untouched",
+              json.load(open(os.path.join(root, ".bodhi-profile.json"))) ==
+              {"version": 2, "cumulativeStats": {}})
+
+
+def t_notes_set_refuses_bad_vaults():
+    """learning-vault/REQ-37: a vault folder that does not exist, lies inside
+    learningWithBodhi/, or holds it is refused with a reason, and nothing is
+    recorded. So is a learner with no profile, and an app this host does not
+    offer."""
+    with tempfile.TemporaryDirectory() as outer:
+        root = os.path.join(outer, "learningWithBodhi")
+        os.makedirs(root)
+        proj, = make_learner(root)
+        inside = os.path.join(root, "my-vault")
+        os.makedirs(inside)
+        elsewhere = os.path.join(outer, "vault")
+        os.makedirs(elsewhere)
+        cases = (("a folder that does not exist", os.path.join(outer, "nope")),
+                 ("a folder inside learningWithBodhi/", inside),
+                 ("learningWithBodhi/ itself", root),
+                 ("a folder that holds learningWithBodhi/", outer))
+        for label, loc in cases:
+            out = run_env(proj, "notes-set", "--choice", "vault", "--app", "obsidian",
+                          "--location", loc, expect_fail=True)
+            check(f"notes-set refuses {label}, with a reason",
+                  out.get("ok") is False and len(out.get("error", "")) > 20, out)
+            check(f"notes-set refuses {label}: nothing recorded", read_notes(root) is None)
+        out = run_env(proj, "notes-set", "--choice", "vault", "--app", "notion",
+                      "--location", elsewhere, expect_fail=True)
+        check("notes-set refuses an app this host does not offer",
+              out.get("ok") is False and read_notes(root) is None, out)
+        out = run_env(proj, "notes-set", "--choice", "vault", "--location", elsewhere,
+                      expect_fail=True)
+        check("notes-set vault without --app is refused", out.get("ok") is False, out)
+    with tempfile.TemporaryDirectory() as root, tempfile.TemporaryDirectory() as vault:
+        proj = os.path.join(root, "loose")
+        os.makedirs(os.path.join(proj, ".bodhi"))
+        out = run_env(proj, "notes-set", "--choice", "files", expect_fail=True)
+        check("notes-set with no profile is refused, and writes nothing",
+              out.get("ok") is False and not os.path.exists(
+                  os.path.join(root, ".bodhi-notes.json")), out)
+
+
+def t_notes_offered_once():
+    """learning-vault/REQ-10: the offer is recorded once; a second call keeps
+    the first date. With no profile there is nowhere to record it, and the
+    command says so without failing (the Stop hook calls it)."""
+    with tempfile.TemporaryDirectory() as root:
+        proj, = make_learner(root)
+        out = run_env(proj, "notes-offered")
+        check("notes-offered: records today", out.get("offerMadeOn") == TODAY.isoformat()
+              and out.get("already") is False, out)
+        later = (TODAY + datetime.timedelta(days=3)).isoformat()
+        out = run_env(proj, "notes-offered", env={"BODHI_TODAY": later})
+        check("notes-offered again: the first date stays",
+              out.get("offerMadeOn") == TODAY.isoformat() and out.get("already") is True, out)
+        check("notes-offered: no choice is recorded by the offer",
+              read_notes(root).get("choice") is None, read_notes(root))
+        check("notes-show reports the offer", run_env(proj, "notes-show").get("offerMadeOn")
+              == TODAY.isoformat())
+    with tempfile.TemporaryDirectory() as root:
+        proj = os.path.join(root, "loose")
+        os.makedirs(os.path.join(proj, ".bodhi"))
+        out = run_env(proj, "notes-offered")
+        check("notes-offered with no profile: not recorded, not an error",
+              out.get("ok") is True and out.get("recorded") is False
+              and not os.path.exists(os.path.join(root, ".bodhi-notes.json")), out)
+
+
+def t_notes_show_no_apps_on_cloud_chat():
+    """learning-vault/REQ-2: on a host that keeps the learner's folder the
+    app offered is Obsidian; in a cloud chat no app is offered, so the skill
+    says notes cannot be kept there yet. notes-show writes nothing."""
+    with tempfile.TemporaryDirectory() as root, tempfile.TemporaryDirectory() as marker:
+        proj, = make_learner(root)
+        local = run_env(proj, "notes-show")
+        check("notes-show local: host and one app",
+              local.get("host") == "local"
+              and [a.get("app") for a in local.get("appsOffered", [])] == ["obsidian"], local)
+        check("notes-show with no file: no choice, no offer, not created",
+              local.get("choice") is None and local.get("offerMadeOn") is None
+              and read_notes(root) is None, local)
+        cloud = run_env(proj, "notes-show", env={"BODHI_CLOUD_MARKER": marker})
+        check("notes-show cloud chat: no app offered",
+              cloud.get("host") == "cloud-chat" and cloud.get("appsOffered") == [], cloud)
+        with tempfile.TemporaryDirectory() as vault:
+            out = run_env(proj, "notes-set", "--choice", "vault", "--app", "obsidian",
+                          "--location", vault, env={"BODHI_CLOUD_MARKER": marker},
+                          expect_fail=True)
+            check("notes-set refuses a vault in a cloud chat", out.get("ok") is False
+                  and read_notes(root) is None, out)
+    with tempfile.TemporaryDirectory() as root:
+        proj = os.path.join(root, "loose")
+        os.makedirs(os.path.join(proj, ".bodhi"))
+        out = run_env(proj, "notes-show")
+        check("notes-show with no profile: says so, does not fail",
+              out.get("ok") is True and out.get("profileFound") is False, out)
+
+
+def t_verify_checks_notes_file():
+    """learning-vault/REQ-4: verify checks .bodhi-notes.json when it exists,
+    and every reader runs on one verify accepts."""
+    with tempfile.TemporaryDirectory() as root, tempfile.TemporaryDirectory() as vault:
+        proj, = make_learner(root)
+        run_env(proj, "notes-set", "--choice", "vault", "--app", "obsidian",
+                "--location", vault)
+        check("verify: a written notes file passes", run(proj, "verify")["ok"] is True)
+        path = os.path.join(root, ".bodhi-notes.json")
+        for label, bad in (("an unknown choice", {"version": 1, "choice": "maybe"}),
+                           ("a vault with no location",
+                            {"version": 1, "choice": "vault", "app": "obsidian"}),
+                           ("announced not a list",
+                            {"version": 1, "choice": "files", "announced": "x"}),
+                           ("a malformed date", {"version": 1, "offerMadeOn": "soon"})):
+            with open(path, "w") as f:
+                json.dump(bad, f)
+            out = run(proj, "verify", expect_fail=True)
+            check(f"verify flags {label}", out["ok"] is False and any(
+                ".bodhi-notes.json" in e for e in out["errors"]), out)
+            r = subprocess.run([sys.executable, SCRIPT, "--project", proj, "notes-show"],
+                               capture_output=True, text=True)
+            check(f"notes-show on {label} dies cleanly", "Traceback" not in r.stderr,
+                  r.stderr[-200:])
+        with open(path, "w") as f:
+            f.write("{not json")
+        out = run(proj, "verify", expect_fail=True)
+        check("verify flags a notes file that is not JSON", out["ok"] is False, out)
+
+
 def main():
     for t in (t_migrate, t_record_review, t_sessions_and_forget,
               t_touch_state_and_profile, t_gate_check,
@@ -4477,7 +4685,10 @@ def main():
               t_solid_by_report, t_kind_breakdowns, t_performed_solid_needs_graded_parts,
               t_revise_review_restores_a_wrong_incorrect, t_revise_review_lowers_a_wrong_correct,
               t_revise_review_keeps_the_wrong_entry, t_revise_review_readers_match_honest,
-              t_revise_review_refusals, t_golden_snapshot_strip_is_narrow):
+              t_revise_review_refusals, t_golden_snapshot_strip_is_narrow,
+              t_notes_set_records_the_choice, t_notes_set_refuses_bad_vaults,
+              t_notes_offered_once, t_notes_show_no_apps_on_cloud_chat,
+              t_verify_checks_notes_file):
         print(f"-- {t.__name__}")
         try:
             t()

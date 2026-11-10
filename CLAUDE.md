@@ -58,6 +58,7 @@ The plugin's audience is currently one real learner. No new skills, KBs, taxonom
 - `skills/<kb>/SKILL.md` — KBs (frontmatter `user-invocable: false`; lint tells the two kinds apart by that line). `state-ops` is the routine operational surface; `state-schema` is the field-level reference behind it (1.13.0 split). The per-skill read contract lives in `dev/read-defaults.md` (dev-only, moved out of knowledge/ in 1.13.0).
 - `rules/<name>.md` — the learning-project rule. Plugins cannot ship path-scoped rules, so the SessionStart hook injects this file's body when the session starts inside a learning project (in a cloud chat, when a BodhiKit skill first runs).
 - `scripts/bodhi-state` — deterministic state writer (Python 3, stdlib-only). `scripts/bodhi-stop-hook.py` — Stop-hook safety net.
+- `learningWithBodhi/.bodhi-notes.json` — the learner's notes choice (learning vault, decision 0006). Its shape lives in `skills/notes-setup/references/notes-file.md`, not in `state-schema`, so that no existing skill pays for it; only `bodhi-state`'s `notes-*` commands write it.
 - `hooks/hooks.json` — plugin hook manifest (SessionStart, and in cloud chats UserPromptExpansion and PreToolUse on Skill → learning-project rule; Stop → schema verify and revision sheet).
 - `.claude-plugin/plugin.json` — install manifest. Update `version` here on release.
 - `.claude-plugin/marketplace.json` — marketplace manifest. Keep `version` and counts in sync with `plugin.json` and README.

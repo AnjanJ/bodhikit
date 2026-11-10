@@ -382,8 +382,18 @@ else
   done
   # (h) state-ops calls its subcommand table the complete set, and skills
   # learn the write path from it, so a subcommand it does not name is one no
-  # skill can be told to call.
+  # skill can be told to call. The learning vault's `notes-*` commands are the
+  # exception (decision 0006): only /notes-setup and the Stop hook call them,
+  # no existing SKILL.md may change (learning-vault/REQ-11), and they are
+  # named instead in the notes file's reference, which /notes-setup loads.
   for cmd in $(grep -o 'sub\.add_parser("[a-z-]*"' scripts/bodhi-state | sed 's/.*("//; s/"$//'); do
+    case "$cmd" in
+      notes-*)
+        if ! grep -qE "\`$cmd[\` ]" skills/notes-setup/references/notes-file.md 2>/dev/null; then
+          err "skills/notes-setup/references/notes-file.md does not name subcommand \`$cmd\` (the notes commands are documented there)"
+        fi
+        continue ;;
+    esac
     if ! grep -qE "\`$cmd[\` ]" skills/state-ops/SKILL.md; then
       err "skills/state-ops/SKILL.md does not name subcommand \`$cmd\` (its table is the complete set)"
     fi

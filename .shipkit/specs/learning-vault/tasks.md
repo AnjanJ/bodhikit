@@ -10,8 +10,8 @@ before the change.
   - After: none
   - Done when: `dev/check.sh` → "All hard checks passed."
 
-- [ ] **T2** The settings file and its record commands: `notes-show`, `notes-set` (recording and refusals only), `notes-offered`, and `verify` on the file → REQ-4, REQ-10, REQ-37, REQ-2
-  - Files: scripts/bodhi-state, dev/eval/test_bodhi_state.py, skills/notes-setup/references/notes-file.md, CLAUDE.md (*Where things live* names the file)
+- [x] **T2** The settings file and its record commands: `notes-show`, `notes-set` (recording and refusals only), `notes-offered`, and `verify` on the file → REQ-4, REQ-10, REQ-37, REQ-2
+  - Files: scripts/bodhi-state, dev/eval/test_bodhi_state.py, skills/notes-setup/references/notes-file.md, CLAUDE.md (*Where things live* names the file), dev/check.sh (added while building: rule (h) wants every command named in `state-ops`, which REQ-11 freezes, so `notes-*` commands are named in `notes-file.md` instead)
   - Test: dev/eval/test_bodhi_state.py::t_notes_set_records_the_choice (REQ-4), ::t_notes_set_refuses_bad_vaults (REQ-37: missing folder, inside `learningWithBodhi/`, holding it, no profile; nothing recorded), ::t_notes_offered_once (REQ-10), ::t_notes_show_no_apps_on_cloud_chat (REQ-2: empty `appsOffered` under the marker), ::t_verify_checks_notes_file
   - After: T1
   - Done when: `python3 dev/eval/test_bodhi_state.py` → all pass, including `t_golden_code_path` and `t_verify_implies_readers`

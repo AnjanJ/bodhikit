@@ -3278,10 +3278,186 @@ def cmd_verify(args):
                 errors.append(f"profile projects list structurally broken "
                               f"({type(e).__name__}: {e})")
 
+        # learning-vault: the notes choice beside the profile
+        np_ = os.path.join(os.path.dirname(pp), NOTES_FILE)
+        if os.path.exists(np_):
+            try:
+                notes = load_json_raw(np_)
+                errors.extend(notes_shape_errors(notes))
+                if isinstance(notes, dict) and notes.get("version") != 1:
+                    warnings.append(f"{NOTES_FILE} version is "
+                                    f"{notes.get('version')!r}, expected 1")
+            except (json.JSONDecodeError, OSError) as e:
+                errors.append(f"{NOTES_FILE} unreadable: {e}")
+
     result = {"ok": not errors, "project": project,
               "errors": errors, "warnings": warnings}
     print(json.dumps(result, indent=2))
     sys.exit(0 if not errors else 1)
+
+
+# --- The learning vault (spec learning-vault, decision 0006) ----------------
+#
+# The learner's notes choice lives in `.bodhi-notes.json` beside
+# `.bodhi-profile.json` (shape: skills/notes-setup/references/notes-file.md).
+# Its absence is the 1.26.1 state: never offered, no choice. Disk stays the
+# record; nothing is ever read back from the vault into a tracking file.
+
+NOTES_FILE = ".bodhi-notes.json"
+NOTES_HOME = "Learn with Bodhi"
+NOTES_CHOICES = ("vault", "files", "off")
+# Apps offered per host kind. `carriedBy: model` entries need a recorded
+# probe PASS (learning-vault/REQ-29, dev/eval t_notes_apps_need_a_probe_pass).
+NOTES_APPS = {
+    "local": [{"app": "obsidian", "name": "Obsidian", "location": "folder",
+               "carriedBy": "script"}],
+    "cloud-chat": [],
+}
+
+
+def host_kind():
+    """`cloud-chat` where the cloud sandbox's file exchange exists (the
+    marker bodhi-session-context.py uses), else `local`: a host that keeps
+    the learner's folder."""
+    marker = os.environ.get("BODHI_CLOUD_MARKER", "/mnt/user-data")
+    return "cloud-chat" if os.path.isdir(marker) else "local"
+
+
+def apps_offered():
+    return [dict(a) for a in NOTES_APPS.get(host_kind(), [])]
+
+
+def notes_defaults():
+    return {"version": 1, "choice": None, "app": None, "location": None,
+            "agreedOn": None, "offerMadeOn": None, "announced": []}
+
+
+def notes_path(project):
+    pp = find_profile(project)
+    return os.path.join(os.path.dirname(pp), NOTES_FILE) if pp else None
+
+
+def notes_shape_errors(data):
+    """Every way a notes file can be one the readers cannot act on."""
+    if not isinstance(data, dict):
+        return [f"{NOTES_FILE} top level is {type(data).__name__}, expected object"]
+    errs = []
+    choice = data.get("choice")
+    if choice is not None and choice not in NOTES_CHOICES:
+        errs.append(f"{NOTES_FILE} choice {choice!r} is not one of "
+                    f"{', '.join(NOTES_CHOICES)} or null")
+    for key in ("app", "location"):
+        if data.get(key) is not None and not isinstance(data.get(key), str):
+            errs.append(f"{NOTES_FILE} {key} is {type(data.get(key)).__name__}, "
+                        f"expected string or null")
+    if choice == "vault" and not (isinstance(data.get("app"), str)
+                                  and isinstance(data.get("location"), str)
+                                  and data.get("location")):
+        errs.append(f"{NOTES_FILE} choice is vault but app or location is missing")
+    for key in ("agreedOn", "offerMadeOn"):
+        if data.get(key) is not None and parse_date(data.get(key)) is None:
+            errs.append(f"{NOTES_FILE} {key} {data.get(key)!r} is not a date")
+    ann = data.get("announced", [])
+    if not isinstance(ann, list) or not all(isinstance(a, str) for a in ann):
+        errs.append(f"{NOTES_FILE} announced is not a list of course names")
+    return errs
+
+
+def load_notes(project):
+    """(path, data). path is None when no profile is found; data is the
+    file merged over the defaults, unknown fields kept."""
+    path = notes_path(project)
+    data = notes_defaults()
+    if path and os.path.exists(path):
+        raw = load_json(path)
+        errs = notes_shape_errors(raw)
+        if errs:
+            die("; ".join(errs) + " — run `bodhi-state verify`; repair through "
+                "`bodhi-state notes-set`")
+        data.update(raw)
+    return path, data
+
+
+def vault_refusal(location, profile_dir):
+    """Why a vault folder cannot be used (learning-vault/REQ-37), or None."""
+    if not os.path.isdir(location):
+        return (f"the folder {location!r} does not exist — create the vault in the "
+                f"notes app first, then name its folder")
+    loc, home = os.path.realpath(location), os.path.realpath(profile_dir)
+    if loc == home or loc.startswith(home + os.sep):
+        return (f"the folder {location!r} is inside the learning folder {profile_dir!r}; "
+                f"a vault there would copy the files into themselves")
+    if home.startswith(loc + os.sep):
+        return (f"the folder {location!r} holds the learning folder {profile_dir!r}, so "
+                f"the notes app already shows those files — choose files only instead")
+    return None
+
+
+def cmd_notes_show(args):
+    """learning-vault: what the notes setup reads first (read-only)."""
+    path = notes_path(args.project)
+    data = notes_defaults()
+    if path and os.path.exists(path):
+        _, data = load_notes(args.project)
+    loc = data.get("location")
+    emit({"profileFound": path is not None,
+          "notesFile": path,
+          "exists": bool(path and os.path.exists(path)),
+          "choice": data.get("choice"), "app": data.get("app"),
+          "location": loc,
+          "home": os.path.join(loc, NOTES_HOME) if loc else None,
+          "agreedOn": data.get("agreedOn"), "offerMadeOn": data.get("offerMadeOn"),
+          "host": host_kind(), "appsOffered": apps_offered()})
+
+
+def cmd_notes_set(args):
+    """learning-vault/REQ-4, REQ-6, REQ-37: record the learner's agreed
+    notes choice. The skill calls this only after the learner agreed."""
+    path, data = load_notes(args.project)
+    if path is None:
+        die("no .bodhi-profile.json found walking up from the project — the notes "
+            "setting lives beside it, so it cannot be recorded for a course outside "
+            "the learning folder")
+    choice = args.choice
+    if choice == "vault":
+        offered = {a["app"]: a for a in apps_offered()}
+        if not args.app:
+            die("--choice vault needs --app (one of: "
+                f"{', '.join(offered) or 'none on this host'})")
+        if args.app not in offered:
+            die(f"the app {args.app!r} is not offered on this host "
+                f"({host_kind()}); offered: {', '.join(offered) or 'none'}")
+        if not args.location:
+            die("--choice vault needs --location <the vault's folder>")
+        location = os.path.abspath(os.path.expanduser(args.location))
+        why = vault_refusal(location, os.path.dirname(path))
+        if why:
+            die(why)
+        data.update({"choice": "vault", "app": args.app, "location": location,
+                     "agreedOn": iso(today())})
+    elif choice == "files":
+        data.update({"choice": "files", "agreedOn": iso(today())})
+    else:
+        data["choice"] = "off"
+    write_json(path, data)
+    loc = data.get("location")
+    emit({"choice": data["choice"], "app": data.get("app"), "location": loc,
+          "home": os.path.join(loc, NOTES_HOME) if loc and data["choice"] == "vault" else None,
+          "agreedOn": data.get("agreedOn"), "notesFile": path})
+
+
+def cmd_notes_offered(args):
+    """learning-vault/REQ-10: record that the one-time offer was made. Never
+    fails for a missing profile: the Stop hook calls it."""
+    path, data = load_notes(args.project)
+    if path is None:
+        emit({"recorded": False, "reason": "no profile to record it beside"})
+        return
+    already = data.get("offerMadeOn") is not None
+    if not already:
+        data["offerMadeOn"] = iso(today())
+        write_json(path, data)
+    emit({"recorded": True, "already": already, "offerMadeOn": data["offerMadeOn"]})
 
 
 # --- CLI --------------------------------------------------------------------
@@ -3289,7 +3465,7 @@ def cmd_verify(args):
 READ_ONLY_COMMANDS = {cmd_due, cmd_mastery, cmd_calibration, cmd_retention,
                       cmd_export_anonymized, cmd_session_brief, cmd_snapshot,
                       cmd_gate_check, cmd_verify, cmd_revision_brief,
-                      cmd_syllabus}
+                      cmd_syllabus, cmd_notes_show}
 
 def main():
     p = argparse.ArgumentParser(prog="bodhi-state", description=__doc__,
@@ -3511,6 +3687,19 @@ def main():
 
     s = sub.add_parser("verify", help="schema sanity check (lint + Stop hook)")
     s.set_defaults(fn=cmd_verify)
+
+    s = sub.add_parser("notes-show",
+                       help="the learner's notes choice and the apps offered on this host (read-only)")
+    s.set_defaults(fn=cmd_notes_show)
+
+    s = sub.add_parser("notes-set", help="record the learner's agreed notes choice")
+    s.add_argument("--choice", required=True, choices=NOTES_CHOICES)
+    s.add_argument("--app", help="with --choice vault: an app from notes-show appsOffered")
+    s.add_argument("--location", help="with --choice vault: the vault's folder")
+    s.set_defaults(fn=cmd_notes_set)
+
+    s = sub.add_parser("notes-offered", help="record that the one-time notes offer was made")
+    s.set_defaults(fn=cmd_notes_offered)
 
     args = p.parse_args()
     # One exclusive lock per project for the whole read-mutate-write run —
