@@ -2442,7 +2442,7 @@ def notes_hand_edits(transcript):
 
 
 def assert_notes_setup(project, transcript):
-    """learning-vault/REQ-1, REQ-2, REQ-3: the scripted learner uses no notes
+    """learning-vault/REQ-1, learning-vault/REQ-2, learning-vault/REQ-3: the scripted learner uses no notes
     app. /notes-setup asks which app (listing Obsidian, none and files only),
     suggests exactly one app with a reason, says what is copied, where, that
     a synced vault carries it, that it is optional and can be turned off,
@@ -2489,7 +2489,7 @@ def assert_notes_setup(project, transcript):
 
 
 def assert_notes_setup_off(project, transcript):
-    """learning-vault/REQ-5, REQ-6: with Obsidian on record, /notes-setup shows
+    """learning-vault/REQ-5, learning-vault/REQ-6: with Obsidian on record, /notes-setup shows
     the current choice and offers a change before turning it off, and after
     turning it off says the files stay and will no longer be refreshed."""
     prose = assistant_prose(transcript)

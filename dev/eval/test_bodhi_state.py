@@ -5206,7 +5206,7 @@ def t_notes_off_writes_nothing():
 
 
 def t_notes_commands_take_the_learning_folder():
-    """learning-vault/REQ-1, REQ-4: /notes-setup may name the learning folder
+    """learning-vault/REQ-1, learning-vault/REQ-4: /notes-setup may name the learning folder
     itself as --project (it holds the profile but no .bodhi/); the notes
     commands work there. Other commands still refuse it as before."""
     with tempfile.TemporaryDirectory() as root, tempfile.TemporaryDirectory() as vault:

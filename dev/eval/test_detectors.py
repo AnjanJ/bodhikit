@@ -1215,7 +1215,7 @@ def notes_state(root, name, *argv):
 
 
 def t_notes_setup(root):
-    """learning-vault/REQ-1, REQ-2, REQ-3: the notes-setup detector passes a
+    """learning-vault/REQ-1, learning-vault/REQ-2, learning-vault/REQ-3: the notes-setup detector passes a
     run that asks, suggests one app with a reason, explains, then records,
     and fails each way of skipping a step."""
     rec = ("notes-set", "--choice", "vault", "--app", "obsidian", "--location", "<vault>")
@@ -1264,7 +1264,7 @@ def t_notes_setup(root):
 
 
 def t_notes_setup_off(root):
-    """learning-vault/REQ-5, REQ-6: the off detector passes a run that shows
+    """learning-vault/REQ-5, learning-vault/REQ-6: the off detector passes a run that shows
     the setting, offers a change, turns it off and says the files stay and
     will no longer be refreshed; it fails a run that skips either."""
     rec = ("notes-set", "--choice", "vault", "--app", "obsidian", "--location", "<vault>")

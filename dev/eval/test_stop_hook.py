@@ -423,7 +423,7 @@ def t_no_notes_file_same_as_before():
 
 
 def t_offer_after_learn():
-    """learning-vault/REQ-8, REQ-10: the turn that registered a new course and
+    """learning-vault/REQ-8, learning-vault/REQ-10: the turn that registered a new course and
     gave its first step ends with the offer once, through systemMessage,
     never a block; the offer is recorded and not made again."""
     with tempfile.TemporaryDirectory() as root:
@@ -473,7 +473,7 @@ def t_offer_after_continue():
 
 
 def t_offer_not_with_a_choice():
-    """learning-vault/REQ-8, REQ-9: a learner who already chose (here: files
+    """learning-vault/REQ-8, learning-vault/REQ-9: a learner who already chose (here: files
     only) is not offered, even with no offer on record."""
     with tempfile.TemporaryDirectory() as root:
         lwb, proj = learner_with_course(root)

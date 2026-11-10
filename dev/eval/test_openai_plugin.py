@@ -240,7 +240,7 @@ def test_build_and_structure():
             < close[1].find("## Load knowledge progressively"),
             runtime[:200],
         )
-        # learning-vault/REQ-36, REQ-38: where no hook runs, the close
+        # learning-vault/REQ-36, learning-vault/REQ-38: where no hook runs, the close
         # procedure does the notes step and the one-time offer itself, after
         # the revision sheet, in local state mode only.
         steps = close[1].split("## Load knowledge progressively", 1)[0] if len(close) == 2 else ""
