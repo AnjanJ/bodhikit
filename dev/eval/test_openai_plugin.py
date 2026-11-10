@@ -8,6 +8,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import sys
 import tempfile
@@ -238,6 +239,28 @@ def test_build_and_structure():
             and 0 <= close[1].find("verify`") < close[1].find("revision-brief")
             < close[1].find("## Load knowledge progressively"),
             runtime[:200],
+        )
+        # learning-vault/REQ-36, REQ-38: where no hook runs, the close
+        # procedure does the notes step and the one-time offer itself, after
+        # the revision sheet, in local state mode only.
+        steps = close[1].split("## Load knowledge progressively", 1)[0] if len(close) == 2 else ""
+        check(
+            "adapter: the close procedure runs notes-sync after the revision sheet",
+            0 <= steps.find("revision-brief") < steps.find("notes-sync`"),
+            steps[-600:],
+        )
+        check(
+            "adapter: the close procedure makes the one-time offer once and records it",
+            "notes-show`" in steps and "notes-offered`" in steps
+            and "the notes-setup skill" in steps and "offerMadeOn" in steps,
+            steps[-600:],
+        )
+        check(
+            "adapter: conversation-only mode makes no offer and copies nothing",
+            re.search(r"(?i)no notes offer and copy nothing",
+                      " ".join(steps.split("In conversation-only mode", 1)[-1].split()))
+            is not None and "In conversation-only mode" in steps,
+            steps[-400:],
         )
         rule_section = runtime.split("## Apply the learning-project rule", 1)
         check(

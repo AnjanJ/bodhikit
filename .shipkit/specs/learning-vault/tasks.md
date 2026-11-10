@@ -46,7 +46,7 @@ before the change.
   - After: T2
   - Done when: `python3 dev/eval/test_detectors.py` → all pass, and `dev/check.sh` → "All hard checks passed." (the 18 KB budget and the skill lint included)
 
-- [ ] **T8** The OpenAI adapter states the sync and offer steps where no hook runs → REQ-36, REQ-38
+- [x] **T8** The OpenAI adapter states the sync and offer steps where no hook runs → REQ-36, REQ-38
   - Files: platforms/openai/bodhikit/references/openai-runtime.md, dev/eval/test_openai_plugin.py
   - Test: dev/eval/test_openai_plugin.py check "adapter: the close procedure runs notes-sync and makes the one-time offer in local state mode, and neither in conversation-only mode" (cites learning-vault/REQ-36, REQ-38)
   - After: T6

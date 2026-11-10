@@ -74,11 +74,28 @@ procedure, explicitly, before its final message:
    sheet is owed. If it names an `existing` sheet, append today's concepts to
    it; otherwise write `suggestedFile` following the `reflect` skill's
    `references/revision-sheet.md`.
-3. Only then end the turn. The closing message may say the sheet was written
+3. Copy the learner's notes, if they turned notes on: run
+   `<BODHIKIT_PLUGIN_ROOT>/scripts/bodhi-state --project <project> notes-sync`.
+   It writes nothing when notes are off or were never set up. If its
+   `firstArrival` lists a course, tell the learner that course's notes are now
+   in their vault; if its `failed` lists anything, tell them the copy did not
+   happen and why. Never say a note was saved unless the command reported it.
+4. Make the one-time notes offer, at most once ever: only when this workflow
+   was `learn` giving a new course's first step, or `continue` reaching its
+   close. Run `<BODHIKIT_PLUGIN_ROOT>/scripts/bodhi-state --project <project>
+   notes-show`; if `choice` and `offerMadeOn` are both null, tell the learner in
+   one or two sentences that BodhiKit can keep a syllabus of each course and
+   their revision sheets in the notes app they use, or as a file in each course
+   folder, that it is off until they turn it on, and that the notes-setup skill
+   turns it on at any time. Then run `<BODHIKIT_PLUGIN_ROOT>/scripts/bodhi-state
+   --project <project> notes-offered` so it is never made again.
+5. Only then end the turn. The closing message may say the sheet was written
    only after step 2 wrote it.
 
 In conversation-only mode there is nothing to verify; provide the revision
-content in the conversation instead and say that no file was written.
+content in the conversation instead and say that no file was written. Make
+no notes offer and copy nothing there: with no file to keep it in, the
+offer could not be recorded.
 
 ## Load knowledge progressively
 
