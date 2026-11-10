@@ -16,7 +16,7 @@ before the change.
   - After: T1
   - Done when: `python3 dev/eval/test_bodhi_state.py` → all pass, including `t_golden_code_path` and `t_verify_implies_readers`
 
-- [ ] **T3** The supported-apps table is held to the recorded probes → REQ-29
+- [x] **T3** The supported-apps table is held to the recorded probes → REQ-29
   - Files: scripts/bodhi-state, dev/eval/test_bodhi_state.py
   - Test: dev/eval/test_bodhi_state.py::t_notes_apps_need_a_probe_pass. It passes on today's table (no `model` entry), and fails on a synthetic table with a `model` entry and no matching PASS row in either probe document
   - After: T2

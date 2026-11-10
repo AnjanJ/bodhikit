@@ -3306,8 +3306,12 @@ def cmd_verify(args):
 NOTES_FILE = ".bodhi-notes.json"
 NOTES_HOME = "Learn with Bodhi"
 NOTES_CHOICES = ("vault", "files", "off")
-# Apps offered per host kind. `carriedBy: model` entries need a recorded
-# probe PASS (learning-vault/REQ-29, dev/eval t_notes_apps_need_a_probe_pass).
+# Apps offered per host kind. `carriedBy` says who writes the copy: `script`
+# (notes-sync, on the learner's disk) or `model` (a chat carrying the files).
+# A `model` entry also names `probeHost`, and is offered only once a probe
+# row in docs/no-computer-probe.md or docs/cowork-probe.md records checks 1
+# to 3 as PASS for its `name` on that host (learning-vault/REQ-29, enforced
+# by dev/eval t_notes_apps_need_a_probe_pass).
 NOTES_APPS = {
     "local": [{"app": "obsidian", "name": "Obsidian", "location": "folder",
                "carriedBy": "script"}],

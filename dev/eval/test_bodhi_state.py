@@ -4652,6 +4652,81 @@ def t_verify_checks_notes_file():
         check("verify flags a notes file that is not JSON", out["ok"] is False, out)
 
 
+PROBE_COLUMNS = ["Date", "Probe", "Host, plan and how BodhiKit was loaded",
+                 "BodhiKit", "Checks", "Notes"]
+PROBE_DOCS = ("docs/no-computer-probe.md", "docs/cowork-probe.md")
+
+
+def probe_rows(text):
+    """Rows of every Markdown table in `text` whose header is PROBE_COLUMNS,
+    as dicts. Tables of any other shape are skipped."""
+    rows, header = [], None
+    for line in text.splitlines():
+        if not line.lstrip().startswith("|"):
+            header = None
+            continue
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if header is None:
+            header = cells if cells == PROBE_COLUMNS else []
+            continue
+        if not header or all(set(c) <= set("-: ") for c in cells):
+            continue
+        if len(cells) == len(header):
+            rows.append(dict(zip(header, cells)))
+    return rows
+
+
+def apps_missing_a_probe_pass(table, texts):
+    """Entries of a NOTES_APPS-shaped table that the model carries and that
+    no probe row passes: probe D or vault, the entry's probeHost in the host
+    cell, its app name in the notes cell, and checks 1 to 3 PASS."""
+    rows = [r for t in texts for r in probe_rows(t)]
+    missing = []
+    for host, entries in table.items():
+        for e in entries:
+            if e.get("carriedBy") != "model":
+                continue
+            ok = any(r["Probe"] in ("D", "vault")
+                     and (e.get("probeHost") or "\0") in r[PROBE_COLUMNS[2]]
+                     and e.get("name", "\0") in r["Notes"]
+                     and all(f"{n} PASS" in r["Checks"] for n in (1, 2, 3))
+                     for r in rows)
+            if not ok:
+                missing.append((host, e.get("app")))
+    return missing
+
+
+def t_notes_apps_need_a_probe_pass():
+    """learning-vault/REQ-29: an app the model carries is offered on a host
+    only where a probe recorded checks 1 to 3 as PASS for that app there. A
+    folder vault the script writes rests on the Obsidian hand check."""
+    eng = _engine()
+    texts = []
+    for rel in PROBE_DOCS:
+        with open(os.path.join(REPO, rel), encoding="utf-8") as f:
+            texts.append(f.read())
+    missing = apps_missing_a_probe_pass(eng.NOTES_APPS, texts)
+    check("NOTES_APPS: every model-carried app has a recorded probe PASS", not missing, missing)
+    check("NOTES_APPS: every entry says who carries the files",
+          all(e.get("carriedBy") in ("script", "model")
+              for es in eng.NOTES_APPS.values() for e in es), eng.NOTES_APPS)
+    fake = {"connector": [{"app": "notion", "name": "Notion", "carriedBy": "model",
+                           "probeHost": "Claude"}]}
+    check("probe check: a model-carried entry with no PASS row is caught",
+          apps_missing_a_probe_pass(fake, texts) == [("connector", "notion")])
+    passing = ("| Date | Probe | Host, plan and how BodhiKit was loaded | BodhiKit | Checks | Notes |\n"
+               "|---|---|---|---|---|---|\n"
+               "| 2026-12-01 | D | Claude Pro, web | 1.27.0 | 1 PASS, 2 PASS, 3 PASS | Notion MCP |\n")
+    check("probe check: a matching PASS row clears the entry",
+          apps_missing_a_probe_pass(fake, texts + [passing]) == [])
+    partial = passing.replace("3 PASS", "3 FAIL")
+    check("probe check: a row with a failed check does not clear the entry",
+          apps_missing_a_probe_pass(fake, [partial]) == [("connector", "notion")])
+    other_host = passing.replace("Claude Pro", "ChatGPT Plus")
+    check("probe check: a PASS on another host does not clear the entry",
+          apps_missing_a_probe_pass(fake, [other_host]) == [("connector", "notion")])
+
+
 def main():
     for t in (t_migrate, t_record_review, t_sessions_and_forget,
               t_touch_state_and_profile, t_gate_check,
@@ -4688,7 +4763,7 @@ def main():
               t_revise_review_refusals, t_golden_snapshot_strip_is_narrow,
               t_notes_set_records_the_choice, t_notes_set_refuses_bad_vaults,
               t_notes_offered_once, t_notes_show_no_apps_on_cloud_chat,
-              t_verify_checks_notes_file):
+              t_verify_checks_notes_file, t_notes_apps_need_a_probe_pass):
         print(f"-- {t.__name__}")
         try:
             t()
