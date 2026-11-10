@@ -2214,7 +2214,7 @@ def summary_tier(tiers):
     return None
 
 
-def cmd_syllabus(args):
+def build_syllabus(project):
     """Plan order × review evidence × state position, one read-only call.
     Every module the plan declares, in order, with its status (declared
     `skipped`/`done`, else `done`/`current`/`upcoming` from the position the
@@ -2224,13 +2224,13 @@ def cmd_syllabus(args):
     no concept was tracked under (not reached yet, or a spelling the review
     file does not use); `unplanned` carries the rows of tracked modules the
     plan does not declare, so no evidence disappears from a dashboard."""
-    state = state_if_present(args.project, {})
-    _, data = load_spaced_review(args.project, create=True)
+    state = state_if_present(project, {})
+    _, data = load_spaced_review(project, create=True)
     t = today()
     concepts = data.get("concepts", [])
     warnings = []
 
-    phases, plan = read_plan_modules(args.project)
+    phases, plan = read_plan_modules(project)
     if phases is None:
         warnings.append("no .bodhi/plan/ directory — a pre-1.7.0 monolithic "
                         "plan.md is not read; /housekeep migrate converts it")
@@ -2246,7 +2246,9 @@ def cmd_syllabus(args):
         raw = c.get("module", "(none)")
         entry = tracked.setdefault(norm_module_name(raw),
                                    {"module": raw, "aliases": [], "row": new_module_row(),
-                                    "nextDue": None, "dueToday": 0, "parked": 0})
+                                    "nextDue": None, "dueToday": 0, "parked": 0,
+                                    "items": []})
+        entry["items"].append(c)
         if raw != entry["module"] and raw not in entry["aliases"]:
             entry["aliases"].append(raw)
         tally_module(entry["row"], c, t)
@@ -2284,10 +2286,11 @@ def cmd_syllabus(args):
     cur_idx, pos_warnings = plan_position(state, plan)
     warnings.extend(pos_warnings)
 
-    modules, matched_keys = [], set()
+    modules, matched_keys, entries = [], set(), []
     for i, m in enumerate(plan):
         key = norm_module_name(m["name"])
         entry = tracked.get(key) or tracked.get(m["id"])
+        entries.append(entry)
         if entry is not None:
             matched_keys.add(norm_module_name(entry["module"]))
         if m["declaredStatus"]:
@@ -2313,12 +2316,13 @@ def cmd_syllabus(args):
         modules.append(row)
 
     untracked = [m["name"] for m in modules if not m["evidence"]["tracked"]]
+    loose = [e for k, e in tracked.items() if k not in matched_keys]
     unplanned = [{"module": e["module"], **{k: v for k, v in evidence(e).items()
                                             if k not in ("tracked", "trackedAs")},
                   "evidenceKind": kind_of_module(e["module"])}
-                 for k, e in tracked.items() if k not in matched_keys]
+                 for e in loose]
 
-    emit({
+    payload = {
         "project": state.get("projectName"),
         "evidenceKind": _KINDS["project"],
         "plan": phases is not None and bool(plan),
@@ -2334,7 +2338,165 @@ def cmd_syllabus(args):
         "untracked": untracked,
         "unplanned": unplanned,
         "warnings": warnings,
-    })
+    }
+    return payload, {"today": t, "state": state, "entries": entries, "loose": loose,
+                     "concepts": concepts}
+
+
+# The words /progress uses for a module row (skills/progress/references/
+# module-row.md), held here so `syllabus --markdown` prints them byte for
+# byte (learning-vault/REQ-13, REQ-17). dev/eval t_syllabus_md_words_match_
+# module_row fails when this copy and module-row.md differ.
+SYLLABUS_KIND_WORDS = {
+    "code": ("you write code, and we run it", "code you run"),
+    "problems": ("you work problems, checked against answers I save before you start",
+                 "problems, checked against saved answers"),
+    "writing": ("you write short pieces applying an idea to a new case, read against "
+                "criteria I save first", "writing, read against saved criteria"),
+    "performed": ("you practise away from the screen and tell me how it went, and it "
+                  "counts as your account", "practice, by your account"),
+}
+SYLLABUS_STATUS_WORDS = {"done": "Done", "current": "◀ Current", "upcoming": "Upcoming",
+                         "skipped": "Skipped", "unplanned": "Not in plan"}
+SYLLABUS_UPCOMING_AIM = "Upcoming — aims at: "
+SYLLABUS_TIER_WORDS = {"mastered": ("Solid", "can find where it breaks and explain the "
+                                              "trade-offs"),
+                       "familiar": ("Working", "can use it with guidance"),
+                       "introduced": ("Introduced", "can explain it")}
+SYLLABUS_DUE_CHECK = ", due for a check"
+SYLLABUS_PHRASES = ("How your work is checked: ", "by your account", "not yet observed",
+                    "built with", "due today", "parked")
+
+
+def _syllabus_position(ev):
+    """A module's evidence block in module-row words."""
+    if not ev.get("tracked") or ev.get("summaryTier") is None:
+        return "—"
+    tiers, words = ev["tiers"], SYLLABUS_TIER_WORDS
+    mastered, total, by_report = ev["mastered"], ev["concepts"], ev["masteredByReport"]
+    word, clause = words[ev["summaryTier"]]
+    extra = []
+    if ev["summaryTier"] == "mastered":
+        if mastered == total and ev["dueForCheck"] > 0:
+            word += SYLLABUS_DUE_CHECK
+        if by_report and by_report == mastered:
+            word += ", by your account"
+        elif by_report:
+            word += f"** ({by_report} by your account)**"
+        if mastered < total:
+            extra.append(f"{mastered} solid; {total - mastered} not yet observed")
+    occupied = [(k, tiers.get(k, 0)) for k in ("mastered", "familiar", "introduced")
+                if tiers.get(k, 0)]
+    if len(occupied) > 1:
+        extra.append(", ".join(f"{n} {words[k][0].lower()}" for k, n in occupied))
+    if ev["applied"] < ev["classified"]:
+        extra.append(f"built with {ev['applied']} of {ev['classified']}")
+    out = f"**{word}** — {clause}".replace("**** ", "** ")
+    return out + (f" ({'; '.join(extra)})" if extra else "")
+
+
+def _syllabus_next(ev):
+    if not ev.get("nextDue"):
+        out = "—"
+    else:
+        out = ev["nextDue"] + (f" ({ev['dueToday']} due today)" if ev.get("dueToday") else "")
+    if ev.get("parked"):
+        out += f" · {ev['parked']} parked"
+    return out
+
+
+def render_syllabus_md(project, payload, ctx):
+    """The text of Syllabus.md (learning-vault/REQ-13..REQ-19): the plan in
+    order with where the learner stands and when reviews are due, in the
+    words /progress uses. Depends only on the tracking files and today."""
+    t = ctx["today"]
+    name = payload.get("project") or os.path.basename(os.path.abspath(project))
+    solid_basis = solid_by_report(ctx["concepts"])[1]
+    lines = [f"# Syllabus — {name}", "",
+             "BodhiKit rewrites this file at each session from your learning record, so "
+             "anything written here is replaced. Keep your own notes in `notes/`.", ""]
+    pos = payload.get("position")
+    where = (f"You are on module {pos['index']} of {pos['of']}: {pos['module']}. "
+             if pos else "")
+    lines += [f"{where}Updated {iso(t)}.", ""]
+    kinds = {payload["evidenceKind"], *(m["evidenceKind"] for m in payload["modules"]),
+             *(u["evidenceKind"] for u in payload["unplanned"])}
+    if kinds != {"code"}:
+        lines += ["How your work is checked: "
+                  + SYLLABUS_KIND_WORDS[payload["evidenceKind"]][0], ""]
+
+    # Which plan module each tracked concept sits under, for the due list.
+    shown_module = {}
+    for row, entry in zip(payload["modules"], ctx["entries"]):
+        for c in (entry or {}).get("items", []):
+            shown_module[id(c)] = row["name"]
+    for entry in ctx["loose"]:
+        for c in entry["items"]:
+            shown_module[id(c)] = entry["module"]
+
+    horizon = t + datetime.timedelta(days=7)
+    due = []
+    for c in ctx["concepts"]:
+        nr = parse_date(c.get("nextReview"))
+        if c.get("parked") is True or nr is None or nr > horizon:
+            continue
+        due.append((nr, c.get("name", ""), shown_module.get(id(c), c.get("module", ""))))
+    due.sort(key=lambda d: (d[0], d[1].lower()))
+    lines += ["## Due in the next seven days", ""]
+    lines += [f"- {'due now' if nr <= t else iso(nr)} — {n} ({mod})" for nr, n, mod in due] \
+        or ["Nothing due this week."]
+    lines.append("")
+
+    def concept_lines(items):
+        out = []
+        for c in sorted(items, key=lambda c: str(c.get("name", "")).lower()):
+            outcome = bloom_render(c.get("bloomLevel", 0))["bloomOutcome"]
+            label = ""
+            if concept_tier(c) == "mastered":
+                label = "Solid, by your account — " if solid_basis.get(c.get("name")) \
+                    == "reported" else "Solid — "
+            if c.get("parked") is True:
+                tail = "Parked."
+            elif parse_date(c.get("nextReview")):
+                tail = f"Next review {c['nextReview'][:10]}."
+            else:
+                tail = "No review scheduled."
+            out.append(f"  - {c.get('name', '')} — {label}{outcome}. {tail}")
+        return (["- Concepts you have studied:"] + out) if out else []
+
+    def section(heading, kind, status, ev, planned, terms, items):
+        short = f" ({SYLLABUS_KIND_WORDS[kind][1]})" if kind != payload["evidenceKind"] else ""
+        out = [f"## {heading}{short}", "", f"- Status: {status}",
+               f"- Where you are: {_syllabus_position(ev)}",
+               f"- Mastered: {ev['mastered']}/{ev['concepts']}"
+               if ev.get("masteryPct") is not None else "- Mastered: —",
+               f"- Next review: {_syllabus_next(ev)}"]
+        if planned:
+            out.append("- Planned concepts: " + ", ".join(planned))
+        if terms:
+            out.append("- Key terms: " + ", ".join(terms))
+        return out + concept_lines(items) + [""]
+
+    for row, entry in zip(payload["modules"], ctx["entries"]):
+        status = SYLLABUS_STATUS_WORDS[row["status"]]
+        if row["status"] == "upcoming" and row.get("targetBloomOutcome"):
+            status = SYLLABUS_UPCOMING_AIM + row["targetBloomOutcome"]
+        lines += section(f"Module {row['id']} — {row['name']}", row["evidenceKind"], status,
+                         row["evidence"], row["plannedConcepts"], row["keyTerms"],
+                         (entry or {}).get("items", []))
+    for u, entry in zip(payload["unplanned"], ctx["loose"]):
+        lines += section(f"Not in plan — {u['module']}", u["evidenceKind"],
+                         SYLLABUS_STATUS_WORDS["unplanned"], {"tracked": True, **u}, [], [],
+                         entry["items"])
+    return "\n".join(lines).rstrip("\n") + "\n"
+
+
+def cmd_syllabus(args):
+    payload, ctx = build_syllabus(args.project)
+    if getattr(args, "markdown", False):
+        sys.stdout.write(render_syllabus_md(args.project, payload, ctx))
+        return
+    emit(payload)
 
 
 def cmd_revision_brief(args):
@@ -3672,6 +3834,8 @@ def main():
 
     s = sub.add_parser("syllabus",
                        help="plan order × review evidence × position: every plan module in order with status and module evidence (read-only)")
+    s.add_argument("--markdown", action="store_true",
+                   help="print the text of the course's Syllabus.md instead of JSON (learning vault)")
     s.set_defaults(fn=cmd_syllabus)
 
     s = sub.add_parser("revision-brief",

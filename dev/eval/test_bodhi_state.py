@@ -3579,8 +3579,10 @@ def t_single_applied_reader():
                    and isinstance(n.slice, ast.Constant) and n.slice.value == "applied")
             if get or sub:
                 readers.add(fn.name)
+    # _syllabus_position (learning vault) reads a module row's `applied`
+    # COUNT, which tally_module made through the helper; it never sees a flag.
     check("basis: the applied flag is read by one counting helper and verify",
-          readers == {"entry_basis", "cmd_verify"}, sorted(readers))
+          readers == {"entry_basis", "cmd_verify", "_syllabus_position"}, sorted(readers))
 
 
 def _kinds_project(root):
@@ -4727,6 +4729,234 @@ def t_notes_apps_need_a_probe_pass():
           apps_missing_a_probe_pass(fake, [other_host]) == [("connector", "notion")])
 
 
+SYL_DAY = "2026-01-02"
+
+
+def _solid_reported(name, module):
+    """A concept Solid on the learner's word (as in t_solid_by_report)."""
+    hist = [{"date": "2025-12-20", "result": "correct", "bloomLevel": 4, "source": "practice",
+             "boxBefore": 3, "applied": True, "appliedBasis": "reported"}]
+    return {"name": name, "module": module, "introduced": "2025-11-01", "box": 4,
+            "nextReview": "2026-01-20", "lastReviewed": "2025-12-20", "question": "",
+            "lastResult": "correct", "bloomLevel": 4, "feynmanPassed": True,
+            "feynmanPassedAt": "2025-12-20", "consecutiveCorrectAtL4Plus": 3,
+            "reviewHistory": hist}
+
+
+def syllabus_fixture(root):
+    """t_syllabus's plan and concepts, plus reviews at +7 and +8 days and a
+    concept Solid by the learner's account in a performed module."""
+    def c(name, module, box, bloom, nxt, **kw):
+        return {"name": name, "module": module, "box": box, "bloomLevel": bloom,
+                "nextReview": nxt, "feynmanPassed": False,
+                "consecutiveCorrectAtL4Plus": 0, "reviewHistory": [], **kw}
+    sr = {"version": 3, "sessionHistory": [], "concepts": [
+        c("Normalization", "schema design", 1, 2, "2026-01-03"),
+        c("Denormalization", "Schema Design", 3, 3, "2026-01-01"),
+        c("B-tree indexes", "Module 1.2 — Indexing", 2, 3, "2026-01-10"),
+        c("Hash indexes", "Indexing", 1, 0, "2026-01-01", parked=True),
+        c("Window functions", "Analytics", 1, 1, "2026-01-05"),
+        c("Isolation levels", "Transactions", 1, 2, "2026-01-09"),
+        c("Deadlocks", "Transactions", 1, 2, "2025-12-30"),
+        _solid_reported("Failover drill", "Replication")]}
+    state = {"version": 2, "projectName": "databases", "sessionDates": [],
+             "currentPhase": "1", "currentModule": "Query Optimization",
+             "currentModuleIndex": 2, "overallCompletion": 40}
+    proj = make_project(root, spaced_review=sr, state=state)
+    write_plan(proj, SYLLABUS_PLAN)
+    run(proj, "set-evidence-kind", "--kind", "performed", "--module", "Replication")
+    return proj
+
+
+def syllabus_md(proj, day=SYL_DAY):
+    r = subprocess.run([sys.executable, SCRIPT, "--project", proj, "syllabus", "--markdown"],
+                       capture_output=True, text=True, env=dict(os.environ, BODHI_TODAY=day))
+    if r.returncode != 0:
+        raise AssertionError(f"syllabus --markdown failed:\n{r.stdout}\n{r.stderr}")
+    return r.stdout
+
+
+def md_section(text, heading_start):
+    """The lines of the `## ` section whose heading starts with heading_start."""
+    out, on = [], False
+    for line in text.splitlines():
+        if line.startswith("## "):
+            on = line[3:].startswith(heading_start)
+            continue
+        if on:
+            out.append(line)
+    return "\n".join(out)
+
+
+def t_syllabus_md_modules_in_order():
+    """learning-vault/REQ-13: every plan module in order, then each tracked
+    module the plan does not declare, with status, planned concepts and key
+    terms."""
+    with tempfile.TemporaryDirectory() as root:
+        text = syllabus_md(syllabus_fixture(root))
+        heads = [ln[3:] for ln in text.splitlines() if ln.startswith("## ")]
+        mods = [h for h in heads if h.startswith("Module ") or h.startswith("Not in plan")]
+        check("syllabus md: plan modules in order, then the unplanned one",
+              [re.sub(r" \(.*\)$", "", h) for h in mods] ==
+              ["Module 1.1 — Schema Design", "Module 1.2 — Indexing",
+               "Module 1.3 — Query   Optimization", "Module 2.1 — Transactions",
+               "Module 2.2 — Replication", "Not in plan — Analytics"], heads)
+        check("syllabus md: the due list comes first", heads[0] == "Due in the next seven days",
+              heads)
+        sections = {h: md_section(text, "Module " + h) for h in
+                    ("1.1", "1.2", "1.3", "2.1")}
+        check("syllabus md: each status in /progress's words",
+              "Status: Done" in sections["1.1"] and "Status: Skipped" in sections["1.2"]
+              and "Status: ◀ Current" in sections["1.3"]
+              and "Status: Upcoming — aims at: " in sections["2.1"]
+              and "Status: Not in plan" in md_section(text, "Not in plan"), sections)
+        check("syllabus md: planned concepts and key terms",
+              "Planned concepts: Isolation levels, Deadlocks" in sections["2.1"]
+              and "Key terms: isolation level, dirty read, write skew" in sections["2.1"],
+              sections["2.1"])
+        check("syllabus md: a module's position in the module-row words",
+              "**Introduced** — can explain it" in sections["1.1"], sections["1.1"])
+
+
+def t_syllabus_md_words_match_module_row():
+    """learning-vault/REQ-13: the script's copy of the module-row words and
+    skills/progress/references/module-row.md say the same thing (design:
+    bodhi-state holds its own copy, pinned by this test)."""
+    eng = _engine()
+    with open(os.path.join(REPO, "skills/progress/references/module-row.md"),
+              encoding="utf-8") as f:
+        md = f.read()
+    kinds = {}
+    for m in re.finditer(r"^\| `(\w+)` \| ([^|]+?) \| ([^|]+?) \|$", md, re.M):
+        if m.group(1) in eng.EVIDENCE_KINDS:
+            kinds[m.group(1)] = (m.group(2), m.group(3))
+    check("module-row words: the kind lines and shorts match, both ways",
+          kinds == eng.SYLLABUS_KIND_WORDS, (kinds, eng.SYLLABUS_KIND_WORDS))
+    status = {}
+    status_table = md.split("## Status", 1)[1].split("\n## ", 1)[0]
+    for m in re.finditer(r"^\| (?:`(\w+)`|\(an `(unplanned)` row\)) \| `([^`]+)`",
+                         status_table, re.M):
+        status[m.group(1) or m.group(2)] = m.group(3)
+    check("module-row words: the status words match, both ways",
+          status == eng.SYLLABUS_STATUS_WORDS, (status, eng.SYLLABUS_STATUS_WORDS))
+    check("module-row words: the upcoming aim reads the same",
+          f"`{eng.SYLLABUS_UPCOMING_AIM}" in md, eng.SYLLABUS_UPCOMING_AIM)
+    pairs = set(re.findall(r"`\*\*([^*`]+)\*\* — ([^`(…]+?)(?: \(|`)", md))
+    mine = {(w, clause) for w, clause in eng.SYLLABUS_TIER_WORDS.values()}
+    mine.add((eng.SYLLABUS_TIER_WORDS["mastered"][0] + eng.SYLLABUS_DUE_CHECK,
+              eng.SYLLABUS_TIER_WORDS["mastered"][1]))
+    check("module-row words: every tier word and clause match, both ways",
+          pairs == mine, (sorted(pairs), sorted(mine)))
+    missing = [p for p in eng.SYLLABUS_PHRASES if p not in md]
+    check("module-row words: every fixed phrase the script uses is in module-row.md",
+          not missing, missing)
+
+
+def t_syllabus_md_concepts():
+    """learning-vault/REQ-14: each concept with a review on record shows where
+    the learner stands as an outcome clause and its next date, or parked."""
+    with tempfile.TemporaryDirectory() as root:
+        text = syllabus_md(syllabus_fixture(root))
+        s11 = md_section(text, "Module 1.1")
+        check("syllabus md: a concept's outcome clause and next date",
+              "Normalization — you can explain it in your own words. Next review 2026-01-03."
+              in s11, s11)
+        s12 = md_section(text, "Module 1.2")
+        check("syllabus md: a parked concept reads parked, with no date",
+              "Hash indexes — nothing observed yet. Parked." in s12, s12)
+        check("syllabus md: a concept filed under a prefixed module name joins its module",
+              "B-tree indexes — you can apply it to a real case with some guidance." in s12,
+              s12)
+        check("syllabus md: an unplanned module's concepts are listed",
+              "Window functions" in md_section(text, "Not in plan"))
+
+
+def t_syllabus_md_due_week():
+    """learning-vault/REQ-15: reviews due on or before today + 7, earliest
+    first, at the top; today or earlier read as due now; parked ones never."""
+    with tempfile.TemporaryDirectory() as root:
+        text = syllabus_md(syllabus_fixture(root))
+        due = [ln for ln in md_section(text, "Due in the next seven days").splitlines()
+               if ln.startswith("- ")]
+        check("syllabus md: the due list, earliest first",
+              due == ["- due now — Deadlocks (Transactions)",
+                      "- due now — Denormalization (Schema Design)",
+                      "- 2026-01-03 — Normalization (Schema Design)",
+                      "- 2026-01-05 — Window functions (Analytics)",
+                      "- 2026-01-09 — Isolation levels (Transactions)"], due)
+        check("syllabus md: +8 days and parked concepts are not listed",
+              "B-tree indexes (" not in md_section(text, "Due in the next")
+              and "Hash indexes" not in md_section(text, "Due in the next"))
+    with tempfile.TemporaryDirectory() as root:
+        proj = make_project(root, spaced_review={"version": 3, "sessionHistory": [],
+                                                 "concepts": []})
+        empty = syllabus_md(proj)
+        check("syllabus md: a week with nothing due says so",
+              md_section(empty, "Due in the next").strip() == "Nothing due this week.",
+              empty[:400])
+
+
+def t_syllabus_md_no_internals():
+    """learning-vault/REQ-16: no Bloom number, no box number, and none of the
+    names the transcript scenarios forbid (assert_no_internal_names' regex)."""
+    sys.path.insert(0, os.path.join(REPO, "dev", "eval"))
+    import assert_scenario
+    with tempfile.TemporaryDirectory() as root:
+        text = syllabus_md(syllabus_fixture(root))
+        m = assert_scenario.INTERNAL_NAME_RE.search(text)
+        check("syllabus md: no engine names or output keys", m is None,
+              m and text[max(0, m.start() - 40):m.end() + 40])
+        check("syllabus md: no Bloom level and no box",
+              not re.search(r"(?i)\bbloom", text) and not re.search(r"(?i)\bbox\b", text),
+              re.findall(r"(?i).{20}\b(?:bloom|box)\b.{20}", text))
+
+
+def t_syllabus_md_deterministic():
+    """learning-vault/REQ-17: the whole text comes from the tracking files,
+    so two runs on the same files on the same day give the same bytes, and
+    plain `syllabus` still prints its JSON."""
+    with tempfile.TemporaryDirectory() as root:
+        proj = syllabus_fixture(root)
+        a, b = syllabus_md(proj), syllabus_md(proj)
+        check("syllabus md: two runs, same bytes", a == b and len(a) > 200)
+        out = run(proj, "syllabus", on=SYL_DAY)
+        check("syllabus without --markdown prints the JSON as before",
+              isinstance(out.get("modules"), list) and "_raw" not in out, list(out)[:5])
+
+
+def t_syllabus_md_header():
+    """learning-vault/REQ-18: before the first `##`, the file says BodhiKit
+    rewrites it each session and that the learner's notes belong in notes/."""
+    with tempfile.TemporaryDirectory() as root:
+        text = syllabus_md(syllabus_fixture(root))
+        head = text.split("\n## ", 1)[0]
+        check("syllabus md: the header says it is rewritten each session",
+              "rewrites this file at each session" in head, head)
+        check("syllabus md: the header sends the learner's notes to notes/",
+              "`notes/`" in head, head)
+        check("syllabus md: the header names the course and where the learner is",
+              head.startswith("# ") and "databases" in head.splitlines()[0]
+              and "module 3 of 5" in head, head)
+
+
+def t_syllabus_md_by_your_account():
+    """learning-vault/REQ-19: Solid that rests on practice the learner
+    reported says "by your account", on the module and on the concept."""
+    with tempfile.TemporaryDirectory() as root:
+        text = syllabus_md(syllabus_fixture(root))
+        s = md_section(text, "Module 2.2")
+        check("syllabus md: the module row says Solid, by your account",
+              "**Solid, by your account** — can find where it breaks" in s, s)
+        check("syllabus md: the concept says Solid, by your account",
+              "Failover drill — Solid, by your account — " in s, s)
+        check("syllabus md: a module of another kind is labelled",
+              re.search(r"^## Module 2\.2 — Replication \(practice, by your account\)$",
+                        text, re.M) is not None)
+        check("syllabus md: the course's check line appears once kinds differ",
+              "How your work is checked: you write code, and we run it" in
+              text.split("\n## ", 1)[0])
+
+
 def main():
     for t in (t_migrate, t_record_review, t_sessions_and_forget,
               t_touch_state_and_profile, t_gate_check,
@@ -4763,7 +4993,11 @@ def main():
               t_revise_review_refusals, t_golden_snapshot_strip_is_narrow,
               t_notes_set_records_the_choice, t_notes_set_refuses_bad_vaults,
               t_notes_offered_once, t_notes_show_no_apps_on_cloud_chat,
-              t_verify_checks_notes_file, t_notes_apps_need_a_probe_pass):
+              t_verify_checks_notes_file, t_notes_apps_need_a_probe_pass,
+              t_syllabus_md_modules_in_order, t_syllabus_md_words_match_module_row,
+              t_syllabus_md_concepts, t_syllabus_md_due_week, t_syllabus_md_no_internals,
+              t_syllabus_md_deterministic, t_syllabus_md_header,
+              t_syllabus_md_by_your_account):
         print(f"-- {t.__name__}")
         try:
             t()

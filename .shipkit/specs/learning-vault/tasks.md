@@ -22,7 +22,7 @@ before the change.
   - After: T2
   - Done when: `python3 dev/eval/test_bodhi_state.py` → all pass
 
-- [ ] **T4** `syllabus --markdown` renders `Syllabus.md` → REQ-13, REQ-14, REQ-15, REQ-16, REQ-17, REQ-18, REQ-19
+- [x] **T4** `syllabus --markdown` renders `Syllabus.md` → REQ-13, REQ-14, REQ-15, REQ-16, REQ-17, REQ-18, REQ-19
   - Files: scripts/bodhi-state, dev/eval/test_bodhi_state.py
   - Test: dev/eval/test_bodhi_state.py::t_syllabus_md_modules_in_order (REQ-13: planned, then unplanned), ::t_syllabus_md_words_match_module_row (REQ-13: every status, tier and kind phrase in the Python tables appears in `skills/progress/references/module-row.md`, and the reverse), ::t_syllabus_md_concepts (REQ-14: outcome clause and date, or "parked"), ::t_syllabus_md_due_week (REQ-15: due at −3, 0, +7 and +8 days; the first three listed earliest first, the first two as `due now`, the last absent), ::t_syllabus_md_no_internals (REQ-16: `assert_no_internal_names`, and no Bloom or box number), ::t_syllabus_md_deterministic (REQ-17: two runs give the same bytes), ::t_syllabus_md_header (REQ-18: both facts before the first `##`), ::t_syllabus_md_by_your_account (REQ-19)
   - After: T3
