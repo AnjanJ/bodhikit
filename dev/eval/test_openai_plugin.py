@@ -12,6 +12,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import time
 import zipfile
 
 
@@ -610,6 +611,7 @@ def test_hooks(output, temp_path):
         check(f"Stop: {label} is recognised as execution",
               decision.get("decision") == "block", stop_output[:200])
     test_codex_rollout(output, temp_path, root, project)
+    test_codex_script_writes(output, temp_path, root, project)
     revision.write_text("# Revision — Joins\n", encoding="utf-8")
 
     broken_root = temp_path / "codex-broken"
@@ -681,9 +683,27 @@ def codex_rollout(path, cwd, scripts, completed=None, output=""):
     return path
 
 
+def heredoc(state, project_arg, *runs):
+    """How the Codex tutor really called bodhi-state on 2026-11-10: a Python
+    heredoc whose --project is a variable, out of reach of `--project <path>`."""
+    body = "\n".join(f"run({', '.join(repr(a) for a in argv)})" for argv in runs)
+    return ("python3 - <<'PY'\nimport subprocess\n"
+            f"s={str(state)!r}; p={project_arg!r}\n"
+            "def run(*a):\n r=subprocess.run([s,'--project',p,*a],capture_output=True,text=True);"
+            " print(a[0],r.stdout,r.stderr); r.check_returncode()\n"
+            f"{body}\nPY")
+
+
+def set_mtime(project, when):
+    for name in os.listdir(project / ".bodhi"):
+        os.utime(project / ".bodhi" / name, (when, when))
+
+
 def test_codex_rollout(output, temp_path, root, project):
-    """The Codex Stop adapter on Codex 0.167's real rollout shape. `project`
-    sits at root/learningWithBodhi/sql, studied today, no sheet yet."""
+    """The Codex Stop adapter on Codex 0.167's real rollout shape
+    (learning-vault/REQ-11, REQ-12: the close is seen, so the notes step can
+    run). `project` sits at root/learningWithBodhi/sql, studied today, no
+    sheet yet."""
     stop_hook = output / "scripts" / "bodhi-stop-hook.py"
     state = output / "scripts" / "bodhi-state"
     (temp_path / "home").mkdir(exist_ok=True)
@@ -708,6 +728,62 @@ def test_codex_rollout(output, temp_path, root, project):
     out, _ = stop(codex_rollout(temp_path / "cx-output.jsonl", root,
                                 ["cat skills/reflect/SKILL.md"], output=f"Close with {direct}"))
     check("Stop: Codex output that mentions touch-state never blocks", out == "", out[:200])
+
+
+def test_codex_script_writes(output, temp_path, root, project):
+    """The Codex tutor runs bodhi-state from a script: touch-state counts for
+    the projects that script changed, and only those (learning-vault/REQ-8,
+    REQ-11, REQ-12)."""
+    stop_hook = output / "scripts" / "bodhi-stop-hook.py"
+    state = output / "scripts" / "bodhi-state"
+    (temp_path / "home").mkdir(exist_ok=True)
+    env = {"HOME": str(temp_path / "home"), "BODHI_CLOUD_MARKER": str(temp_path / "no-cloud")}
+
+    def stop(transcript):
+        out = run_hook(stop_hook, {"cwd": str(root), "hook_event_name": "Stop",
+                                   "transcript_path": str(transcript)}, env=env)
+        try:
+            return out, json.loads(out)
+        except json.JSONDecodeError:
+            return out, {}
+
+    set_mtime(project, time.time())
+    wrapped = heredoc(state, "learningWithBodhi/sql",
+                      ("record-review", "--concept", "Joins", "--result", "correct"),
+                      ("touch-state", "--activity", "done"))
+    out, decision = stop(codex_rollout(temp_path / "cx-heredoc.jsonl", root, [wrapped]))
+    check("Stop: Codex touch-state inside a script blocks for the project it changed",
+          decision.get("decision") == "block" and str(project) in decision.get("reason", ""),
+          out[:300])
+
+    set_mtime(project, time.time() - 3600)
+    out, _ = stop(codex_rollout(temp_path / "cx-heredoc-old.jsonl", root, [wrapped]))
+    check("Stop: Codex touch-state inside a script never claims a project it did not change",
+          out == "", out[:200])
+
+    # The offer moment after /learn's first step (learning-vault/REQ-8),
+    # when the tutor registered the course from inside a script.
+    learner = temp_path / "codex-offer"
+    course = make_project(learner, "coffee", {
+        "version": 3, "sessionHistory": [], "concepts": [{
+            "name": "Grind size", "module": "A", "box": 1, "bloomLevel": 1,
+            "feynmanPassed": False, "consecutiveCorrectAtL4Plus": 0,
+            "nextReview": datetime.date.today().isoformat(), "reviewHistory": []}]})
+    (course.parent / ".bodhi-profile.json").write_text(
+        json.dumps({"version": 2, "cumulativeStats": {}}), encoding="utf-8")
+    set_mtime(course, time.time())
+    learn = heredoc(state, "learningWithBodhi/coffee",
+                    ("profile-add-project", "--name", "coffee", "--topic", "Coffee"),
+                    ("touch-state", "--activity", "first step"))
+    out = run_hook(stop_hook, {"cwd": str(learner), "hook_event_name": "Stop",
+                               "transcript_path": str(codex_rollout(
+                                   temp_path / "cx-learn.jsonl", learner, [learn]))}, env=env)
+    try:
+        said = json.loads(out)
+    except json.JSONDecodeError:
+        said = {}
+    check("Stop: Codex /learn first step from a script ends with the notes offer",
+          "notes-setup" in said.get("systemMessage", "") and "decision" not in said, out[:300])
 
 
 def main():

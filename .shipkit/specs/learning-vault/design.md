@@ -184,6 +184,39 @@ simpler, and the owner's two moments differ from it only in excluding a session 
 transcript on a new Claude Code release no longer carries the `<command-name>` marker.
 **Fired-if.** manual
 
+## Decision: in Codex, `touch-state` run from a script counts for the projects it changed   (→ REQ-8, REQ-11, REQ-12)
+
+**Context.** Hand check 3 (2026-11-10, Codex 0.167) found the Codex tutor calling
+`bodhi-state` from a Python heredoc: `p='learningWithBodhi/pour-over-coffee'`, then
+`subprocess.run([s, '--project', p, ...])` for `profile-add-project`, `record-review` and
+`touch-state`. The hook finds the project only from a `--project <path>` in the command, so
+that session closed with no notes step, no offer and no revision-sheet demand, even after
+the adapter learned to read Codex's `CommandExecution` records.
+
+**Alternatives.**
+1. The Codex adapter reads the project files. When a script that ran mentions `bodhi-state`
+   and `touch-state` but has no `--project <path>`, the projects counted are those under
+   the hook's usual roots whose `.bodhi/` files changed after that command started.
+2. Parse the script: follow Python and shell variables to the `--project` value.
+3. Tell the tutor, in the OpenAI runtime reference, to call `bodhi-state` directly.
+
+**Case for 1.** It rests on what happened on disk, not on how the command was written, so
+any wrapper works. It runs only in the Codex adapter and only when the command names no
+project, so Claude Code and every command the hook already reads are unchanged. The
+command's start time comes from the record itself (its completion time less its duration).
+
+**Case against 1.** It infers the project rather than reading it. Two Codex sessions working
+in the same folder on the same course at the same moment could both be asked for the sheet;
+a project changed by another program during the command would be counted too. Option 2
+reads the actual value, but only for the shapes it was written for. Option 3 is louder
+prose for an executor-discipline problem, which this project does not do.
+
+**Decision.** Option 1, with two seconds of slack before the start time.
+**Falsifiability.** We would reverse this if a Codex session is asked for a revision sheet or
+shown the notes offer for a course it did not study, or if Codex stops recording a
+command's completion time or duration (then the window cannot be computed).
+**Fired-if.** manual
+
 ## Decision: `bodhi-state` holds its own copy of the module-row words   (→ REQ-13, REQ-14, REQ-17, REQ-19)
 
 **Context.** `/progress` and `/plan view` render the `syllabus` JSON in model prose from the

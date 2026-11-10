@@ -10,7 +10,12 @@ normalized transcript for the canonical BodhiKit hook. Codex 0.167 writes
 each command it ran as a `CommandExecution` item whose `command` is an argv
 list (`["/bin/zsh", "-lc", "<script>"]`) and whose `cwd` is a `file://` URL;
 the script is read from that list. The `exec` call that precedes it holds
-JavaScript and is not parsed. Prose is never
+JavaScript and is not parsed. When such a script runs `touch-state` but
+names no `--project <path>` (the tutor wrapped bodhi-state in a Python
+heredoc), it counts for the projects under the hook's usual roots whose
+`.bodhi/` files changed after the command started (decision "in Codex,
+touch-state run from a script counts for the projects it changed",
+learning-vault design). Prose is never
 inspected: an assistant paragraph that *mentions* a bodhi-state command is
 not evidence the command ran (review finding 8, 2026-09-07 — a read-only
 discussion used to block the stop with a revision-sheet demand). If no
@@ -20,8 +25,11 @@ revision-sheet enforcement fails open for that turn.
 
 from __future__ import annotations
 
+import datetime
+import importlib.util
 import json
 import os
+import re
 import shlex
 import subprocess
 import sys
@@ -35,6 +43,12 @@ SHELL_FLAGS = {"-c", "-lc", "-ic", "-lic"}
 COMMAND_CONTAINERS = ("tool_input", "input", "arguments", "args", "parameters")
 PROSE_KEYS = {"content", "text", "message", "output", "result", "stdout",
               "stderr", "last_assistant_message", "reasoning"}
+# The canonical hook reads a project only from `--project <path>` or
+# `--project=<path>` (its session_writes); a script without one names none.
+PROJECT_ARG = re.compile(r"--project(?:\s+|=)")
+TOUCH = re.compile(r"\btouch-state\b")
+REGISTER = re.compile(r"\bprofile-add-project\b")
+START_SLACK_SECONDS = 2.0
 
 
 def _is_tool_record(d):
@@ -114,6 +128,70 @@ def find_cwd(value, fallback):
     return fallback
 
 
+def _executions(value):
+    """Every Codex CommandExecution item inside a record."""
+    if isinstance(value, dict):
+        if value.get("type") == "CommandExecution":
+            yield value
+        for child in value.values():
+            yield from _executions(child)
+    elif isinstance(value, list):
+        for child in value:
+            yield from _executions(child)
+
+
+def _started(record, item):
+    """Epoch seconds the command started: the record's completion time less
+    the command's duration. None when either is missing."""
+    stamp, duration = record.get("timestamp"), item.get("duration")
+    if not isinstance(stamp, str) or not isinstance(duration, dict):
+        return None
+    try:
+        done = datetime.datetime.fromisoformat(stamp.replace("Z", "+00:00")).timestamp()
+        return done - float(duration.get("secs", 0)) - float(duration.get("nanos", 0)) / 1e9
+    except (TypeError, ValueError):
+        return None
+
+
+def _load_core():
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                        "bodhi-stop-hook-core.py")
+    spec = importlib.util.spec_from_file_location("bodhi_stop_hook_core", path)
+    if spec is None or spec.loader is None:
+        return None
+    core = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(core)
+    return core
+
+
+def _changed_since(project, since):
+    bdir = os.path.join(project, ".bodhi")
+    try:
+        return any(os.path.getmtime(os.path.join(bdir, name)) >= since
+                   for name in os.listdir(bdir)
+                   if os.path.isfile(os.path.join(bdir, name)))
+    except OSError:
+        return False
+
+
+def script_touches(record, fallback_cwd, core):
+    """(cwd, command) for each project a script's touch-state changed, when
+    that script names no --project path the canonical hook can read."""
+    for item in _executions(record):
+        script = _command_of(item)
+        if (not script or "bodhi-state" not in script or not TOUCH.search(script)
+                or PROJECT_ARG.search(script)):
+            continue
+        started = _started(record, item)
+        if started is None or core is None:
+            continue
+        cwd = _local_path(item.get("cwd") or "") or fallback_cwd
+        verbs = "profile-add-project touch-state" if REGISTER.search(script) else "touch-state"
+        for project in core.find_projects(core.configured_roots(cwd)):
+            if _changed_since(project, started - START_SLACK_SECONDS):
+                yield cwd, f'bodhi-state --project "{project}" {verbs}'
+
+
 def transcript_records(path):
     if not path or not os.path.exists(path):
         return []
@@ -143,9 +221,17 @@ def transcript_records(path):
 def normalized_commands(path, fallback_cwd):
     seen = set()
     normalized = []
+    core = None
     for record in transcript_records(path):
         cwd = find_cwd(record, fallback_cwd)
-        for candidate in walk_tool_commands(record):
+        found = [(cwd, c) for c in walk_tool_commands(record)]
+        if any(TOUCH.search(c) and not PROJECT_ARG.search(c) for _, c in found):
+            try:
+                core = core or _load_core()
+            except Exception:
+                core = None
+            found += list(script_touches(record, fallback_cwd, core))
+        for cwd, candidate in found:
             if "bodhi-state" not in candidate or "--project" not in candidate:
                 continue
             key = (cwd, candidate)
