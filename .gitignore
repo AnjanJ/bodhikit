@@ -29,6 +29,7 @@ output/
 
 # Shipkit's session handoff note (rewritten every session; local only)
 .shipkit/state.md
+.shipkit/specs/learning-vault/handoff.md
 
 # Environment
 .env
