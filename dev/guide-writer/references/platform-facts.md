@@ -66,6 +66,32 @@ Facts about BodhiKit itself (the version, the commands, how each host keeps prog
 - Checked: 2026-11-08
 - Status: verified
 
+## Claude Code
+
+### Claude Code needs a paid plan or a Console account
+- Fact: "Claude Code requires a Pro, Max, Ultra, Team, Enterprise, or Console account. The free claude.ai plan does not include Claude Code access." On Pro, Max and Ultra, usage limits are shared: "all activity in both tools counts against the same limits".
+- Source: https://code.claude.com/docs/en/setup (*Authenticate*) ; https://support.claude.com/en/articles/11145838-using-claude-code-with-your-pro-or-max-plan
+- Checked: 2026-11-09
+- Status: verified
+
+### Installing Claude Code
+- Fact: native installer, recommended: `curl -fsSL https://claude.ai/install.sh | bash` (macOS, Linux, WSL); `irm https://claude.ai/install.ps1 | iex` (Windows PowerShell); a CMD form too. Also Homebrew (`brew install --cask claude-code`) and WinGet. It shows no progress while downloading; check with `claude --version` in a new terminal. Native installs update themselves. Requirements: macOS 13.0+, Windows 10 1809+, Ubuntu 20.04+, Debian 10+; 4 GB+ RAM. On Windows, Git for Windows is optional (without it Claude Code uses PowerShell). First run of `claude` asks you to log in through the browser. Anthropic's *Terminal guide for new users* walks a first-time terminal user through it.
+- Source: https://code.claude.com/docs/en/setup ; https://code.claude.com/docs/en/quickstart ; https://code.claude.com/docs/en/terminal-guide
+- Checked: 2026-11-08
+- Status: verified
+
+### Installing a plugin in Claude Code
+- Fact: in a session, `/plugin marketplace add <source>` (GitHub `owner/repo` or a full git URL) prints `Successfully added marketplace: <name>`. `/plugin install <plugin>@<marketplace>` opens the plugin's details; choose a scope ("Install for you (user scope)" is every project on this machine). The install summary says either `Plugin is now active.` or `Run /reload-plugins to apply.` Skills then appear as `/<plugin>:<skill>` when you type `/`. Third-party marketplaces don't auto-update by default: `/plugin` → **Marketplaces** → select it → **Update marketplace**.
+- Source: https://code.claude.com/docs/en/discover-plugins
+- Checked: 2026-11-09
+- Status: verified
+
+### BodhiKit's learning rule in Claude Code depends on the folder
+- Fact: in Claude Code the learning-project rule (guide, don't solve; protected folders; safety) is injected at session start only when the working folder is inside, or holds, `learningWithBodhi`. A session started in another code repository is left alone, so Claude Code writes code there as usual. `~/learningWithBodhi` is on the default discovery path, so projects are found from any folder.
+- Source: scripts/bodhi-session-context.py ; skills/state-ops/SKILL.md *Project Discovery Config*
+- Checked: 2026-11-09
+- Status: verified (repository)
+
 ## ChatGPT
 
 ### Plugins in ChatGPT
@@ -81,7 +107,7 @@ Facts about BodhiKit itself (the version, the commands, how each host keeps prog
 - Status: not verified (page wouldn't open)
 
 ### OpenAI's plugin docs on learn.chatgpt.com
-- Fact: OpenAI's *Plugins* page (ChatGPT Learn): open the **Plugins** tab, search, open a plugin's details and "Select the plus button to install the plugin". "Type `@` to invoke the plugin or one of its bundled skills explicitly"; describing the task instead lets ChatGPT "choose the right installed tools for the task". "Plugins work in Chat and Work across ChatGPT on the web, desktop, and mobile." It doesn't say how long an `@` mention lasts within a chat.
+- Fact: OpenAI's *Plugins* page (ChatGPT Learn): open the **Plugins** tab, search, open a plugin's details and "Select the plus button to install the plugin". "Type `@` to invoke the plugin or one of its bundled skills explicitly"; describing the task instead lets ChatGPT "choose the right installed tools for the task". "Plugins work in Chat and Work across ChatGPT on the web, desktop, and mobile." On mobile you use plugins your account already has; the page says installation happens on the web or in the desktop app (a learner's phone screenshot, below, showed an **Install plugin** button, so say "install on the web or desktop app" to be safe). It doesn't say how long an `@` mention lasts within a chat.
 - Source: https://learn.chatgpt.com/docs/plugins
 - Checked: 2026-11-08
 - Status: verified
