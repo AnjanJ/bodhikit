@@ -28,6 +28,8 @@
 #   BODHI_EVAL_RUNS=3 dev/eval/run-llm-evals.sh kind-grading
 #                                        # the grading boundaries on problems and writing
 #   dev/eval/run-llm-evals.sh performed  # practice reps, debriefs, "by your account"
+#   BODHI_EVAL_RUNS=3 dev/eval/run-llm-evals.sh performed-grading
+#                                        # the grade a debrief earns: thin, Apply, genuine
 #   dev/eval/run-llm-evals.sh photo      # a photo examined, then recorded as inspected
 #   dev/eval/run-llm-evals.sh safety     # a home-canning request, a personal medical question
 #
@@ -1081,6 +1083,33 @@ if [ "$want" = "all" ] || [ "$want" = "performed" ] || [ "$want" = "performed-by
   BODHI_EVAL_FIXTURE="$PERFORMED_FIXTURE" BODHI_EVAL_PROJECT="$PERFORMED_PROJECT" run_scenario performed-by-your-account \
     "/bodhikit:progress — headless eval run. Show me my full dashboard for this project, as the skill specifies." \
     performed-by-your-account "" transcript
+fi
+
+# --- Performed skills: the debrief's grade (learn-anything/REQ-29) -----------
+# performed-debrief-first accepts any graded result, so nothing above pins the
+# grade a debrief earns, and on a performed concept that grade is the only
+# level the tutor assigns. Three debriefs of the same mayonnaise rep, read
+# together: a thin one (partial, schedule held), a specific one with an
+# admitted gap on where it breaks (correct at Apply, never the level Solid
+# asks for), and one that gives the cause, the rescue and a defended choice
+# (correct, 4-5). File-state assertions; sweep with BODHI_EVAL_RUNS=3 and read
+# the recorded levels.
+performed_grade() {  # <name> <assert> <learner script>
+  BODHI_EVAL_FIXTURE="$PERFORMED_FIXTURE" BODHI_EVAL_PROJECT="$PERFORMED_PROJECT" repeat_scenario "$1" \
+    "/bodhikit:practice Emulsions — $SIM_CONTRACT Scripted replies: I made mayonnaise yesterday and want to talk it through. $3 I have nothing to add beyond these replies. Grade me honestly — including the level my replies actually demonstrated — and complete ALL tracking updates exactly as the skill specifies." \
+    "$2" "" "" nudge
+}
+if [ "$want" = "all" ] || [ "$want" = "performed-grading" ] || [ "$want" = "performed-grade-vague" ]; then
+  performed_grade performed-grade-vague performed-grade-vague \
+    "When you ask what I did: 'I followed the recipe and whisked it all together until it looked like mayonnaise.' If you ask for quantities, times or the order of the steps: 'I do not remember exactly, I just followed the steps.' When you ask what went wrong or surprised me: 'Nothing really, it went fine.' When you ask what I would change and why: 'Nothing. Maybe be a bit quicker.' If you ask why the oil goes in slowly, what holds the sauce together, or ask me to say any of it another way, I say again that I just followed the recipe. If you give me a concrete case and ask what would happen — all the oil poured in at once, say — I answer: 'I do not know, I have never tried that.'"
+fi
+if [ "$want" = "all" ] || [ "$want" = "performed-grading" ] || [ "$want" = "performed-grade-apply-band" ]; then
+  performed_grade performed-grade-apply-band performed-grade-apply-band \
+    "When you ask what I did: 'One yolk, a teaspoon of mustard and a squeeze of lemon, then 200 ml of sunflower oil: the first 50 ml drop by drop while whisking, the rest in a thin stream. About eight minutes, and it came out thick and glossy. The yolk is what holds the oil in tiny drops, so the oil has to go in slowly enough for the whisk to break it up.' When you ask what went wrong or surprised me: 'Nothing went wrong. I was surprised how suddenly it turned thick.' When you ask what I would change and why: 'Nothing, I would do the same again.' If you ask when it would split, what could make it fail, how I would rescue it, or whether another method would be better, I answer honestly: 'I do not know — it has not split on me, and I have only ever made it this one way.' If you ask again after refining: 'Still no. I can make it this way, and that is all I can say.'"
+fi
+if [ "$want" = "all" ] || [ "$want" = "performed-grading" ] || [ "$want" = "performed-grade-genuine" ]; then
+  performed_grade performed-grade-genuine performed-grade-genuine \
+    "When you ask what I did: 'Two batches. One yolk, a teaspoon of mustard and a squeeze of lemon, then 200 ml of sunflower oil: the first 50 ml drop by drop while whisking, the rest in a thin stream, about eight minutes.' When you ask what went wrong or surprised me: 'The first batch split. Once it thickened I got confident and poured faster, and it went thin and greasy with oil pooling at the edge. The yolk can only coat so much oil at a time: pour faster than the whisk can break it into droplets and the droplets run back together. I rescued it by starting a fresh yolk and whisking the broken sauce into it slowly, as if it were the oil.' When you ask what I would change and why: 'Keep the stream thin for longer, and add a teaspoon of water when it gets very stiff, because a stiff emulsion has little water left to hold more oil. I thought about switching to a stick blender: it shears so hard that it almost never splits, and it takes thirty seconds. For a big batch, or when it has to work first time for guests, I would use it. But for one yolk I am staying with the whisk: by hand I can feel the moment it catches, and that feel is what I am practising.'"
 fi
 
 prep_photo() {

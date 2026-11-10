@@ -2107,6 +2107,81 @@ def concept_or_fail(project, name):
     return concept(load(project, ".bodhi", "spaced-review.json"), name)
 
 
+# --- Performed skills: the debrief's grade (learn-anything/REQ-29) -----------
+# performed-debrief-first accepts any graded result. These three script a
+# debrief of controlled quality and assert the grade it earns. Read them
+# together: a tutor that grades every debrief `correct` at Analyze passes the
+# third and fails the first two; one that never credits a debrief fails the
+# third. On a performed concept the debrief's grade is the only tutor-graded
+# level there is, and Analyze is the level Solid asks for.
+
+def debrief_entry(project, concept):
+    """(concept record, today's entry for the rep): the last entry carrying
+    --applied, or today's last entry when the tutor recorded none as applied."""
+    c = concept_or_fail(project, concept)
+    entries = todays_entries(c)
+    if not entries:
+        fail(f"no review recorded for {concept} — a debriefed rep is recorded on the "
+             "debrief's grade")
+    reps = [h for h in entries if h.get("applied")]
+    return c, (reps or entries)[-1]
+
+
+def assert_performed_grade_vague(project, concept="Emulsions"):
+    """learn-anything/REQ-29: a debrief with no steps, no reasons and no answer
+    to a concrete case is fluency without understanding, graded `partial`."""
+    c, rep = debrief_entry(project, concept)
+    res = rep.get("result")
+    if res != "partial":
+        fail(f"a debrief that named no step, quantity or reason was graded {res!r}; "
+             "'correct' moves the schedule out on the learner's word alone, and "
+             "'incorrect' claims a miss that was never shown")
+    ok(f"thin debrief graded 'partial' (level {rep.get('bloomLevel')})")
+    if c.get("feynmanPassed") is True:
+        fail("feynmanPassed set on a debrief that explained nothing")
+    ok("explain-back gate held")
+    before = rep.get("boxBefore", c.get("box", 0))
+    if c.get("box", 0) > before:
+        fail(f"box moved {before} -> {c.get('box')} on a partial debrief")
+    ok(f"schedule held (box {before} -> {c.get('box')})")
+
+
+def assert_performed_grade_apply_band(project, concept="Emulsions"):
+    """learn-anything/REQ-29: a real account of the rep with the mechanism in
+    the learner's words, and an admitted gap on where it breaks, is `correct`
+    at Apply. The code band admits 3-4; here 4 fails, because the learner said
+    they do not know where it breaks and 4 is the level Solid asks for."""
+    c, rep = debrief_entry(project, concept)
+    if rep.get("result") != "correct":
+        fail(f"a specific, accurate debrief of a rep that worked was graded "
+             f"{rep.get('result')!r}")
+    ok("graded correct")
+    bl = rep.get("bloomLevel", 0)
+    if bl >= 4:
+        fail(f"tested-bloom recorded as {bl}; the learner said they do not know when it "
+             "splits or what else they could do — an admitted gap caps at the row below "
+             "it, and 4 on a debrief is the level Solid rests on")
+    if bl <= 2:
+        fail(f"tested-bloom recorded as {bl}; the learner described a rep that worked, "
+             "with quantities and the reason for the slow pour — that is usage")
+    ok(f"tested-bloom {bl}: Apply, below the level Solid asks for")
+
+
+def assert_performed_grade_genuine(project, concept="Emulsions"):
+    """learn-anything/REQ-29: a debrief that says why the rep failed, how it was
+    rescued, and defends a choice between two methods earns Analyze or Evaluate."""
+    c, rep = debrief_entry(project, concept)
+    if rep.get("result") != "correct":
+        fail(f"a debrief with the cause, the rescue and a defended choice was graded "
+             f"{rep.get('result')!r} — over-harsh grading punishes real understanding")
+    ok("graded correct")
+    bl = rep.get("bloomLevel", 0)
+    if bl not in (4, 5):
+        fail(f"tested-bloom recorded as {bl}; naming where it breaks and weighing the "
+             "whisk against the blender is the 4-5 band")
+    ok(f"tested-bloom {bl} in the 4-5 band")
+
+
 COUNTS_LATER_RE = re.compile(
     r"(?i)(once (?:it'?s |it is |you'?ve |you have |we'?ve )?(?:talked it through|debriefed|"
     r"been debriefed)|when(?:ever)? you(?:'re| are) ready|counts? once|goes on the record|"
@@ -2391,7 +2466,10 @@ def main():
                   "plan-regenerate": assert_plan_regenerate,
                   "evaluate": assert_evaluate,
                   "applied-essay": assert_applied_essay,
-                  "applied-chat": assert_applied_chat}
+                  "applied-chat": assert_applied_chat,
+                  "performed-grade-vague": assert_performed_grade_vague,
+                  "performed-grade-apply-band": assert_performed_grade_apply_band,
+                  "performed-grade-genuine": assert_performed_grade_genuine}
     if name in TRANSCRIPT_ASSERTIONS:
         if not transcript:
             fail(f"scenario {name} requires a transcript path")

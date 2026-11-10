@@ -579,6 +579,44 @@ def t_performed_repless_review(root):
          (proj, good), (applied, good))
 
 
+def t_performed_grade(root):
+    """The three debrief-grading scenarios, read together: each detector passes
+    the grade its debrief earned and fails its neighbour's."""
+    def graded(label, result, level):
+        proj = fresh(root, "performed-project", "cooking", label)
+        state(proj, "record-review", "--concept", "Emulsions", "--result", result,
+              "--tested-bloom", str(level), "--applied", "reported", "--source", "practice")
+        return proj
+    partial1, correct3 = graded("partial-1", "partial", 1), graded("correct-3", "correct", 3)
+    correct4, correct2 = graded("correct-4", "correct", 4), graded("correct-2", "correct", 2)
+    incorrect1 = graded("incorrect-1", "incorrect", 1)
+    clean = fresh(root, "performed-project", "cooking", "grade-none")
+    pair("performed grade vague (a thin debrief is not correct)",
+         A.assert_performed_grade_vague, (partial1,), (correct3,))
+    pair("performed grade vague (nor a demonstrated miss)",
+         A.assert_performed_grade_vague, (partial1,), (incorrect1,))
+    pair("performed grade apply band (an admitted gap stays below Analyze)",
+         A.assert_performed_grade_apply_band, (correct3,), (correct4,))
+    pair("performed grade apply band (the rep done is credited)",
+         A.assert_performed_grade_apply_band, (correct3,), (correct2,))
+    pair("performed grade apply band (not marked down to partial)",
+         A.assert_performed_grade_apply_band, (correct3,), (partial1,))
+    pair("performed grade genuine (reaches Analyze or Evaluate)",
+         A.assert_performed_grade_genuine, (correct4,), (correct3,))
+    pair("performed grade genuine (graded correct)",
+         A.assert_performed_grade_genuine, (correct4,), (partial1,))
+    for fn in (A.assert_performed_grade_vague, A.assert_performed_grade_apply_band,
+               A.assert_performed_grade_genuine):
+        check(f"{fn.__name__}: fails when nothing was recorded", not passes(fn, clean)[0])
+    # A knowledge question recorded after the debrief must not be read as the
+    # debrief's grade: the rep's entry is the one that carries --applied.
+    mixed = graded("mixed", "partial", 1)
+    state(mixed, "record-review", "--concept", "Emulsions", "--result", "correct",
+          "--tested-bloom", "3", "--source", "practice")
+    check("performed grade vague: reads the rep's entry, not a later knowledge question",
+          passes(A.assert_performed_grade_vague, mixed)[0])
+
+
 def t_performed_by_your_account(root):
     good = transcript(root, "account-good", ("text", "**Knife skills** — Knife grip: *Solid, "
                                              "due for a check* — by your account of your "
@@ -1165,7 +1203,8 @@ def main():
                   t_legacy_proposal,
                   t_review_no_rewrite, t_performed_debrief_first, t_performed_no_debrief,
                   t_performed_practice_sets_rep, t_kind_gate_reconfirm_rep,
-                  t_performed_repless_review, t_performed_by_your_account, t_plan_view_kind,
+                  t_performed_repless_review, t_performed_grade, t_performed_by_your_account,
+                  t_plan_view_kind,
                   t_photo_inspected,
                   t_safety_canning, t_safety_medical, t_kb_load_learned_counter,
                   t_internal_names, t_internal_names_everywhere, t_bare_level_source,
