@@ -536,7 +536,12 @@ run_discovery_scenario() {
 # (multi-phase + agents), hence the raised turn cap.
 run_parent_scenario() {
   name="$1"; prompt="$2"; assert="$3"; prep="${4:-}"; maxturns="${5:-60}"; transcript_mode="${6:-}"
-  tmp=$(mktemp -d "/tmp/bodhi-eval-$name.XXXXXX")
+  # Set by repeat_parent_scenario, exactly as for run_scenario.
+  if [ -n "${BODHI_EVAL_SWEEP:-}" ]; then
+    tmp="$BODHI_EVAL_SWEEP"; mkdir -p "$tmp"
+  else
+    tmp=$(mktemp -d "/tmp/bodhi-eval-$name.XXXXXX")
+  fi
   cp -r "$FIXTURE" "$tmp/learningWithBodhi"
   echo "== scenario: $name  (workdir $tmp)"
   if [ -n "$prep" ]; then "$prep" "$tmp/learningWithBodhi/sql-deep-dive" || { echo "FAIL: $name prep"; FAIL=1; return; }; fi
@@ -556,7 +561,7 @@ run_parent_scenario() {
   if python3 "$REPO/dev/eval/assert_scenario.py" "$assert" "$tmp/learningWithBodhi/sql-deep-dive" ${transcript_mode:+"$out"}; then
     echo "PASS: $name"
     archive_run "$name" "$tmp" PASS
-    rm -rf "$tmp"
+    [ -n "${BODHI_EVAL_SWEEP:-}" ] || rm -rf "$tmp"
   else
     echo "FAIL: $name — transcript at $out, project left at $tmp"
     FAIL=1
@@ -579,15 +584,24 @@ EVAL_RUNS="${BODHI_EVAL_RUNS:-1}"
 
 repeat_scenario() {
   # Same signature as run_scenario; sampled EVAL_RUNS times.
+  repeat_with run_scenario "$@"
+}
+repeat_parent_scenario() {
+  # Same signature as run_parent_scenario; sampled EVAL_RUNS times. Before
+  # this existed, BODHI_EVAL_RUNS was silently ignored for parent scenarios.
+  repeat_with run_parent_scenario "$@"
+}
+repeat_with() {
+  runner="$1"; shift
   name="$1"
-  if [ "$EVAL_RUNS" -le 1 ]; then run_scenario "$@"; return; fi
+  if [ "$EVAL_RUNS" -le 1 ]; then "$runner" "$@"; return; fi
   sweep=$(mktemp -d "/tmp/bodhi-sweep-$name.XXXXXX")
   passes=0; outer_fail="$FAIL"
   echo "== sweep: $name  ($EVAL_RUNS runs, workdirs under $sweep)"
   for i in $(seq 1 "$EVAL_RUNS"); do
     echo "-- run $i/$EVAL_RUNS"
     FAIL=0
-    BODHI_EVAL_SWEEP="$sweep/run-$i" run_scenario "$@"
+    BODHI_EVAL_SWEEP="$sweep/run-$i" "$runner" "$@"
     [ "$FAIL" -eq 0 ] && passes=$((passes + 1))
   done
   FAIL="$outer_fail"
@@ -1290,12 +1304,12 @@ prep_notes_on() {
     --app obsidian --location "$(dirname "$(dirname "$1")")/vault" > /dev/null
 }
 if [ "$want" = "all" ] || [ "$want" = "notes" ] || [ "$want" = "notes-setup" ]; then
-  run_parent_scenario notes-setup \
+  repeat_parent_scenario notes-setup \
     "/bodhikit:notes-setup — $SIM_CONTRACT My scripted answers: I do not use any notes app. When you suggest one, I take it: I have just installed it and created a vault, and the vault's folder is the folder named vault that sits beside my learningWithBodhi folder, in the same parent folder. When you explain what will happen and ask, I say yes. Run the session turn by turn in your messages — each question you ask, then my scripted reply — rather than summarising it at the end." \
     notes-setup prep_notes_vault 30 transcript
 fi
 if [ "$want" = "all" ] || [ "$want" = "notes" ] || [ "$want" = "notes-setup-off" ]; then
-  run_parent_scenario notes-setup-off \
+  repeat_parent_scenario notes-setup-off \
     "/bodhikit:notes-setup — $SIM_CONTRACT My scripted answers: when you show me how my notes are set up, I want to turn them off; when you check, I say yes, turn it off. Run the session turn by turn in your messages — each question you ask, then my scripted reply — rather than summarising it at the end." \
     notes-setup-off prep_notes_on 30 transcript
 fi
