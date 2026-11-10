@@ -468,9 +468,23 @@ parent with an empty `vault` folder beside the learning folder:
   is optional and that it can be turned off, and only then record the vault
   through `bodhi-state`. File state: `.bodhi-notes.json` records Obsidian at
   the vault, and the course's `Syllabus.md` is in `vault/Learn with Bodhi/`.
-- `notes-setup-off`: Obsidian is on record; the learner turns it off. The
-  tutor shows the setting and offers a change, records `off`, and says the
-  files stay and will no longer be refreshed. The vault copy must survive.
+- `notes-setup-off` (a dialogue since 2026-11-10): Obsidian is on record;
+  the learner opens `/bodhikit:notes-setup`, then asks to turn it off. The
+  tutor shows the setting and offers a change in its first turn, records
+  `off` only in a later one, and says the files stay and will no longer be
+  refreshed. The vault copy must survive.
+- `notes-setup-other-folder` (a dialogue): the learner picks Obsidian, names
+  a vault, then asks for a different one. It fails if the tutor searches the
+  computer for a vault, or records a folder in the same turn the learner
+  named it; the second vault must be the one recorded.
+
+**Dialogue scenarios.** Every other scenario puts the learner's whole script
+in one prompt, under a harness prompt that says never to wait, so none can
+test whether the tutor shows something and waits. `run_parent_dialogue` runs
+each learner line as its own turn of one resumed `claude -p` session, under
+`SYS_DIALOGUE`, and writes a `{"type": "learner"}` line before each turn so
+an assertion can tell which turn a call came in. Claude only; other runtimes
+report SKIP. `BODHI_EVAL_RUNS` repeats them like any other scenario.
 
 Live runs: see *Runs* below.
 
@@ -533,3 +547,4 @@ may find and propose a real Obsidian vault.
 | 2026-11-10 | `7db1c23` | — | check 4a, Obsidian | **Not run**: it needs Obsidian's window. File level only: the vault's syllabus and revision sheet are byte-identical to the course folder's, and `Courses.md` links with a relative Markdown link, `[pour-over-coffee](pour-over-coffee/Syllabus.md)`. |
 | 2026-11-10 | `7db1c23` | — | check 4b, an earlier day's sheet | **PASS, date simulated.** A line added to the vault copy of the day's sheet survived `notes-sync` run with `BODHI_TODAY=2026-11-11`. Control: on the same day the sheet was replaced and the line went, as designed. |
 | 2026-11-10 | `7db1c23` | Codex 0.167.0 | check 3, Codex | **Not run.** Installed from a scratch local marketplace, and both hooks (SessionStart, Stop) reviewed and trusted. Codex then could not reach OpenAI from inside Claude Code's command sandbox ("Connection refused"), and running it outside the sandbox was refused. It needs a terminal outside Claude Code. |
+| 2026-11-10 | `c3fa3f0` (+ the dialogue harness, uncommitted) | Claude, fable-5 | `notes-setup-other-folder`, first run | **FAIL, REQ-3, reproduces the hand check** (transcript read). Asked for the folder (no search), explained all four points for the first vault and asked; when the learner named a second vault it ran `notes-set` in that same turn and said "your 'use the other vault instead' was all I needed". The search for a vault did not happen in this run. The maintainer's real iCloud vault was listed before and after: unchanged. |

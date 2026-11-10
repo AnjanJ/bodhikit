@@ -51,10 +51,14 @@ def passes(fn, *args, **kw):
 
 def transcript(root, name, *items):
     """A claude stream-json transcript: ("text", str), ("tool", name, input),
-    or ("result", str) — the output of the tool call just before it."""
+    ("result", str) — the output of the tool call just before it — or
+    ("learner", str), the harness's marker for a dialogue run's next turn."""
     path = os.path.join(root, f"{name}.jsonl")
     with open(path, "w", encoding="utf-8") as f:
         for i, it in enumerate(items):
+            if it[0] == "learner":
+                f.write(json.dumps({"type": "learner", "text": it[1]}) + "\n")
+                continue
             if it[0] == "result":
                 f.write(json.dumps({"type": "user", "message": {"content": [
                     {"type": "tool_result", "tool_use_id": f"t{i - 1}",
@@ -1203,13 +1207,16 @@ def notes_state(root, name, *argv):
     shutil.copytree(os.path.join(FIXTURES, "v2-project"), learner)
     vault = os.path.join(root, f"{name}-vault-parent", "vault")
     os.makedirs(vault)
-    # the detectors look for the vault beside the learning folder
+    os.makedirs(os.path.join(os.path.dirname(vault), "vault-2"))
+    # the detectors look for the vaults beside the learning folder
     os.rename(learner, os.path.join(os.path.dirname(vault), "learningWithBodhi"))
     learner = os.path.join(os.path.dirname(vault), "learningWithBodhi")
     env = dict(os.environ, BODHI_CLOUD_MARKER=os.path.join(root, "no-cloud"))
     for args in argv:
         subprocess.run([sys.executable, os.path.join(REPO, "scripts", "bodhi-state"),
-                        "--project", learner, *[a.replace("<vault>", vault) for a in args]],
+                        "--project", learner,
+                        *[a.replace("<vault2>", vault + "-2").replace("<vault>", vault)
+                          for a in args]],
                        check=True, capture_output=True, env=env)
     return os.path.join(learner, "sql-deep-dive"), vault
 
@@ -1274,18 +1281,72 @@ def t_notes_setup_off(root):
     off = bash('"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project .. notes-set --choice off')
     said = ("text", "Done. The syllabus and sheets already written stay where they are, and "
                     "they will no longer be refreshed. Nothing was deleted.")
-    good = transcript(root, "off-good", show, off, said)
+    opened, answer = ("learner", "/bodhikit:notes-setup"), ("learner", "Turn it off, please.")
+    good = transcript(root, "off-good", opened, show, answer, off, said)
     ok_good, out = passes(A.assert_notes_setup_off, proj, good)
     check("notes-setup off: passes the good run", ok_good, out[-300:])
     for label, items in {
-            "no current setting shown": (("text", "Turning it off."), off, said),
-            "no word that the files stay unrefreshed": (show, off, ("text", "Done, it is off.")),
+            "no current setting shown": (opened, ("text", "Turning it off."), answer, off, said),
+            "no word that the files stay unrefreshed": (opened, show, answer, off,
+                                                        ("text", "Done, it is off.")),
+            # The 2026-11-10 live runs: shown, or not, and off in the same turn.
+            "off in the turn it was shown, no answer awaited": (opened, show, off, said),
+            "a one-shot run with no learner turns": (show, off, said),
     }.items():
         ok_bad, out = passes(A.assert_notes_setup_off, proj, transcript(root, "off-bad", *items))
         check(f"notes-setup off: fails {label}", not ok_bad, out[-300:])
     still_on, _ = notes_state(root, "still-on", rec)
     ok_bad, out = passes(A.assert_notes_setup_off, still_on, good)
     check("notes-setup off: fails a run where off was never recorded", not ok_bad, out[-300:])
+
+
+def t_notes_setup_folder(root):
+    """learning-vault/REQ-3, learning-vault/REQ-4: the other-folder detector
+    passes a dialogue that asks for the folder and records the second one
+    only after the learner agrees, and fails the two misses of the
+    2026-11-10 hand check: a search for a vault, and a folder recorded in
+    the turn the learner named it."""
+    rec2 = ("notes-set", "--choice", "vault", "--app", "obsidian", "--location", "<vault2>")
+    proj, vault = notes_state(root, "folder", rec2)
+    vault2 = vault + "-2"
+    record2 = bash(f'"${{CLAUDE_PLUGIN_ROOT}}/scripts/bodhi-state" --project .. notes-set '
+                   f'--choice vault --app obsidian --location "{vault2}"')
+    opened = ("learner", "/bodhikit:notes-setup")
+    ask_app = ("text", "Which notes app do you use? Obsidian, I don't use a notes app, or just "
+                       "keep the syllabus as a file in each course folder?")
+    obsidian = ("learner", "I use Obsidian.")
+    ask_folder = ("text", "Which folder is your vault? The one you chose when you created it.")
+    named = ("learner", f"My vault is {vault}")
+    explain = ("text", "Here is what happens. Each course's syllabus and your revision sheets "
+                       "are copied into a folder named Learn with Bodhi in your vault. If your "
+                       "vault syncs, the copy goes with it. It is optional, and you can turn it "
+                       "off at any time. Shall I set it up?")
+    other = ("learner", f"Actually, please use my other vault instead: {vault2}")
+    again = ("text", "Of course: the same copy goes into Learn with Bodhi in that vault instead. "
+                     "Shall I set it up there?")
+    yes = ("learner", "Yes, set it up.")
+    done = ("text", f"Done: your notes are in {vault2}/Learn with Bodhi.")
+    good = transcript(root, "folder-good", opened, ask_app, obsidian, ask_folder, named,
+                      explain, other, again, yes, record2, done)
+    ok_good, out = passes(A.assert_notes_setup_folder, proj, good)
+    check("notes-setup other folder: passes the good run", ok_good, out[-300:])
+    search = bash('cat "$HOME/Library/Application Support/obsidian/obsidian.json"')
+    for label, items in {
+            "a search for a vault": (opened, ask_app, obsidian, search, ask_folder, named,
+                                     explain, other, again, yes, record2, done),
+            "the new folder recorded in the turn it was named": (
+                opened, ask_app, obsidian, ask_folder, named, explain, other, record2, done),
+            "a one-shot run with no learner turns": (ask_app, ask_folder, explain, again,
+                                                     record2, done),
+    }.items():
+        ok_bad, out = passes(A.assert_notes_setup_folder, proj,
+                             transcript(root, "folder-bad", *items))
+        check(f"notes-setup other folder: fails {label}", not ok_bad, out[-300:])
+    first_only, _ = notes_state(root, "first-only", ("notes-set", "--choice", "vault", "--app",
+                                                     "obsidian", "--location", "<vault>"))
+    ok_bad, out = passes(A.assert_notes_setup_folder, first_only, good)
+    check("notes-setup other folder: fails a run that recorded the first vault",
+          not ok_bad, out[-300:])
 
 
 def main():
@@ -1303,7 +1364,7 @@ def main():
                   t_teach_vocabulary_names,
                   t_archive_run, t_intake_change, t_review_problems, t_practice_applied,
                   t_harness_recap, t_continue_gate, t_grade_regrade, t_predict_key,
-                  t_notes_setup, t_notes_setup_off):
+                  t_notes_setup, t_notes_setup_off, t_notes_setup_folder):
             print(f"-- {t.__name__}")
             sub = os.path.join(root, t.__name__)
             os.makedirs(sub)

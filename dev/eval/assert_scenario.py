@@ -1377,8 +1377,10 @@ def tool_events(transcript_path):
 
 
 def stream_items(transcript_path):
-    """[("text", str) | ("tool", name, input)] in transcript order: what the
-    learner read and what the executor ran, interleaved."""
+    """[("text", str) | ("tool", name, input) | ("learner", str)] in
+    transcript order: what the learner read and what the executor ran,
+    interleaved. A dialogue run (run_parent_dialogue) marks each learner
+    turn with a {"type": "learner"} line before that turn's output."""
     items = []
     with open(transcript_path) as f:
         for line in f:
@@ -1398,6 +1400,8 @@ def stream_items(transcript_path):
                 items.append(("text", ev["text"]))
             elif ev.get("type") == "tool" and isinstance(ev.get("name"), str):
                 items.append(("tool", ev["name"], ev.get("input", {}) or {}))
+            elif ev.get("type") == "learner" and isinstance(ev.get("text"), str):
+                items.append(("learner", ev["text"]))
     return items
 
 
@@ -2427,6 +2431,18 @@ def notes_call(items, choice):
     return None
 
 
+def learner_turns(items):
+    """Indices of the learner's turns in a dialogue run's items."""
+    return [i for i, it in enumerate(items) if it[0] == "learner"]
+
+
+# Looking for a vault the learner did not name: Obsidian's own vault list, the
+# iCloud folder Obsidian syncs through, or a disk search for `.obsidian`.
+VAULT_SEARCH_RE = re.compile(r"(?i)obsidian\.json|Application Support/obsidian|Mobile Documents"
+                             r"|iCloud~md~obsidian|\bmdfind\b|-i?name\s+['\"]?\.obsidian")
+PATH_IN_TEXT_RE = re.compile(r"(?:^|\s)[~/][^\s]*/")
+
+
 def notes_record(learner):
     p = os.path.join(learner, ".bodhi-notes.json")
     if not os.path.exists(p):
@@ -2499,12 +2515,16 @@ def assert_notes_setup_off(project, transcript):
     call = notes_call(items, "off")
     if call is None:
         fail("no `notes-set --choice off` call: the learner asked to turn notes off")
-    before = protocol_text(items, call)
-    if not (("Obsidian" in before or "vault" in before)
-            and re.search(r"(?i)chang|switch|different|turn (?:it )?off", before)):
-        fail("the current setting was not shown, with a change or off offered, before "
-             "turning it off (REQ-5)")
-    ok("the current setting shown and a change offered")
+    turns = learner_turns(items[:call])
+    if len(turns) < 2:
+        fail("turned notes off in the turn the learner opened, before the learner could "
+             "answer: the setting is shown and the answer waited for (REQ-5)")
+    shown = "\n".join(it[1] for it in items[turns[0] + 1:turns[-1]] if it[0] == "text")
+    if not (("Obsidian" in shown or "vault" in shown)
+            and re.search(r"(?i)chang|switch|different|turn (?:it )?off", shown)):
+        fail("the current setting was not shown, with a change or off offered, before the "
+             "learner's answer (REQ-5)")
+    ok("the current setting shown and a change offered, then the learner's answer awaited")
     after = "\n".join(it[1] for it in items[call + 1:] if it[0] == "text")
     if not (NOTES_STAY_RE.search(after) and NOTES_STALE_RE.search(after)):
         fail("after turning it off, the tutor did not say the files stay and will no longer "
@@ -2517,6 +2537,57 @@ def assert_notes_setup_off(project, transcript):
     if not os.path.exists(os.path.join(vault, "Learn with Bodhi", "sql-deep-dive", "Syllabus.md")):
         fail("the vault copy is gone: turning notes off deletes nothing")
     ok("off recorded, and the vault copy still there")
+    assert_no_internal_names(prose, transcript)
+
+
+def assert_notes_setup_folder(project, transcript):
+    """learning-vault/REQ-3, learning-vault/REQ-4: a dialogue run. The learner
+    picks Obsidian, names a vault, then asks for a different one. The tutor
+    asks for the folder rather than searching the computer for a vault, and
+    records a folder only in a turn after the one that named it, once the
+    learner has agreed; the folder recorded is the second one."""
+    prose = assistant_prose(transcript)
+    if not prose.strip():
+        fail("empty transcript — run did not produce assistant output")
+    items = stream_items(transcript)
+    if len(learner_turns(items)) < 2:
+        fail("not a dialogue run: the scenario needs the learner's turns")
+    for it in items:
+        if it[0] != "tool" or it[1] == "Skill":
+            continue
+        body = json.dumps(it[2])
+        if it[1] == "Bash" and "bodhi-state" in body:
+            continue
+        if VAULT_SEARCH_RE.search(body):
+            fail(f"searched the computer for a vault instead of asking for the folder: "
+                 f"{it[1]} {body[:200]}")
+    ok("asked for the folder, no search for a vault")
+    calls = [i for i, it in enumerate(items) if it[0] == "tool" and it[1] == "Bash"
+             and (m := NOTES_SET_RE.search(str(it[2].get("command", ""))))
+             and m.group(1) == "vault"]
+    if not calls:
+        fail("no `notes-set --choice vault` call: the learner agreed and nothing was recorded")
+    for c in calls:
+        said = [items[t][1] for t in learner_turns(items[:c])]
+        if said and PATH_IN_TEXT_RE.search(said[-1]):
+            fail("recorded a folder in the same turn the learner named it, without asking "
+                 f"first (REQ-3): the learner's last words were {said[-1][:160]!r}")
+    ok("each folder recorded only after the learner agreed in a later turn")
+    missing = [label for label, rx in NOTES_EXPLAIN if not rx.search(protocol_text(items, calls[-1]))]
+    if missing:
+        fail(f"before recording, the tutor did not say: {', '.join(missing)} (REQ-3)")
+    learner = os.path.dirname(os.path.abspath(project))
+    second = os.path.join(os.path.dirname(learner), "vault-2")
+    notes = notes_record(learner)
+    if os.path.realpath(notes.get("location") or "") != os.path.realpath(second):
+        fail(f"the notes file does not record the second vault {second}: {notes}")
+    if not os.path.exists(os.path.join(second, "Learn with Bodhi", "sql-deep-dive", "Syllabus.md")):
+        fail("the course's syllabus never reached the second vault")
+    ok("the second vault recorded and the syllabus copied there")
+    edits = notes_hand_edits(transcript)
+    if edits:
+        fail(f"hand-wrote the notes setting or the vault copy: {edits}")
+    ok("no hand edits")
     assert_no_internal_names(prose, transcript)
 
 
@@ -2554,7 +2625,8 @@ TRANSCRIPT_ASSERTIONS = {"teach-pretest": assert_teach_pretest,
                          "safety-canning": assert_safety_canning,
                          "safety-medical": assert_safety_medical,
                          "notes-setup": assert_notes_setup,
-                         "notes-setup-off": assert_notes_setup_off}
+                         "notes-setup-off": assert_notes_setup_off,
+                         "notes-setup-other-folder": assert_notes_setup_folder}
 
 
 def assert_transcript_scenario(name, project, transcript):

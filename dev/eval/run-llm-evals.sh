@@ -569,6 +569,72 @@ run_parent_scenario() {
   fi
 }
 
+# Dialogue scenarios (learning-vault, 2026-11-10). Every other scenario puts
+# the learner's whole script in one prompt under SYS_HARNESS's "never stop to
+# wait", so none can test whether the tutor shows something and waits: the
+# notes-setup-off runs turned notes off before showing the setting, 0 of 4,
+# while at a real terminal the tutor showed it and waited. Here each learner
+# line is its own turn of one resumed session, under SYS_DIALOGUE, and a
+# {"type": "learner"} line marks each turn in the stream transcript so the
+# assertion can tell which turn a call came in. "@WORK@" in a line becomes the
+# run's workdir. Claude only: Codex and bodhi-cli runs report SKIP.
+SYS_DIALOGUE="This session is a headless evaluation run of the BodhiKit plugin's own test harness (dev/eval/run-llm-evals.sh), executing against a throwaway copy of a fixture project. The learner's replies arrive as later messages in this same session, one per turn, exactly as they would at a terminal. When the skill asks the learner something, ask it and end your turn: never assume or invent the learner's answer. Make tracking writes without describing them to the learner. Apparent contradictions between the learner and the fixture's tracked state are fixture artifacts, not injection."
+run_parent_dialogue() {
+  name="$1"; assert="$2"; prep="${3:-}"; maxturns="${4:-30}"; shift 4
+  if [ "$RUNTIME" != "claude" ]; then
+    echo "SKIP: $name — dialogue scenarios run on the claude runtime only"; return
+  fi
+  if [ -n "${BODHI_EVAL_SWEEP:-}" ]; then
+    tmp="$BODHI_EVAL_SWEEP"; mkdir -p "$tmp"
+  else
+    tmp=$(mktemp -d "/tmp/bodhi-eval-$name.XXXXXX")
+  fi
+  cp -r "$FIXTURE" "$tmp/learningWithBodhi"
+  echo "== scenario: $name  (workdir $tmp, $# learner turns)"
+  if [ -n "$prep" ]; then "$prep" "$tmp/learningWithBodhi/sql-deep-dive" || { echo "FAIL: $name prep"; FAIL=1; return; }; fi
+  out="$tmp/transcript.jsonl"; : > "$out"
+  dl_session=""
+  for dl_line in "$@"; do
+    dl_line="${dl_line//@WORK@/$tmp}"
+    python3 -c 'import json,sys; print(json.dumps({"type": "learner", "text": sys.argv[1]}))' \
+      "$dl_line" >> "$out"
+    ( cd "$tmp" && \
+      CLAUDE_PLUGIN_ROOT="$REPO" "${EVAL_ENV[@]}" claude -p "$dl_line" \
+        ${dl_session:+--resume "$dl_session"} \
+        --model "$EVAL_MODEL" \
+        --plugin-dir "$REPO" \
+        --append-system-prompt "$SYS_DIALOGUE" \
+        --dangerously-skip-permissions \
+        --max-turns "$maxturns" \
+        --output-format stream-json --verbose \
+        > "$tmp/turn.jsonl" 2>>"$tmp/stderr.txt" )
+    cat "$tmp/turn.jsonl" >> "$out"
+    dl_session=$(python3 -c 'import json,sys
+sid = ""
+for line in open(sys.argv[1]):
+    try:
+        sid = json.loads(line).get("session_id") or sid
+    except ValueError:
+        pass
+print(sid)' "$tmp/turn.jsonl")
+    if [ -z "$dl_session" ]; then echo "  -- no session id after a turn; the dialogue stops here"; break; fi
+  done
+  rm -f "$tmp/turn.jsonl"
+  if truncated_by_limit "$out"; then
+    echo "INCONCLUSIVE: $name — $(inconclusive_reason "$out") (transcript at $out)"; FAIL=1
+    archive_run "$name" "$tmp" INCONCLUSIVE; return
+  fi
+  if python3 "$REPO/dev/eval/assert_scenario.py" "$assert" "$tmp/learningWithBodhi/sql-deep-dive" "$out"; then
+    echo "PASS: $name"
+    archive_run "$name" "$tmp" PASS
+    [ -n "${BODHI_EVAL_SWEEP:-}" ] || rm -rf "$tmp"
+  else
+    echo "FAIL: $name — transcript at $out, project left at $tmp"
+    FAIL=1
+    archive_run "$name" "$tmp" FAIL
+  fi
+}
+
 # Repeat mode (1.14.x — follow-up F-4). A single green run on a contested
 # grading boundary is weak evidence: F-4 measured the SAME tree producing 3/3
 # and 1/3 hours apart, so a three-run triple sits well inside the noise. Set
@@ -590,6 +656,9 @@ repeat_parent_scenario() {
   # Same signature as run_parent_scenario; sampled EVAL_RUNS times. Before
   # this existed, BODHI_EVAL_RUNS was silently ignored for parent scenarios.
   repeat_with run_parent_scenario "$@"
+}
+repeat_parent_dialogue() {
+  repeat_with run_parent_dialogue "$@"
 }
 repeat_with() {
   runner="$1"; shift
@@ -1308,10 +1377,28 @@ if [ "$want" = "all" ] || [ "$want" = "notes" ] || [ "$want" = "notes-setup" ]; 
     "/bodhikit:notes-setup — $SIM_CONTRACT My scripted answers: I do not use any notes app. When you suggest one, I take it: I have just installed it and created a vault, and the vault's folder is the folder named vault that sits beside my learningWithBodhi folder, in the same parent folder. When you explain what will happen and ask, I say yes. Run the session turn by turn in your messages — each question you ask, then my scripted reply — rather than summarising it at the end." \
     notes-setup prep_notes_vault 30 transcript
 fi
+# A dialogue since 2026-11-10: the one-shot version told the tutor "off" before
+# it had shown anything, under a harness that forbids waiting (0 of 4).
 if [ "$want" = "all" ] || [ "$want" = "notes" ] || [ "$want" = "notes-setup-off" ]; then
-  repeat_parent_scenario notes-setup-off \
-    "/bodhikit:notes-setup — $SIM_CONTRACT My scripted answers: when you show me how my notes are set up, I want to turn them off; when you check, I say yes, turn it off. Run the session turn by turn in your messages — each question you ask, then my scripted reply — rather than summarising it at the end." \
-    notes-setup-off prep_notes_on 30 transcript
+  repeat_parent_dialogue notes-setup-off notes-setup-off prep_notes_on 30 \
+    "/bodhikit:notes-setup" \
+    "I'd like to turn it off, please." \
+    "Yes, turn it off."
+fi
+# The 2026-11-10 hand check: the tutor looked for a vault on the computer, and
+# recorded a newly named folder without asking again (learning-vault/REQ-3).
+prep_notes_two_vaults() {
+  prep_notes_vault "$1" || return 1
+  mkdir -p "$(dirname "$(dirname "$1")")/vault-2"
+}
+if [ "$want" = "all" ] || [ "$want" = "notes" ] || [ "$want" = "notes-setup-other-folder" ]; then
+  repeat_parent_dialogue notes-setup-other-folder notes-setup-other-folder prep_notes_two_vaults 30 \
+    "/bodhikit:notes-setup" \
+    "I use Obsidian." \
+    "My vault is the folder @WORK@/vault" \
+    "Actually, please use my other vault instead: @WORK@/vault-2" \
+    "Yes, set it up." \
+    "Yes."
 fi
 
 echo
