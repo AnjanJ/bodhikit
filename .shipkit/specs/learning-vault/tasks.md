@@ -52,7 +52,7 @@ before the change.
   - After: T6
   - Done when: `python3 dev/eval/test_openai_plugin.py` → all pass
 
-- [ ] **T9** Both packages carry the skill and the commands; the counts read 19 → REQ-34, REQ-35
+- [x] **T9** Both packages carry the skill and the commands; the counts read 19 → REQ-34, REQ-35
   - Files: README.md, GUIDE.md, .claude-plugin/marketplace.json, docs/openai.md, dev/guide-writer/references/commands.md, dev/eval/test_openai_plugin.py, dev/eval/test_cowork_plugin.py
   - Test: dev/eval/test_openai_plugin.py check "build: reports 19 user skills" and "bundle carries notes-setup and the notes commands" (REQ-35); dev/eval/test_cowork_plugin.py check "package carries notes-setup and the notes commands" (REQ-35); dev/eval/test_openai_plugin.py check "docs: each REQ-34 file names /bodhikit:notes-setup and counts 19 skills, and docs/openai-submission.md is unchanged" (REQ-34)
   - After: T7, T8

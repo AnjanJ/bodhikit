@@ -349,7 +349,7 @@ Every day you study, BodhiKit leaves a take-home in your project: `revision/YYYY
 
 ## Skills Reference
 
-Eighteen user-invocable skills, grouped by what they do for you. Each entry follows the same five-field structure: **What it does · When to use · When NOT to use · Pairs well with · Example**. The journey arc above shows them in context; this reference is the manual you reach for when you have a specific need.
+Nineteen user-invocable skills, grouped by what they do for you. Each entry follows the same five-field structure: **What it does · When to use · When NOT to use · Pairs well with · Example**. The journey arc above shows them in context; this reference is the manual you reach for when you have a specific need.
 
 ### The four routine skills
 
@@ -565,6 +565,24 @@ These three skills keep what you have learned from leaking out.
 > "Would rotate: 1 session entry from `progress.md` (Week-7 session, 2026-07-14) → `progress/archive/session-2026-07-14.md`. Would append a 4-line summary pointer to the live doc. No assessment rotation needed (no new assessment since last `/housekeep`). Live `progress.md` would go from 4.2 KB to 1.8 KB. Re-run without `--dry-run` to apply."
 
 ---
+
+#### `/bodhikit:notes-setup [off]`
+
+**What it does.** Optional. Keeps, for each course, a syllabus and your revision sheets in one more place you already look. The syllabus is the plan in order, where you stand on each module and concept (in the same words `/progress` uses), and the reviews due in the next seven days. With Obsidian, BodhiKit writes into a folder named `Learn with Bodhi` inside your vault: a `Courses.md` page linking every course, and per course its `Syllabus.md` and a `revision/` folder. With *files only*, it keeps `Syllabus.md` at the top of each course folder. Both are refreshed at the end of each study session. Your learning folder stays the record: nothing written in the vault comes back into it, and nothing in the vault outside `Learn with Bodhi` is touched. A revision sheet from an earlier day is copied once and then left alone, so notes you add to it in Obsidian stay.
+
+**When to use.** Once, if you want your notes where you already keep them. BodhiKit offers it once, after a new course's first step or a `/continue` session; after that it never asks again. Run it again any time to change the app or folder, switch to files only, or turn it off. `off` turns it off and deletes nothing.
+
+**When NOT to use.** In a Claude chat on the web, desktop or phone, or in ChatGPT: for now it works only in Claude Code (and Codex), where BodhiKit writes to your own computer. There it says notes can't be kept yet. Nor for an app BodhiKit can't write to (Notion, OneNote, Apple Notes): choose files only.
+
+**Pairs well with.**
+- `/reflect` — writes the day's revision sheet that the copy carries.
+- `/progress` — the same positions, as a dashboard in the chat.
+
+**Example.**
+```
+/bodhikit:notes-setup
+```
+> "Which notes app do you use: Obsidian, none, or just a syllabus file in each course folder? … Each course's syllabus and your revision sheets will go into a folder named Learn with Bodhi in your vault. If your vault syncs, the copy goes with it. It's optional, and you can turn it off any time. Shall I set it up?"
 
 ### Deep work skills
 

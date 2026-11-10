@@ -94,6 +94,15 @@ def test_package_contents():
                   dev_only[:6])
             check("package: no marketplace manifest (a .plugin is installed directly)",
                   ".claude-plugin/marketplace.json" not in names)
+            # learning-vault/REQ-35: the package carries the notes skill and
+            # the script's notes commands.
+            state = bundle.read("scripts/bodhi-state").decode("utf-8")
+            check("package carries notes-setup and the notes commands",
+                  "skills/notes-setup/SKILL.md" in names
+                  and "skills/notes-setup/references/notes-file.md" in names
+                  and all(f'add_parser("{c}"' in state for c in
+                          ("notes-show", "notes-set", "notes-offered", "notes-sync"))
+                  and '"--markdown"' in state)
 
 
 def main():

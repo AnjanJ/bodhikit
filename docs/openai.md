@@ -33,7 +33,7 @@ dist/openai/bodhikit/
 │   ├── bodhi-session-context.py
 │   ├── bodhi-stop-hook.py
 │   └── bodhi-stop-hook-core.py
-└── skills/              # 18 OpenAI Agent Skills
+└── skills/              # 19 OpenAI Agent Skills
 ```
 
 To also create an uploadable archive:
@@ -113,11 +113,11 @@ After installation, mention the plugin and state the learning goal:
 
 | Capability | Claude Code | Codex | ChatGPT |
 |---|---|---|---|
-| Learner workflows | 18 native skills | 18 generated Agent Skills | Same 18 Agent Skills |
+| Learner workflows | 19 native skills | 19 generated Agent Skills | Same 19 Agent Skills |
 | Pedagogy knowledge | 19 model-only skills | 19 progressive references | 19 progressive references |
 | Delegated roles | 4 Claude agents | Portable procedures; delegation optional | Portable procedures in the current conversation |
 | Deterministic state | Local `bodhi-state` | Same script, copied byte-for-byte | Local when shell/files are exposed; otherwise conversation-only |
-| SessionStart/Stop hooks | Native | Optional adapters in local directory builds after trust; omitted from the public ZIP | Not available; the runtime adapter carries their duties explicitly (the learning-project rule on first learner-file access; `verify` and the revision sheet at close) |
+| SessionStart/Stop hooks | Native | Optional adapters in local directory builds after trust; omitted from the public ZIP | Not available; the runtime adapter carries their duties explicitly (the learning-project rule on first learner-file access; `verify`, the revision sheet, and the `notes-setup` skill's notes copy and one-time offer at close) |
 | Cross-chat/device persistence | Local project files | Local project files | Requires a future remote MCP state service |
 
 In ChatGPT conversation-only mode, BodhiKit preserves the teaching interaction
@@ -149,7 +149,7 @@ python3 dev/eval/test_openai_plugin.py
 ```
 
 The OpenAI suite verifies package isolation, manifest/version synchronization,
-18 workflow conversions, all knowledge and role mappings, source-platform token
+19 workflow conversions, all knowledge and role mappings, source-platform token
 removal, archive structure, byte-for-byte state-engine reuse, Codex-shaped
 SessionStart and Stop events, ChatGPT hook independence, and schema/revision
 enforcement.

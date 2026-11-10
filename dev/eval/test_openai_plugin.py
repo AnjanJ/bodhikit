@@ -262,6 +262,40 @@ def test_build_and_structure():
             is not None and "In conversation-only mode" in steps,
             steps[-400:],
         )
+        # learning-vault/REQ-35: the bundle carries the notes skill and the
+        # script's notes commands.
+        bundled_state = (output / "scripts" / "bodhi-state").read_text(encoding="utf-8")
+        check(
+            "bundle carries notes-setup and the notes commands",
+            (output / "skills" / "notes-setup" / "SKILL.md").is_file()
+            and all(f'add_parser("{c}"' in bundled_state for c in
+                    ("notes-show", "notes-set", "notes-offered", "notes-sync"))
+            and '"--markdown"' in bundled_state,
+        )
+        # learning-vault/REQ-34: the documents name the command and count 19
+        # skills; the dated records of past portal runs are left as they were.
+        def doc(rel):
+            return (REPO / rel).read_text(encoding="utf-8")
+        market = json.loads(doc(".claude-plugin/marketplace.json"))
+        market_text = json.dumps(market, ensure_ascii=False)
+        named = {
+            "README.md": "/notes-setup" in doc("README.md") and "Skills (19)" in doc("README.md"),
+            "GUIDE.md": "/bodhikit:notes-setup" in doc("GUIDE.md")
+                        and "Nineteen user-invocable skills" in doc("GUIDE.md"),
+            "marketplace.json": "/bodhikit:notes-setup" in market_text
+                                and market_text.count("19 skills") == 2
+                                and "18 skills" not in market_text,
+            "docs/openai.md": "notes-setup" in doc("docs/openai.md")
+                              and not re.search(r"\b18 (?:OpenAI |native |generated )?"
+                                                r"(?:Agent Skills|skills|workflow)",
+                                                doc("docs/openai.md")),
+            "commands.md": "### notes-setup" in doc("dev/guide-writer/references/commands.md"),
+        }
+        check("docs: each REQ-34 file names notes-setup and counts 19 skills",
+              all(named.values()), named)
+        submission = doc("docs/openai-submission.md")
+        check("docs: the dated portal records in docs/openai-submission.md are unchanged",
+              "notes-setup" not in submission and "All 18 skills" in submission)
         rule_section = runtime.split("## Apply the learning-project rule", 1)
         check(
             "ChatGPT: rule delivery reads the packaged learning-project rule",
