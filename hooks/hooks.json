@@ -1,5 +1,5 @@
 {
-  "description": "BodhiKit hooks, all fail-open (a missing python3 or a mis-expanded path exits 0). SessionStart: inject rules/learning-project.md when the session starts inside a learning project (plugins do not load rules/). UserPromptExpansion and PreToolUse on Skill: in a cloud chat only, inject the same rule when a BodhiKit skill first runs. Stop: verify tracking-file schemas before the session ends.",
+  "description": "BodhiKit hooks, all fail-open (a missing python3 or a mis-expanded path exits 0). SessionStart: inject rules/learning-project.md when the session starts inside a learning project (plugins do not load rules/). UserPromptExpansion and PreToolUse on Skill: in a cloud chat only, inject the same rule when a BodhiKit skill first runs. Stop: verify tracking-file schemas before the session ends; with the learner's notes turned on, copy their syllabus and revision sheets at session close, and make the one-time /bodhikit:notes-setup offer (never a block).",
   "hooks": {
     "SessionStart": [
       {

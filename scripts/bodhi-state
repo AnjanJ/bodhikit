@@ -3750,6 +3750,13 @@ def cmd_notes_sync(args):
         emit({"choice": None, "written": [], "unchanged": [], "failed": [],
               "firstArrival": [], "reason": "no profile"})
         return
+    if notes.get("choice") in ("vault", "files"):
+        # Locks only when there is work: with no choice this command must
+        # leave no file behind, a lock file included (learning-vault/REQ-7).
+        bdir = os.path.join(args.project, ".bodhi")
+        if os.path.isdir(bdir):
+            acquire_lock(bdir)
+        acquire_lock(os.path.dirname(path))
     courses = profile_courses(path) if args.all else [os.path.abspath(args.project)]
     res = sync_notes(notes, courses)
     record_announced(path, notes, res["firstArrival"])
@@ -3842,6 +3849,8 @@ READ_ONLY_COMMANDS = {cmd_due, cmd_mastery, cmd_calibration, cmd_retention,
                       cmd_export_anonymized, cmd_session_brief, cmd_snapshot,
                       cmd_gate_check, cmd_verify, cmd_revision_brief,
                       cmd_syllabus, cmd_notes_show}
+# Takes its own locks once it knows it will write (learning-vault/REQ-7).
+LOCKS_ITSELF = {cmd_notes_sync}
 
 def main():
     p = argparse.ArgumentParser(prog="bodhi-state", description=__doc__,
@@ -4091,11 +4100,12 @@ def main():
     # the profile's directory too.
     shared = args.fn in READ_ONLY_COMMANDS
     bdir = os.path.join(args.project, ".bodhi")
-    if os.path.isdir(bdir):
-        acquire_lock(bdir, shared=shared)
     profile = find_profile(args.project)
-    if profile:
-        acquire_lock(os.path.dirname(profile), shared=shared)
+    if args.fn not in LOCKS_ITSELF:
+        if os.path.isdir(bdir):
+            acquire_lock(bdir, shared=shared)
+        if profile:
+            acquire_lock(os.path.dirname(profile), shared=shared)
     install_kinds(args.project)
     args.fn(args)
 

@@ -331,6 +331,9 @@ def build(output: Path) -> dict[str, int | str]:
         encoding="utf-8"
     )
     stop_core_text = stop_core_text.replace("tells Claude", "tells the model")
+    # learning vault: the notes offer names the skill the way Codex does.
+    stop_core_text = stop_core_text.replace(
+        'SETUP = "/bodhikit:notes-setup"', 'SETUP = "the notes-setup skill"')
     write_text(stop_core, stop_core_text, mode=0o755)
     copy_transformed_tree(REPO_ROOT / "rules", output / "rules", user_skill_names)
 

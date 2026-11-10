@@ -9,6 +9,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import shutil
 import time
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -309,10 +310,267 @@ def t_shell_variables():
         check("variables: an unassigned variable names nothing", out == "", out[:120])
 
 
+# --- The learning vault (spec learning-vault) ---------------------------------
+
+TODAY = os.environ["BODHI_TODAY"]
+STATE = os.path.join(REPO, "scripts", "bodhi-state")
+NO_CLOUD = os.path.join(tempfile.gettempdir(), "bodhi-no-cloud-marker")
+
+
+def vault_env(cloud=None):
+    env = os.environ.copy()
+    env["HOME"] = tempfile.mkdtemp(prefix="bodhi-hook-home-")
+    env["BODHI_CLOUD_MARKER"] = cloud or NO_CLOUD
+    return env
+
+
+def learner_with_course(root, name="sql", studied=True, sheet=True):
+    """root/learningWithBodhi with a profile, its projects list and one
+    course; with `studied`, a review dated today, and with `sheet`, today's
+    revision sheet, so a session that ran touch-state can close."""
+    lwb = os.path.join(root, "learningWithBodhi")
+    os.makedirs(lwb, exist_ok=True)
+    if not os.path.exists(os.path.join(lwb, ".bodhi-profile.json")):
+        with open(os.path.join(lwb, ".bodhi-profile.json"), "w") as f:
+            json.dump({"version": 2, "cumulativeStats": {}}, f)
+    lp = os.path.join(lwb, ".bodhi-profile.projects.json")
+    lists = {"version": 2, "activeProjects": [], "completedProjects": []}
+    if os.path.exists(lp):
+        with open(lp) as f:
+            lists = json.load(f)
+    lists["activeProjects"].append({"name": name, "topic": name, "startedAt": TODAY,
+                                    "currentPhase": "1", "currentModule": "A",
+                                    "bloomLevel": 1, "pace": "steady", "status": "active",
+                                    "trackPurpose": "test"})
+    with open(lp, "w") as f:
+        json.dump(lists, f)
+    review = [{"date": TODAY, "result": "correct", "bloomLevel": 3, "source": "teach"}]
+    proj = make_project(root, name, {"version": 3, "sessionHistory": [], "concepts": [
+        {"name": "Joins", "module": "A", "box": 2, "bloomLevel": 3,
+         "feynmanPassed": False, "consecutiveCorrectAtL4Plus": 0,
+         "nextReview": TODAY, "lastReviewed": TODAY,
+         "reviewHistory": review if studied else []}]})
+    if sheet:
+        os.makedirs(os.path.join(proj, "revision"))
+        with open(os.path.join(proj, "revision", f"{TODAY}-joins.md"), "w") as f:
+            f.write("# Revision — Joins\n")
+    return lwb, proj
+
+
+def notes_of(lwb):
+    p = os.path.join(lwb, ".bodhi-notes.json")
+    if not os.path.exists(p):
+        return None
+    with open(p) as f:
+        return json.load(f)
+
+
+def state_cmd(proj, *argv, env=None):
+    r = subprocess.run([sys.executable, STATE, "--project", proj, *argv],
+                       capture_output=True, text=True, env=env)
+    assert r.returncode == 0, r.stdout + r.stderr
+    return json.loads(r.stdout)
+
+
+def write_session(root, cwd, commands=(), typed=None, skill=None):
+    """A transcript: an optional typed command, an optional Skill call, then
+    one Bash tool_use per command."""
+    path = os.path.join(root, "transcript.jsonl")
+    with open(path, "w") as f:
+        if typed:
+            f.write(json.dumps({"type": "user", "cwd": cwd, "message": {
+                "role": "user", "content": f"<command-message>{typed}</command-message>\n"
+                f"<command-name>/{typed}</command-name>\n<command-args></command-args>"}}) + "\n")
+        if skill:
+            f.write(json.dumps({"type": "assistant", "cwd": cwd, "message": {"content": [
+                {"type": "tool_use", "name": "Skill", "input": {"skill": skill}}]}}) + "\n")
+        for cmd in commands:
+            f.write(json.dumps({"type": "assistant", "cwd": cwd, "message": {"content": [
+                {"type": "tool_use", "name": "Bash", "input": {"command": cmd}}]}}) + "\n")
+    return path
+
+
+def touch(proj):
+    return f'"$R/scripts/bodhi-state" --project "{proj}" touch-state --activity x'
+
+
+def system_message(out):
+    d = json.loads(out) if out else {}
+    return d.get("systemMessage", ""), d
+
+
+def internal_name(text):
+    sys.path.insert(0, os.path.join(REPO, "dev", "eval"))
+    import assert_scenario
+    m = assert_scenario.INTERNAL_NAME_RE.search(text)
+    return m.group(1) if m else None
+
+
+def t_no_notes_file_same_as_before():
+    """learning-vault/REQ-7: with no notes file and no offer moment, the hook
+    prints what it printed before and writes nothing new."""
+    with tempfile.TemporaryDirectory() as root:
+        lwb, proj = learner_with_course(root)
+        before = sorted(os.listdir(proj)) + sorted(os.listdir(lwb))
+        tp = write_session(root, root, [touch(proj)])
+        out = run_hook({"cwd": root, "transcript_path": tp}, env=vault_env())
+        check("no notes: a closed session stops silently", out == "", out[:200])
+        check("no notes: no new file", sorted(os.listdir(proj)) + sorted(os.listdir(lwb))
+              == before, os.listdir(proj))
+        out = run_hook({"cwd": root, "transcript_path": tp, "stop_hook_active": True},
+                       env=vault_env())
+        check("no notes: the re-entry stop is silent too", out == "", out[:200])
+
+
+def t_offer_after_learn():
+    """learning-vault/REQ-8, REQ-10: the turn that registered a new course and
+    gave its first step ends with the offer once, through systemMessage,
+    never a block; the offer is recorded and not made again."""
+    with tempfile.TemporaryDirectory() as root:
+        lwb, proj = learner_with_course(root, studied=False, sheet=False)
+        cmds = [f'"$R/scripts/bodhi-state" --project "{proj}" profile-add-project '
+                f'--name sql --topic SQL --bloom 1 --pace steady --track-purpose x', touch(proj)]
+        tp = write_session(root, root, cmds)
+        out = run_hook({"cwd": root, "transcript_path": tp}, env=vault_env())
+        msg, d = system_message(out)
+        check("offer after /learn: made, naming the command", "/bodhikit:notes-setup" in msg, out)
+        check("offer after /learn: never a block", "decision" not in d, d)
+        check("offer after /learn: a statement, not a question", "?" not in msg, msg)
+        check("offer after /learn: no engine names", internal_name(msg) is None,
+              internal_name(msg))
+        check("offer after /learn: recorded", (notes_of(lwb) or {}).get("offerMadeOn") == TODAY,
+              notes_of(lwb))
+        out = run_hook({"cwd": root, "transcript_path": tp}, env=vault_env())
+        check("offer after /learn: not made twice", "notes-setup" not in out, out)
+
+
+def t_offer_after_continue():
+    """learning-vault/REQ-9: a session begun with /continue that reaches
+    session close ends with the offer, whether /continue was typed or
+    called through the Skill tool; not before the sheet exists."""
+    for label, kw in (("typed", {"typed": "bodhikit:continue"}),
+                      ("Skill call", {"skill": "bodhikit:continue"})):
+        with tempfile.TemporaryDirectory() as root:
+            lwb, proj = learner_with_course(root, sheet=False)
+            tp = write_session(root, root, [touch(proj)], **kw)
+            out = run_hook({"cwd": root, "transcript_path": tp}, env=vault_env())
+            d = json.loads(out) if out else {}
+            check(f"offer after /continue ({label}): no offer while the sheet is owed",
+                  d.get("decision") == "block" and "notes-setup" not in out
+                  and notes_of(lwb) is None, out[:200])
+            os.makedirs(os.path.join(proj, "revision"))
+            with open(os.path.join(proj, "revision", f"{TODAY}-joins.md"), "w") as f:
+                f.write("# Revision — Joins\n")
+            out = run_hook({"cwd": root, "transcript_path": tp}, env=vault_env())
+            msg, d = system_message(out)
+            check(f"offer after /continue ({label}): made at session close",
+                  "/bodhikit:notes-setup" in msg and "decision" not in d, out)
+    with tempfile.TemporaryDirectory() as root:
+        lwb, proj = learner_with_course(root)
+        tp = write_session(root, root, [touch(proj)], typed="bodhikit:quiz")
+        out = run_hook({"cwd": root, "transcript_path": tp}, env=vault_env())
+        check("no offer after a session begun with another command", out == "", out)
+
+
+def t_offer_not_with_a_choice():
+    """learning-vault/REQ-8, REQ-9: a learner who already chose (here: files
+    only) is not offered, even with no offer on record."""
+    with tempfile.TemporaryDirectory() as root:
+        lwb, proj = learner_with_course(root)
+        state_cmd(proj, "notes-set", "--choice", "files", env=vault_env())
+        tp = write_session(root, root, [touch(proj)], typed="bodhikit:continue")
+        out = run_hook({"cwd": root, "transcript_path": tp}, env=vault_env())
+        check("a learner with a choice is not offered", "notes-setup" not in out, out)
+        check("files only: the session close writes Syllabus.md",
+              os.path.exists(os.path.join(proj, "Syllabus.md")))
+
+
+def t_no_offer_in_cloud_chat():
+    """learning-vault/REQ-38: in a cloud chat sprint 1 makes no offer and
+    writes nothing."""
+    with tempfile.TemporaryDirectory() as root, tempfile.TemporaryDirectory() as marker:
+        lwb, proj = learner_with_course(root)
+        tp = write_session(root, root, [touch(proj)], typed="bodhikit:continue")
+        out = run_hook({"cwd": root, "transcript_path": tp}, env=vault_env(cloud=marker))
+        check("cloud chat: no offer", out == "", out)
+        check("cloud chat: nothing recorded", notes_of(lwb) is None)
+
+
+NOTES_WORDS = ("notes-setup", "notes-sync", "notes-set", "notes-show", "notes-offered",
+               ".bodhi-notes.json", "Syllabus.md", "Learn with Bodhi")
+
+
+def t_existing_skills_unchanged():
+    """learning-vault/REQ-11: the offer and the session-close writes reach the
+    learner with no change to the text of any existing SKILL.md: no skill but
+    /notes-setup names the feature. (A byte comparison with a release would
+    also catch unrelated edits, such as another spec's.)"""
+    r = subprocess.run(["git", "-C", REPO, "ls-tree", "-r", "--name-only", "v1.26.1",
+                        "skills/"], capture_output=True, text=True)
+    names = [n for n in r.stdout.split() if n.endswith("/SKILL.md")]
+    check("the skills of release 1.26.1 are listed from git", r.returncode == 0
+          and len(names) > 30, r.stderr[-200:])
+    named = []
+    for n in names:
+        with open(os.path.join(REPO, n), encoding="utf-8") as f:
+            text = f.read()
+        named += [f"{n}: {w}" for w in NOTES_WORDS if w in text]
+    check("no SKILL.md that 1.26.1 shipped names the notes feature", not named, named)
+
+
+def t_copy_failure_reported():
+    """learning-vault/REQ-26: when the copy cannot be written the session still
+    closes (exit 0, no block) and the learner is told it did not happen and
+    why."""
+    with tempfile.TemporaryDirectory() as root:
+        lwb, proj = learner_with_course(root)
+        vault = os.path.join(root, "vault")
+        os.makedirs(vault)
+        state_cmd(proj, "notes-set", "--choice", "vault", "--app", "obsidian",
+                  "--location", vault, env=vault_env())
+        shutil.rmtree(vault)
+        tp = write_session(root, root, [touch(proj)])
+        out = run_hook({"cwd": root, "transcript_path": tp}, env=vault_env())
+        msg, d = system_message(out)
+        check("copy failure: the stop is not blocked", "decision" not in d, d)
+        check("copy failure: the learner is told, with the reason",
+              "could not copy" in msg and "not there" in msg, msg)
+        check("copy failure: no engine names", internal_name(msg) is None, internal_name(msg))
+
+
+def t_saved_only_after_success():
+    """learning-vault/REQ-27: a course's first arrival in the vault is
+    announced only after it was written; a failed copy announces nothing."""
+    with tempfile.TemporaryDirectory() as root:
+        lwb, proj = learner_with_course(root)
+        vault = os.path.join(root, "vault")
+        os.makedirs(vault)
+        state_cmd(proj, "notes-set", "--choice", "vault", "--app", "obsidian",
+                  "--location", vault, env=vault_env())
+        _, proj2 = learner_with_course(root, name="chess")
+        tp = write_session(root, root, [touch(proj2)])
+        out = run_hook({"cwd": root, "transcript_path": tp}, env=vault_env())
+        msg, _ = system_message(out)
+        check("first arrival: announced once written",
+              "chess" in msg and "now in" in msg and os.path.exists(
+                  os.path.join(vault, "Learn with Bodhi", "chess", "Syllabus.md")), out)
+        out = run_hook({"cwd": root, "transcript_path": tp}, env=vault_env())
+        check("first arrival: not announced again", out == "", out)
+        _, proj3 = learner_with_course(root, name="art")
+        shutil.rmtree(vault)
+        tp = write_session(root, root, [touch(proj3)])
+        out = run_hook({"cwd": root, "transcript_path": tp}, env=vault_env())
+        msg, _ = system_message(out)
+        check("failed copy: nothing announced as saved", "now in" not in msg, msg)
+
+
 def main():
     for t in (t_block_on_broken, t_reentry_and_stale, t_configured_roots,
               t_bounded_search, t_failure_reasons, t_revision_sheet_required,
-              t_touched_outside_cwd, t_shell_variables):
+              t_touched_outside_cwd, t_shell_variables,
+              t_no_notes_file_same_as_before, t_offer_after_learn, t_offer_after_continue,
+              t_offer_not_with_a_choice, t_no_offer_in_cloud_chat, t_existing_skills_unchanged,
+              t_copy_failure_reported, t_saved_only_after_success):
         t()
     print(f"\n{PASS} passed, {FAIL} failed")
     sys.exit(1 if FAIL else 0)

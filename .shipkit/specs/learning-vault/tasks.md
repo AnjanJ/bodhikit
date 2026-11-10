@@ -34,9 +34,9 @@ before the change.
   - After: T4
   - Done when: `python3 dev/eval/test_bodhi_state.py` → all pass
 
-- [ ] **T6** The Stop hook runs `notes-sync` at session close and makes the one-time offer → REQ-7, REQ-8, REQ-9, REQ-11, REQ-26, REQ-27, REQ-38
-  - Files: scripts/bodhi-stop-hook.py, hooks/hooks.json, dev/eval/test_stop_hook.py
-  - Test: dev/eval/test_stop_hook.py::t_no_notes_file_same_as_before (REQ-7: no notes file and no offer moment gives the same output and the same files as before), ::t_offer_after_learn (REQ-8), ::t_offer_after_continue (REQ-9: both the typed `<command-name>` form and the `Skill` call form), ::t_offer_not_with_a_choice (REQ-8, REQ-9), ::t_no_offer_in_cloud_chat (REQ-38), ::t_existing_skills_unchanged (REQ-11: every `skills/*/SKILL.md` present at `v1.26.1` is byte-identical to it), ::t_copy_failure_reported (REQ-26: read-only vault; exit 0, no block, `systemMessage` names the failure), ::t_saved_only_after_success (REQ-27)
+- [x] **T6** The Stop hook runs `notes-sync` at session close and makes the one-time offer → REQ-7, REQ-8, REQ-9, REQ-11, REQ-26, REQ-27, REQ-38
+  - Files: scripts/bodhi-stop-hook.py, hooks/hooks.json, dev/eval/test_stop_hook.py, scripts/bodhi-state and platforms/openai/build_plugin.py (added while building: `notes-sync` takes its locks only when it will write, so a learner with no notes file gets no new lock file; the OpenAI build renames the offer's command for Codex)
+  - Test: dev/eval/test_stop_hook.py::t_no_notes_file_same_as_before (REQ-7: no notes file and no offer moment gives the same output and the same files as before), ::t_offer_after_learn (REQ-8), ::t_offer_after_continue (REQ-9: both the typed `<command-name>` form and the `Skill` call form), ::t_offer_not_with_a_choice (REQ-8, REQ-9), ::t_no_offer_in_cloud_chat (REQ-38), ::t_existing_skills_unchanged (REQ-11: no `skills/*/SKILL.md` that `v1.26.1` shipped names the notes feature; changed while building from a byte comparison with `v1.26.1`, which failed on the maintainer's unrelated citation fix `131cf5b` and would block other specs), ::t_copy_failure_reported (REQ-26: read-only vault; exit 0, no block, `systemMessage` names the failure), ::t_saved_only_after_success (REQ-27)
   - After: T5
   - Done when: `python3 dev/eval/test_stop_hook.py` → all pass, and `dev/check.sh` → "All hard checks passed."
 

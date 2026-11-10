@@ -153,9 +153,11 @@ def session_writes(transcript_path):
                     for m in arg_re.finditer(cmd):
                         raw = expand_vars(next(g for g in m.groups() if g), cmd, m.start())
                         path = os.path.abspath(os.path.join(cwd, os.path.expanduser(raw)))
-                        entry = out.setdefault(path, {"touch": False})
+                        entry = out.setdefault(path, {"touch": False, "register": False})
                         if re.search(r"\btouch-state\b", cmd[m.end():]):
                             entry["touch"] = True
+                        if re.search(r"\bprofile-add-project\b", cmd[m.end():]):
+                            entry["register"] = True
     except OSError:
         return {}
     return out
@@ -188,13 +190,16 @@ def main():
         payload = json.load(sys.stdin)
     except (json.JSONDecodeError, OSError):
         return
-    if payload.get("stop_hook_active"):
-        return  # already blocked once this turn; never loop
     cwd = payload.get("cwd") or os.getcwd()
     script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bodhi-state")
     if not os.path.exists(script):
         return
     wrote = session_writes(payload.get("transcript_path"))
+    if payload.get("stop_hook_active"):
+        # Already blocked once this turn; never block again. The notes step
+        # never blocks, and this is often the turn the late sheet was written.
+        say(notes_step(script, wrote, payload.get("transcript_path"), offer=False))
+        return
 
     found = find_projects(configured_roots(cwd))
     seen = {os.path.realpath(p) for p in found}
@@ -266,6 +271,111 @@ def main():
              if any(o for *_, o in missing_sheets) else ""))
     if reasons:
         print(json.dumps({"decision": "block", "reason": "\n\n".join(reasons)}))
+        return
+    say(notes_step(script, wrote, payload.get("transcript_path"), offer=True))
+
+
+# --- The learning vault (spec learning-vault, decision 0006) ----------------
+# At session close (a stop this hook does not block, after this session's
+# touch-state), copy the learner's notes with `bodhi-state notes-sync`, and
+# make the one-time offer of the notes setup after /learn's first step
+# or a /continue session. It speaks through systemMessage, never a block.
+# Nothing happens in a cloud chat in sprint 1, and with no notes file and no
+# offer moment the hook prints what it printed before (learning-vault/REQ-7).
+
+# The command's name as the learner types it; the OpenAI build rewrites this
+# one line, because Codex names a skill differently.
+SETUP = "/bodhikit:notes-setup"
+OFFER = ("BodhiKit can keep a syllabus of each course, with when your reviews are due, "
+         "and your revision sheets in the notes app you already use, or just as a file "
+         "in each course folder. It is off until you turn it on, and you can turn it on "
+         f"or change it at any time with {SETUP}.")
+CONTINUE_RE = re.compile(r"<command-name>/?bodhikit:continue</command-name>")
+
+
+def cloud_chat():
+    """The marker bodhi-session-context.py uses for a cloud chat."""
+    return os.path.isdir(os.environ.get("BODHI_CLOUD_MARKER", "/mnt/user-data"))
+
+
+def began_with_continue(transcript_path):
+    """True when this session ran /continue: typed (the command-name marker
+    in a user message) or called by the model as a skill."""
+    if not transcript_path or not os.path.exists(transcript_path):
+        return False
+    try:
+        with open(transcript_path, encoding="utf-8", errors="replace") as f:
+            for line in f:
+                if "continue" not in line:
+                    continue
+                try:
+                    rec = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                content = (rec.get("message") or {}).get("content")
+                if rec.get("type") == "user":
+                    texts = [content] if isinstance(content, str) else [
+                        b.get("text", "") for b in content or [] if isinstance(b, dict)]
+                    if any(CONTINUE_RE.search(t or "") for t in texts):
+                        return True
+                for b in content if isinstance(content, list) else []:
+                    if (isinstance(b, dict) and b.get("type") == "tool_use"
+                            and b.get("name") == "Skill"
+                            and str((b.get("input") or {}).get("skill", "")).strip("/")
+                            in ("bodhikit:continue", "continue")):
+                        return True
+    except OSError:
+        return False
+    return False
+
+
+def state_json(script, project, *argv):
+    try:
+        r = subprocess.run([sys.executable, script, "--project", project, *argv],
+                           capture_output=True, text=True, timeout=10)
+        return json.loads(r.stdout) if r.stdout.strip() else {}
+    except (subprocess.SubprocessError, OSError, ValueError):
+        return {}
+
+
+def notes_step(script, wrote, transcript_path, offer):
+    """The lines to show the learner, or [] (learning-vault/REQ-8, REQ-9,
+    REQ-12, REQ-20..REQ-22, REQ-26, REQ-27, REQ-38)."""
+    if cloud_chat():
+        return []
+    closed = [p for p, w in wrote.items()
+              if w.get("touch") and os.path.exists(os.path.join(p, ".bodhi", "state.json"))]
+    if not closed:
+        return []
+    lines, failed, arrived = [], [], []
+    for project in closed:
+        res = state_json(script, project, "notes-sync")
+        failed += [f for f in res.get("failed", []) if isinstance(f, dict)]
+        arrived += [n for n in res.get("firstArrival", []) if n not in arrived]
+    if arrived:
+        home = state_json(script, closed[0], "notes-show").get("home") or "your vault"
+        lines.append(f"Your notes for {', '.join(arrived)} are now in {home}.")
+    if failed:
+        first = failed[0]
+        more = f" (and {len(failed) - 1} more)" if len(failed) > 1 else ""
+        lines.append(f"BodhiKit could not copy your notes this time: {first.get('path')}: "
+                     f"{first.get('why')}{more}. Your files in the course folder are "
+                     f"unchanged; {SETUP} shows or changes the setting.")
+    if offer:
+        moment = any(wrote[p].get("register") for p in closed) or \
+            began_with_continue(transcript_path)
+        if moment:
+            shown = state_json(script, closed[0], "notes-show")
+            if (shown.get("profileFound") and shown.get("choice") is None
+                    and shown.get("offerMadeOn") is None):
+                if state_json(script, closed[0], "notes-offered").get("recorded"):
+                    lines.append(OFFER)
+    return lines
+
+
+def say(lines):
+    if lines:
+        print(json.dumps({"systemMessage": "\n\n".join(lines)}))
 
 
 if __name__ == "__main__":
