@@ -1278,6 +1278,28 @@ if [ "$want" = "all" ] || [ "$want" = "lifecycle" ] || [ "$want" = "evaluate" ];
     evaluate prep_evaluate "" "" 60
 fi
 
+# --- The learning vault (learning-vault/REQ-1, REQ-2, REQ-3, REQ-5, REQ-6) ---
+# Both run from the learningWithBodhi parent, with an empty folder named
+# `vault` beside the learning folder standing in for an Obsidian vault.
+prep_notes_vault() {
+  mkdir -p "$(dirname "$(dirname "$1")")/vault"
+}
+prep_notes_on() {
+  prep_notes_vault "$1" || return 1
+  python3 "$REPO/scripts/bodhi-state" --project "$(dirname "$1")" notes-set --choice vault \
+    --app obsidian --location "$(dirname "$(dirname "$1")")/vault" > /dev/null
+}
+if [ "$want" = "all" ] || [ "$want" = "notes" ] || [ "$want" = "notes-setup" ]; then
+  run_parent_scenario notes-setup \
+    "/bodhikit:notes-setup — $SIM_CONTRACT My scripted answers: I do not use any notes app. When you suggest one, I take it: I have just installed it and created a vault, and the vault's folder is the folder named vault that sits beside my learningWithBodhi folder, in the same parent folder. When you explain what will happen and ask, I say yes. Run the session turn by turn in your messages — each question you ask, then my scripted reply — rather than summarising it at the end." \
+    notes-setup prep_notes_vault 30 transcript
+fi
+if [ "$want" = "all" ] || [ "$want" = "notes" ] || [ "$want" = "notes-setup-off" ]; then
+  run_parent_scenario notes-setup-off \
+    "/bodhikit:notes-setup — $SIM_CONTRACT My scripted answers: when you show me how my notes are set up, I want to turn them off; when you check, I say yes, turn it off. Run the session turn by turn in your messages — each question you ask, then my scripted reply — rather than summarising it at the end." \
+    notes-setup-off prep_notes_on 30 transcript
+fi
+
 echo
 [ "$FAIL" -eq 0 ] && echo "All LLM evals passed." || echo "LLM eval failures above."
 exit $FAIL

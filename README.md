@@ -162,7 +162,7 @@ BodhiKit currently has a very small number of real learners. If you try it, your
 
 **Full guide:** see [GUIDE.md](./GUIDE.md) — a complete worked example from Day 1 to capstone (10-week Rust journey), every skill with *when to use / when not to / pairs well with / example*, how teaching and analogies work, the spaced-review system, the optional capstone, and tips for using BodhiKit alongside books and courses.
 
-## Skills (18)
+## Skills (19)
 
 | Skill | Description |
 |-------|-------------|
@@ -184,6 +184,7 @@ BodhiKit currently has a very small number of real learners. If you try it, your
 | `/forget` | Send one or more concepts back for review tomorrow, starting their schedule again — for honest self-assessment |
 | `/housekeep` | Rotate tracking files into archive + summary form; one-shot 1.7.0 migration |
 | `/teach-back` | Optional capstone after completion: Socratic-style blog post on a formerly-shaky topic, master comparison, learner-decided publish |
+| `/notes-setup` | Optional: keep each course's syllabus (with when reviews are due) and your revision sheets in your notes app (Obsidian) or as a file in each course folder; turn it on, change it or turn it off |
 
 ## Agents (4)
 

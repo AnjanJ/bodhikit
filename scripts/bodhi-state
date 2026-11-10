@@ -3851,6 +3851,9 @@ READ_ONLY_COMMANDS = {cmd_due, cmd_mastery, cmd_calibration, cmd_retention,
                       cmd_syllabus, cmd_notes_show}
 # Takes its own locks once it knows it will write (learning-vault/REQ-7).
 LOCKS_ITSELF = {cmd_notes_sync}
+# Learner-wide: --project may be the learning folder itself, which holds the
+# profile but no .bodhi/ (learning-vault, /notes-setup).
+LEARNER_WIDE = {cmd_notes_show, cmd_notes_set, cmd_notes_offered, cmd_notes_sync}
 
 def main():
     p = argparse.ArgumentParser(prog="bodhi-state", description=__doc__,
@@ -4106,7 +4109,8 @@ def main():
             acquire_lock(bdir, shared=shared)
         if profile:
             acquire_lock(os.path.dirname(profile), shared=shared)
-    install_kinds(args.project)
+    if not (args.fn in LEARNER_WIDE and not os.path.isdir(bdir)):
+        install_kinds(args.project)
     args.fn(args)
 
 

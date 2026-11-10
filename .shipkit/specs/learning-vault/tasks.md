@@ -40,8 +40,8 @@ before the change.
   - After: T5
   - Done when: `python3 dev/eval/test_stop_hook.py` → all pass, and `dev/check.sh` → "All hard checks passed."
 
-- [ ] **T7** The `/bodhikit:notes-setup` skill, with its transcript assertion and a live scenario → REQ-1, REQ-2, REQ-3, REQ-5, REQ-6
-  - Files: skills/notes-setup/SKILL.md, dev/eval/assert_scenario.py, dev/eval/test_detectors.py, dev/eval/run-llm-evals.sh
+- [x] **T7** The `/bodhikit:notes-setup` skill, with its transcript assertion and a live scenario → REQ-1, REQ-2, REQ-3, REQ-5, REQ-6
+  - Files: skills/notes-setup/SKILL.md, dev/eval/assert_scenario.py, dev/eval/test_detectors.py, dev/eval/run-llm-evals.sh; added while building, because `dev/check.sh` fails the moment a 19th skill exists: README.md (the `Skills (19)` count and its row), dev/eval/test_openai_plugin.py (the 19-skill count), dev/guide-writer/references/commands.md (its entry), skills/notes-setup/references/notes-file.md (the Stop-hook line names the ChatGPT path); and scripts/bodhi-state with dev/eval/test_bodhi_state.py (the notes commands accept the learning folder as `--project`)
   - Test: dev/eval/test_detectors.py::t_notes_setup_detector, on canned transcripts that pass and fail each point: the question lists the apps, "I use none" and "files only" (REQ-1); exactly one suggestion with a reason (REQ-2); what, where, sync, optional and off said before `notes-set` runs (REQ-3); with a choice on record, the current choice shown and change or off offered (REQ-5); on off, the learner told the files stay and will not be refreshed (REQ-6)
   - After: T2
   - Done when: `python3 dev/eval/test_detectors.py` → all pass, and `dev/check.sh` → "All hard checks passed." (the 18 KB budget and the skill lint included)

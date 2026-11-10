@@ -5205,6 +5205,23 @@ def t_notes_off_writes_nothing():
               read_text(os.path.join(proj, "Syllabus.md")) == syl_before)
 
 
+def t_notes_commands_take_the_learning_folder():
+    """learning-vault/REQ-1, REQ-4: /notes-setup may name the learning folder
+    itself as --project (it holds the profile but no .bodhi/); the notes
+    commands work there. Other commands still refuse it as before."""
+    with tempfile.TemporaryDirectory() as root, tempfile.TemporaryDirectory() as vault:
+        make_learner(root)
+        shown = run_env(root, "notes-show")
+        check("notes-show on the learning folder", shown.get("profileFound") is True, shown)
+        run_env(root, "notes-set", "--choice", "vault", "--app", "obsidian", "--location", vault)
+        check("notes-set on the learning folder records the choice",
+              (read_notes(root) or {}).get("choice") == "vault")
+        out = run_env(root, "notes-sync", "--all")
+        check("notes-sync --all on the learning folder runs", out.get("failed") == [], out)
+        out = run(root, "due", expect_fail=True)
+        check("another command still refuses a folder with no .bodhi/", out.get("ok") is False, out)
+
+
 def main():
     for t in (t_migrate, t_record_review, t_sessions_and_forget,
               t_touch_state_and_profile, t_gate_check,
@@ -5249,7 +5266,7 @@ def main():
               t_notes_sync_files_only, t_notes_sync_copies_syllabus, t_notes_sync_sheet_rule,
               t_notes_sync_courses_index, t_notes_set_vault_copies_every_course,
               t_notes_sync_stays_in_home, t_notes_sync_reads_nothing_back,
-              t_notes_off_writes_nothing):
+              t_notes_off_writes_nothing, t_notes_commands_take_the_learning_folder):
         print(f"-- {t.__name__}")
         try:
             t()

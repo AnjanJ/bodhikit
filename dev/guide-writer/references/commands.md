@@ -91,6 +91,13 @@ Most learners need five: **learn** once per subject, then **continue** (Claude w
 - **ChatGPT:** `@BodhiKit Here's my log. Summarise where I stand and what to review this week.`
 - **Without saved files:** it can only summarise the log the learner pastes.
 
+### notes-setup
+- **What it does:** optional. For each subject it keeps a syllabus (the plan, where the learner stands, and when reviews are due) and the revision sheets in Obsidian, in a `Learn with Bodhi` folder inside the learner's vault, or just as a file in each subject's folder. They are refreshed at the end of each study session, and nothing written in the notes app comes back into the record. BodhiKit offers it once, after a new subject's first step or a *continue* session. It is off until the learner turns it on, and *off* turns it off without deleting anything.
+- **When:** once, if the learner wants their notes where they already keep them.
+- **Claude:** `/bodhikit:notes-setup`, `/bodhikit:notes-setup off`. For now it works only in Claude Code, on the learner's own computer; in a Claude chat it says notes cannot be kept there yet.
+- **ChatGPT:** not available yet; it says notes cannot be kept there.
+- **Without saved files:** not available; the learner pastes the summary note into their notes app themselves.
+
 ## Look back and grow
 
 ### mentor

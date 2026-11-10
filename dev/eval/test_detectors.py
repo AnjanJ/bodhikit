@@ -1196,6 +1196,98 @@ def t_continue_gate(root):
                            ("text", closing + recap_gate + recap_box))))
 
 
+def notes_state(root, name, *argv):
+    """The v2 fixture under root/<name>, a vault beside it, and the notes
+    commands run through the real script. Returns (project, vault)."""
+    learner = os.path.join(root, name)
+    shutil.copytree(os.path.join(FIXTURES, "v2-project"), learner)
+    vault = os.path.join(root, f"{name}-vault-parent", "vault")
+    os.makedirs(vault)
+    # the detectors look for the vault beside the learning folder
+    os.rename(learner, os.path.join(os.path.dirname(vault), "learningWithBodhi"))
+    learner = os.path.join(os.path.dirname(vault), "learningWithBodhi")
+    env = dict(os.environ, BODHI_CLOUD_MARKER=os.path.join(root, "no-cloud"))
+    for args in argv:
+        subprocess.run([sys.executable, os.path.join(REPO, "scripts", "bodhi-state"),
+                        "--project", learner, *[a.replace("<vault>", vault) for a in args]],
+                       check=True, capture_output=True, env=env)
+    return os.path.join(learner, "sql-deep-dive"), vault
+
+
+def t_notes_setup(root):
+    """learning-vault/REQ-1, REQ-2, REQ-3: the notes-setup detector passes a
+    run that asks, suggests one app with a reason, explains, then records,
+    and fails each way of skipping a step."""
+    rec = ("notes-set", "--choice", "vault", "--app", "obsidian", "--location", "<vault>")
+    proj, vault = notes_state(root, "good", rec)
+    record = bash(f'"${{CLAUDE_PLUGIN_ROOT}}/scripts/bodhi-state" --project .. notes-set '
+                  f'--choice vault --app obsidian --location "{vault}"')
+    ask = ("text", "Which notes app do you use? Obsidian, I don't use a notes app, or just "
+                   "keep the syllabus as a file in each course folder?")
+    suggest = ("text", "Then I'd suggest Obsidian: it is free and keeps every note as a plain "
+                       "file in a folder on your own computer, so the notes stay yours.")
+    explain = ("text", "Here is what happens. Each course's syllabus and your revision sheets "
+                       "are copied into a folder named Learn with Bodhi in your vault. If your "
+                       "vault syncs, the copy goes with it. It is optional, and you can turn it "
+                       "off at any time. Shall I set it up?")
+    done = ("text", f"Done: your notes are in {vault}/Learn with Bodhi.")
+    good = transcript(root, "notes-good", ask, suggest, explain, record, done)
+    ok_good, out = passes(A.assert_notes_setup, proj, good)
+    check("notes-setup: passes the good run", ok_good, out[-300:])
+    bads = {
+        "no files-only answer offered": (("text", "Which notes app do you use? Obsidian, or "
+                                                  "I don't use a notes app?"),
+                                         suggest, explain, record, done),
+        "a second app suggested": (ask, ("text", "Then try Obsidian, which is free, or Notion."),
+                                   explain, record, done),
+        "a suggestion with no reason": (ask, ("text", "Then I'd suggest Obsidian."),
+                                        explain, record, done),
+        "recorded before explaining": (ask, suggest, record, explain, done),
+        "no word on sync": (ask, suggest, ("text", explain[1].replace(
+            "If your vault syncs, the copy goes with it. ", "")), record, done),
+        "an engine name in the prose": (ask, suggest, explain, record,
+                                        ("text", "Done: I ran notes-sync for every course.")),
+    }
+    for label, items in bads.items():
+        bad = transcript(root, "notes-bad", *items)
+        ok_bad, out = passes(A.assert_notes_setup, proj, bad)
+        check(f"notes-setup: fails {label}", not ok_bad, out[-300:])
+    unrecorded, _ = notes_state(root, "unrecorded")
+    ok_bad, out = passes(A.assert_notes_setup, unrecorded, good)
+    check("notes-setup: fails a run whose record never landed", not ok_bad, out[-300:])
+    edited = transcript(root, "notes-edit", ask, suggest, explain, record,
+                        ("tool", "Write", {"file_path": f"{os.path.dirname(os.path.dirname(proj))}"
+                                                        "/.bodhi-notes.json", "content": "{}"}),
+                        done)
+    ok_bad, out = passes(A.assert_notes_setup, proj, edited)
+    check("notes-setup: fails a hand-written notes file", not ok_bad, out[-300:])
+
+
+def t_notes_setup_off(root):
+    """learning-vault/REQ-5, REQ-6: the off detector passes a run that shows
+    the setting, offers a change, turns it off and says the files stay and
+    will no longer be refreshed; it fails a run that skips either."""
+    rec = ("notes-set", "--choice", "vault", "--app", "obsidian", "--location", "<vault>")
+    proj, vault = notes_state(root, "off", rec, ("notes-set", "--choice", "off"))
+    show = ("text", f"Your notes go to Obsidian, in the vault at {vault}, since today. Would "
+                    "you like to change the folder, switch to files only, or turn it off?")
+    off = bash('"${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project .. notes-set --choice off')
+    said = ("text", "Done. The syllabus and sheets already written stay where they are, and "
+                    "they will no longer be refreshed. Nothing was deleted.")
+    good = transcript(root, "off-good", show, off, said)
+    ok_good, out = passes(A.assert_notes_setup_off, proj, good)
+    check("notes-setup off: passes the good run", ok_good, out[-300:])
+    for label, items in {
+            "no current setting shown": (("text", "Turning it off."), off, said),
+            "no word that the files stay unrefreshed": (show, off, ("text", "Done, it is off.")),
+    }.items():
+        ok_bad, out = passes(A.assert_notes_setup_off, proj, transcript(root, "off-bad", *items))
+        check(f"notes-setup off: fails {label}", not ok_bad, out[-300:])
+    still_on, _ = notes_state(root, "still-on", rec)
+    ok_bad, out = passes(A.assert_notes_setup_off, still_on, good)
+    check("notes-setup off: fails a run where off was never recorded", not ok_bad, out[-300:])
+
+
 def main():
     with tempfile.TemporaryDirectory() as root:
         for t in (t_code_never_loads_kinds, t_teach_no_code, t_quiz_no_code, t_offers,
@@ -1210,7 +1302,8 @@ def main():
                   t_internal_names, t_internal_names_everywhere, t_bare_level_source,
                   t_teach_vocabulary_names,
                   t_archive_run, t_intake_change, t_review_problems, t_practice_applied,
-                  t_harness_recap, t_continue_gate, t_grade_regrade, t_predict_key):
+                  t_harness_recap, t_continue_gate, t_grade_regrade, t_predict_key,
+                  t_notes_setup, t_notes_setup_off):
             print(f"-- {t.__name__}")
             sub = os.path.join(root, t.__name__)
             os.makedirs(sub)

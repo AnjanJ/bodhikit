@@ -6,8 +6,11 @@ reads this file. It holds the learner's notes choice for every course, and sits 
 
 `bodhi-state` writes it, never a skill: `notes-set` records the choice the learner agreed to,
 and `notes-offered` records that the one-time offer was made. `notes-show` reads it. `verify`
-checks it when it exists. `notes-sync` does the copying: the Stop hook runs it when a session
-closes, and `notes-set` runs it across every course when a choice is first recorded. **No file means no choice and no offer** — every learner on 1.26.1.
+checks it when it exists. `notes-sync` does the copying, and `notes-set` runs it across every
+course when a choice is first recorded.
+At session close the Stop hook runs `notes-sync`; in ChatGPT or Codex without hooks, the runtime adapter's close procedure runs it.
+
+**No file means no choice and no offer** — every learner on 1.26.1.
 
 ```json
 {

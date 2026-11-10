@@ -2397,6 +2397,129 @@ CODE_TRANSCRIPT_SCENARIOS = {"teach-pretest", "teach-hint-discipline", "continue
 
 # Every scenario that saves a stream transcript, by name. main() dispatches
 # through assert_transcript_scenario, which a test can run.
+# --- The learning vault (spec learning-vault) ---------------------------------
+# The scenarios run from the learningWithBodhi parent; `project` is the
+# fixture's sql-deep-dive, the learning folder its parent, and the vault a
+# folder named `vault` beside the learning folder.
+
+NOTES_SET_RE = re.compile(r"\bnotes-set\s+--choice\s+(vault|files|off)\b")
+NOTES_OTHER_APPS_RE = re.compile(
+    r"\b(Notion|OneNote|Evernote|Logseq|Joplin|Apple Notes|Bear|Google (?:Docs|Drive))\b")
+NOTES_NONE_RE = re.compile(r"(?i)\b(?:don'?t|do not) use (?:a|any)\b|\bno notes app\b|\bnone\b")
+NOTES_FILES_RE = re.compile(r"(?i)course folders?|files? only|just (?:keep|as) a file")
+NOTES_REASON_RE = re.compile(r"(?i)plain (?:text )?files?|folder on your (?:own )?computer|\bfree\b")
+NOTES_EXPLAIN = (("what is copied: the syllabus", re.compile(r"(?i)\bsyllabus")),
+                 ("what is copied: the revision sheets", re.compile(r"(?i)revision sheets?")),
+                 ("where it goes: the Learn with Bodhi folder", re.compile(r"Learn with Bodhi")),
+                 ("that a synced vault carries the copy", re.compile(r"(?i)\bsync")),
+                 ("that it is optional", re.compile(r"(?i)optional|up to you|only if you want")),
+                 ("that it can be turned off", re.compile(r"(?i)turn (?:it )?off|switch (?:it )?off")))
+NOTES_STAY_RE = re.compile(r"(?i)\bstay\b|\bremain|\bkept\b|still there|nothing (?:was|is|has been|will be) deleted|not deleted|won'?t be deleted")
+NOTES_STALE_RE = re.compile(r"(?i)no longer (?:be )?(?:refresh|updat|cop)|(?:won'?t|will not) be (?:refresh|updat|cop)|stop(?:s|ped)? (?:refresh|updat|cop)")
+
+
+def notes_call(items, choice):
+    for i, it in enumerate(items):
+        if it[0] == "tool" and it[1] == "Bash":
+            m = NOTES_SET_RE.search(str(it[2].get("command", "")))
+            if m and m.group(1) == choice:
+                return i
+    return None
+
+
+def notes_record(learner):
+    p = os.path.join(learner, ".bodhi-notes.json")
+    if not os.path.exists(p):
+        return {}
+    with open(p) as f:
+        return json.load(f)
+
+
+def notes_hand_edits(transcript):
+    return [name for name, inp in tool_events(transcript) if name in WRITE_TOOLS
+            and re.search(r"\.bodhi-notes\.json|Learn with Bodhi",
+                          str(inp.get("file_path") or ""))]
+
+
+def assert_notes_setup(project, transcript):
+    """learning-vault/REQ-1, REQ-2, REQ-3: the scripted learner uses no notes
+    app. /notes-setup asks which app (listing Obsidian, none and files only),
+    suggests exactly one app with a reason, says what is copied, where, that
+    a synced vault carries it, that it is optional and can be turned off,
+    and only then records the vault through bodhi-state."""
+    prose = assistant_prose(transcript)
+    if not prose.strip():
+        fail("empty transcript — run did not produce assistant output")
+    items = stream_items(transcript)
+    call = notes_call(items, "vault")
+    if call is None:
+        fail("no `notes-set --choice vault` call: the learner agreed to Obsidian and the "
+             "choice was never recorded through bodhi-state")
+    before = protocol_text(items, call)
+    if not ("Obsidian" in before and NOTES_NONE_RE.search(before) and NOTES_FILES_RE.search(before)):
+        fail("the question did not offer Obsidian, 'I don't use one' and files only before "
+             "the record (REQ-1)")
+    ok("the question offered the app, none, and files only")
+    other = NOTES_OTHER_APPS_RE.search(before)
+    if other:
+        fail(f"suggested or offered an app BodhiKit cannot write to ({other.group(0)!r}); "
+             "exactly one app is suggested (REQ-2)")
+    if not NOTES_REASON_RE.search(before):
+        fail("Obsidian was suggested with no reason (plain files in a folder on the "
+             "learner's computer, free) (REQ-2)")
+    ok("exactly one app suggested, with a reason")
+    missing = [label for label, rx in NOTES_EXPLAIN if not rx.search(before)]
+    if missing:
+        fail(f"before recording, the tutor did not say: {', '.join(missing)} (REQ-3)")
+    ok("what, where, sync, optional and off said before the record")
+    learner = os.path.dirname(os.path.abspath(project))
+    vault = os.path.join(os.path.dirname(learner), "vault")
+    notes = notes_record(learner)
+    if notes.get("choice") != "vault" or notes.get("app") != "obsidian" or \
+            os.path.realpath(notes.get("location") or "") != os.path.realpath(vault):
+        fail(f"the notes file does not record Obsidian at {vault}: {notes}")
+    if not os.path.exists(os.path.join(vault, "Learn with Bodhi", "sql-deep-dive", "Syllabus.md")):
+        fail("the course's syllabus never reached the vault")
+    ok("Obsidian recorded at the learner's vault, and the syllabus copied there")
+    edits = notes_hand_edits(transcript)
+    if edits:
+        fail(f"hand-wrote the notes setting or the vault copy: {edits}")
+    ok("no hand edits")
+    assert_no_internal_names(prose, transcript)
+
+
+def assert_notes_setup_off(project, transcript):
+    """learning-vault/REQ-5, REQ-6: with Obsidian on record, /notes-setup shows
+    the current choice and offers a change before turning it off, and after
+    turning it off says the files stay and will no longer be refreshed."""
+    prose = assistant_prose(transcript)
+    if not prose.strip():
+        fail("empty transcript — run did not produce assistant output")
+    items = stream_items(transcript)
+    call = notes_call(items, "off")
+    if call is None:
+        fail("no `notes-set --choice off` call: the learner asked to turn notes off")
+    before = protocol_text(items, call)
+    if not (("Obsidian" in before or "vault" in before)
+            and re.search(r"(?i)chang|switch|different|turn (?:it )?off", before)):
+        fail("the current setting was not shown, with a change or off offered, before "
+             "turning it off (REQ-5)")
+    ok("the current setting shown and a change offered")
+    after = "\n".join(it[1] for it in items[call + 1:] if it[0] == "text")
+    if not (NOTES_STAY_RE.search(after) and NOTES_STALE_RE.search(after)):
+        fail("after turning it off, the tutor did not say the files stay and will no longer "
+             f"be refreshed (REQ-6): {after[:300]!r}")
+    ok("the learner told the files stay and will not be refreshed")
+    learner = os.path.dirname(os.path.abspath(project))
+    vault = os.path.join(os.path.dirname(learner), "vault")
+    if notes_record(learner).get("choice") != "off":
+        fail("the notes file does not record off")
+    if not os.path.exists(os.path.join(vault, "Learn with Bodhi", "sql-deep-dive", "Syllabus.md")):
+        fail("the vault copy is gone: turning notes off deletes nothing")
+    ok("off recorded, and the vault copy still there")
+    assert_no_internal_names(prose, transcript)
+
+
 TRANSCRIPT_ASSERTIONS = {"teach-pretest": assert_teach_pretest,
                          "teach-hint-discipline": assert_teach_hint_discipline,
                          "continue-discovery": assert_continue_discovery,
@@ -2429,7 +2552,9 @@ TRANSCRIPT_ASSERTIONS = {"teach-pretest": assert_teach_pretest,
                          "performed-by-your-account": assert_performed_by_your_account,
                          "photo-inspected": assert_photo_inspected,
                          "safety-canning": assert_safety_canning,
-                         "safety-medical": assert_safety_medical}
+                         "safety-medical": assert_safety_medical,
+                         "notes-setup": assert_notes_setup,
+                         "notes-setup-off": assert_notes_setup_off}
 
 
 def assert_transcript_scenario(name, project, transcript):

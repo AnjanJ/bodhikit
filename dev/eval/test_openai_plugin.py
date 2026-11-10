@@ -127,7 +127,7 @@ def test_build_and_structure():
             summary = json.loads(result.stdout)
         except json.JSONDecodeError:
             summary = {}
-        check("build: reports 18 user skills", summary.get("skills") == 18, summary)
+        check("build: reports 19 user skills", summary.get("skills") == 19, summary)  # learning-vault/REQ-34
         check(
             "build: reports 19 knowledge references",
             summary.get("knowledgeReferences") == 19,
