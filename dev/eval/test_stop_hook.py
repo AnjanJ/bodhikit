@@ -472,6 +472,42 @@ def t_offer_after_continue():
         check("no offer after a session begun with another command", out == "", out)
 
 
+def t_offer_on_the_sheet_turn():
+    """learning-vault/REQ-8, learning-vault/REQ-9: when the first stop was
+    blocked for the revision sheet, the session closes on the re-entry stop
+    that follows the sheet, so the offer comes there and not a turn later.
+    A re-entry stop with the sheet still owed is not a close: no offer."""
+    learn = lambda proj: [f'"$R/scripts/bodhi-state" --project "{proj}" profile-add-project '
+                          f'--name sql --topic SQL --bloom 1 --pace steady --track-purpose x',
+                          touch(proj)]
+    for label, cmds, kw in (("/learn", learn, {}),
+                            ("/continue", lambda proj: [touch(proj)],
+                             {"typed": "bodhikit:continue"})):
+        with tempfile.TemporaryDirectory() as root:
+            lwb, proj = learner_with_course(root, sheet=False)
+            tp = write_session(root, root, cmds(proj), **kw)
+            out = run_hook({"cwd": root, "transcript_path": tp}, env=vault_env())
+            check(f"sheet turn ({label}): the first stop blocks for the sheet",
+                  json.loads(out).get("decision") == "block" if out else False, out[:200])
+            out = run_hook({"cwd": root, "transcript_path": tp, "stop_hook_active": True},
+                           env=vault_env())
+            check(f"sheet turn ({label}): no offer while the sheet is still owed",
+                  "notes-setup" not in out and notes_of(lwb) is None, out[:200])
+            os.makedirs(os.path.join(proj, "revision"))
+            with open(os.path.join(proj, "revision", f"{TODAY}-joins.md"), "w") as f:
+                f.write("# Revision — Joins\n")
+            out = run_hook({"cwd": root, "transcript_path": tp, "stop_hook_active": True},
+                           env=vault_env())
+            msg, d = system_message(out)
+            check(f"sheet turn ({label}): offered on the turn the sheet was written",
+                  "/bodhikit:notes-setup" in msg and "decision" not in d, out[:300])
+            check(f"sheet turn ({label}): recorded",
+                  (notes_of(lwb) or {}).get("offerMadeOn") == TODAY, notes_of(lwb))
+            out = run_hook({"cwd": root, "transcript_path": tp}, env=vault_env())
+            check(f"sheet turn ({label}): not made again next turn", "notes-setup" not in out,
+                  out[:200])
+
+
 def t_offer_not_with_a_choice():
     """learning-vault/REQ-8, learning-vault/REQ-9: a learner who already chose (here: files
     only) is not offered, even with no offer on record."""
@@ -569,6 +605,7 @@ def main():
               t_bounded_search, t_failure_reasons, t_revision_sheet_required,
               t_touched_outside_cwd, t_shell_variables,
               t_no_notes_file_same_as_before, t_offer_after_learn, t_offer_after_continue,
+              t_offer_on_the_sheet_turn,
               t_offer_not_with_a_choice, t_no_offer_in_cloud_chat, t_existing_skills_unchanged,
               t_copy_failure_reported, t_saved_only_after_success):
         t()

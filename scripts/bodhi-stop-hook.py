@@ -198,7 +198,10 @@ def main():
     if payload.get("stop_hook_active"):
         # Already blocked once this turn; never block again. The notes step
         # never blocks, and this is often the turn the late sheet was written.
-        say(notes_step(script, wrote, payload.get("transcript_path"), offer=False))
+        # Once no closed project still owes today's sheet, this stop is the
+        # session close, so the offer belongs here (learning-vault/REQ-8, REQ-9).
+        owed = any(sheet_owed(script, p) for p, w in wrote.items() if w.get("touch"))
+        say(notes_step(script, wrote, payload.get("transcript_path"), offer=not owed))
         return
 
     found = find_projects(configured_roots(cwd))
@@ -327,6 +330,15 @@ def began_with_continue(transcript_path):
     except OSError:
         return False
     return False
+
+
+def sheet_owed(script, project):
+    """True when this project studied today and today's revision sheet is not
+    written yet: the stop is then not a session close."""
+    if not os.path.exists(os.path.join(project, ".bodhi", "state.json")):
+        return False
+    brief = state_json(script, project, "revision-brief")
+    return bool(brief.get("sessionToday") and not brief.get("existing"))
 
 
 def state_json(script, project, *argv):
