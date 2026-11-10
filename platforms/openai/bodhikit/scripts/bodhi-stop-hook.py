@@ -6,7 +6,11 @@ internal format. This adapter finds TOOL-CALL records — a dict carrying a
 tool marker (`tool_name`, `name`, `function`, or a `type` of tool_use /
 tool_call / function_call / tool) whose `command` (or `tool_input.command`,
 `input.command`, `arguments.command`) is a string — and emits a minimal
-normalized transcript for the canonical BodhiKit hook. Prose is never
+normalized transcript for the canonical BodhiKit hook. Codex 0.167 writes
+each command it ran as a `CommandExecution` item whose `command` is an argv
+list (`["/bin/zsh", "-lc", "<script>"]`) and whose `cwd` is a `file://` URL;
+the script is read from that list. The `exec` call that precedes it holds
+JavaScript and is not parsed. Prose is never
 inspected: an assistant paragraph that *mentions* a bodhi-state command is
 not evidence the command ran (review finding 8, 2026-09-07 — a read-only
 discussion used to block the stop with a revision-sheet demand). If no
@@ -18,13 +22,16 @@ from __future__ import annotations
 
 import json
 import os
+import shlex
 import subprocess
 import sys
 import tempfile
+from urllib.parse import unquote, urlparse
 
 
 TOOL_MARKER_KEYS = ("tool_name", "name", "function")
-TOOL_TYPES = {"tool_use", "tool_call", "function_call", "tool"}
+TOOL_TYPES = {"tool_use", "tool_call", "function_call", "tool", "CommandExecution"}
+SHELL_FLAGS = {"-c", "-lc", "-ic", "-lic"}
 COMMAND_CONTAINERS = ("tool_input", "input", "arguments", "args", "parameters")
 PROSE_KEYS = {"content", "text", "message", "output", "result", "stdout",
               "stderr", "last_assistant_message", "reasoning"}
@@ -45,6 +52,11 @@ def _command_of(d):
     cmd = d.get("command")
     if isinstance(cmd, str):
         return cmd
+    if isinstance(cmd, list) and cmd and all(isinstance(a, str) for a in cmd):
+        # Codex 0.167 CommandExecution: `<shell> -lc <script>`, or plain argv.
+        if len(cmd) == 3 and cmd[1] in SHELL_FLAGS:
+            return cmd[2]
+        return shlex.join(cmd)
     for key in COMMAND_CONTAINERS:
         inner = d.get(key)
         if isinstance(inner, str):
@@ -78,11 +90,18 @@ def walk_tool_commands(value):
             yield from walk_tool_commands(child)
 
 
+def _local_path(cwd):
+    """Codex 0.167 writes a CommandExecution's cwd as a file:// URL."""
+    if cwd.startswith("file://"):
+        return unquote(urlparse(cwd).path)
+    return cwd
+
+
 def find_cwd(value, fallback):
     if isinstance(value, dict):
         cwd = value.get("cwd")
         if isinstance(cwd, str) and cwd:
-            return cwd
+            return _local_path(cwd)
         for child in value.values():
             found = find_cwd(child, "")
             if found:

@@ -609,6 +609,7 @@ def test_hooks(output, temp_path):
             decision = {}
         check(f"Stop: {label} is recognised as execution",
               decision.get("decision") == "block", stop_output[:200])
+    test_codex_rollout(output, temp_path, root, project)
     revision.write_text("# Revision — Joins\n", encoding="utf-8")
 
     broken_root = temp_path / "codex-broken"
@@ -644,6 +645,69 @@ def test_hooks(output, temp_path):
         and "box" in decision.get("reason", ""),
         stop_output[:300],
     )
+
+
+def codex_rollout(path, cwd, scripts, completed=None, output=""):
+    """A Codex 0.167 rollout as it lands on disk (shape copied from a real
+    2026-11-10 session, paths made generic): each command is a
+    `custom_tool_call` named `exec` whose input is JavaScript, then an
+    `item_completed` event carrying the `CommandExecution` that ran, with
+    its argv, a `file://` cwd, the exit code and the duration, then the
+    call's output."""
+    completed = completed or datetime.datetime.now(datetime.timezone.utc)
+    stamp = completed.strftime("%Y-%m-%dT%H:%M:%S.") + f"{completed.microsecond // 1000:03d}Z"
+    lines = [{"timestamp": stamp, "type": "session_meta",
+              "payload": {"id": "thread-1", "cwd": str(cwd)}}]
+    for n, script in enumerate(scripts):
+        call = f"call_{n}"
+        lines.append({"timestamp": stamp, "type": "response_item", "payload": {
+            "type": "custom_tool_call", "status": "completed", "call_id": call,
+            "name": "exec",
+            "input": "const r=await tools.exec_command({cmd:" + json.dumps(script)
+                     + ",max_output_tokens:7000});text(r.output)\n"}})
+        lines.append({"timestamp": stamp, "type": "event_msg", "payload": {
+            "type": "item_completed", "thread_id": "thread-1", "turn_id": "turn-1",
+            "item": {"type": "CommandExecution", "id": f"exec-{n}", "process_id": "1",
+                     "command": ["/bin/zsh", "-lc", script],
+                     "cwd": Path(cwd).as_uri(),
+                     "parsed_cmd": [{"type": "unknown", "cmd": script}],
+                     "source": "unified_exec_startup", "status": "completed",
+                     "aggregated_output": output, "exit_code": 0,
+                     "duration": {"secs": 0, "nanos": 300000000}}}})
+        lines.append({"timestamp": stamp, "type": "response_item", "payload": {
+            "type": "custom_tool_call_output", "call_id": call,
+            "output": [{"type": "input_text", "text": "Script completed\nOutput:\n" + output}]}})
+    path.write_text("".join(json.dumps(line) + "\n" for line in lines), encoding="utf-8")
+    return path
+
+
+def test_codex_rollout(output, temp_path, root, project):
+    """The Codex Stop adapter on Codex 0.167's real rollout shape. `project`
+    sits at root/learningWithBodhi/sql, studied today, no sheet yet."""
+    stop_hook = output / "scripts" / "bodhi-stop-hook.py"
+    state = output / "scripts" / "bodhi-state"
+    (temp_path / "home").mkdir(exist_ok=True)
+    env = {"HOME": str(temp_path / "home"), "BODHI_CLOUD_MARKER": str(temp_path / "no-cloud")}
+
+    def stop(transcript):
+        out = run_hook(stop_hook, {"cwd": str(root), "hook_event_name": "Stop",
+                                   "transcript_path": str(transcript)}, env=env)
+        try:
+            return out, json.loads(out)
+        except json.JSONDecodeError:
+            return out, {}
+
+    direct = f'"{state}" --project learningWithBodhi/sql touch-state --activity done'
+    out, decision = stop(codex_rollout(temp_path / "cx-direct.jsonl", root, [direct]))
+    check("Stop: Codex 0.167 CommandExecution with a relative --project blocks for the sheet",
+          decision.get("decision") == "block" and "revision sheet" in decision.get("reason", ""),
+          out[:300])
+
+    # Review finding 8 again: a command's OUTPUT is prose. Reading a skill
+    # file that spells out touch-state is not touch-state running.
+    out, _ = stop(codex_rollout(temp_path / "cx-output.jsonl", root,
+                                ["cat skills/reflect/SKILL.md"], output=f"Close with {direct}"))
+    check("Stop: Codex output that mentions touch-state never blocks", out == "", out[:200])
 
 
 def main():
