@@ -20,13 +20,16 @@ possible), 2 = bad usage.
 """
 
 import argparse
+import contextlib
 import datetime
+import io
 import json
 import os
 import re
 import shutil
 import sys
 import tempfile
+import urllib.parse
 
 try:
     import fcntl  # POSIX only; locking degrades gracefully elsewhere
@@ -3559,6 +3562,200 @@ def vault_refusal(location, profile_dir):
     return None
 
 
+def write_bytes_if_changed(path, data):
+    """Atomic write of `data` only when the file does not already hold it
+    (learning-vault/REQ-24). Returns True when it wrote."""
+    try:
+        with open(path, "rb") as f:
+            if f.read() == data:
+                return False
+    except OSError:
+        pass
+    fd, tmp = tempfile.mkstemp(dir=os.path.dirname(os.path.abspath(path)),
+                               prefix=".bodhi-", suffix=".tmp")
+    try:
+        try:
+            mode = os.stat(path).st_mode & 0o777
+        except OSError:
+            umask = os.umask(0)
+            os.umask(umask)
+            mode = 0o666 & ~umask
+        try:
+            os.chmod(tmp, mode)
+        except OSError:
+            pass
+        with os.fdopen(fd, "wb") as f:
+            f.write(data)
+        os.replace(tmp, path)
+    except BaseException:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
+    return True
+
+
+def within(path, top):
+    """True when `path`, symlinks resolved, is `top` or lies under it."""
+    p, t = os.path.realpath(path), os.path.realpath(top)
+    return p == t or p.startswith(t + os.sep)
+
+
+def render_course_md(course):
+    """(Syllabus.md text, None), or (None, why) for a course whose files
+    cannot be read: one broken course never stops the others."""
+    buf = io.StringIO()
+    try:
+        with contextlib.redirect_stdout(buf):
+            install_kinds(course)
+            payload, ctx = build_syllabus(course)
+            return render_syllabus_md(course, payload, ctx), None
+    except SystemExit:
+        try:
+            why = json.loads(buf.getvalue().strip().splitlines()[0]).get("error")
+        except (ValueError, IndexError, AttributeError):
+            why = None
+        return None, why or "its tracking files could not be read"
+
+
+def profile_courses(notes_file):
+    """Every course in the learner's projects list, active or completed,
+    whose folder holds `.bodhi/` (learning-vault/REQ-23)."""
+    top = os.path.dirname(notes_file)
+    lp = os.path.join(top, ".bodhi-profile.projects.json")
+    try:
+        with open(lp, encoding="utf-8") as f:
+            lists = json.load(f)
+    except (OSError, ValueError):
+        return []
+    out = []
+    for key in ("activeProjects", "completedProjects"):
+        for e in lists.get(key, []) if isinstance(lists, dict) else []:
+            name = e.get("name") if isinstance(e, dict) else None
+            if not isinstance(name, str) or not name or os.sep in name or name in (".", ".."):
+                continue
+            course = os.path.join(top, name)
+            if os.path.isdir(os.path.join(course, ".bodhi")) and course not in out:
+                out.append(course)
+    return out
+
+
+def sync_notes(notes, courses):
+    """learning-vault/REQ-12, REQ-20..REQ-24: write each course's Syllabus.md
+    and, for a vault, copy it, its revision sheets and Courses.md into the
+    home. Nothing is read back. Failures are collected, never raised."""
+    res = {"written": [], "unchanged": [], "failed": [], "firstArrival": []}
+    choice = notes.get("choice")
+    if choice not in ("vault", "files"):
+        return res
+    t = iso(today())
+
+    def put(path, data):
+        try:
+            (res["written"] if write_bytes_if_changed(path, data)
+             else res["unchanged"]).append(path)
+            return True
+        except OSError as e:
+            res["failed"].append({"path": path, "why": e.strerror or str(e)})
+            return False
+
+    home = None
+    if choice == "vault":
+        loc = notes.get("location") or ""
+        home = os.path.join(loc, NOTES_HOME)
+        if not os.path.isdir(loc):
+            res["failed"].append({"path": loc, "why": "the vault folder is not there"})
+            home = None
+        else:
+            try:
+                os.makedirs(home, exist_ok=True)
+            except OSError as e:
+                res["failed"].append({"path": home, "why": e.strerror or str(e)})
+                home = None
+            if home and not within(home, loc):
+                res["failed"].append({"path": home, "why": "it leads outside the vault"})
+                home = None
+
+    for course in courses:
+        name = os.path.basename(os.path.abspath(course))
+        text, why = render_course_md(course)
+        if text is None:
+            res["failed"].append({"path": course, "why": why})
+            continue
+        data = text.encode("utf-8")
+        put(os.path.join(course, "Syllabus.md"), data)
+        if home is None:
+            continue
+        cdir = os.path.join(home, name)
+        if os.path.lexists(cdir) and not within(cdir, home):
+            res["failed"].append({"path": cdir, "why": "it leads outside the Learn with "
+                                                       "Bodhi folder, so nothing was copied"})
+            continue
+        try:
+            os.makedirs(os.path.join(cdir, "revision"), exist_ok=True)
+        except OSError as e:
+            res["failed"].append({"path": cdir, "why": e.strerror or str(e)})
+            continue
+        if not within(os.path.join(cdir, "revision"), home):
+            res["failed"].append({"path": cdir, "why": "its revision folder leads outside "
+                                                       "the Learn with Bodhi folder"})
+            continue
+        if put(os.path.join(cdir, "Syllabus.md"), data) and \
+                name not in notes.get("announced", []):
+            res["firstArrival"].append(name)
+        src = os.path.join(course, "revision")
+        try:
+            sheets = sorted(f for f in os.listdir(src) if f.endswith(".md"))
+        except OSError:
+            sheets = []
+        for f in sheets:
+            dst = os.path.join(cdir, "revision", f)
+            if os.path.exists(dst) and not f.startswith(t):
+                continue  # an earlier day's sheet, once copied, is never touched again
+            try:
+                with open(os.path.join(src, f), "rb") as fh:
+                    put(dst, fh.read())
+            except OSError as e:
+                res["failed"].append({"path": dst, "why": e.strerror or str(e)})
+
+    if home is not None:
+        try:
+            names = sorted(d for d in os.listdir(home)
+                           if not d.startswith(".")
+                           and os.path.isfile(os.path.join(home, d, "Syllabus.md")))
+        except OSError:
+            names = []
+        index = ["# Learn with Bodhi", "",
+                 "BodhiKit rewrites this page at each session. Each course's syllabus is "
+                 "linked below; its revision sheets sit beside it in `revision/`.", ""]
+        index += [f"- [{n}]({urllib.parse.quote(n)}/Syllabus.md)" for n in names]
+        put(os.path.join(home, "Courses.md"), ("\n".join(index) + "\n").encode("utf-8"))
+    return res
+
+
+def record_announced(path, notes, names):
+    if names:
+        notes["announced"] = list(notes.get("announced", [])) + \
+            [n for n in names if n not in notes.get("announced", [])]
+        write_json(path, notes)
+
+
+def cmd_notes_sync(args):
+    """learning-vault: the session-close writes. The Stop hook runs it for
+    each course the session closed; `--all` covers every course in the
+    profile. Exits 0 whatever failed: the failures are in `failed`."""
+    path, notes = load_notes(args.project)
+    if path is None:
+        emit({"choice": None, "written": [], "unchanged": [], "failed": [],
+              "firstArrival": [], "reason": "no profile"})
+        return
+    courses = profile_courses(path) if args.all else [os.path.abspath(args.project)]
+    res = sync_notes(notes, courses)
+    record_announced(path, notes, res["firstArrival"])
+    emit({"choice": notes.get("choice"), **res})
+
+
 def cmd_notes_show(args):
     """learning-vault: what the notes setup reads first (read-only)."""
     path = notes_path(args.project)
@@ -3599,6 +3796,16 @@ def cmd_notes_set(args):
         why = vault_refusal(location, os.path.dirname(path))
         if why:
             die(why)
+        home = os.path.join(location, NOTES_HOME)
+        probe = os.path.join(home, ".bodhikit-write-test")
+        try:
+            os.makedirs(home, exist_ok=True)
+            with open(probe, "w", encoding="utf-8") as f:
+                f.write("BodhiKit checks it can write here; this file is removed at once.\n")
+            os.unlink(probe)
+        except OSError as e:
+            die(f"cannot write in {home!r} ({e.strerror or e}) — check the folder's "
+                f"permissions; nothing was recorded")
         data.update({"choice": "vault", "app": args.app, "location": location,
                      "agreedOn": iso(today())})
     elif choice == "files":
@@ -3606,10 +3813,13 @@ def cmd_notes_set(args):
     else:
         data["choice"] = "off"
     write_json(path, data)
+    # learning-vault/REQ-23: a choice that writes starts with every course.
+    res = sync_notes(data, profile_courses(path))
+    record_announced(path, data, res["firstArrival"])
     loc = data.get("location")
     emit({"choice": data["choice"], "app": data.get("app"), "location": loc,
           "home": os.path.join(loc, NOTES_HOME) if loc and data["choice"] == "vault" else None,
-          "agreedOn": data.get("agreedOn"), "notesFile": path})
+          "agreedOn": data.get("agreedOn"), "notesFile": path, "sync": res})
 
 
 def cmd_notes_offered(args):
@@ -3868,6 +4078,12 @@ def main():
 
     s = sub.add_parser("notes-offered", help="record that the one-time notes offer was made")
     s.set_defaults(fn=cmd_notes_offered)
+
+    s = sub.add_parser("notes-sync",
+                       help="write Syllabus.md and copy the notes into the vault (session close)")
+    s.add_argument("--all", action="store_true",
+                   help="every course in the learner's profile, not just --project")
+    s.set_defaults(fn=cmd_notes_sync)
 
     args = p.parse_args()
     # One exclusive lock per project for the whole read-mutate-write run —

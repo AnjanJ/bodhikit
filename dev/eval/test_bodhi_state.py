@@ -4957,6 +4957,254 @@ def t_syllabus_md_by_your_account():
               text.split("\n## ", 1)[0])
 
 
+HOME = "Learn with Bodhi"
+
+
+def vault_learner(root, courses=("algebra",), completed=()):
+    """A learner folder under root/learningWithBodhi with a profile, its
+    projects list, and courses holding a plan-less state and one review;
+    plus an empty vault at root/vault. Returns (learner, {name: path}, vault)."""
+    learner = os.path.join(root, "learningWithBodhi")
+    os.makedirs(learner)
+    paths = dict(zip(courses + completed, make_learner(learner, courses + completed)))
+    for name, proj in paths.items():
+        with open(os.path.join(proj, ".bodhi", "spaced-review.json"), "w") as f:
+            json.dump({"version": 3, "sessionHistory": [], "concepts": [
+                {"name": f"{name} basics", "module": "Start", "box": 1, "bloomLevel": 2,
+                 "nextReview": "2026-01-04", "feynmanPassed": False,
+                 "consecutiveCorrectAtL4Plus": 0, "reviewHistory": []}]}, f)
+    with open(os.path.join(learner, ".bodhi-profile.projects.json"), "w") as f:
+        json.dump({"version": 2,
+                   "activeProjects": [{"name": n} for n in courses],
+                   "completedProjects": [{"name": n} for n in completed]}, f)
+    vault = os.path.join(root, "vault")
+    os.makedirs(vault)
+    return learner, paths, vault
+
+
+def write_sheet(proj, name, text):
+    os.makedirs(os.path.join(proj, "revision"), exist_ok=True)
+    with open(os.path.join(proj, "revision", name), "w") as f:
+        f.write(text)
+
+
+def read_text(path):
+    with open(path, encoding="utf-8") as f:
+        return f.read()
+
+
+def tree_bytes(top):
+    out = {}
+    for d, _, names in os.walk(top):
+        for n in names:
+            p = os.path.join(d, n)
+            with open(p, "rb") as f:
+                out[os.path.relpath(p, top)] = f.read()
+    return out
+
+
+def sync(proj, *extra, day=SYL_DAY, expect_fail=False):
+    return run_env(proj, "notes-sync", *extra, env={"BODHI_TODAY": day},
+                   expect_fail=expect_fail)
+
+
+def t_notes_sync_files_only():
+    """learning-vault/REQ-12: with the choice `files`, a session close writes
+    the course's Syllabus.md in its root folder; with no choice it writes
+    nothing (REQ-7)."""
+    with tempfile.TemporaryDirectory() as root:
+        learner, paths, vault = vault_learner(root)
+        proj = paths["algebra"]
+        out = sync(proj)
+        check("notes-sync with no choice: nothing written",
+              out.get("written") == [] and not os.path.exists(os.path.join(proj, "Syllabus.md")),
+              out)
+        run_env(proj, "notes-set", "--choice", "files")
+        out = sync(proj)
+        syl = os.path.join(proj, "Syllabus.md")
+        check("notes-sync files: Syllabus.md in the course root",
+              os.path.exists(syl) and read_text(syl) == syllabus_md(proj), out)
+        check("notes-sync files: nothing in the vault", os.listdir(vault) == [])
+
+
+def t_notes_sync_copies_syllabus():
+    """learning-vault/REQ-20: with a vault, the course's Syllabus.md is copied
+    to <vault>/Learn with Bodhi/<course>/Syllabus.md; the first arrival is
+    reported once (REQ-27 reads it)."""
+    with tempfile.TemporaryDirectory() as root:
+        learner, paths, vault = vault_learner(root)
+        proj = paths["algebra"]
+        run_env(proj, "notes-set", "--choice", "vault", "--app", "obsidian",
+                "--location", vault, env={"BODHI_TODAY": SYL_DAY})
+        os.unlink(os.path.join(proj, "Syllabus.md"))
+        out = sync(proj)
+        copy = os.path.join(vault, HOME, "algebra", "Syllabus.md")
+        check("notes-sync vault: the syllabus is copied",
+              os.path.exists(copy) and read_text(copy) ==
+              read_text(os.path.join(proj, "Syllabus.md")), out)
+        check("notes-sync vault: no failure", out.get("failed") == [], out)
+        out = sync(proj)
+        check("notes-sync vault: a second run reports no first arrival",
+              out.get("firstArrival") == [], out)
+
+
+def t_notes_sync_sheet_rule():
+    """learning-vault/REQ-21: a sheet the home does not hold is copied; today's
+    is replaced with the disk's version; an earlier day's sheet the home holds
+    is never touched again."""
+    with tempfile.TemporaryDirectory() as root:
+        learner, paths, vault = vault_learner(root)
+        proj = paths["algebra"]
+        write_sheet(proj, "2025-12-30-limits.md", "old v1\n")
+        write_sheet(proj, f"{SYL_DAY}-groups.md", "today v1\n")
+        run_env(proj, "notes-set", "--choice", "vault", "--app", "obsidian",
+                "--location", vault, env={"BODHI_TODAY": SYL_DAY})
+        rev = os.path.join(vault, HOME, "algebra", "revision")
+        check("sheets: both copied on the first sync",
+              sorted(os.listdir(rev)) == ["2025-12-30-limits.md", f"{SYL_DAY}-groups.md"],
+              os.listdir(rev) if os.path.isdir(rev) else None)
+        with open(os.path.join(rev, "2025-12-30-limits.md"), "a") as f:
+            f.write("my note in the vault\n")
+        write_sheet(proj, "2025-12-30-limits.md", "old v2 on disk\n")
+        write_sheet(proj, f"{SYL_DAY}-groups.md", "today v2\n")
+        write_sheet(proj, "2025-12-31-rings.md", "late arrival\n")
+        sync(proj)
+        check("sheets: an earlier day's sheet in the home is left alone",
+              read_text(os.path.join(rev, "2025-12-30-limits.md")) ==
+              "old v1\nmy note in the vault\n")
+        check("sheets: today's sheet is replaced from disk",
+              read_text(os.path.join(rev, f"{SYL_DAY}-groups.md")) == "today v2\n")
+        check("sheets: a sheet the home did not hold is copied",
+              read_text(os.path.join(rev, "2025-12-31-rings.md")) == "late arrival\n")
+
+
+def t_notes_sync_courses_index():
+    """learning-vault/REQ-22: Courses.md lists every course folder in the home
+    with a link to its syllabus."""
+    with tempfile.TemporaryDirectory() as root:
+        learner, paths, vault = vault_learner(root, courses=("algebra", "art history"))
+        run_env(paths["algebra"], "notes-set", "--choice", "vault", "--app", "obsidian",
+                "--location", vault, env={"BODHI_TODAY": SYL_DAY})
+        idx = read_text(os.path.join(vault, HOME, "Courses.md"))
+        check("Courses.md links each course's syllabus",
+              "[algebra](algebra/Syllabus.md)" in idx
+              and "[art history](art%20history/Syllabus.md)" in idx, idx)
+        check("Courses.md says BodhiKit rewrites it", "rewrites" in idx, idx)
+
+
+def t_notes_set_vault_copies_every_course():
+    """learning-vault/REQ-23: recording a vault writes the syllabus of every
+    course in the profile, active or completed, and copies it and every
+    existing revision sheet into the home. Recording `files` writes every
+    course's syllabus."""
+    with tempfile.TemporaryDirectory() as root:
+        learner, paths, vault = vault_learner(root, courses=("algebra",),
+                                              completed=("chess",))
+        write_sheet(paths["chess"], "2025-11-01-openings.md", "e4\n")
+        out = run_env(paths["algebra"], "notes-set", "--choice", "vault", "--app",
+                      "obsidian", "--location", vault, env={"BODHI_TODAY": SYL_DAY})
+        home = os.path.join(vault, HOME)
+        check("notes-set vault: active and completed courses arrive",
+              all(os.path.exists(os.path.join(home, n, "Syllabus.md"))
+                  for n in ("algebra", "chess")), out)
+        check("notes-set vault: existing sheets arrive",
+              os.path.exists(os.path.join(home, "chess", "revision", "2025-11-01-openings.md")))
+        check("notes-set vault: each course folder has its Syllabus.md",
+              all(os.path.exists(os.path.join(p, "Syllabus.md")) for p in paths.values()))
+        check("notes-set vault: the output says what was copied",
+              sorted(out.get("sync", {}).get("firstArrival", [])) == ["algebra", "chess"], out)
+    with tempfile.TemporaryDirectory() as root:
+        learner, paths, vault = vault_learner(root, courses=("algebra",),
+                                              completed=("chess",))
+        run_env(paths["chess"], "notes-set", "--choice", "files")
+        check("notes-set files: every course's Syllabus.md",
+              all(os.path.exists(os.path.join(p, "Syllabus.md")) for p in paths.values()))
+
+
+def t_notes_sync_stays_in_home():
+    """learning-vault/REQ-24: nothing in the vault outside Learn with Bodhi/ is
+    written, changed or deleted; a file is written only when its content
+    differs; a course folder in the home that resolves outside it is refused."""
+    with tempfile.TemporaryDirectory() as root:
+        learner, paths, vault = vault_learner(root)
+        proj = paths["algebra"]
+        with open(os.path.join(vault, "My own note.md"), "w") as f:
+            f.write("mine\n")
+        os.makedirs(os.path.join(vault, "Learn with Bodhi elsewhere"))
+        before = {k: v for k, v in tree_bytes(vault).items()}
+        write_sheet(proj, "2025-12-30-limits.md", "old\n")
+        run_env(proj, "notes-set", "--choice", "vault", "--app", "obsidian",
+                "--location", vault, env={"BODHI_TODAY": SYL_DAY})
+        after = tree_bytes(vault)
+        check("vault: files outside the home are unchanged",
+              {k: v for k, v in after.items() if not k.startswith(HOME + os.sep)} == before,
+              sorted(after))
+        old = 1_000_000_000
+        for d, _, names in os.walk(os.path.join(vault, HOME)):
+            for n in names:
+                os.utime(os.path.join(d, n), (old, old))
+        out = sync(proj)
+        mtimes = [os.path.getmtime(os.path.join(d, n))
+                  for d, _, names in os.walk(os.path.join(vault, HOME)) for n in names]
+        check("vault: a second sync rewrites nothing unchanged",
+              out.get("written") == [] and all(m == old for m in mtimes), out)
+    with tempfile.TemporaryDirectory() as root:
+        learner, paths, vault = vault_learner(root)
+        proj = paths["algebra"]
+        run_env(proj, "notes-set", "--choice", "vault", "--app", "obsidian",
+                "--location", vault, env={"BODHI_TODAY": SYL_DAY})
+        outside = os.path.join(root, "outside")
+        os.makedirs(outside)
+        course_dir = os.path.join(vault, HOME, "algebra")
+        shutil.rmtree(course_dir)
+        os.symlink(outside, course_dir)
+        out = sync(proj)
+        check("vault: a course folder that leads outside the home is refused",
+              os.listdir(outside) == [] and out.get("failed"), out)
+
+
+def t_notes_sync_reads_nothing_back():
+    """learning-vault/REQ-25: editing a vault copy changes no tracking file;
+    the next sync puts the disk's version back."""
+    with tempfile.TemporaryDirectory() as root:
+        learner, paths, vault = vault_learner(root)
+        proj = paths["algebra"]
+        run_env(proj, "notes-set", "--choice", "vault", "--app", "obsidian",
+                "--location", vault, env={"BODHI_TODAY": SYL_DAY})
+        copy = os.path.join(vault, HOME, "algebra", "Syllabus.md")
+        with open(copy, "w") as f:
+            f.write("I rewrote my syllabus\n")
+        tracking = {k: v for k, v in tree_bytes(learner).items()
+                    if ".bodhi" in k and not k.endswith(".lock")}
+        sync(proj)
+        check("vault edits: no tracking file changed",
+              {k: v for k, v in tree_bytes(learner).items()
+               if ".bodhi" in k and not k.endswith(".lock")} == tracking)
+        check("vault edits: the syllabus copy is the disk's again",
+              read_text(copy) == read_text(os.path.join(proj, "Syllabus.md")))
+
+
+def t_notes_off_writes_nothing():
+    """learning-vault/REQ-6: once notes are off, a session close writes
+    nothing, and nothing written before is deleted."""
+    with tempfile.TemporaryDirectory() as root:
+        learner, paths, vault = vault_learner(root)
+        proj = paths["algebra"]
+        write_sheet(proj, f"{SYL_DAY}-groups.md", "today v1\n")
+        run_env(proj, "notes-set", "--choice", "vault", "--app", "obsidian",
+                "--location", vault, env={"BODHI_TODAY": SYL_DAY})
+        vault_before = tree_bytes(vault)
+        syl_before = read_text(os.path.join(proj, "Syllabus.md"))
+        run_env(proj, "notes-set", "--choice", "off")
+        write_sheet(proj, f"{SYL_DAY}-groups.md", "today v2\n")
+        run(proj, "add-concept", "--concept", "Rings", "--module", "Start")
+        out = sync(proj)
+        check("notes off: nothing written", out.get("written") == [], out)
+        check("notes off: the vault is as it was", tree_bytes(vault) == vault_before)
+        check("notes off: the course's Syllabus.md is kept, not refreshed",
+              read_text(os.path.join(proj, "Syllabus.md")) == syl_before)
+
+
 def main():
     for t in (t_migrate, t_record_review, t_sessions_and_forget,
               t_touch_state_and_profile, t_gate_check,
@@ -4997,7 +5245,11 @@ def main():
               t_syllabus_md_modules_in_order, t_syllabus_md_words_match_module_row,
               t_syllabus_md_concepts, t_syllabus_md_due_week, t_syllabus_md_no_internals,
               t_syllabus_md_deterministic, t_syllabus_md_header,
-              t_syllabus_md_by_your_account):
+              t_syllabus_md_by_your_account,
+              t_notes_sync_files_only, t_notes_sync_copies_syllabus, t_notes_sync_sheet_rule,
+              t_notes_sync_courses_index, t_notes_set_vault_copies_every_course,
+              t_notes_sync_stays_in_home, t_notes_sync_reads_nothing_back,
+              t_notes_off_writes_nothing):
         print(f"-- {t.__name__}")
         try:
             t()

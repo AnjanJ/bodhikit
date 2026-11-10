@@ -28,8 +28,8 @@ before the change.
   - After: T3
   - Done when: `python3 dev/eval/test_bodhi_state.py` → all pass, `t_golden_code_path` unchanged
 
-- [ ] **T5** `notes-sync`, and the first full copy when a vault is recorded → REQ-12, REQ-20, REQ-21, REQ-22, REQ-23, REQ-24, REQ-25, REQ-6
-  - Files: scripts/bodhi-state, dev/eval/test_bodhi_state.py
+- [x] **T5** `notes-sync`, and the first full copy when a vault is recorded → REQ-12, REQ-20, REQ-21, REQ-22, REQ-23, REQ-24, REQ-25, REQ-6
+  - Files: scripts/bodhi-state, dev/eval/test_bodhi_state.py, skills/notes-setup/references/notes-file.md (added while building: check.sh rule (h) wants `notes-sync` named there)
   - Test: dev/eval/test_bodhi_state.py::t_notes_sync_files_only (REQ-12), ::t_notes_sync_copies_syllabus (REQ-20), ::t_notes_sync_sheet_rule (REQ-21: a new sheet copied, today's replaced, an earlier day's edited in the vault left alone), ::t_notes_sync_courses_index (REQ-22), ::t_notes_set_vault_copies_every_course (REQ-23: active and completed), ::t_notes_sync_stays_in_home (REQ-24: sentinel files outside the home unchanged; a second run changes no mtime; a course name that resolves outside the home is refused), ::t_notes_sync_reads_nothing_back (REQ-25), ::t_notes_off_writes_nothing (REQ-6: earlier files remain, no new writes)
   - After: T4
   - Done when: `python3 dev/eval/test_bodhi_state.py` → all pass
