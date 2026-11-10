@@ -475,8 +475,9 @@ parent with an empty `vault` folder beside the learning folder:
 Live runs: see *Runs* below.
 
 **Hand checks before the first release that ships it.** The scenarios cannot
-see two things: what the learner's terminal shows when the Stop hook speaks,
-and what Obsidian makes of the copy. Record each as PASS or FAIL with the date
+see three things: what the learner's terminal shows when the Stop hook speaks,
+what Obsidian makes of the copy, and whether the tutor waits for a learner
+who has not yet said what they want. Record each as PASS or FAIL with the date
 and the BodhiKit commit in *Runs*.
 
 1. **The offer shows in Claude Code.** In a scratch folder, run
@@ -500,6 +501,15 @@ and the BodhiKit commit in *Runs*.
 5. **Timing.** `notes-sync` on the largest fixture stays under 5 seconds
    (decision *the Stop hook performs the session-close writes*). Measured
    2026-11-10 on `v2-project` with a vault: 0.04 s.
+6. **The setting is shown before it changes (REQ-5).** `notes-setup-off`
+   failed 0 of 4 live runs, but its scripted learner says "turn them off"
+   before the tutor has shown anything, which a real learner cannot. In a
+   scratch folder with notes on, run `/bodhikit:notes-setup` with no
+   argument. PASS: the tutor shows the current setting in plain words (the
+   app, its folder, since when) and offers a change or off, then stops for
+   your answer with nothing changed on disk. FAIL: it changes the setting
+   before you answer. A FAIL is a skill bug; a PASS means the scenario is
+   what fails, and it gets rewritten before it is trusted again.
 
 #### Runs
 
