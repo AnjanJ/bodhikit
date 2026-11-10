@@ -7,7 +7,7 @@ nothing (`docs/hosts-without-files.md`, `docs/openai.md` *Runtime behavior by
 platform*). `.shipkit/product.md` lists saved state there under *Later*,
 "after a research spike on keeping state between chats". This is that spike.
 
-It asks three questions, cheapest first. Each can be answered by hand in
+It asks four questions, cheapest first. Each can be answered by hand in
 under an hour, and none needs a change to the plugin.
 
 - **A. Phone to laptop.** Can a phone chat run tracked study through a
@@ -16,6 +16,9 @@ under an hour, and none needs a change to the plugin.
   run `bodhi-state` on a learning folder the learner uploads, and hand the
   updated folder back?
 - **C. A carried file on ChatGPT.** The same, in ChatGPT.
+- **D. A notes app or a cloud drive.** Can a chat write a note into the app
+  the learner already uses, and can a drive carry the folder so nobody
+  uploads and downloads by hand?
 
 B and C keep the design BodhiKit already has: the same script writes the
 same files, and the learner owns them. Only how the files reach the chat is
@@ -39,6 +42,15 @@ harness.
   tick the computer under Devices and run BodhiKit tracked is untested.
 - A running Claude Desktop counts as connected even with nothing ticked
   (`docs/hosts-without-files.md`, 2026-10-22). For B, quit it first.
+- Notion's developer docs say Notion MCP lets an assistant "search your
+  workspace, create and edit pages, and manage databases", and name Claude,
+  ChatGPT and Gemini as clients (developers.notion.com/docs/mcp, read
+  2026-11-10). Claude's docs say its Google Drive connector can "search your
+  Google Drive, read the files it finds, and create new files there"
+  (claude.com/docs/connectors/google/drive, read 2026-11-10). They list the
+  document types it reads and do not say it can update a file or read a zip.
+  What ChatGPT can write to Notion or Drive is not verified: OpenAI's help
+  pages refused the fetch.
 - ChatGPT runs BodhiKit conversation-only unless it exposes a shell and a
   writable folder (`platforms/openai/bodhikit/references/openai-runtime.md`).
   Whether a chat on the web or the phone exposes either is untested.
@@ -123,12 +135,42 @@ Run on the plan a new learner would have. Record which plan it was.
 3. **Checks B2 to B6,** in ChatGPT on the web, then B2, B4 and B5 in the phone
    app.
 
+## D. A notes app or a cloud drive
+
+Use a test Notion workspace or page and a test Drive folder, not the ones you
+work in. Run each check on Claude with no computer connected, then in
+ChatGPT. Record which connector was used and who publishes it.
+
+1. **A note is written.** After a short untracked lesson, ask the chat to
+   save its closing summary as a page under a parent page named
+   `BodhiKit / Cooking` in Notion, and as a document in a Drive folder of the
+   same name. PASS: the page or document exists with the summary's headings
+   and its two self-test prompts. FAIL: no write tool, or the chat says it
+   saved and nothing is there.
+2. **It lands under the course.** Ask for a second note for the same course.
+   PASS: it sits beside the first under the same parent. FAIL: a second
+   parent is created, or the note lands at the top level.
+3. **It says so when it cannot.** Disconnect the connector and ask again.
+   PASS: the tutor says the note was not saved and offers it in the chat.
+   FAIL: it claims the save.
+4. **A drive carries the folder.** Only if B or C passed through check 5. Put
+   `bodhi-bundle.zip` in the Drive folder and ask the chat to fetch it, run
+   check B3 on it, and write the updated zip back to the same folder. PASS:
+   the zip in Drive, unpacked on the computer, passes `verify` with today's
+   entry. FAIL: the connector cannot read or write a zip. Record whether it
+   replaced the file or made a second one.
+
+Checks 1 to 3 are about notes, which are a copy. Check 4 is about the record
+itself. A pass on 1 to 3 says nothing about 4.
+
 ## What the results decide
 
 | Result | Next step |
 |---|---|
 | A passes | Documentation only: the README, the no-files reference and the guides say a phone works while the computer is on. No spec. |
 | B or C passes through check 5 | A spec for carried state, with a decision record first, because the feature freeze does not admit it today. Check 6 is its first requirement. The engine's existing commands do not change, and `t_golden_code_path` holds. |
+| D passes checks 1 to 3 on a host | The learning-vault spec may offer that app on that host. Where it fails, the spec offers the note in the chat and names no app. |
+| D passes check 4 | The carried-state spec may use a drive in place of upload and download. Otherwise the learner carries the file by hand. |
 | B and C fail at check 1 or 2 | Saved state with no computer stays under *Later*. The honest behaviour is the one shipped: teach, keep no schedule, hand over a summary. |
 
 ## Results
