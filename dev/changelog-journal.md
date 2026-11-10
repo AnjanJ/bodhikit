@@ -8,7 +8,11 @@ This is the full, unabridged, patch-by-patch changelog kept for the maintainer â
 
 All notable changes to BodhiKit will be documented in this file.
 
-## [Unreleased]
+## [1.27.0] - 2026-11-10
+
+**The learning vault, sprint 1 (spec `learning-vault`, decision 0006).** Built task by task on `learning-vault` from `d94fdea`, one commit per task: the notes file and `notes-show` / `notes-set` / `notes-offered` with `verify` (`797a326`), the REQ-29 probe test (`b9e7ec8`), `syllabus --markdown` (`7431149`), `notes-sync` (`2dfa793`), the Stop hook's notes step and one-time offer through `systemMessage` (`bfc4c6f`), `skills/notes-setup/SKILL.md` (`0eba010`), the OpenAI adapter's close procedure (`5f234aa`), docs and counts at 19 skills (`621ea87`), `PRIVACY.md` (`8fe395b`). Deviations from the plan are noted in the spec's `tasks.md`: REQ-11 is tested as "no 1.26.1 SKILL.md names the notes feature", not a byte compare, because `131cf5b` changed `evidence-kinds`; check rule (h) reads `notes-file.md`; `notes-sync` locks lazily; the hook copies on `stop_hook_active` turns too; the notes commands accept the learning folder as `--project`. Suites: test_bodhi_state 907, test_stop_hook 61, test_detectors 248, test_openai_plugin 58, test_cowork_plugin 19.
+
+**Live runs and the open REQ-5 question.** `notes-setup` PASS on `a6245e7`. `notes-setup-off` FAIL 0/4 (`a6245e7`, then three on `5136573`), every transcript the same: `notes-show`, then `notes-set --choice off` with no message between, then a message meeting REQ-6; two recaps claim the setting was shown. The scenario's opening prompt states the learner wants notes off, so the run cannot tell a skill miss from a scenario artefact; hand check 6 (`11259fe`) decides it at a real terminal, and the skill is unchanged until it does. `repeat_scenario` wrapped only `run_scenario`, so `BODHI_EVAL_RUNS` silently ran parent scenarios once; `repeat_with` now takes the runner and the notes scenarios use `repeat_parent_scenario` (`0d0cc92`). The ship gate at `891c4d8` was NOT READY on the clean-tree step alone (`d198826`).
 
 **A citation figure the abstract doesn't support (found by /write-guide, 2026-11-08).** The README and the `evidence-kinds` KB said Yang et al. (2021) found quizzing helps "across 18 subject areas". The study's abstract (PubMed 33683913) gives 222 classroom studies, 48,478 students and g = 0.499, and names no count of subject areas. Both now give the abstract's figures. Marketplace users get the KB line on their next sync; the reader-facing `CHANGELOG.md` entry belongs to the next release.
 
