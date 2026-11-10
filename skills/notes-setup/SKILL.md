@@ -46,7 +46,7 @@ Then:
 
 ## Phase 3: Say What Happens, Then Agree
 
-**For an app** (`location: folder`), ask for the vault's folder: the folder they chose when they created the vault.
+**For an app** (`location: folder`), ask for the vault's folder: the folder they chose when they created the vault. Ask; don't look for one on their computer.
 
 Before anything is recorded, tell the learner in plain words:
 
@@ -55,7 +55,7 @@ Before anything is recorded, tell the learner in plain words:
 3. **Sync**: if their notes app syncs that vault (Obsidian Sync, iCloud, another service), the copy travels wherever the vault syncs.
 4. **It is optional**, and they can change it or turn it off at any time with `/bodhikit:notes-setup`. Turning it off deletes nothing.
 
-Then ask: "Shall I set it up?" Record nothing until they say yes. On yes:
+Then ask: "Shall I set it up?" Record nothing until they say yes. If they name a different folder or app instead, that is a new choice, not a yes: say where the copy will now go and ask again. On yes:
 
 ```
 "${CLAUDE_PLUGIN_ROOT}/scripts/bodhi-state" --project <learning folder> notes-set --choice vault --app <app> --location "<vault folder>"
