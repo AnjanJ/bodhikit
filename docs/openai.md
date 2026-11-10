@@ -70,6 +70,10 @@ Restart or refresh Codex after rebuilding/reinstalling. Review and trust the
 plugin's hooks when prompted; Codex does not trust newly installed plugin hooks
 automatically.
 
+If your notes vault is outside the folder you start Codex in, start it with
+`codex --add-dir <vault>`. Codex's sandbox refuses to write outside the
+workspace otherwise, so BodhiKit cannot set up or copy your notes there.
+
 Invoke a workflow naturally or explicitly, for example:
 
 ```text
