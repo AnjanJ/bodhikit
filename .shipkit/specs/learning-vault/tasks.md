@@ -4,7 +4,7 @@ One commit per task, each after `dev/check.sh` passes. Every new test cites its 
 `learning-vault/REQ-N` in its docstring. The tests named below are written first and fail
 before the change.
 
-- [ ] **T1** Admit this spec past the feature freeze → (design: *the feature freeze is lifted for this spec only*)
+- [x] **T1** Admit this spec past the feature freeze → (design: *the feature freeze is lifted for this spec only*)
   - Files: .shipkit/decisions/0006-learning-vault-past-the-freeze.md, CLAUDE.md
   - Test: none: prose. `CLAUDE.md` *Feature freeze* names decision 0006 beside 0001 and admits only this spec's sprint 1; read by the maintainer
   - After: none
