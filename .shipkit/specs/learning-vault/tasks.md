@@ -58,7 +58,7 @@ before the change.
   - After: T7, T8
   - Done when: `dev/check.sh` → "All hard checks passed."
 
-- [ ] **T10** `PRIVACY.md` says what the notes copy does → REQ-33
+- [x] **T10** `PRIVACY.md` says what the notes copy does → REQ-33
   - Files: PRIVACY.md
   - Test: none: REQ-33 is `[untested: prose]`; read by the maintainer
   - After: none

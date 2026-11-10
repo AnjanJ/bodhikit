@@ -21,6 +21,22 @@ current conversation and does not claim that learning state was persisted.
 Conversation content is handled by the host platform under that platform's
 privacy policy and account settings.
 
+## Optional notes copy
+
+BodhiKit can keep a copy of each course's syllabus and revision sheets in the
+learner's notes app, or a syllabus file in each course folder. This is
+optional and off until the learner turns it on with `/bodhikit:notes-setup`,
+which explains what will be copied and where before asking for agreement, and
+records the choice only after the learner agrees. The copy goes only to the
+place the learner chose: a folder on their own computer (an Obsidian vault),
+inside a `Learn with Bodhi` folder that BodhiKit creates there. BodhiKit sends
+nothing over the network for this. If the learner's notes app syncs that
+folder elsewhere, the copy travels with it under that app's terms. Nothing in
+the vault is read back into the learning record, and nothing outside
+`Learn with Bodhi` is changed. Turning it off stops the copying and deletes
+nothing. A learner who never turns it on loses nothing: every other part of
+BodhiKit works the same.
+
 ## Permissions and network access
 
 BodhiKit may request access to read and write files in the selected project and
