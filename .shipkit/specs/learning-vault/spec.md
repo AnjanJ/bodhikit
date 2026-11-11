@@ -1,7 +1,7 @@
 # Spec: Learning vault
 
 > Spec accepted at commit `30e6b6d` on learning-vault (the maintainer approved the requirements on 2026-11-10).
-> Status: open
+> Status: shipped
 > Paths: skills/notes-setup/, scripts/, hooks/, platforms/, dev/, docs/, README.md, GUIDE.md, PRIVACY.md, CLAUDE.md, CHANGELOG.md, .claude-plugin/
 
 ## Purpose
