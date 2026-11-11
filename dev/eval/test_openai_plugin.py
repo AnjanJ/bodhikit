@@ -294,9 +294,11 @@ def test_build_and_structure():
         }
         check("docs: each REQ-34 file names notes-setup and counts 19 skills",
               all(named.values()), named)
-        submission = doc("docs/openai-submission.md")
+        # The records from 1.26.1 down describe 18-skill packages; newer
+        # release notes and records above them may name notes-setup.
+        records = doc("docs/openai-submission.md").partition("### 7 November 2026")[2]
         check("docs: the dated portal records in docs/openai-submission.md are unchanged",
-              "notes-setup" not in submission and "All 18 skills" in submission)
+              records != "" and "notes-setup" not in records and "All 18 skills" in records)
         rule_section = runtime.split("## Apply the learning-project rule", 1)
         check(
             "ChatGPT: rule delivery reads the packaged learning-project rule",

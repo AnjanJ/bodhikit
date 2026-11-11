@@ -120,14 +120,15 @@ must make the final selection in the portal.
 
 ## Release notes
 
-BodhiKit 1.26.1 lets the tutor correct a grade it got wrong the same day, with
-the mistake kept visible in the learner's record, and keeps the state engine's
-internal names (commands, keys, box numbers) out of what the learner reads: the
-tutor says what a step means instead. Since the published 1.25.1 package, a
-non-code plan also says how its work is checked. No learning-data migration is
-required.
+BodhiKit 1.27.0 adds an optional notes copy. The new `notes-setup` workflow can
+keep each course's syllabus and the learner's revision sheets in the notes app
+they already use, such as Obsidian, or as a file in each course folder. The
+syllabus holds the plan, where the learner stands, and when reviews are due. It
+is off until the learner turns it on. The learning folder stays the record, and
+nothing is read back from the notes app. A conversation with no project files
+copies nothing. No learning-data migration is required.
 
-The skills-only package includes 18 learner workflows, 19 knowledge references,
+The skills-only package includes 19 learner workflows, 19 knowledge references,
 four portable role procedures, and the deterministic local state engine. Local
 persistence requires shell and filesystem access; otherwise learning stays in
 the conversation with a saveable summary. The public ZIP omits lifecycle hooks.
