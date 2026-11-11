@@ -3114,8 +3114,11 @@ def cmd_normalize(args):
                                           json.dumps(cm))[:LAST_ACTIVITY_MAX] if isinstance(cm, dict) else str(cm)[:LAST_ACTIVITY_MAX]
             changes.append("stringified currentModule")
             state_changes += 1
+        # Bare `bloomLevels` is the same drift, from projects written before
+        # 1.7.0 (issue #1): it holds the current per-topic levels.
         for plural, singular in (("initialBloomLevels", "initialBloomLevel"),
-                                 ("currentBloomLevels", "currentBloomLevel")):
+                                 ("currentBloomLevels", "currentBloomLevel"),
+                                 ("bloomLevels", "currentBloomLevel")):
             if plural in state and singular not in state:
                 state[singular] = state.pop(plural)
                 changes.append(f"renamed {plural} -> {singular}")
@@ -3230,6 +3233,9 @@ def cmd_verify(args):
                 if plural in state:
                     warnings.append(f"state.json {plural!r} should be the singular "
                                     f"map — run `bodhi-state normalize`")
+            if "bloomLevels" in state and "currentBloomLevel" not in state:
+                warnings.append("state.json 'bloomLevels' should be the "
+                                "currentBloomLevel map — run `bodhi-state normalize`")
             dates = state.get("sessionDates")
             if isinstance(dates, list) and len(dates) != len(set(dates)):
                 warnings.append("state.json sessionDates has duplicates — "

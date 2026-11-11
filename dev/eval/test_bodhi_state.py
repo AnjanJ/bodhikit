@@ -982,6 +982,48 @@ def t_normalize():
         check("normalize: idempotent second run", out2.get("action") == "noop", out2)
 
 
+def t_bare_bloom_levels():
+    """Issue #1: projects written before 1.7.0 keep their per-topic levels in
+    a bare `bloomLevels` map, which /progress (`snapshot`) never reads. The
+    plural maps' rule applies: verify warns, normalize renames it to
+    `currentBloomLevel` when that map is missing, and never overwrites it."""
+    with tempfile.TemporaryDirectory() as root:
+        state = {"version": 2, "projectName": "proj", "topic": "testing",
+                 "sessions": {"totalSessions": 3, "sessionDates": ["2026-03-23"],
+                              "currentStreak": 1},
+                 "currentPhase": "1", "currentModule": "A", "lastActivity": "x",
+                 "bloomLevels": {"caching": 2}, "currentPhaseName": "Foundations"}
+        proj = make_project(root, spaced_review={"version": 3, "sessionHistory": [], "concepts": []}, state=state)
+        out = run(proj, "verify", expect_fail=True)
+        warns = " | ".join(out.get("warnings", []))
+        check("bare bloomLevels: verify warns and names normalize",
+              "bloomLevels" in warns and "normalize" in warns, warns)
+        run(proj, "normalize")
+        st = read_state(proj)
+        check("bare bloomLevels: normalize renames it to currentBloomLevel",
+              st.get("currentBloomLevel") == {"caching": 2} and "bloomLevels" not in st, st)
+        check("bare bloomLevels: unknown fields still kept",
+              st.get("currentPhaseName") == "Foundations", st)
+        out = run(proj, "verify")
+        check("bare bloomLevels: verify clean afterwards",
+              out.get("ok") is True and not out.get("warnings"), out)
+        snap = run(proj, "snapshot")
+        check("bare bloomLevels: /progress now sees the levels",
+              snap.get("project", {}).get("currentBloomLevel") == {"caching": 2},
+              snap.get("project"))
+    with tempfile.TemporaryDirectory() as root:
+        state = {"version": 2, "projectName": "proj", "topic": "testing",
+                 "totalSessions": 1, "sessionDates": ["2026-03-23"], "currentStreak": 1,
+                 "currentPhase": "1", "currentModule": "A", "lastActivity": "x",
+                 "bloomLevels": {"caching": 1}, "currentBloomLevel": {"caching": 3}}
+        proj = make_project(root, spaced_review={"version": 3, "sessionHistory": [], "concepts": []}, state=state)
+        run(proj, "normalize")
+        st = read_state(proj)
+        check("bare bloomLevels: never overwrites an existing currentBloomLevel",
+              st.get("currentBloomLevel") == {"caching": 3}
+              and st.get("bloomLevels") == {"caching": 1}, st)
+
+
 def t_verify():
     with tempfile.TemporaryDirectory() as root:
         proj = make_project(root, spaced_review=json.loads(json.dumps(V2_SR)))
@@ -5232,7 +5274,7 @@ def main():
               t_forget_comma_names, t_robustness, t_concurrency,
               t_history_cap, t_mastery_blocked_on_feynman,
               t_box_before, t_retention, t_export_anonymized,
-              t_defer, t_verify_flags_drift, t_normalize, t_last_activity_threshold,
+              t_defer, t_verify_flags_drift, t_normalize, t_bare_bloom_levels, t_last_activity_threshold,
               t_profile_project_list_shape,
               t_session_brief, t_writers_say_no_box, t_record_review_counts_learned,
               t_record_review_without_profile, t_snapshot,
