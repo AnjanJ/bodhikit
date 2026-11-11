@@ -1,6 +1,6 @@
 # Product: BodhiKit
 
-> Product reviewed on 2026-10-22. *Now* updated 2026-11-05.
+> Product reviewed on 2026-10-22. *Now* updated 2026-11-11.
 
 ## One line
 A research-informed tutor for any subject, with code first-class, that teaches by asking and keeps each learner's spaced-review record in files they own.
@@ -35,6 +35,6 @@ A research-informed tutor for any subject, with code first-class, that teaches b
 - The ChatGPT listing depends on the OpenAI portal, which refused skills-only submissions on 2026-10-15.
 
 ## Now / Next / Later
-- **Now:** 1.26.x is out. Shipped 2026-11-06: 1.26.0 (a wrong grade can be revised the same day, `revise-review`; plus the 1.25.2 work: the module kind on the syllabus view, no box numbers or engine keys from the write commands, decisions 0002–0004) and 1.26.1 (no state-engine names in learner text, decision 0005). Both on GitHub with releases; 1.26.1 published on ChatGPT (confirmed 2026-11-07). Left: the `explain-with-a-picture` spec, gated on the maintainer's reading-loop trial; keep counting decision 0005's leaks in later live runs.
+- **Now:** 1.27.0, the learning vault, is tagged and on GitHub's `master` (2026-11-11): a syllabus per course and revision sheets copied into the learner's notes app, off until turned on (decision 0006, spec `learning-vault`, shipped). Hand-checked in Claude Code, Codex and Obsidian. Left for 1.27.0: the GitHub release with `bodhikit.plugin`, and the ChatGPT re-upload (release step 7). Then: the maintainer turns notes on in their own learning folder; the `explain-with-a-picture` spec stays gated on the maintainer's reading-loop trial; keep counting decision 0005's leaks in later live runs. Earlier: 1.26.0 and 1.26.1 (2026-11-06), both on GitHub and ChatGPT.
 - **Next:** reach outside learners on non-code subjects, and the maintainer's own non-code project toward 5 *Solid*.
 - **Later:** saved state on a phone or claude.ai with no computer connected, after a research spike on keeping state between chats.
