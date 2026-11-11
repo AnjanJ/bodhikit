@@ -153,7 +153,7 @@ and upload the complete ZIP as an update.
 
 ## Submission record
 
-### 11 November 2026 — 1.27.0 approved, publication pending
+### 11 November 2026 — 1.27.0 published
 
 The 1.27.0 package (`dist/bodhikit-openai.zip`, built from a clean checkout of
 the `v1.27.0` tag, no lifecycle hooks) was uploaded on 11 November 2026 as the
@@ -162,8 +162,9 @@ took about 20 minutes to clear. The two usual non-blocking notices came up
 again: category confirmation and privacy-policy review. `PRIVACY.md` gained its
 *Optional notes copy* section in this release. The maintainer did the
 attestations and submitted. The same day the version list showed
-**1.27.0 · Approved**, with 1.26.1 still published. Publishing is the
-maintainer's step.
+**1.27.0 · Approved**, and the maintainer published it. The portal then showed
+*Publication: Version 1.27.0, Listed publicly*, and the public ChatGPT plugin
+page showed version 1.27.0 with 19 skills.
 
 Before upload, headless Codex passed the executor-discipline group on the tag
 (`dev/eval/README.md`). The manual ChatGPT smoke test ran in a ChatGPT session
