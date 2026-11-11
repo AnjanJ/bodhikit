@@ -64,10 +64,10 @@ before the change.
   - After: none
   - Done when: `dev/check.sh` → "All hard checks passed."
 
-- [x] **T11** The Codex Stop adapter sees a Codex 0.167 session close → REQ-8, REQ-11, REQ-12
+- [x] **T11** The Codex Stop adapter sees a Codex 0.167 session close (the gap hand check 3 found on 2026-11-10) → REQ-8, REQ-11, REQ-12
   - Files: platforms/openai/bodhikit/scripts/bodhi-stop-hook.py, dev/eval/test_openai_plugin.py
   - Test: dev/eval/test_openai_plugin.py checks "Codex 0.167 CommandExecution with a relative --project blocks for the sheet", "Codex output that mentions touch-state never blocks", "Codex touch-state inside a script blocks for the project it changed", "... never claims a project it did not change", "Codex /learn first step from a script ends with the notes offer" (cite learning-vault/REQ-8, REQ-11, REQ-12)
-  - After: T6, hand check 3 (2026-11-10), which found the gap
+  - After: T6, T8, T9
   - Done when: `python3 dev/eval/test_openai_plugin.py` → all pass
 
 ## After the gate
