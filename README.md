@@ -12,6 +12,10 @@ BodhiKit turns Claude Code, Codex, or ChatGPT into a research-informed tutor: a 
 
 **What it can check, and what it can't.** It checks code by reading it and seeing it run, and problems and essays against the answers or criteria it saved before you started. It can't see a skill you practise away from the screen, like a dish, a drawing or a passage played. There it debriefs you, grades the debrief, and counts the practice as *your account*, labelled that way wherever it shows. In every subject the tutor itself grades your level, your reviews and your explain-backs. Tracked study needs a computer: Claude Code, Codex, or a claude.ai chat with Claude Desktop connected to your folder. Without one, on claude.ai or a phone, it teaches but can't keep your schedule. What "research-informed" does and does not claim is in [The Science](#the-science); the only outcome data so far — one learner, thin, published to be falsifiable — is in [docs/outcomes.md](./docs/outcomes.md).
 
+### Learning something that isn't code?
+
+Start a course in plain words, for example `/bodhikit:learn the causes of the First World War` or `/bodhikit:learn pour-over coffee at home`. The tutor asks what you already know, proposes how your work will be checked, and plans the course with you. If you try BodhiKit on a subject that isn't code, I'd like to hear how it went, good or bad: the [anonymous survey](https://docs.google.com/forms/d/e/1FAIpQLSdTfBrT3J3ot94JmDXwIQosYQaCoxd-K2hDTYWlctl1lKfEgQ/viewform?usp=pp_url&entry.396027065=GitHub+README) takes 5 minutes, or [open an issue](https://github.com/AnjanJ/bodhikit/issues/new/choose).
+
 ### Purpose & philosophy
 
 The animating constraint: **"The learner writes code. BodhiKit asks questions. The goal is to become unnecessary."** In any subject, the learner does the work.
